@@ -1,0 +1,331 @@
+eccApp.controller('catalogFormatListCrtl',['$scope', '$http','$timeout','$location','webStorage','$routeParams','dialog',
+  function ($scope, $http,$timeout,$location,webStorage,$routeParams,dialog) {	
+	$scope.successMessage='';
+	$scope.errorMessage='';	
+	$scope.dataLoad=false;
+	$scope.fileFormatCtrlList=[];
+	$scope.addDataToTable=[];
+	var queryParams='';
+	$scope.format=$routeParams.format;
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Catalog Format List Task\"");
+
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		try { 
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			if(($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0) && $scope.format != 'Region'){
+				$location.path("/SelectCustomer").search({redirect: "page"});
+			}else{
+				$("#catalogFormatScope").html($scope.format);
+				if($scope.format == 'Region'){
+					$("#customerSec").css({"display":"none"});
+					
+				}
+				if($scope.format == 'Customer'){
+					$("#customerName").html($scope.selectCustomer.cust_name);
+					$("#customerId").html($scope.selectCustomer.cust_id);
+					$("#customerDun").html($scope.selectCustomer.cust_dun);
+					$("#customerType").html($scope.selectCustomer.cust_type);
+					$("#eprimeCustomerId").html($scope.selectCustomer.cust_key);
+					$("#eprimeCustomerType").html($scope.selectCustomer.eprime_cust_type);
+				}
+			}
+			$scope.hideMsg();
+			$scope.catalogFormatLists();		
+			$scope.loadTime = new Date().getTime();
+			
+		} catch(e) { 
+			$scope.selectCustomer='';
+		}	
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+
+	$scope.catalogFormatLists = function (){
+		if($scope.format == 'Customer'){
+			regionCD= $scope.selectCustomer.region_code;
+			customerKey=$scope.selectCustomer.cust_key;
+			
+			queryParams=queryParams+"&customerId="+customerKey+"&pageScope="+$scope.format;
+		} else{
+			queryParams=queryParams+"&pageScope="+$scope.format;
+		}
+		
+		$http({
+				url: "format/catalogFormatList.htm?"+queryParams,
+				method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+				data : { }
+		}).success(function(data,status,header,config) {
+				$scope.hideMsg();
+			  	$scope.fileFormatCtrlList = [];
+			  	$scope.fileFormatCtrlList = data;		  	
+			  	$scope.addDataToTable.length=0;	
+			  	$scope.dataLoad=false;
+			  	
+		        angular.forEach($scope.fileFormatCtrlList, function(item, index){			        	
+		        	$scope.addDataToTable.push([
+                         "<input type='checkbox' class='ck' value='"+item.cat_format_key+"' id='"+item.cat_format_key+ "'onClick=angular.element(document.getElementById('catalogFormatList')).scope().setCheckedFlag('"+item.cat_format_key+"') " + getDisabled(item.Deletable, item.cat_format_key) + "/>",
+                         "<a id="+item.cat_format_name+" href='#/ViewCatalogFormat?format="+$scope.format+"&catFormatKey="+item.cat_format_key+"&pageScope="+item.scope+"' onClick=angular.element(document.getElementById('catalogFormatList')).scope().viewCatalogFormat('"+item.cat_format_key+"','"+item.scope+"')>"+item.cat_format_name+"</a>",
+						 item.scope	  
+		        	]);
+			    });
+			 	if ($scope.addDataToTable.length >0){
+	               	 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+			  	}else{
+			  		$scope.hideMsg();
+			  		$scope.showMsg('','no records found');
+			  	}
+		    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).
+		 error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error while loading catalog format list');
+		 });
+	};	
+
+	function getDisabled(flag){
+	    if(flag == false)
+	    	return "disabled";
+	    else
+	        return "";        
+	}
+
+	$scope.setCheckedFlag = function(srcKey){
+	    angular.forEach($scope.fileFormatCtrlList, function(item){               
+	    	if(item.cat_format_key == srcKey){
+	            if(document.getElementById(item.cat_format_key).checked == true)
+	            	item.chkFlag = true;
+	            else
+	            	item.chkFlag = false;
+	    	}                        
+	     });        
+	};
+
+	$scope.globalCodeToGenertaeDataGrid = function(tableId,aaData){
+		$.fn.dataTableExt.oJUIClasses.sSortJUI ="css_right icon-sort";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIAsc ="css_right icon-sort-up";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIDesc ="css_right icon-sort-down";
+		oTable = $("table#"+tableId+"").dataTable({
+			"sEcho": 4,
+				"aaData": aaData,
+				"sPaginationType" : "commonStandard",
+				"bPaginate" :true,
+				"bJQueryUI": true,
+				"bRetrieve": true,
+				"bDestroy": true,
+				"bSortable":false,
+				"processing": false,
+		        "serverSide": true,
+				"sDom": '<"t_header"RrClf><"t_body"t><"t_footer"pi>',
+				"bSort": true,
+				"aaSorting":[ [2,'asc']] ,
+				"aaSorting":[ [1,'asc']] ,
+				"aoColumnDefs": [
+				{ "sClass": "center unsortable", "aTargets": [ 0 ] },
+				{ "sClass": "center", "aTargets": [ 2] },
+				//{ "sClass": "editable", "aTargets": [ 3,4,5] },
+				//{ "sClass": "editable", "aTargets": [ 6 ] },
+				//{ "bVisible": false, "aTargets": [ 0 ] },
+				{ "bSortable": false, "aTargets": [0] }
+				],
+				"oColReorder": {
+				"iFixedColumns": 2 // Define fixed column and checkbox column can not be dragged.
+				},
+				"oLanguage": {
+				"sLengthMenu": "<div class='sLengthText'>View Results of</div> _MENU_ ",
+				"sInfo": "<span class='number_highlight'>_TOTAL_</span> items, <span class='number_highlight'>_TOTALPAGE_</span> pages",
+				"sSearch": "Filter:",
+				"sInfoFiltered": "",
+				"sInfoEmpty":"<span class='number_highlight'>0</span> items, <span class='number_highlight'>0</span> pages",
+				"oPaginate": {
+				"sFirst": "<i class='icon-double-angle-left'></i>",
+				"sLast": "<i class='icon-double-angle-right'></i>",
+				"sNext": "<i class='icon-angle-right'></i>",
+				"sPrevious": "<i class='icon-angle-left'></i>"}
+				},
+				"oColVis": {
+				"buttonText": 'Show / Hide  <i class="icon-chevron-down"></i>',
+				"aiExclude": [ 0 ],
+				"bShowAll": true,
+				"sShowAll": "Show All",
+				"sAlign":"left"
+		        }
+		});
+		if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+		$("#"+tableId+"_length select").selecter();
+		}
+	 	$("#priceTierProductGridDiv").css({"display":'block'});
+	 	$("#priceTierButtons").css({"display":'block'});
+	 	
+	};
+
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	
+	$scope.showMsg=function(success, error){
+	 	$scope.successMessage=success;
+	 	$scope.errorMessage=error;
+	 };
+	 $scope.hideMsg=function(){
+	 	$scope.successMessage='';
+	 	$scope.errorMessage='';
+	 };
+	 
+	$scope.checkAll = function(){
+		if(document.getElementById('chkAllFlag').checked == true){
+			 angular.forEach($scope.fileFormatCtrlList, function(item, index){    
+	        	 if(document.getElementById(item.cat_format_key) != null && document.getElementById(item.cat_format_key).disabled != true){
+	        		 document.getElementById(item.cat_format_key).checked = true;
+	        		 item.chkFlag = true;
+	        	 }
+	        });
+		}else{
+			angular.forEach($scope.fileFormatCtrlList, function(item, index){                
+	        	 if(document.getElementById(item.cat_format_key) != null && document.getElementById(item.cat_format_key).disabled != true){
+	        		 document.getElementById(item.cat_format_key).checked = false;
+	        		 item.chkFlag = false;
+	        	 }
+	        });
+		}
+	};
+	
+	
+	$scope.condtionalAlertDelete = function (catalogFormatKeys) {
+		
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		
+		var queryParams='';
+		var customerKey = '';
+		if($scope.format == 'Customer'){
+			customerKey=$scope.selectCustomer.cust_key;
+		}	
+       
+		  queryParams=queryParams+"&customerId="+customerKey +"&catalogFormatKeys="+catalogFormatKeys+"&pageScope="+$scope.format;
+		  
+        $http({
+			url: 'format/deleteCatalogFormat.htm?'+queryParams,
+			method:"POST",
+			data : { },
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+		 }).success(function(data,status,header,config) {
+				$scope.hideMsg();
+			  	$scope.catFormatCtrlList = [];
+			  	$scope.catFormatCtrlList = data.catalogFormatList;		 
+				$scope.deletedCatFormatNames = data.deletedCatFormatNames;	
+			  	$scope.addDataToTable.length=0;	
+			  	$scope.dataLoad=false;
+			  	
+		        angular.forEach($scope.catFormatCtrlList, function(item, index){			        	
+		        	$scope.addDataToTable.push([
+                        "<input type='checkbox' class='ck' value='"+item.cat_format_key+"' id='"+item.cat_format_key+ "'onClick=angular.element(document.getElementById('catalogFormatList')).scope().setCheckedFlag('"+item.cat_format_key+"') " + getDisabled(item.Deletable, item.cat_format_key) + "/>",
+                        "<a id="+item.cat_format_name+" href='#/ViewCatalogFormat?format="+$scope.format+"&catFormatKey="+item.cat_format_key+"&pageScope="+item.scope+"' onClick=angular.element(document.getElementById('catalogFormatList')).scope().viewCatalogFormat('"+item.cat_format_key+"','"+item.scope+"')>"+item.cat_format_name+"</a>",
+						 item.scope	  	 
+		        	 
+		        	]);
+			    });
+			 	if ($scope.addDataToTable.length >0){
+			 		$("#priceTierProductGridDiv").css({"display":'block'});
+	                $('#search_result').dataTable().fnClearTable();
+	                $('#search_result').dataTable().fnAddData($scope.addDataToTable);
+			  	 }else{
+			  		$scope.hideMsg();
+			  		$scope.showMsg('','no records found');
+			  	 }
+			 	$scope.hideMsg();
+			 	if($scope.deletedCatFormatNames != undefined && $scope.deletedCatFormatNames.length != 0){	
+			 		 $scope.showMsg('Catalog format/s '+ $scope.deletedCatFormatNames.toString() +' deleted successfully','');
+			 	  }
+		    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error while deleting catalog format');
+		  });
+    };
+    
+	$scope.deleteCatalogFormat = function(){
+		var arr = [];
+				
+		if($('.ck:checked').length) {
+	          var chkId = '';
+	          var catalogFormatKeys = '';
+	          $('.ck:checked').each(function() {
+	            chkId += $(this).val() + ",";
+	          });
+	          chkId =  chkId.slice(0,-1);
+	          arr = chkId.split(",");
+	          catalogFormatKeys = arr;
+	        
+	          
+	          dialog.show({
+	              template: '<div class="hpe-main-content" title="Are you sure you want to delete?">' +
+	                            '<span> Are you sure you want to delete?</span>' + 
+	                            '<br>' +
+	                            '<a class="btn btn-inline"   ng-click="close(true)" ><span>Yes</span></a>' +
+	                            '<a class="btn btn-inline"   ng-click="close(false)"><span>No</span></a>' +
+	                        '</div>',
+	              controller: 'catalogFormatListCrtl',
+	              width: 600,
+	              param: $scope,
+	              draggable: true,
+	              title:'Warning'
+	          }).then(function (result) {
+	              if(result == true) {
+	            	  
+	              	$scope.condtionalAlertDelete(catalogFormatKeys);
+	              	$scope.scrollToMessage();
+	              }
+	             
+	          });
+
+		 } else{
+			 $scope.hideMsg();
+			 $scope.scrollToMessage();
+			 $scope.showMsg('','Please select at least 1 catalog format to delete');
+		 };
+	};
+	
+	 
+	$scope.refreshCacheInUI = function(){
+		 $http({
+				url: 'clearCacheInUI.htm',
+				method:"GET",
+				headers: {
+					"Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+				}
+			 }).success(function(data,status,header,config) {
+				//To Clear Cache in UI...
+			});
+	};
+	
+	$scope.loadCreateCatalogFormat = function(){
+		 $scope.refreshCacheInUI();
+   		 $location.path("/CreateCatalogFormat");
+	};
+	
+	$scope.viewCatalogFormat = function(catFormatKey,scope){
+		 $scope.refreshCacheInUI();
+		 document.location.href="#/ViewCatalogFormat?format="+$scope.format+"&catFormatKey="+catFormatKey+"&pageScope="+scope;
+	};
+	$scope.cancelCatalogFormat = function(){
+		 $scope.refreshCacheInUI();
+		 document.location.href="#/CatalogFormatList?format="+$scope.format;
+	};
+}]);

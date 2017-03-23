@@ -1,0 +1,122 @@
+package com.hp.ecc.ui.biz.alert;
+
+import hp.comcat.dax.fwk.common.util.AlertFormat;
+
+import java.util.Date;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.FormatUtil;
+import com.hp.ecc.ui.common.biz.BizObject;
+
+/**
+ * @author
+ * @version 1.0
+ * 
+ */
+
+public class AlertSrcCatalog extends AlertSrc {
+	public AlertSrcCatalog(String catalog_key, Date timestamp) {
+		this(catalog_key, timestamp, false);
+	}
+
+	public AlertSrcCatalog(String catalog_key, Date timestamp, boolean enforced) {
+		if (enforced) {
+			if (com.hp.ecc.ui.util.StrUtil.isEmpty(catalog_key)) {
+				throw new IllegalArgumentException(
+						"catalog key cannot be null or empty");
+			}
+			if (timestamp == null) {
+				throw new IllegalArgumentException(
+						"alert source timestamp cannot be null");
+			}
+		}
+		this.fKey = catalog_key;
+		this.setTimestamp(timestamp);
+	}
+
+	/**
+	 * Get Key
+	 */
+	public String getKey() {
+		return this.fKey;
+	}
+
+	public String getKeyAsStr() {
+		return this.getKey();
+	}
+
+	public String getTitle() {
+		return "Catalog";
+	}
+
+	String getSrcType() {
+		return sSrcType;
+	}
+
+	public com.hp.ecc.ui.biz.catalog.Catalog getCatalog(String adbRegionToConnect) {
+		if (this.fBizObject != null) {
+			return (Catalog) this.fBizObject;
+		}
+
+		// Dx.x("=========2-catalog: " + this.getKey());
+		this.fBizObject = this.getBizObjFromCache();
+		if (this.fBizObject != null) {
+			return (Catalog) this.fBizObject;
+		}
+
+		// Dx.x("=========3-catalog: " + this.getKey());
+		String key = this.getKey();
+		if (StrUtil.isEmpty(key)) {
+			return (Catalog) this.handleGetByNullKey();
+		}
+
+		com.hp.ecc.ui.biz.catalog.CatalogMgr mgr = new CatalogMgr();
+		// CTX.getCTX().getLog().debug("--------key=" + key);
+		Catalog obj = mgr.getCatalogInfo(key, adbRegionToConnect);
+
+		this.putBizObjToCache(obj);
+
+		this.fBizObject = obj;
+		return obj;
+	}
+
+	public StringBuffer getNotification(int indent, StringBuffer sb) {
+		if (sb == null) {
+			sb = new StringBuffer();
+
+		}
+		Catalog catalog = this.getCatalog("default");
+		if (catalog == null) {
+			return sb;
+		}
+
+		FormatUtil.repeat(sb, AlertFormat.INDENT_STR, indent);
+		sb.append("Catalog: ").append(catalog.getCatalogName());
+		// Modified by Sivakumar on 07-09-2007
+		sb.append("     ID: ").append(catalog.getId()).append('\n');
+
+		return sb;
+	}
+
+	String getNotificationEmailAux() {
+		//return this.getAlertMgr().getAlertEmailForCatalog(this.getCatalog());
+		return null;
+	}
+
+	public boolean isNotificationEmailEnabled() {
+		Catalog cat = this.getCatalog("default");
+		return "Y".equals(cat.getEmailWarning());
+	}
+
+	String getHashCodeAux() {
+		return this.getKey();
+	}
+
+	private AlertSrcCatalog() {
+	}
+
+	private String fKey;
+	final static String sSrcType = "catalog";
+}

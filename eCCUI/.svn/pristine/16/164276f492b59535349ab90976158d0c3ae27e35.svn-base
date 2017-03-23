@@ -1,0 +1,350 @@
+/**
+ * This is the class for form "ProductListForm". It is a java bean which contains
+ * all the the field values for a form. Each action must have a form bean
+ * associated with it.
+ *
+ * @author 
+ * @version 1.0
+ */
+
+package com.hp.ecc.ui.view.beans;
+
+import org.springframework.web.multipart.MultipartFile;
+
+public class ManualProductDetailForm {
+	private String gotoUrl = null;
+	private String task = null;
+	private String Sku = "";
+	private String prodId = "";
+	private String category = "";
+	private String categoryId = "";
+	private String warrantyCode = "";
+	private String suppId = "";
+	private String suppName = "";
+	private String suppPartId = "";
+	private String mfr = "";
+	private String mfrPartId = "";
+	private String unspsc = "";
+	private String leadTime = "";
+	private String uom = "";
+	private String mrfUrl = "";
+	private String suppUrl = "";
+	private String warrantyDesc = "";
+	private String shortDesc = "";
+	private String longDesc = "";
+	private String validity = "";
+	private String suppSelect = null;
+	private String isEdit = "";
+	private String page = "";
+	private MultipartFile image = null;
+	private String imageImport;
+	private String isEnableEditProduct;
+	private String productLine = null;
+	private String productFamily=null;
+	
+
+	public ManualProductDetailForm() {
+
+	}
+	
+	
+
+	public String getProductLine() {
+		return productLine;
+	}
+
+
+
+	public void setProductLine(String productLine) {
+		this.productLine = productLine;
+	}
+
+
+
+	public String getProductFamily() {
+		return productFamily;
+	}
+
+
+
+	public void setProductFamily(String productFamily) {
+		this.productFamily = productFamily;
+	}
+
+
+
+	// task
+	public String getTask() {
+		return this.task;
+	}
+
+	public void setTask(String task) {
+		this.task = task;
+	}
+
+	// SKU
+	public void setSku(String Sku) {
+		this.Sku = Sku;
+	}
+
+	public String getSku() {
+		return this.Sku;
+	}
+
+	// prodId
+	public void setProdId(String prodId) {
+		this.prodId = prodId;
+	}
+
+	public String getProdId() {
+		return this.prodId;
+	}
+
+	// category
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	public String getCategory() {
+		return this.category;
+	}
+
+	// categoryId
+	public void setCategoryId(String categoryId) {
+		this.categoryId = categoryId;
+	}
+
+	public String getCategoryId() {
+		return this.categoryId;
+	}
+
+	// warrantyCode
+	public void setWarrantyCode(String warrantyCode) {
+		this.warrantyCode = warrantyCode;
+	}
+
+	public String getWarrantyCode() {
+		return this.warrantyCode;
+	}
+
+	// suppId
+	public void setSuppId(String suppId) {
+		System.out.println("The suppId is *** " + suppId);
+		this.suppId = suppId;
+	}
+
+	public String getSuppId() {
+		return this.suppId;
+	}
+
+	// suppName
+	public void setSuppName(String suppName) {
+		this.suppName = suppName;
+	}
+
+	public String getSuppName() {
+		return this.suppName;
+	}
+
+	// suppPartId
+	public void setSuppPartId(String suppPartId) {
+		this.suppPartId = suppPartId;
+	}
+
+	public String getSuppPartId() {
+		return this.suppPartId;
+	}
+
+	// mfr
+	public void setMfr(String mfr) {
+		this.mfr = mfr;
+	}
+
+	public String getMfr() {
+		return this.mfr;
+	}
+
+	// mfrPartId
+	public void setMfrPartId(String mfrPartId) {
+		this.mfrPartId = mfrPartId;
+	}
+
+	public String getMfrPartId() {
+		return this.mfrPartId;
+	}
+	
+	// leadTime
+	public void setLeadTime(String leadTime) {
+		this.leadTime = leadTime;
+	}
+
+	public String getLeadTime() {
+		return this.leadTime;
+	}
+
+	// uom
+	public void setUom(String uom) {
+		this.uom = uom;
+	}
+
+	public String getUom() {
+		return this.uom;
+	}
+
+	// imageImport
+	public void setImageImport(String imageImport) {
+		this.imageImport = imageImport;
+	}
+
+	public String getImageImport() {
+		return this.imageImport;
+	}
+	
+	// mrfUrl
+	public void setMrfUrl(String mrfUrl) {
+		this.mrfUrl = mrfUrl;
+	}
+
+	public String getMrfUrl() {
+		return this.mrfUrl;
+	}
+
+	// suppUrl
+	public void setSuppUrl(String suppUrl) {
+		this.suppUrl = suppUrl;
+	}
+
+	public String getSuppUrl() {
+		return this.suppUrl;
+	}
+
+	// warrantyDesc
+	public void setWarrantyDesc(String warrantyDesc) {
+		this.warrantyDesc = warrantyDesc;
+	}
+
+	public String getWarrantyDesc() {
+		return this.warrantyDesc;
+	}
+
+	// shortDesc
+	public void setShortDesc(String shortDesc) {
+		this.shortDesc = shortDesc;
+	}
+
+	public String getShortDesc() {
+		return this.shortDesc;
+	}
+
+	// longDesc
+	public void setLongDesc(String longDesc) {
+		this.longDesc = longDesc;
+	}
+
+	public String getLongDesc() {
+		return this.longDesc;
+	}
+
+	// validity
+	public void setValidity(String validity) {
+		this.validity = validity;
+	}
+
+	public String getValidity() {
+		return this.validity;
+	}
+
+	// suppSelect
+	public void setSuppSelect(String suppSelect) {
+		this.suppSelect = suppSelect;
+	}
+
+	public String getSuppSelect() {
+		return this.suppSelect;
+	}
+
+	// isEdit
+	public void setIsEdit(String isEdit) {
+		this.isEdit = isEdit;
+	}
+
+	public String getIsEdit() {
+		return this.isEdit;
+	}
+
+	// page
+	public void setPage(String page) {
+		this.page = page;
+	}
+
+	public String getPage() {
+		return this.page;
+	}
+
+	// goto URL
+	public void setGotoUrl(String gotoUrl) {
+		this.gotoUrl = gotoUrl;
+	}
+
+	public String getGotoUrl() {
+		return this.gotoUrl;
+	}
+
+	// goto URL
+	public void setIsEnableEditProduct(String isEnableEditProduct) {
+		this.isEnableEditProduct = isEnableEditProduct;
+	}
+
+	public String getIsEnableEditProduct() {
+		return this.isEnableEditProduct;
+	}
+	
+	public void setImage(MultipartFile image) {
+		this.image = image;
+	}
+
+	public MultipartFile getImage() {
+		return this.image;	}
+
+	
+	/**
+	 * Reset all properties to their default values.
+	 * 
+	 * @param mapping
+	 *            The mapping used to select this instance
+	 * @param request
+	 *            The servlet request we are processing
+	 */
+	public void reset( ) {
+		this.init();
+	}
+
+	private void init() {
+		this.prodId = null;
+		this.Sku = null;
+		this.category = null;
+		this.categoryId = null;
+		this.warrantyCode = null;
+		this.suppId = null;
+		this.suppName = null;
+		this.suppPartId = null;
+		this.mfr = null;
+		this.mfrPartId = null;
+		this.unspsc = null;
+		this.leadTime = null;
+		this.uom = null;
+		this.mrfUrl = null;
+		this.suppUrl = null;
+		this.warrantyDesc = null;
+		this.shortDesc = null;
+		this.longDesc = null;
+		this.validity = null;
+		this.suppSelect = null;
+		this.isEdit = null;
+		this.page = null;
+		this.gotoUrl = null;
+		this.isEnableEditProduct = null;
+	}
+
+	
+}//class

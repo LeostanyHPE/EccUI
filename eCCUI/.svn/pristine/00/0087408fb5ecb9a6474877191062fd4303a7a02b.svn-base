@@ -1,0 +1,114 @@
+package com.hp.ecc.ui.upload.validation;
+
+import java.io.*;
+import java.util.*;
+
+public class CSVFileParser implements IFileParser {private File uploadFile;
+private InputStream inStream;
+private InputStreamReader inRdr;
+private BufferedReader lineRdr;
+private String nextRecord[];
+private boolean eofReached;
+
+public CSVFileParser () {eofReached = true;
+}
+
+public void setFile ( File uploadFile ) {try {this.uploadFile = uploadFile;
+inStream = new FileInputStream ( uploadFile );
+inRdr = new InputStreamReader ( inStream );
+lineRdr = new BufferedReader ( inRdr );
+eofReached = false;
+nextRecord = getNextNonEmptyRecord ();
+}
+catch ( IOException ioEx ) {closeFile ();
+eofReached = true;
+}
+}
+
+
+public void setCurrentPage ( int pageNo ) { //Not meaningful for CSV file.
+}
+
+public boolean hasNext () {return!eofReached;
+}
+
+public String[] next () {
+	String currentRecord[] = nextRecord;
+nextRecord = getNextNonEmptyRecord ();
+return currentRecord;
+}
+
+public void closeFile () {try {if ( inStream != null ) {
+  inStream.close ();
+}
+if ( inRdr != null ) {
+  inRdr.close ();
+}
+if ( lineRdr != null ) {
+  lineRdr.close ();
+}
+}
+catch ( IOException ioEx ) {
+	ioEx.printStackTrace();
+}
+}
+
+public int getNoPages () {return 1;
+}
+
+public void resetPageRowPointer ()  {if ( uploadFile != null ) {
+    closeFile ();
+setFile ( uploadFile );
+}
+}
+
+private String[] getNextNonEmptyRecord ()  {while ( true ) {
+    String record[] = getNextRecord ();
+if ( ( record != null ) && ( record.length > 0 ) ) {return record;
+}
+if ( eofReached ) {return null;
+}
+}
+}
+
+	private String[] getNextRecord () {
+		String line = null;
+		if ( eofReached ) {
+			return null;
+		}
+		try{	
+			line = lineRdr.readLine ();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		if ( line == null ) {
+			eofReached = true;
+			return null;
+		}
+	
+		StringTokenizer strTok = new StringTokenizer ( line, ",", true );
+		List record = new ArrayList ();
+		boolean lastTokenWasDelim = true;
+		boolean hadNonZeroTokens = strTok.hasMoreTokens ();
+	
+		while ( strTok.hasMoreTokens () ) {
+			String token = strTok.nextToken ();
+			if ( ",".equals ( token ) ) {
+				if ( lastTokenWasDelim ) {
+					record.add ( null );
+				}
+				lastTokenWasDelim = true;
+			}
+			else {record.add ( token );
+				lastTokenWasDelim = false;
+			}
+		}
+	
+		if ( ( hadNonZeroTokens ) && ( lastTokenWasDelim ) ) {
+			record.add ( null );
+		}
+		return ( String[] ) record.toArray ( new String[0] );
+	}
+}

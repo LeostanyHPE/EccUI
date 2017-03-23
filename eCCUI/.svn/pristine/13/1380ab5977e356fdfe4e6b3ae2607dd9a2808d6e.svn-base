@@ -1,0 +1,1009 @@
+eccApp.controller('priceTierProductListCtrl',['$scope','$http','$routeParams', '$timeout','shareddata','webStorage','dateParser','$sce', 'dialog', 'transformRequestAsFormPost', 
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,dateParser,$sce, dialog, transformRequestAsFormPost) {	 
+	$scope.dealList=[];
+	$scope.dateParser=dateParser;
+	$scope.dataToProdTable	=	[];
+	$scope.prodListData		=	[];
+	$scope.displayPriceTierData = '';
+	
+	$scope.prodForm        = {};
+	$scope.prodForm.fCatalogId = '';
+	$scope.prodForm.fConfigId = '';
+	$scope.prodForm.fItemStatus = '';
+	$scope.prodForm.fProdNo = '';
+	$scope.ptId = $routeParams.priceTierID;
+	$scope.statusValue = '';
+	
+	$scope.formProd = {};
+	$scope.ffsPartNumber = false;
+	$scope.queryId = '';
+	
+	$scope.getData = ajaxGetResults;
+	$scope.getDataSorted = getDataWithPaginationAndSort;
+	$scope.priceTierID=$routeParams.priceTierID;
+	
+	$scope.successMessage="";
+	$scope.errorMessage="";
+	$scope.warningGroupMessage="";
+	
+	$scope.ftLoadStatus =  true;
+	
+	$scope.loadPriceTierData=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"PriceTier Product List Task\"");
+
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.hideMsg();
+		
+		webStorage.session.remove('prodRecordCount');
+		
+		$scope.messageAfterSaveCatalog=webStorage.session.get('messageAfterSaveCatalog');
+		$scope.messageAfterSaveCatalogAlertPropagation = webStorage.session.get('messageAfterSaveCatalogAlertPropagation');
+		$scope.messageAfterSaveCatalogAlertStatus = webStorage.session.get('messageAfterSaveCatalogAlertStatus');
+		if(!$scope.messageAfterSaveCatalog){
+			$scope.messageAfterSaveCatalog="";
+			webStorage.session.add('messageAfterSaveCatalog', "");
+		}
+		
+		$scope.queryIdFromSes=webStorage.session.get('PCAT_QUERYID');
+		if( $scope.queryIdFromSes != null){
+			$scope.queryIds = $scope.queryIdFromSes.split("|");
+			if($scope.queryIds[0]==$scope.priceTierID){
+				$scope.queryId=$scope.queryIds[1];
+			}
+			else{
+				webStorage.session.remove('PCAT_QUERYID');
+			}
+		}
+		
+		$scope.loadProductList();
+		
+		$http({
+			url: 'catalog/priceTierProductListHeader.htm?priceTierID='+$routeParams.priceTierID,
+			method:"GET",
+			data: $scope.prodForm,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {		
+			 if(webStorage.session.get('prodRecordCount') == 'NoRecords'){
+				  $scope.hideMsg();
+				  $scope.showMsg('','No Products Found');
+			  }else{
+				  $scope.hideMsg();
+			  }
+			 if($scope.messageAfterSaveCatalog != undefined && $scope.messageAfterSaveCatalog != ""){
+				 $scope.showMsg($scope.messageAfterSaveCatalog,$scope.errorMessage);						 
+				 webStorage.session.add('messageAfterSaveCatalog', "");
+			 }
+			 if(($scope.messageAfterSaveCatalog != undefined && $scope.messageAfterSaveCatalog != "") &&
+				($scope.messageAfterSaveCatalogAlertPropagation != undefined && $scope.messageAfterSaveCatalogAlertPropagation != "") &&
+				($scope.messageAfterSaveCatalogAlertStatus != undefined && $scope.messageAfterSaveCatalogAlertStatus != "")){
+				 $scope.showMsg($scope.messageAfterSaveCatalog,$scope.errorMessage);
+					webStorage.session.add('messageAfterSaveCatalogAlertPropagation',"");
+					webStorage.session.add('messageAfterSaveCatalogAlertStatus',"");
+					$scope.warningGroupMessage = $scope.messageAfterSaveCatalogAlertPropagation+'<br>'+$scope.messageAfterSaveCatalogAlertStatus+'<br>Current Propagation Status:'+data.currPropagationStatus_Info[0];
+					//document.getElementById("idErrorMessage").innerHTML = $scope.messageAfterSaveCatalogAlertPropagation+'<br>'+$scope.messageAfterSaveCatalogAlertStatus+'<br>Current Propagation Status:'+data.currPropagationStatus_Info[0];
+			 }
+			 /* $scope.errorMessage = data.errorMessage;
+			  $scope.successMessage = data.successMessage;									  				  
+			  if($scope.messageAfterSaveCatalog){						
+					$scope.showMsg($scope.messageAfterSaveCatalog,'');						 
+					webStorage.session.add('messageAfterSaveCatalog', "");
+			  }
+			  if($scope.messageAfterSaveCatalog && $scope.messageAfterSaveCatalogAlertPropagation && $scope.messageAfterSaveCatalogAlertStatus){						
+					$scope.showMsg($scope.messageAfterSaveCatalog,'');
+					webStorage.session.add('messageAfterSaveCatalogAlertPropagation',"");
+					webStorage.session.add('messageAfterSaveCatalogAlertStatus',"");
+					$scope.errorMessage = $scope.messageAfterSaveCatalogAlertPropagation+'<br>'+$scope.messageAfterSaveCatalogAlertStatus+'<br>Current Propagation Status:'+data.currPropagationStatus_Info[0];
+					document.getElementById("idErrorMessage").innerHTML = $scope.messageAfterSaveCatalogAlertPropagation+'<br>'+$scope.messageAfterSaveCatalogAlertStatus+'<br>Current Propagation Status:'+data.currPropagationStatus_Info[0];
+			  }
+			 if($scope.errorMessage == undefined){
+				  $("#idErrorMessage").css({"display":"none"});
+				  $("#idSuccessMessage").css({"display":"none"});
+			  }*/
+			 
+			  $scope.displayPriceTierData = data.priceTier_Info[0];
+			  $scope.priceTierName = $scope.displayPriceTierData.cat_catalog_name;
+			  $scope.categorization = "PM Level4";
+			  $scope.ePrimeCustomerType = "MULTI";
+			  $scope.shopListPriceFlag = "N";
+			  $scope.saleCountry = data.saleCountry;
+			  $scope.language = data.language;
+			  $scope.regionCode = data.regionCode;
+			  $scope.publicSector = data.publicSector;
+			  $scope.fulfillmentSite = data.fulfillmentSite;	
+			  $scope.priceProfile = data.priceProfile;
+			  $scope.priceProcedure = data.priceProcedure;
+			  $scope.offer_id = data.offer_id;	
+			  $scope.isTiedToOffer = data.isTiedToOffer;
+			  $scope.countryCode = data.countryCode;
+			  
+			  if($scope.regionCode == "US"){
+				  $("#publicSector").css({"display":"block"});					  
+			  }
+			  else{
+				  $("#publicSector").css({"display":"none"}); 
+			  }
+			  					  
+			  if($scope.isTiedToOffer == "Y"){
+				  if($scope.displayPriceTierData.offer_id != null){
+					  $("#offerId").css({"display":"block"});
+				  }
+				  else{
+					  $("#offerId").css({"display":"none"});
+				  }
+				  $("#priceProcedure").css({"display":"none"});
+				  $("#priceMergeId").css({"display":"none"}); 
+			  }
+			  else{
+				  $("#offerId").css({"display":"none"});
+				  $("#priceProcedure").css({"display":"block"});	
+				  $("#priceMergeId").css({"display":"block"});
+			  }
+			  
+			  if($scope.regionCode != "US"){					  
+				  $("#priceMergeId").css({"display":"block"});
+				  $("#priceProcedure").css({"display":"block"});
+			  }
+			  else{
+				  $("#priceMergeId").css({"display":"none"}); 
+				  $("#priceProcedure").css({"display":"none"});
+			  }			 				  
+			  
+			  
+			  if($scope.regionCode == "US" || ("GL"==$scope.regionCode && "US"==$scope.countryCode)){					 						  
+				  $("#excludeHStockCd").css({"display":"block"});	
+				  $("#applyStdCatPrice").css({"display":"none"});	
+			  }
+			  else{					  					 					  		
+				  $("#excludeHStockCd").css({"display":"none"});	
+				  $("#applyStdCatPrice").css({"display":"block"}); 
+			  }
+			  				  
+			  if($scope.isTiedToOffer == "Y" && $scope.priceProfile != null){					  
+				  $("#priceProfile").css({"display":"block"});				  	  
+			  }
+			  else{
+				  $("#priceProfile").css({"display":"none"}); 
+			  }
+			   
+			  
+			  $scope.optioncategory = data.locOptCatSelList;					 				  
+			  	
+			  
+			  $scope.dealList = data.dealList;
+			  if($scope.dealList.length <= 0){
+				  $("#idDealList").css({"display":"none"});
+			  }
+			  
+			  $scope.PurchaseAgreement = data.PurchaseAgreement;
+			  if($scope.PurchaseAgreement.length <= 0){
+				  $("#idPurchaseAgreement").css({"display":"none"});
+			  }
+			  
+			  
+			  $scope.displayCurrPropagationStatus = data.currPropagationStatus_Info[0];			  
+			  $scope.displayLastPropatationTimeStamp = data.lastPropatationTimeStamp_Info[0];	
+			  
+			  $scope.displayCatalogList = data.catalogList;
+			 
+			  $scope.includeGenCatalog = data.includeGenCatalog;		
+			  				  				 
+			  if($scope.regionCode == "LA" || $scope.regionCode == "GL"){						  
+					  $("#exchangeRateType").css({"display":"block"}); 
+			  }
+			  else
+				  $("#exchangeRateType").css({"display":"none"});				  				  				
+			  
+			  
+			  $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+			  	console.log("Error in service");
+		  });
+		
+	};
+		
+	/*
+	 * Product list functionality
+	 */
+	$scope.loadProductList = function(){
+		if(!$routeParams.flag){
+    		if(!$scope.checkingCatalogTable){
+    			 $scope.currentPage = 0;
+    		      $scope.startIndex = 0;
+    		      $scope.endIndex = 10;
+    		      
+    			  ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 1);
+    		}
+		}
+	};
+	
+	$scope.UpdateProductAttributes = function(){    
+		//To read from DB than redis
+		$scope.queryId = '';
+		webStorage.session.remove('PCAT_QUERYID');
+		
+		$scope.priceTierName = $scope.displayPriceTierData.cat_catalog_name;			
+		document.location.href='#/UpdatePriceTierListMultiProds?priceTierID='+$routeParams.priceTierID+'&priceTierName='+$scope.priceTierName+'&searchProperty=null&searchScope=null&searchKeywords=null';
+	};
+
+	$scope.cancelPriceTierProductListHeader=function(){	
+		document.location.href="#PriceTierList";		
+	};
+	
+	$scope.editPriceTier=function(){	
+		document.location.href="#EditPriceTier?priceTierID="+$routeParams.priceTierID;		
+	};
+	
+	$scope.PropagateToCatalog=function(){				
+		$http({
+			url: 'catalog/priceTierProductListHeader1.htm?priceTierID='+$routeParams.priceTierID,
+			method:"GET",
+			data: $scope.prodForm,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			  
+			  $scope.errorMessage = data.errorMessage;
+			  $scope.successMessage = data.successMessage;
+			  
+			  if($scope.successMessage != undefined){					  
+				  $("#idSuccessMessage").css({"display":"block"});
+			  }
+			  else{
+				  $("#idSuccessMessage").css({"display":"none"});
+			  }
+			  if($scope.errorMessage != undefined){
+				  $("#idErrorMessage").css({"display":"block"});					  
+			  }
+			  else{
+				  $("#idErrorMessage").css({"display":"none"});
+			  }
+			  
+		  }).
+		  error(function(data, status, headers, config) {
+			  	console.log("Error in service");
+		  });
+		
+	};
+		
+//////////////////////AJAX CALLS /////////////////////////////
+	function ajaxGetResults(scope, $http, shareddata, recordsOnHand, recordsOnDemand) {
+		getDataWithPaginationAndSort(scope, $http, shareddata, recordsOnHand, recordsOnDemand, "", "");
+	}
+	
+ 	function getDataWithPaginationAndSort(scope, $http, shareddata, recordsOnHand, recordsOnDemand, sortBy, sortOrder, sortLocale) {
+ 		$scope.loadTime = new Date().getTime();
+ 		$scope.prodListData = [];
+ 		 		 
+ 		var urlToUse = "catalog/priceTierProductList.htm";
+	 	  	
+	 	if (sortBy.length > 0 && sortOrder.length > 0) {
+	 		urlToUse += "?sortBy="+sortBy+"&sortOrder="+sortOrder;
+	 		if (sortLocale) {
+	 			urlToUse += "&sortLocale="+sortLocale;
+	 		}
+	 	}
+	 	
+		$scope.loadTime = new Date().getTime();		 			
+		$http({
+			url: urlToUse,
+			method:"POST",
+			async: true,
+			transformRequest:transformRequestAsFormPost,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0",
+				"Content-type": "application/json; charset=utf-8"
+            },
+            data:{
+            	priceTierID:$routeParams.priceTierID,
+            	recordsOnHand:recordsOnHand,
+            	recordsOnDemand:recordsOnDemand,
+            	fProd:$scope.search.baseModel,
+            	filterPartNumber:$scope.search.partNumber,
+            	ffsPartNumber:$scope.ffsPartNumber,
+            	filterConfigId:$scope.search.configID,
+            	filterSource:$scope.search.source,
+            	filterProductLine:$scope.search.productLine,
+            	queryId:$scope.queryId	            	
+            }
+		 }).success(function(data, status, headers, config) {
+			 	
+			 		$scope.dataToProdTable = [];
+			 		$scope.formProd = data;
+			 		$scope.queryId = data.queryId;
+			 		//$scope.formProd = JSON.parse(data.form);
+				  	$scope.prodListData = data.productList;
+				  	$scope.status = '';					  	
+				  	var pd= $scope.displayPriceTierData.cpd_price_descriptor;
+				  	$scope.currencyCode = $scope.displayPriceTierData.cpd_price_descriptor;
+				  	if($scope.currencyCode != undefined){
+				  		$scope.currencyCode = $scope.currencyCode.substring(2,5);
+				  	}
+				  	
+				  	if( $scope.queryId != null){
+			 	 		webStorage.session.add('PCAT_QUERYID', $routeParams.priceTierID+"|"+$scope.queryId);
+			 	 	}
+			 	 	else{
+			 	 		webStorage.session.remove('PCAT_QUERYID');
+			 	 	}
+				  	
+					angular.forEach($scope.tablecolumns,function(column){
+						if(column.id == 'netPrice')
+				    		column.key = "Price/" + $scope.currencyCode;
+					});
+				  	$scope.redBlueMapFlag = data.redBlueMapFlag;
+				  	var i=1;
+			        angular.forEach($scope.prodListData, function(item){		
+			        		
+			        	$scope.status = item.cop_valid_status;				        	
+			           	item.net_price == null ? item.net_price = "": item.net_price = item.net_price;
+			        					        	
+			        	var crossSellitem = "";
+			        	if (item.cross_sell_avail_flag == 'Y') {
+			        		crossSellitem = "<a onClick=angular.element(this).scope().viewCrossSell('"+encodeURIComponent(item.cop_localize_prod)+"','"+encodeURIComponent(item.cat_item_key)+"','"+encodeURIComponent(item.mfg_part_id)+"','"+encodeURIComponent(item.short_desc)+"')>"+item.cop_localize_prod+"</a>";
+			        	}
+			        	
+			        	item.contract_identifier == "casual" ? item.contract_identifier = "General" : item.contract_identifier = item.contract_identifier;
+			        	
+			        	if(item.net_price == ""){
+			        		item.net_price = "Not Avail";
+			        	}
+			        	var price = "";		        
+			        	var statusParam = $scope.status+"','"+item.cop_base_model+"','"+item.short_desc.replace(new RegExp(" ", 'g'), "^"); 				        	 
+			        	
+			        	if($scope.regionCode  == "EU"){	
+			        		
+			        		$scope.form1 = {};
+			        		$scope.form1.status = getStatus(item, statusParam, $scope.ptId, $scope.displayPriceTierData.cpd_price_descriptor),
+			        	   
+			        		$scope.form1.baseModel = getBaseModel(item, $routeParams.priceTierID),
+			        		$scope.form1.partNumber=getPartNumber(item, $routeParams.priceTierID,$scope.redBlueMapFlag),
+			        		$scope.form1.dealID = item.bd_number,
+			        		$scope.form1.description = item.short_desc,
+			        		$scope.form1.netPrice = "<a onClick=angular.element(this).scope().viewNetPrice('"+item.cat_item_key+"','"+$routeParams.priceTierID+"')>"+$scope.convertToDecimal2Function(item.net_price)+"</a>",
+			        		$scope.form1.priceSource = item.cip_price_src_type,
+			        		$scope.form1.contextID = item.context_id,
+			        		$scope.form1.releaseDate = item.product_release_date, 
+			        		$scope.form1.endOflifeDate = item.end_of_life_date,
+			        		$scope.form1.discountDate = item.discontinued_date,
+			        		$scope.form1.marketingObsoleteDate = item.marketing_obsolete_date,				 											
+			        		$scope.form1.crossSellitem = crossSellitem,
+			        		$scope.form1.fullFillmentSiteId = "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().fullFillmentSiteIDFunction('"+item.fs_id+"')>"+item.fs_id+"</a>",
+			        		$scope.form1.pgmName = item.pgm_name,
+			        		$scope.form1.source = item.source,
+			        		$scope.form1.configId = item.config_id,
+			        		$scope.form1.pl = item.pl,
+			        		$scope.form1.partType = item.part_type,
+			        		$scope.form1.contract = item.contract_identifier,	
+			        		$scope.dataToProdTable.push($scope.form1);
+			        	}
+			        	else{
+							$scope.form1 = {};
+                             
+                            $scope.form1.status =  getStatus(item,statusParam, $scope.ptId, $scope.displayPriceTierData.cpd_price_descriptor),
+			        	    $scope.form1.baseModel = getBaseModel(item, $routeParams.priceTierID),
+                            $scope.form1.partNumber= getPartNumber(item, $routeParams.priceTierID,$scope.redBlueMapFlag),
+                            $scope.form1.dealID = item.bd_number,
+                            $scope.form1.description = item.short_desc,
+                            $scope.form1.netPrice = "<a onClick=angular.element(this).scope().viewNetPrice('"+item.cat_item_key+"','"+$routeParams.priceTierID+"')>"+$scope.convertToDecimal2Function(item.net_price)+"</a>",
+                            $scope.form1.priceSource = item.cip_price_src_type,
+                            $scope.form1.contextID = item.context_id,
+                            $scope.form1.releaseDate = item.product_release_date,
+                            $scope.form1.endOflifeDate = item.end_of_life_date,
+                            $scope.form1.discountDate = item.discontinued_date,
+                            $scope.form1.marketingObsoleteDate = item.marketing_obsolete_date,				 											
+                            $scope.form1.crossSellitem = crossSellitem,				 															 											
+                            $scope.form1.fullFillmentSiteId = "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().fullFillmentSiteIDFunction('"+item.fs_id+"')>"+item.fs_id+"</a>",
+							$scope.form1.pgmName = item.pgm_name,
+							$scope.form1.source = item.source,
+							$scope.form1.configId = item.config_id,
+							$scope.form1.pl = item.pl,
+							$scope.form1.partType = item.part_type,
+							$scope.form1.contract = item.contract_identifier,
+							$scope.dataToProdTable.push($scope.form1);
+		        	}
+		        	i++;
+			        	  						       				        					        	
+				    });
+			        if(!$scope.ftLoadStatus){
+			        	$scope.warningGroupMessage = "";
+			        	$scope.successMessage = "";
+			        }
+			        $scope.ftLoadStatus = false;
+			        if ($scope.dataToProdTable.length >0){
+			        	webStorage.session.add('prodRecordCount', "Records");
+			        	$scope.hideMsg();
+			        	$scope.showMsg($scope.successMessage,'');
+			        	$("#productListGridDiv").css({"display":'block'});
+			        	$scope.globalCodeToGenertaeDataGrid('search_result', $scope.dataToProdTable,$scope.formProd);
+					}
+			        else{
+			        	webStorage.session.add('prodRecordCount', "NoRecords");
+			        	$scope.aaData = [];
+			        	if($scope.formProd.recordCount == undefined || $scope.formProd.recordCount == null)
+			        		$scope.formProd.recordCount = 0;
+			        	$scope.$emit('gotPageData', $http, $scope.formProd,$scope.dataToProdTable);
+			        	$scope.hideMsg();
+			        	$scope.showMsg('','No Products Found');
+			        	$("#productListGridDiv").css({"display":'block'});
+			        	$scope.globalCodeToGenertaeDataGrid('search_result', $scope.dataToProdTable,$scope.formProd);
+						$("#Results").hide();
+					}
+			    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).
+			error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Search Product Service');
+		  	});
+	};
+		
+	$scope.globalCodeToGenertaeDataGrid = function(tableId,aaData,formProd){
+		 $scope.finalObject = formProd;
+		 
+		 if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+				$("#"+tableId+"_length select").selecter();
+				}
+			 	$("#resultTable").css({"display":"block"});
+		 
+		 $scope.aaData = aaData;
+		 
+		 $scope.$emit('gotPageData',$http,$scope.finalObject, $scope.aaData);
+		 
+		if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+		$("#"+tableId+"_length select").selecter();
+		}
+	 	$("#resultTable").css({"display":"block"});
+	};
+	
+	function getStatus(item, statusParam, pricetierId,pd){
+		if(item.cbd_type_flag == 'Q')
+			return "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().loadStatus('"+item.config_id+"','"+encodeURIComponent(item.status)+"','"+item.prodid+"','"+pricetierId+"')>"+getImage(item)+"</a>";
+		else{
+			if(!item.short_desc){
+				return item.short_desc="";					
+			}
+			return "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().statusFunction('"+item.cop_base_model+"','"+item.short_desc.replace(new RegExp(" ", 'g'), "^")+"','"+encodeURIComponent(item.status)+"','"+item.cat_item_key+"','"+item.source+"','"+item.cit_bundle_flag+"','"+item.cbd_type_flag+"','"+item.bdt_template_id+"','"+pd+"','"+pricetierId+"')>"+item.status+"</a>";
+		}
+	}
+		
+	function getImage(item){
+		var status = item.cop_valid_status;
+
+		if(item.cop_valid_status == 'V')
+			status = "<img src='resources/images/hp/icon_valid.gif' style='width: 13px;height: 13px; margin: 0px 5px;'></img>";
+		else if (item.cop_valid_status == 'I')
+			status ="<img src='resources/images/hp/icon_invalid.gif' style='width: 13px;height: 13px; margin: 0px 5px;'></img>";
+		else if (item.cop_valid_status == 'U')
+			status = "<img src='resources/images/hp/icon_unknown.gif' style='width: 13px;height: 13px; margin: 0px 5px;'></img>";
+		else if (item.cop_valid_status == 'P')
+			status = "<img src='resources/images/hp/icon_pending.gif' style='width: 13px;height: 13px; margin: 0px 5px;'></img>";
+		else if (item.cop_valid_status == 'W')
+			status = "<img src='resources/images/hp/icon_price_pending.gif' style='width: 13px;height: 13px; margin: 0px 5px;'></img>";
+		else if (item.cop_valid_status == 'N')
+			status = "<img src='resources/images/hp/icon_invalid.gif' style='width: 13px;height: 13px; margin: 0px 5px;'></img>";
+		
+		if(item.config_replacement_status == "R")
+			status = status + "<img alt='UnknownIMG' src='resources/images/hp/icon_replaced.gif' style='width: 13px;height: 13px; margin: 0px 5px;'>";
+		else if(item.config_replacement_status == "RT")
+			status = status + "<img alt='UnknownIMG' src='resources/images/hp/icon_replacement.gif' style='width: 13px;height: 13px; margin: 0px 5px;'>";
+		
+		return status;
+	} 
+		
+	$scope.statusFunction = function(baseProduct,desc,status, pId,source, bundleFlag,cbdTypeFlag, bundleTemplateId,pd,cId){
+			webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+$routeParams.priceTierID);
+			//To read from DB than redis
+			$scope.queryId = '';
+			webStorage.session.remove('PCAT_QUERYID');
+			
+			if( bundleFlag == 'B' && cbdTypeFlag == 'C'){
+				document.location.href='#/BundleViewTemplate?bundleTemplateID='+bundleTemplateId+'&bundleID='+baseProduct+'$priceProfile=&templateFlag=false&tab=statusTab&priceDescriptor='+pd+'&catalogId='+cId;
+			}
+			else if(bundleFlag != 'B' && cbdTypeFlag == 'C'){
+				document.location.href="#/CatalogProductOptions?masterID="+$routeParams.priceTierID+"&cntry="+$scope.countryCode+"&pID="+encodeURIComponent(pId)+"&pd="+$scope.displayPriceTierData.cpd_price_descriptor+"&baseModel="+encodeURIComponent(baseProduct)+"&desc="+encodeURIComponent(desc)+"&contextID="+"&fusionCheckFlag="+$scope.displayPriceTierData.cat_fusn_ord_fl+"&orderCheckFlag="+$scope.displayPriceTierData.partnum_ordcheck_flag+"&plcCheckFlag="+$scope.displayPriceTierData.cat_plc_ord_flg;
+			}
+			else if( source=='3PO'){
+				
+			}
+	};
+		
+		
+	
+	$scope.loadStatus = function(configId,copStatus,prodid,catalogId){
+		if(configId=="null"){
+			$scope.prodForm.fConfigId = null; 
+		}else if(configId!= null){
+			$scope.prodForm.fConfigId = configId;
+		}
+    	$scope.prodForm.fItemStatus = copStatus;
+    	$scope.prodForm.fProdNo = prodid;
+    	$scope.prodForm.fCatalogId = catalogId;
+
+		$http({
+			url: 'validation/ValidationInfo.htm',
+			method:"POST",
+			data: $scope.prodForm,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {				 
+			 $scope.dialogParam = JSON.parse(data.form);
+			 $scope.statusValue = data.statusValue;
+			  $scope.showStatusDialog();
+		 });
+	};
+		
+		    
+		    
+    $scope.showStatusDialog = function () {
+        dialog.show({
+        templateUrl: 'resources/html/catalog/statusDialog.html',
+            controller: 'statusDialogController',
+            width : 600,
+            param: $scope.dialogParam,
+            draggable: true,
+            title:$scope.statusValue
+        }).then(function (result) {
+           
+        });
+    };
+
+		
+	$scope.editProduct = function(mId,pId, pd, baseModel, bundleFlag,bundleTemplateId,cbdTypeFlag, nonComcatBundle){				
+		webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+mId);		
+		
+		//To read from DB than redis
+		$scope.queryId = '';
+		webStorage.session.remove('PCAT_QUERYID');
+	
+		if(bundleFlag == 'B' && cbdTypeFlag == 'Q'){
+			webStorage.session.add('ListPage', '#/PriceTierProductListHeader?priceTierID='+mId);
+			
+			document.location.href="#/nonComcatBundle?catalogId="+mId+"&bundleID="+encodeURIComponent(nonComcatBundle)+"&priceDescriptor="+$scope.displayPriceTierData.cpd_price_descriptor+"&startingFlag=false&catMasterItemKey="+encodeURIComponent(pId)+"&pricetier=true&viewOnlyFlag=false";							
+		}
+		else if( bundleFlag == 'B' && cbdTypeFlag == 'C'){
+			document.location.href='#/BundleViewTemplate?bundleID='+baseModel+'&catalogId='+ mId +'&templateFlag=false&task=onLoad&priceProfile=&priceDescriptor='+$scope.displayPriceTierData.cpd_price_descriptor+'&bundleTemplateID='+bundleTemplateId;
+		}
+		else if(bundleFlag != 'B' && cbdTypeFlag == 'C'){
+			document.location.href="#/EditProduct?masterID="+mId+"&pID="+encodeURIComponent(pId)+"&pd="+$scope.displayPriceTierData.cpd_price_descriptor+"&baseModel="+encodeURIComponent(baseModel)+"&pricetier=true&flag=PCAT";
+		}
+	};
+		
+		
+	$scope.fullFillmentSiteIDFunction = function(fulfillmentSiteName){
+		webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+$routeParams.priceTierID);
+		document.location.href="#/FulfillmentSiteDetail?ffsId="+fulfillmentSiteName +"&priceTierID="+$routeParams.priceTierID;	
+	};
+	
+	$scope.viewBaseModel = function(mId, pId, baseModel){			
+		webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+$routeParams.priceTierID);			
+		
+		//To read from DB than redis
+		$scope.queryId = '';
+		webStorage.session.remove('PCAT_QUERYID');
+		
+		document.location.href="#/ProductOptions?masterID="+$routeParams.priceTierID+"&pID="+encodeURIComponent(pId)+"&baseModel="+baseModel+"&contextID="+"&fusionCheckFlag="+$scope.form.fusionFlag+"&orderCheckFlag="+$scope.form.fOrderCheckFlag+"&plcCheckFlag="+$scope.form.plcCheck;
+	};
+	
+	$scope.viewNetPrice = function(price, catalogId){			
+		webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+$routeParams.priceTierID);	
+		
+		//To read from DB than redis
+		$scope.queryId = '';
+		webStorage.session.remove('PCAT_QUERYID');
+		
+		document.location.href="#/PriceDetail?priceTierID="+catalogId+"&cik="+encodeURIComponent(price)+"&priceTier=true";
+	};
+	
+	$scope.viewCrossSell = function(localizeProd, catItemKey, mfgPartId, shortDesc){			
+		webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+$routeParams.priceTierID);				
+		document.location.href="#/ViewCrossSale?priceTier=true&sku="+mfgPartId+"&desc="+shortDesc+"&baseModel="+localizeProd+"&catalogId="+$routeParams.priceTierID+"&key="+catItemKey+"&flag=M";
+	};
+		
+	$scope.viewPartNumber = function(baseProduct, pId,desc){			 
+		$http({
+			url: 'clearCacheInUI.htm',
+			method:"GET",
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+			}
+		 }).success(function(data,status,header,config) {
+			//To Clear Cache in UI...
+		});
+		webStorage.session.add('PrevPage', '#/PriceTierProductListHeader?priceTierID='+$routeParams.priceTierID);			
+		//To read from DB than redis
+		$scope.queryId = '';
+		webStorage.session.remove('PCAT_QUERYID');
+		document.location.href="#/CatalogProductOptions?masterID="+$routeParams.priceTierID+"&cntry="+$scope.countryCode+"&pID="+encodeURIComponent(pId)+"&pd="+$scope.displayPriceTierData.cpd_price_descriptor+"&baseModel="+baseProduct+"&desc="+desc+"&contextID=&fusionCheckFlag="+$scope.displayPriceTierData.cat_fusn_ord_fl+"&orderCheckFlag="+$scope.displayPriceTierData.partnum_ordcheck_flag+"&plcCheckFlag="+$scope.displayPriceTierData.cat_plc_ord_flg+"&pricetier=true";		
+	};
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    };
+	    
+    function getBaseModel(item, catalogId){ 		
+ 		if ( (item.cit_delete_flag == 'N' && item.cit_bundle_flag == 'B') ){
+ 			return "<a id="+item.prodid +" onClick=angular.element(priceTierHeader).scope().editProduct('"+catalogId+"','"+item.cat_item_key+"','"+$scope.displayPriceTierData.cpd_price_descriptor+"','"+item.cop_base_model+"','"+item.cit_bundle_flag+"','"+item.bdt_template_id+"','"+item.cbd_type_flag+"','"+item.cit_src_prod+"')>"+item.cop_base_model+"</a>";
+ 		}
+ 		else if( (item.cit_delete_flag == 'N' && item.cit_bundle_flag != 'B') ){
+ 			return "<a id="+item.cop_base_model+" onClick=angular.element(priceTierHeader).scope().editProduct('"+catalogId+"','"+item.cat_item_key+"','"+$scope.displayPriceTierData.cpd_price_descriptor+"','"+item.cop_base_model+"','"+item.cit_bundle_flag+"','"+item.bdt_template_id+"','"+item.cbd_type_flag+"','"+item.cit_src_prod+"')>"+item.cop_base_model+"</a>";
+ 		}
+ 		else{
+ 			if(item.cit_delete_flag != 'N'){
+ 				return item.prodid;
+ 			}
+ 		}	 		
+ 		
+ 	}//getBaseModel
+	    
+    function getPartNumber(item, catalogId,redBlueMapFlag){
+		if(redBlueMapFlag == true ){
+			if( item.redBlueOptionsMap!= null ){
+				if(  item.cit_delete_flag == 'N' && (item.cit_bundle_flag==='B' && item.source==='COMCAT_BDL') ){
+				}				
+				else if(  item.cit_delete_flag == 'N' && !(item.cit_bundle_flag=='B' && item.source=='COMCAT_BDL')){
+						var returnText = "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().viewPartNumber('"+item.cop_base_model+"','"+item.cat_item_key+"','"+encodeURIComponent(item.short_desc)+"')>";
+						if(item.options==null){
+							returnText += "<img alt='partNumberIMG' src='resources/images/ecc/arrow_blue.gif' style='width: 13px;height: 13px; margin: 0px 5px;'>"+item.mfg_part_id+"</a>";							
+						}
+						if(!( item.options != null || (item.options == null && item.loc_opt_flag != null && item.loc_opt_flag == 'Y'))){
+							if ( item.options == "" && item.loc_opt_flag != null  && item.cit_delete_flag == 'N' ) {
+
+						      if ( item.loc_opt_flag != 'Y' ) {						        
+						        return returnText+item.prodid+"</a>";
+						      }
+
+						    }
+						    else if ( item.options == "" && item.loc_opt_flag == null  && item.cit_delete_flag == 'N' ) {
+						    	return returnText+item.prodid+"</a>";
+						    }													
+						}
+						if( item.options != ''){
+							var optData = item.options.split(",");
+							var finalOpt='';
+				        	if(optData.length!=0){
+				    			angular.forEach(optData, function(opt){
+				    				finalOpt = finalOpt + "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().viewPartNumber('"+item.cop_base_model+"','"+item.cat_item_key+"','"+encodeURIComponent(item.short_desc)+"')>" + opt+"</a><br>";		
+				    		    }); 
+				    		}
+				        	else{
+				        		finalOpt = returnText+item.options+"</a>";
+				        	}
+				        	return finalOpt;
+						}
+						
+					
+				}				
+				else if( item.cit_delete_flag == 'Y' && ((item.cit_bundle_flag!=null && item.cit_bundle_flag=='B' && item.source=='COMCAT_BDL')) ? 'Y': 'N'){
+					var optData = item.options.split(",");
+					var finalOpt='';
+		        	if(optData.length!=0){
+		    			angular.forEach(optData, function(opt){
+		    				finalOpt = finalOpt + opt+"<br>";		
+		    		    }); 
+		    		}
+		        	else{
+		        		finalOpt = item.options;
+		        	}
+		        	return finalOpt;
+				}
+			}	
+		}
+		else if(redBlueMapFlag == false ){
+			if( ( item.cit_delete_flag == 'N' && (item.cit_bundle_flag=='B' && item.source=='COMCAT_BDL') )){
+				
+			}
+			if( item.cit_delete_flag == 'N' && !(item.cit_bundle_flag=='B' && item.source=='COMCAT_BDL')){			
+				
+					if( item.zero_price_option == 'Y'){		
+						
+						var optData = item.options.split(",");
+						var finalOpt="<img src='resources/images/ecc/arrow_blue.gif' ALT='Product Option' border=0>";
+			        	if(optData.length!=0){
+			    			angular.forEach(optData, function(opt){
+			    				finalOpt = finalOpt +"<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().viewPartNumber('"+item.cop_base_model+"','"+item.cat_item_key+"','"+encodeURIComponent(item.short_desc)+"')>"+ opt+"</a><br>";		
+			    		    }); 
+			    		}
+			        	else{
+			        		finalOpt = "<a onClick=angular.element(document.getElementById('priceTierHeader')).scope().viewPartNumber('"+item.cop_base_model+"','"+item.cat_item_key+"','"+encodeURIComponent(item.short_desc)+"')>"+item.options+"</a>";
+			        	}
+			        	return finalOpt;
+					}
+					else if(item.zero_price_option == null || item.zero_price_option == 'N'){							
+						return "<img src='resources/images/ecc/arrow_grey.gif' ALT='Product Option not available' border=0><a onClick=angular.element(document.getElementById('priceTierHeader')).scope().viewPartNumber('"+item.cop_base_model+"','"+item.cat_item_key+"','"+encodeURIComponent(item.short_desc)+"')>"+item.options+"</a>";///mfg_part_id
+					}					
+					else if ((( item.options == "" && item.loc_opt_flag != null  && item.loc_opt_flag == 'Y' ) ? 'N':'Y') == 'Y'){
+						if ( item.options == "" && item.loc_opt_flag != null  && item.cit_delete_flag == 'N' ) {
+						      if ( item.loc_opt_flag != 'Y' ) {						        
+						        return item.prodid;
+						      }
+						}
+					    else if ( item.options == "" && item.loc_opt_flag == null  && item.cit_delete_flag == 'N' ) {
+					      return  item.prodid;
+					    }	
+						else if( item.options != "" && item.cit_delete_flag == 'N'){
+							var optData = item.options.split(",");
+							var finalOpt='';
+				        	if(optData.length!=0){
+				    			angular.forEach(optData, function(opt){
+				    				finalOpt = finalOpt + opt+"<br>";		
+				    		    }); 
+				    		}
+				        	else{
+				        		finalOpt = item.options;
+				        	}
+				        	return finalOpt;
+						}
+						else if(item.cit_delete_flag == 'Y'){
+							var optData = item.options.split(",");
+							var finalOpt='';
+				        	if(optData.length!=0){
+				    			angular.forEach(optData, function(opt){
+				    				finalOpt = finalOpt + opt+"<br>";		
+				    		    }); 
+				    		}
+				        	else{
+				        		finalOpt = item.options;
+				        	}
+				        	return finalOpt;
+						}						
+					}
+			}	
+			else if( item.cit_delete_flag == 'Y' && !(item.cit_bundle_flag=='B' && item.source=='COMCAT_BDL') ) {
+				var optData = item.options.split(",");
+				var finalOpt='';
+	        	if(optData.length!=0){
+	    			angular.forEach(optData, function(opt){
+	    				finalOpt = finalOpt + opt+"<br>";		
+	    		    }); 
+	    		}
+	        	else{
+	        		finalOpt = item.options;
+	        	}
+	        	return finalOpt;
+			}			
+		}
+	}//getPartNumber
+	    
+/* -----------Start Pagination Code----------- */
+    	
+	$scope.to_trusted = function(html_code) {
+	    return $sce.trustAsHtml(html_code);
+	};
+  	  
+  	$scope.showClmDropDown = false;
+  	    
+    $("#showhideclmDiv>a, #tinyDrop").mousedown(function(e) {
+    	e.stopPropagation();
+    });
+    
+    $scope.mouseDownHide = function mouseDownHide(id){
+		$("#"+id).hide(200);
+	};
+	
+	$scope.toggle = function toggle(id) {
+		$("#"+id).fadeToggle(200);
+	};
+  		
+	$scope.getData = ajaxGetResults;
+	$scope.getDataSorted = getDataWithPaginationAndSort;
+	
+	if($routeParams.searchCriteria){
+		//  $('#Spinner').show();
+	}else{
+		toggleDisplay();
+	}
+  		
+  			
+	$scope.showDropDown = function(){
+		if($("#tinyDrop").is(":visible")){
+			$("#tinyDrop").hide();
+		}else{
+			$("#tinyDrop").show();
+		}
+	};
+		
+	$scope.showHide = function(id) {
+		if($scope.selectedColumns.id == "true")
+			$scope.selectedColumns.id = "false";
+		else
+			$scope.selectedColumns.id = "true";
+	};
+	
+	$scope.showList = function() {
+		if($scope.showClmDropDown == "true")
+			$scope.showClmDropDown = "false";
+		else
+			$scope.showClmDropDown = "true";
+	};
+  			
+	$scope.sortColumn = function($parent, colId, colName, locale, needSort) { 
+        if (needSort!="false") {
+            $parent.reverse=!$parent.reverse; 
+            $scope.sortBy = colName;
+            $scope.sortOrder = ($parent.reverse)?"DESC":"ASC";
+            $scope.sortLocale = locale;
+            $scope.requireSort = true;
+            $scope.getDataSorted($scope, $scope.http,shareddata, 0, $scope.pageSize, 
+            	$scope.sortBy, $scope.sortOrder, $scope.sortLocale);
+            
+            $scope.initToStart();
+            
+            if ( !$scope.sortedColumn ) $scope.sortedColumn = colId;
+            $scope["sortedTD_"+$scope.sortedColumn] = "";
+            $scope["sortedTD_"+colId] = "sorted";
+            $scope.sortedColumn = colId;
+        }
+    };
+  		 
+  		 
+    $scope.tablecolumns = [
+    	{'id':'status',					'value':'Status',							"key":"Status",					'columnName':'COP_VALID_STATUS',							'sort':'true'},
+    	{'id':'baseModel', 				'value':'Base Model',						"key":"BaseModel",				'columnName':'COP_BASE_MODEL',					'sort':'true'},
+    	{'id':'partNumber', 			'value':'Part Number',						"key":"PartNumber",				'columnName':'mfg_part_id',						'sort':'true'},
+    	{'id':'priceSourceID', 			'value':'Price Source ID',					"key":"Price<br>SourceID",			'columnName':'PriceSourceID',					'sort':'true'},
+    	{'id':'description', 			'value':'Description',						"key":"Description",			'columnName':'short_desc',						'sort':'true'},
+    	{'id':'netPrice', 				'value':'Price/ {{currencyCode}}',			"key":"Price",					'columnName':'net_price',						'sort':'true'},
+    	{'id':'priceSource', 			'value':'Price Source',						"key":"Price<br>Source",			'columnName':'CIP_PRICE_SRC_TYPE',				'sort':'true'},
+    	{'id':'configID', 				'value':'Config ID',						"key":"ConfigID",				'columnName':'config_id',						'sort':'true'},
+    	{'id':'source', 				'value':'Source',							"key":"Source",					'columnName':'source',							'sort':'true'},
+    	{'id':'productLine', 			'value':'Product Line',						"key":"Product<br>Line",			'columnName':'pl',								'sort':'true'},
+    	{'id':'contextID', 				'value':'Context ID',						"key":"ContextID",				'columnName':'context_id',						'sort':'true'},
+    	{'id':'gADate',					'value':'GA Date',							"key":"GA<br>Date",					'columnName':'PRODUCT_RELEASE_DATE',			'sort':'true'},
+    	{'id':'pEDate',					'value':'PE Date',							"key":"PE<br>Date",					'columnName':'DISCONTINUED_DATE',				'sort':'true'},
+    	{'id':'eMDate',					'value':'EM Date',							"key":"EM<br>Date",					'columnName':'END_OF_LIFE_DATE',				'sort':'true'},
+    	{'id':'esDate',					'value':'ES Date',							"key":"ES<br>Date",					'columnName':'MARKETING_OBSOLETE_DATE',			'sort':'true'},
+    	{'id':'crossSell', 				'value':'Cross Sell',						"key":"Cross<br>Sell",				'columnName':'cross_sell_avail_flag',			'sort':'true'},
+    	{'id':'fulfillmentSiteId', 		'value':'Fulfillment Site Id',				"key":"Fulfillment<br>SiteId",		'columnName':'fs_id',							'sort':'true'},
+    	{'id':'program', 				'value':'Program',							"key":"Program",				'columnName':'cit_pgm_key',						'sort':'true'},
+    	{'id':'partType', 				'value':'Part Type',						"key":"Part<br>Type",				'columnName':'part_type',						'sort':'true'},	
+    	{'id':'contract', 				'value':'Contract/General',					"key":"Contract",				'columnName':'contract_identifier',						'sort':'true'},
+ 	  ];
+ 	  $scope.selectedColumns = {
+ 			'status'				:'true',
+ 			'baseModel'				:'true',
+ 			'partNumber'			:'true',		
+ 			'priceSourceID'			:'true',
+ 			'description'			:'true',
+ 			'netPrice'				:'true',
+ 			'priceSource'			:'true', 
+ 			'contextID'				:'true',
+ 			'gADate'				:'true',
+ 			'pEDate'				:'true',
+ 			'eMDate'				:'true',
+ 			'esDate'				:'true',
+ 			'crossSell'				:'true',
+ 			'fulfillmentSiteId'		:'true',
+ 			'program'				:'true',
+ 			'source'				:'true',
+ 			'configID'				:'true',
+ 			'productLine'			:'true',
+ 			'partType'				:'true',
+ 			'contract'				:'true',
+ 		};
+  		 	  
+ 	  $scope.search = {
+ 			 //	'status'			:'true',						
+ 			  'baseModel' 		:'',
+ 			  'partNumber'		:'',
+ 			//	'description' 		:'true',
+ 			//	'netPrice' 			:'true',
+ 			//	'priceSource' 		:'true',
+ 			//	'contextID' 		:'true',
+ 			//	'crossSell' 		:'true',
+ 			//	'categorization' 	:'true',
+ 			//	'fulfillmentSiteId' :'true',
+ 			//	'program' 			:'true',
+ 				'configID' 			:'',
+ 				'productLine' 		:'',
+ 			//	'lastModifiedDate' 	:'true',
+ 				'source' 			:'',
+ 			//	'offeringType' 		:'true',
+ 			//	'epeatDesignation' 	:'true',
+ 		};
+  		 	  
+ 	  function toggleDisplay(){
+
+ 			 $(document).off('click').on('click','h1 .w-toggle-visi, h1 .label-unit',function(){
+ 				var elementToToggle = $(this).parent().siblings('.id-body');
+ 		       if(elementToToggle.css('display')=='block'){
+ 		       	elementToToggle.slideUp(300);         	  
+ 		              $(this).parent().find('.w-toggle-visi').find('img').attr("src","resources/images/ecc/row_tb.png");
+ 		              $('#expandCollapseAll>a').html('Expand All').attr('data-mode', 'expandall');
+ 		              $('#qdexpcollAll').attr('src','img/open_all.png');
+ 		              
+ 		       }else {
+ 		              $(this).parent().find('.w-toggle-visi').find('img').attr("src","resources/images/ecc/row_tb_up.png");
+ 		              elementToToggle.slideDown(250);
+ 		              $('#expandCollapseAll>a').html('Collapse All').attr('data-mode', 'collapseall');
+ 		              $('#qdexpcollAll').attr('src','img/close_all.png');
+ 		       }
+ 			});
+ 	};
+ 		
+	$(document).mousedown(function(e) {
+		$("#tinyDrop").hide();
+	});
+  		 		
+	$scope.convertToDecimal2Function = function(item){
+		if (item != null && item != undefined) {
+			if(item.length != 0 && item.length != 0 && !isNaN(item)){
+				return item.toFixed(2);
+			}else if(item == "Not Available" || item == "Not Avail" || str.indexOf("Not Avail")){
+				return "Not Available";
+			}else{
+				return "";
+			}
+		}
+	};
+ 		
+ 	$scope.loadFulfillmentSitePartProducts = function(ffsPartNumberVal){		
+		  $scope.currentPage = 0;
+	      $scope.startIndex = 0;
+	      $scope.endIndex = 10;
+	      
+	      $scope.ffsPartNumber = ffsPartNumberVal;
+	      
+	      //To read from DB than redis
+			$scope.queryId = '';
+			webStorage.session.remove('PCAT_QUERYID');
+	      
+		  ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 1);
+ 	};
+	$(document).on("click",".accordion section h2",function(event){
+        if ($(this).children().hasClass("icon-minus")) {
+            $(this).next().slideUp();
+            $(this).find(".accordion-icon").removeClass("icon-minus");
+            $(this).find(".accordion-icon").addClass("icon-plus");
+        }
+        else if($(this).children().hasClass("icon-plus")){
+            $(this).next().slideDown();
+            $(this).find(".accordion-icon").removeClass("icon-plus");
+            $(this).find(".accordion-icon").addClass("icon-minus");
+        }
+        var $accordionSections = $(this).parent().parent();
+        var $controlAllIcon = $accordionSections.children(".control-accordion").children(".accordion-icon");
+        if($accordionSections.children("section").find(".accordion-icon").hasClass("icon-plus") && 
+            !$accordionSections.children("section").find(".accordion-icon").hasClass("icon-minus")){
+            if($controlAllIcon.hasClass("icon-minus")){
+                $controlAllIcon.removeClass("icon-minus");
+                $controlAllIcon.addClass("icon-plus");
+                $controlAllIcon.next("span").html("Expand All");
+            }
+        }
+        if($accordionSections.children("section").find(".accordion-icon").hasClass("icon-minus") && 
+            !$accordionSections.children("section").find(".accordion-icon").hasClass("icon-plus")){
+            if($controlAllIcon.hasClass("icon-plus")){
+                $controlAllIcon.removeClass("icon-plus");
+                $controlAllIcon.addClass("icon-minus");
+                $controlAllIcon.next("span").html("Collapse All");
+            }
+        }
+    });  
+	    
+}]);	

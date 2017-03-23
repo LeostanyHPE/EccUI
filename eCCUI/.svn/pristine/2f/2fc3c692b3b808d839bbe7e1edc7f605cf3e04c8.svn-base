@@ -1,0 +1,9 @@
+package com.hp.ecc.ui.biz.misc;
+
+public class RegionFields {
+	public static final String WORLDWIDE_REGION_CODE = "WW";
+	public static final String REGION_CODE = "region_code";
+	public static final String REGION_NAME = "region_name";
+
+	public static final String CONST_GL_REGION = "GL";
+}

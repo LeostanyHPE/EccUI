@@ -1,0 +1,300 @@
+package com.hp.ecc.ui.common.web.support;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) 2002</p>
+ * <p>Company: Hewlett-Packard</p>
+ * @author Andrey Svirsky
+ * @version 1.0
+ */
+public class SupportBean {
+
+  private String customerName;
+  private String status;
+  private Timestamp statusChangeTime;
+  private String source;
+  private String catalogId;
+  private String category;
+  private String notifyFlag;
+  private String owner;
+  private String comments;
+  private String entry;
+  private String type;
+  private String change;
+  private String result;
+  private String catalogFormat;
+  //Added for TAT Propagation Queue Page--kamalakkannan
+  private int myPriority;
+  private String myPropKey;
+  private int myEventId;
+  private String myLastModifiedBy;
+
+  private String errorCount;
+  private String errorMsg;
+  private String[] catalogIds;
+  
+  // Added for Re-Register Offers - QC1998
+  private String offer_id;
+  private String countOffer;
+  private String ret_prs;
+  private String ret_prs_msg;
+  // End of Re-Register Offers - QC1998
+  
+  // Added for ffsid and price tier check - QC2025
+  private String ffsid;
+  private String regionCode;
+  private String  searchCatalog;
+  private String query;
+  private String string1;
+  private String[] offerProducts;
+ 
+  
+
+
+public String[] getOfferProducts() {
+	return offerProducts;
+}
+
+public void setOfferProducts(String[] offerProducts) {
+	this.offerProducts = offerProducts;
+}
+
+public String getString1() {
+	return string1;
+}
+
+public void setString1(String string1) {
+	this.string1 = string1;
+}
+
+public String getQuery() {
+	return query;
+}
+
+public void setQuery(String query) {
+	this.query = query;
+}
+
+public String getSearchCatalog() {
+	return searchCatalog;
+}
+
+public void setSearchCatalog(String searchCatalog) {
+	this.searchCatalog = searchCatalog;
+}
+
+public String getregionCode() {
+	return regionCode;
+  }
+
+  public void setregionCode(String regionCode) {
+	this.regionCode = regionCode;
+  }
+
+  public String getffsid() {
+	return this.ffsid;
+  }
+	
+  public void setffsid(String ffsid) {
+	this.ffsid = ffsid;
+  }
+
+  // End of ffsid and price tier check - QC2025
+
+  public String getCatalogFormat () {
+    return catalogFormat;
+  }
+
+  public void setCatalogFormat ( String catalogFormat ) {
+    this.catalogFormat = catalogFormat;
+  }
+
+  public SupportBean () {}
+
+  public String getCustomerName () {return customerName;
+  }
+
+  public String getStatus () {return status;
+  }
+
+  public Timestamp getStatusChangeTime () {return statusChangeTime;
+  }
+
+  public String getSource () {return source;
+  }
+
+  public String getCatalogId () {return catalogId;
+  }
+
+  public String getCategory () {return category;
+  }
+
+  public String getNotifyFlag () {return notifyFlag;
+  }
+
+  public String getOwner () {return owner;
+  }
+
+  public String getComments () {return comments;
+  }
+
+  public String getEntry () {return entry;
+  }
+
+  public String getType () {return type;
+  }
+
+  public String getChange () {return change;
+  }
+
+  public String getResult () {return result;
+  }
+
+  public void setCustomerName ( String value ) {customerName = value;
+  }
+
+  public void setStatus ( String value ) {status = value;
+  }
+
+  public void setStatusChangeTime ( Timestamp value ) {statusChangeTime = value;
+  }
+
+  public void setSource ( String value ) {source = value;
+  }
+
+  public void setCatalogId ( String value ) {catalogId = value;
+  }
+
+  public void setCategory ( String value ) {category = value;
+  }
+
+  public void setNotifyFlag ( String value ) {notifyFlag = value;
+  }
+
+  public void setOwner ( String value ) {owner = value;
+  }
+
+  public void setComments ( String value ) {comments = value;
+  }
+
+  public void setEntry ( String value ) {entry = value;
+  }
+
+  public void setType ( String value ) {type = value;
+  }
+
+  public void setChange ( String value ) {change = value;
+  }
+
+  public void setResult ( String value ) {result = value;
+  }
+
+  /*
+   * Added for TAT Propagation Queue Page--kamalakkannan
+   */
+	public int getPriority() {
+		return myPriority;
+	}
+
+	public void setPriority(int priority) {
+		this.myPriority = priority;
+	}
+
+	public String getPropKey() {
+		return myPropKey;
+	}
+
+	public void setPropKey(String propKey) {
+		this.myPropKey = propKey;
+	}
+
+	public String getLastModifiedBy() {
+		return myLastModifiedBy;
+	}
+
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.myLastModifiedBy = lastModifiedBy;
+	}
+
+	public int getEventId() {
+		return myEventId;
+	}
+
+	public void setEventId(int eventId) {
+		this.myEventId = eventId;
+	}
+
+
+	public String getErrorCount() {
+		return errorCount;
+	}
+
+	public void setErrorCount(String errorCount) {
+		this.errorCount = errorCount;
+	}
+
+	/**
+	 * @return the errorMsg
+	 */
+	public String getErrorMsg() {
+		return errorMsg;
+	}
+
+	/**
+	 * @param errorMsg the errorMsg to set
+	 */
+	public void setErrorMsg(String errorMsg) {
+		this.errorMsg = errorMsg;
+	}
+	
+	//Added for Asynchronous Std Catalog Deletion
+	public void setCatalogIds(String[] listcatalogIds) {
+		catalogIds = listcatalogIds;
+	}
+
+	public String[] getCatalogIds() {
+		return catalogIds;
+	}
+	
+	//End of Asynchronous Std Catalog Deletion
+		// Added for Re-Register Offers - QC1998
+	public void setoffer_id(String offer_id) {
+		this.offer_id = offer_id;
+	}
+
+	public void setret_prs(String ret_prs) {
+		this.ret_prs = ret_prs;
+	}
+
+	public void setret_prs_msg(String ret_prs_msg) {
+		this.ret_prs_msg = ret_prs_msg;
+	}
+
+	public String getoffer_id() {
+		return this.offer_id;
+	}
+
+	public String getret_prs() {
+		return this.ret_prs;
+	}
+
+	public String getret_prs_msg() {
+		return this.ret_prs_msg;
+	}
+	
+	public String getCountOffer() {
+		return countOffer;
+	}
+
+	public void setCountOffer(String countOffer) {
+		this.countOffer = countOffer;
+	}
+
+
+	// End of Re-Register Offers - QC1998
+
+}

@@ -1,0 +1,71 @@
+package com.hp.ecc.ui.upload;
+
+import hp.comcat.dax.fwk.common.web.util.pagination.Pagination;
+import hp.comcat.dax.fwk.common.web.util.sort.SortInfo;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hp.ecc.ui.biz.admin.IUploadInfo;
+import com.hp.ecc.ui.biz.admin.UploadInfo;
+import com.hp.ecc.ui.common.exceptions.CatWebException;
+import com.hp.ecc.ui.upload.process.ValidatorImpl;
+import com.hp.ecc.ui.upload.validation.IRowValidationInfo;
+
+
+public class GUIUploadInfo {
+	private UploadInfo uploadInfo = null;
+	public static final String SEL_VAL_LOG_STMT = "selectValidationLog";
+	public static final String INS_VAL_LOG_STMT = "insertValidationLog";
+	public static final String SEL_UPLD_FILE_STMT = "selUploadFilePath";
+	 
+	
+	public UploadInfo getUploadInfo () {
+	    if ( this.uploadInfo == null ) {
+	      this.uploadInfo = new UploadInfo ();
+	    }
+	    return this.uploadInfo;
+	  }
+
+	public IRowValidationInfo[] getStoredValidationMsg ( long uploadHandle,String dbRegionToConnect ) {
+		 List retList = new ArrayList ();
+		    //Get the validation info from the database
+		    getUploadInfo ().setUploadHandle ( uploadHandle );
+		    try {
+				retList = DaxUploadUtil.executeSelect ( SEL_VAL_LOG_STMT
+				                                        , ( new ValidatorImpl () ).getClass ()
+				                                        , getUploadInfo (), null, null,dbRegionToConnect );
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		    return ( IRowValidationInfo[] ) retList.toArray ( new IRowValidationInfo[
+		        retList.size ()] );
+	}
+	
+	/**
+	   * Returns the detail of the upload for the given
+	   * upload handle.
+	   */
+	  public IUploadInfo getUploadInfo ( long uploadHandle,String dbRegionToConnect ) throws CatWebException {
+	    IUploadInfo upldInf = null;
+	    getUploadInfo ().setUploadHandle ( uploadHandle );
+	    List res=new ArrayList();
+		try {
+			res = DaxUploadUtil.executeSelect ( SEL_UPLD_FILE_STMT
+			                                         , getUploadInfo ().getClass ()
+			                                         , getUploadInfo (), null, null,dbRegionToConnect );
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    if ( res.size () > 0 ) {
+	      upldInf = ( IUploadInfo ) res.get ( 0 );
+	    }
+	    return upldInf;
+	  }
+
+
+}

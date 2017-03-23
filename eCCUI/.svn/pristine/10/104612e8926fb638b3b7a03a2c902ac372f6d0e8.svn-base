@@ -1,0 +1,49 @@
+<div class="row" data-ng-controller="masterCatalogProductOptionsCtrl" data-ng-init="init()">
+		<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+		<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+	  <div class="customer_rows">
+			<h1 class="h1Underline">				
+				<div class="label-unit">
+					<span>Product Options</span>
+				</div>
+			</h1>
+	  </div>
+      <div class="customer_rows form-border">
+            <div class="four columns">
+                  <div class="generals">
+                      <span>Catalog Master ID:</span>
+                      <div class="div_input" id="productOptions_catalogMasterId" ng-model="productOptions_catalogMasterId" ></div>
+                  </div>
+                  <div class="generals">
+                      <span>Country:</span>
+                      <div class="div_input" id="productOptions_country" ng-model="productOptions_country" ></div>
+                  </div>
+            </div>
+            <div class="four columns">
+            	<div class="generals">
+                      <span>Base Product:</span>
+                      <div class="div_input" id="productOptions_baseProduct"  ng-model="productOptions_baseProduct" ></div>
+                  </div>
+                <div class="generals">
+                     <span>Price Descriptor:</span>
+                     <div class="div_input" id="productOptions_priceDescriptor" ng-model="productOptions_priceDescriptor" ></div>
+                </div>
+                
+            </div>
+            <div class="four columns">
+            	<div class="generals">
+                     <span>Description:</span>
+                     <div class="div_input" id="productOptions_description" ng-model="productOptions_description" ></div>
+                </div>
+            </div>
+      </div>
+      <div class="customer_rows">
+      </div>
+      
+      <div class="customer_rows">
+	  		<div class="eight columns">
+		        <a class="btn btn-inline"  style="margin-top: -25px;" ng-click="cancelProductOptions()"><span id="Cancel">Cancel</span></a>
+	  		</div>
+	  </div>
+      
+ </div>

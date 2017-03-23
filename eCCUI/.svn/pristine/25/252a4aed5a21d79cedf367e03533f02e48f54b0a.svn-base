@@ -1,0 +1,129 @@
+package com.hp.ecc.ui.biz.alert;
+
+import hp.comcat.dax.fwk.common.util.AlertFormat;
+
+import java.util.Date;
+
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.CustomerMgr;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.FormatUtil;
+import com.hp.ecc.ui.common.biz.BizObject;
+
+public class AlertSrcCustomer extends AlertSrc {
+  public AlertSrcCustomer ( String cust_key, String customer_name
+                            , Date timestamp ) {
+    this ( cust_key, customer_name, timestamp, false );
+  }
+
+  public AlertSrcCustomer ( String cust_key, String customer_name
+                            , Date timestamp, boolean enforced ) {
+    if ( enforced ) {
+      if ( StrUtil.isEmpty ( cust_key ) ) {
+        throw new IllegalArgumentException (
+            "customer key cannot be null or empty" );
+      }
+      if ( timestamp == null ) {
+        throw new IllegalArgumentException (
+            "alert source timestamp cannot be null" );
+      }
+    }
+
+    this.fKey = cust_key;
+    this.fName = customer_name;
+    this.setTimestamp ( timestamp );
+  }
+
+
+  /**
+   * Get Key
+   */
+  public String getKey () {
+    return this.fKey;
+  }
+
+
+  public String getKeyAsStr () {
+    return this.getKey ();
+  }
+
+  public String getName () {
+    return this.fName;
+  }
+
+
+  public void setName ( String name ) {
+    this.fName = name;
+  }
+
+
+  public String getTitle () {
+    return "Customer";
+  }
+
+  public StringBuffer getNotification ( int indent, StringBuffer sb ) {
+    if ( sb == null ) {
+      sb = new StringBuffer ();
+
+    }
+    FormatUtil.repeat ( sb, AlertFormat.INDENT_STR, indent );
+    sb.append ( "Customer: " ).append ( this.getName () );
+    sb.append ( "     Key: " ).append ( this.getKey () );
+    sb.append ( '\n' );
+    return sb;
+  }
+
+  public Customer getCustomer () {
+    if ( this.fBizObject != null ) {
+      return ( Customer )this.fBizObject;
+    }
+
+    this.fBizObject = this.getBizObjFromCache ();
+    if ( this.fBizObject != null ) {
+      return ( Customer )this.fBizObject;
+    }
+
+    String key = this.getKey ();
+    if ( key == null ) {
+      return ( Customer )this.handleGetByNullKey ();
+    }
+
+    CustomerMgr mgr = new CustomerMgr ();
+    this.fBizObject = mgr.getCustomer ( key, "default" );
+    this.putBizObjToCache ( this.fBizObject );
+
+    return ( Customer )this.fBizObject;
+
+  }
+
+  String getNotificationEmailAux () {
+    Customer cust = this.getCustomer ();
+    if ( cust == null ) {
+      throw new CatRuntimeException( "Cannot find customer " + this.getKey () );
+    }
+    String code = cust.getRegionCode ();
+    String email = null; //this.getAlertMgr ().getAlertEmailForRegion ( code );
+    return email;
+  }
+
+  public boolean isNotificationEmailEnabled () {
+    return true;
+  }
+
+  String getSrcType () {
+    return sSrcType;
+  }
+
+  String getHashCodeAux () {
+    return this.getSrcType () + "_" + this.getKey ();
+  }
+
+  private AlertSrcCustomer () {
+  }
+
+
+  private String fKey;
+  private String fName;
+  final static String sSrcType = "customer";
+}

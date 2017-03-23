@@ -1,0 +1,814 @@
+eccApp.controller('bundleOptionPacksCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams', '$window',
+  function ($scope, $http, $timeout, webStorage, $routeParams, $window) {
+	///View Master Catalog
+	$scope.successMessage	      =	'';
+	$scope.errorMessage		      =	'';
+	$scope.formData			      = {};
+	$scope.optionpacklist         = [];
+	$scope.optionpackprodlist     = [];
+	$scope.optionpackprodlistprev = [];
+	$scope.form                   = [];
+	$scope.userRole               = webStorage.local.get('userRoleId');
+  	$scope.editchargeshipflag     = '';
+  	$scope.bundletype             = '';
+  	$scope.autoflag               = '';
+  	$scope.custflag               = '';
+  	$scope.genericbundle          = false;
+  	$scope.readonly               = false;
+  	$scope.isshowpriceflag        = false;
+  	$scope.templateflag           = false;
+  	$scope.regionCode  = webStorage.local.get('userRegion');
+	
+    $scope.showMsg=function(success, error){
+      	$scope.successMessage=success;
+      	$scope.errorMessage=error;
+      };  	
+      
+    $scope.hideMsg=function(){
+      	$scope.successMessage='';
+      	$scope.errorMessage='';
+      	$scope.warningMessage='';
+      };
+    $scope.validateDealDetail=function(item){
+		generatedString = "Deal:&nbsp;" + ((item.dealid == null || item.dealid == undefined) ? '' : item.dealid)
+				          + "<br/>Eclipse:&nbsp;" + ((item.configid == null || item.configid == undefined) ? '' : item.configid )
+				          + "</br>Price:&nbsp;" + ((item.price == null || item.price == undefined) ? '' : item.price ) 
+				          + "<br/>Price Desc:&nbsp;" + ((item.pricedescriptor == null || item.pricedescriptor == undefined) ? '' : item.pricedescriptor );
+       return generatedString;				          
+    };     
+    $scope.promoBdlTemplateCheck=function(bundleType, autoFlag, customFlag, updateType){
+    	if(bundleType=='PROMO' && autoFlag=='Y'&& customFlag=='N')
+    	{
+    		var a = confirm("The system will \"freeze\" all Contextual Promotion attributes"
+    				+"(Eg:Promo Messages),except price if this Bundle template " 
+    				+"is modified. Any updates to the frozen attributes will not "
+    				+"be applied to this Bundle Template");
+    		if(a){
+    			if (updateType=='cop')
+    				$scope.createOptionPack();
+    			else if (updateType=='uop')
+    			   $scope.updateOptionPack();
+    			else if (updateType=='aoc')
+    				$scope.addOtherComp();
+    			else
+    			   $scope.updateBundlePackComponent();
+    		}
+    	}else{
+    		if (updateType=='cop')
+				$scope.createOptionPack();
+			else if (updateType=='uop')
+ 			   $scope.updateOptionPack();
+			else if (updateType=='aoc')
+				$scope.addOtherComp();			
+ 			else
+ 			   $scope.updateBundlePackComponent();
+    	}
+    };
+	$scope.loadBundleOptionPacks=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Bundle Option Pack Task\"");
+
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		
+		bundleId=(($routeParams.bundleID==null || $routeParams.bundleID == undefined) ? "": $routeParams.bundleID);
+		catalogId=(($routeParams.catalogId==null || $routeParams.catalogId == undefined) ? "": $routeParams.catalogId);
+		priceProfile =(($routeParams.priceProfile==null || $routeParams.priceProfile == undefined) ? "": $routeParams.priceProfile); 
+		priceDescriptor=(( $routeParams.priceDescriptor==null ||  $routeParams.priceDescriptor == undefined) ? "":  $routeParams.priceDescriptor);
+		if($routeParams.page == "optionGroup"){
+			if($routeParams.templateFlag == "true"){
+				webStorage.session.add('ReturnOptionPack','#/BundleViewTemplate?bundleTemplateID='+$routeParams.bundleTemplateID+'&templateFlag='+$routeParams.templateFlag+'&task=onLoad&tab=optionGroupTab'+'&selectedOptGrp='+$routeParams.groupId);
+			}
+			else{
+				webStorage.session.add('ReturnOptionPack','#/BundleViewTemplate?bundleTemplateID='+$routeParams.bundleTemplateID+'&templateFlag='+$routeParams.templateFlag+'&task=onLoad&tab=optionGroupTab&bundleID='+bundleId+'&catalogId='+catalogId+'&priceProfile='+priceProfile+'&priceDescriptor='+priceDescriptor+'&selectedOptGrp='+$routeParams.groupId);
+			}
+		}
+		if($routeParams.page == "standalone"){
+			if($routeParams.templateFlag == "true"){
+				webStorage.session.add('ReturnOptionPack','#/BundleViewTemplate?bundleTemplateID='+$routeParams.bundleTemplateID+'&templateFlag='+$routeParams.templateFlag+'&task=onLoad&tab=standaloneTab');
+			}
+			else{								
+				webStorage.session.add('ReturnOptionPack','#/BundleViewTemplate?bundleTemplateID='+$routeParams.bundleTemplateID+'&templateFlag='+$routeParams.templateFlag+'&task=onLoad&tab=standaloneTab&bundleID='+bundleId+'&catalogId='+catalogId+'&priceProfile='+priceProfile+'&priceDescriptor='+priceDescriptor);
+			}
+		}
+
+		$scope.loadTime = new Date().getTime();
+		templateFlag = $routeParams.templateFlag;
+		bundleTemplateID = $routeParams.bundleTemplateID;
+		bundleCompID = $routeParams.bundleCompID;
+		bundleId = $routeParams.bundleID;
+		catalogId = $routeParams.catalogId;
+		priceDescriptor = $routeParams.priceDescriptor;
+		priceProfile = $routeParams.priceProfile;
+		custId = $routeParams.custId;
+		$scope.formData.custId=custId;
+		$scope.formData.templateFlag = templateFlag;
+		$scope.formData.bundleTemplateID = bundleTemplateID;
+		$scope.formData.bundleCompID = ((bundleCompID==null || bundleCompID==undefined)?'':bundleCompID) ;
+		$scope.formData.bundleId = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		$scope.formData.bundleID = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		$scope.formData.catalogID = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+		$scope.formData.priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+		$scope.formData.priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;
+
+        $http({
+    			url : "bundle/loadBundleOptionPack.htm",
+			    method : "POST",
+			    data: $scope.formData,
+			    headers: {
+				 "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+               }}).
+		  success(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	$scope.formData = data;
+			  	$scope.optionpacklist = data.optionpacklist;
+			  	$scope.optionPackSelection = data.selectedOptionPackId;
+			  	$scope.optionPackName = data.selectedOptionPackName;
+			  	$scope.optionPackDescription = data.selectedOptionPackDesc;
+			  	$scope.optionpackprodlist = data.optionpackprodlist;
+			  	$scope.optionpackprodlistprev = angular.copy(data.optionpackprodlist);
+			  	$scope.editchargeshipflag = data.editChargeShipFlag;
+			  	$scope.bundletype = data.bundleType;
+			  	$scope.autoflag = data.autoFlag;
+			  	$scope.custflag = data.custFlag;
+			  	$scope.genericbundle = data.genericBundle;
+			  	$scope.readonly = data.readonly;
+			  	$scope.isshowpriceflag = data.isShowPriceFlag;
+			  	$scope.templateflag=data.templateFlag;
+			  	
+			  	if (data.selectedOptionPackId == 0 ){
+			  		$scope.optionPackName = 'New Option Pack';
+			  		$scope.optionPackDescription = '';
+			  	}else{
+				angular.forEach($scope.optionpackprodlist, function(item){	
+					item.checkedFlag=false;
+		        	$scope.defaultingValues(item);   	
+				});
+			  	}
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers) {
+			  $window.scrollTo(0,0);
+			  	console.log("Error in service");
+		  });
+		
+	};
+	$scope.defaultingValues=function(item){
+		 $scope.delChkAll= false;
+		 $scope.hideProdChkAll= false;
+		  $scope.hidePriceChkAll= false;
+		  $scope.localizeChkAll= false;
+		  $scope.inBoxChkAll= false;
+		 $scope.shipTogetherChkAll= false;
+		 $scope.chargeShipChkAll= false;
+		
+	  		 if(item.intheboxflag=='Y')
+		  		item.intheboxflag = true;
+	  		 else 
+	  			item.intheboxflag = false;
+	  		 if(item.localizeflag=='Y')
+		  		item.localizeflag = false;
+	  		 else
+	  			item.localizeflag = true;
+	  		 if(item.pricehideflag=='H')
+	  			item.pricehideflag = true;
+	  		 else
+	  			 item.pricehideflag = false;
+	  		 if(item.hideflag=='H')
+		  		item.hideflag = true;
+	  		 else
+	  			item.hideflag =false;
+	  		 if(item.shiptogetherflag=='Y')
+	  			item.shiptogetherflag = true;
+	  		 else
+	  			item.shiptogetherflag = false;
+	  		 if(item.dealvalue == null || item.dealvalue == '')
+	  			 item.dealvalue = 'Select...';
+	  		 
+	  		if(item.chargeshippingflag=='Y' && ($scope.regionCode  === 'EU' || $scope.regionCode  === 'GL'))
+	  			item.chargeshippingflag = true;
+	  		if(item.chargeshippingflag=='N' && ($scope.regionCode  === 'EU' || $scope.regionCode  === 'GL'))
+	  			 item.chargeshippingflag = false;
+	};
+	$scope.find=function(arr, key, val) { // Find array element which has a key value of val 
+		  for (var ai, i = arr.length; i--;)
+		    if ((ai = arr[i]) && ai[key] == val)
+		      return ai;
+		  return null;
+	};
+	$scope.displayOptionPackProds=function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		templateFlag = $routeParams.templateFlag;
+		bundleTemplateID = $routeParams.bundleTemplateID;
+		custId = $routeParams.custId;
+		bundleId = $routeParams.bundleID;
+		catalogId = $routeParams.catalogId;
+		priceDescriptor = $routeParams.priceDescriptor;
+		priceProfile = $routeParams.priceProfile;		
+		$scope.formData.custId=custId;		
+		$scope.formData.templateFlag = templateFlag;
+		$scope.formData.bundleTemplateID = bundleTemplateID;
+		$scope.formData.bundleCompID = $scope.optionPackSelection;
+		$scope.formData.bundleId = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		$scope.formData.catalogID = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+		$scope.formData.priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+		$scope.formData.priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;
+		$scope.formData.groupId = $routeParams.groupId;
+	  	if ($scope.optionPackSelection == 0 ){
+	  		$scope.optionPackName = 'New Option Pack';
+	  		$scope.optionPackDescription = '';
+	  		$scope.optionpackprodlist = [];
+	  		$scope.readonly=false;
+	  	
+	  	}else{
+
+        $http({
+    			url : "bundle/fetchBundleOptionPackProd.htm",
+			    method : "POST",
+			    data: $scope.formData,
+			    headers: {
+				 "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+               }}).
+		  success(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	$scope.formData = data;
+			  	$scope.optionpackprodlist = data.optionpackprodlist;
+			  	$scope.optionpackprodlistprev = angular.copy(data.optionpackprodlist);
+			  	selectedOptionPack = $scope.find($scope.optionpacklist, 'bundlecompid', data.selectedoptionpack);
+			  	$scope.optionPackSelection = selectedOptionPack.bundlecompid;
+			  	$scope.optionPackName = selectedOptionPack.shortdesc;
+			  	$scope.optionPackDescription = selectedOptionPack.longdesc;
+			  	$scope.editchargeshipflag = data.editChargeShipFlag;
+			  	$scope.bundletype = data.bundleType;
+			  	$scope.autoflag = data.autoFlag;
+			  	$scope.custflag = data.custFlag;
+			  	$scope.genericbundle = data.genericBundle;
+			  	$scope.readonly = data.readonly;
+			  	$scope.isshowpriceflag = data.isShowPriceFlag;
+			  	$scope.templateflag=data.templateFlag;
+			  	
+				angular.forEach($scope.optionpackprodlist, function(item){	
+					$scope.defaultingValues(item);
+				});
+				
+		  
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	console.log("Error in service");
+		  });
+	  	}
+	};
+	 
+  	$scope.createOptionPack=function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		templateFlag = $routeParams.templateFlag;
+		bundleTemplateID = $routeParams.bundleTemplateID;
+		custId = $routeParams.custId;
+		$scope.formData.custId=custId;		
+		$scope.formData.templateFlag = templateFlag;
+		$scope.formData.bundleTemplateID = bundleTemplateID;
+		$scope.formData.bundleCompID = $scope.optionPackSelection;
+		$scope.formData.shortDesc = $scope.optionPackName;
+		$scope.formData.longDesc = $scope.optionPackDescription;
+		bundleId = $routeParams.bundleID;
+		catalogId = $routeParams.catalogId;
+		priceDescriptor = $routeParams.priceDescriptor;
+		priceProfile = $routeParams.priceProfile;		
+		$scope.formData.bundleId = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		$scope.formData.catalogID = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+		$scope.formData.priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+		$scope.formData.priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;
+		$scope.formData.groupId = $routeParams.groupId;
+
+        $http({
+    			url : "bundle/createBundleOptionPack.htm",
+			    method : "POST",
+			    data: $scope.formData,
+			    headers: {
+				 "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+               }}).
+		  success(function(data, status, headers) {
+			  	$window.scrollTo(0,0);
+			  	$scope.formData = data;
+			  	$scope.optionpacklist = data.optionpacklist;
+			  	selectedOptionPack = $scope.find($scope.optionpacklist, 'bundlecompid', data.selectedoptionpack);
+			  	$scope.optionPackSelection = selectedOptionPack.bundlecompid;
+			  	$scope.optionPackName = selectedOptionPack.shortdesc;
+			  	$scope.optionPackDescription = selectedOptionPack.longdesc;
+			  	$scope.successMessage = data.successMessage;
+			  	$scope.errorMessage = data.errorMessage;
+			  	$scope.editchargeshipflag = data.editChargeShipFlag;
+			  	$scope.bundletype = data.bundleType;
+			  	$scope.autoflag = data.autoFlag;
+			  	$scope.custflag = data.custFlag;
+			  	$scope.genericbundle = data.genericBundle;
+			  	$scope.readonly = data.readonly;
+			  	$scope.isshowpriceflag = data.isShowPriceFlag;
+			  	$scope.templateflag=data.templateFlag;
+			  	
+			  	
+				$scope.showMsg($scope.successMessage, $scope.errorMessage);
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	console.log("Error in service");
+		  });
+	};
+
+  	$scope.updateOptionPack=function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		templateFlag = $routeParams.templateFlag;
+		bundleTemplateID = $routeParams.bundleTemplateID;
+		custId = $routeParams.custId;
+		$scope.formData.custId=custId;		
+		$scope.formData.templateFlag = templateFlag;
+		$scope.formData.bundleTemplateID = bundleTemplateID;
+		$scope.formData.bundleCompID = $scope.optionPackSelection;
+		$scope.formData.shortDesc = $scope.optionPackName;
+		$scope.formData.longDesc = $scope.optionPackDescription;
+		bundleId = $routeParams.bundleID;
+		catalogId = $routeParams.catalogId;
+		priceDescriptor = $routeParams.priceDescriptor;
+		priceProfile = $routeParams.priceProfile;		
+		$scope.formData.bundleId = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		$scope.formData.catalogID = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+		$scope.formData.priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+		$scope.formData.priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;
+		$scope.formData.groupId = $routeParams.groupId;
+        $http({
+    			url : "bundle/updateBundleOptionPack.htm",
+			    method : "POST",
+			    data: $scope.formData,
+			    headers: {
+				 "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+               }}).
+		  success(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	$scope.successMessage = data.successMessage;
+			  	$scope.errorMessage = data.errorMessage;
+			  	$scope.optionpacklist = data.optionpacklist;
+			  	$scope.editchargeshipflag = data.editChargeShipFlag;
+			  	$scope.bundletype = data.bundleType;
+			  	$scope.autoflag = data.autoFlag;
+			  	$scope.custflag = data.custFlag;
+			  	$scope.genericbundle = data.genericBundle;
+			  	$scope.readonly = data.readonly;
+			  	$scope.isshowpriceflag = data.isShowPriceFlag;
+			  	$scope.templateflag=data.templateFlag;
+
+			  	
+				$scope.showMsg($scope.successMessage, $scope.errorMessage);
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	console.log("Error in service");
+		  });
+	};
+	
+	$scope.copyOptionPack=function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		templateFlag = $routeParams.templateFlag;
+		bundleTemplateID = $routeParams.bundleTemplateID;
+		custId = $routeParams.custId;
+		$scope.formData.custId=custId;		
+		$scope.formData.templateFlag = templateFlag;
+		$scope.formData.bundleTemplateID = bundleTemplateID;
+		$scope.formData.bundleCompID = $scope.optionPackSelection;
+		$scope.formData.shortDesc = $scope.optionPackName;
+		$scope.formData.longDesc = $scope.optionPackDescription;
+		bundleId = $routeParams.bundleID;
+		catalogId = $routeParams.catalogId;
+		priceDescriptor = $routeParams.priceDescriptor;
+		priceProfile = $routeParams.priceProfile;		
+		$scope.formData.bundleId = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		$scope.formData.catalogID = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+		$scope.formData.priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+		$scope.formData.priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;	
+		$scope.formData.groupId = $routeParams.groupId;
+        $http({
+    			url : "bundle/copyBundleOptionPack.htm",
+			    method : "POST",
+			    data: $scope.formData,
+			    headers: {
+				 "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+               }}).
+		  success(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	$scope.formData = data;
+			  	$scope.optionpacklist = data.optionpacklist;
+			  	$scope.optionpackprodlist = data.optionpackprodlist;
+			  	$scope.optionpackprodlistprev = angular.copy(data.optionpackprodlist);
+			  	selectedOptionPack = $scope.find($scope.optionpacklist, 'bundlecompid', data.selectedoptionpack);
+			  	$scope.optionPackSelection = selectedOptionPack.bundlecompid;
+			  	$scope.optionPackName = selectedOptionPack.shortdesc;
+			  	$scope.optionPackDescription = selectedOptionPack.longdesc;
+			  	$scope.editchargeshipflag = data.editChargeShipFlag;
+			  	$scope.bundletype = data.bundleType;
+			  	$scope.autoflag = data.autoFlag;
+			  	$scope.custflag = data.custFlag;
+			  	$scope.genericbundle = data.genericBundle;
+			  	$scope.readonly = data.readonly;
+			  	$scope.isshowpriceflag = data.isShowPriceFlag;
+			  	$scope.templateflag=data.templateFlag;
+
+			  	
+				angular.forEach($scope.optionpackprodlist, function(item){	
+		        	$scope.defaultingValues(item);
+				});
+				
+    			 $scope.showMsg(data.successMessage,data.errorMessage);
+				
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers) {
+				$window.scrollTo(0,0);
+			  	console.log("Error in service");
+		  });
+	};
+	
+	$scope.redirectToPrevPage= function(){
+		webStorage.session.remove('OptionPackPrevPage');
+		document.location.href=webStorage.session.get('ReturnOptionPack');
+	 };
+
+	$scope.addOtherComp=function(){
+			$("#loadTime").html("");
+			$scope.hideMsg();
+			$scope.loadTime = new Date().getTime();
+			templateFlag = $routeParams.templateFlag;
+			bundleTemplateID = $routeParams.bundleTemplateID;
+			custId = $routeParams.custId;
+			if(!$scope.genericbundle){
+				$scope.formData.custId=custId;	
+			} else{
+				$scope.formData.custId='';
+			}
+			$scope.formData.templateFlag = templateFlag;
+			$scope.formData.bundleTemplateID = bundleTemplateID;
+			$scope.formData.bundleCompID = $scope.optionPackSelection;
+			$scope.formData.addSkuText = $scope.addSkuText;
+			bundleId = $routeParams.bundleID;
+			catalogId = $routeParams.catalogId;
+			priceDescriptor = $routeParams.priceDescriptor;
+			priceProfile = $routeParams.priceProfile;		
+			$scope.formData.bundleID = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+			$scope.formData.catalogID = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+			$scope.formData.priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+			$scope.formData.priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;	
+			$scope.formData.groupId = $routeParams.groupId;
+			if($scope.formData.addSkuText != undefined && $scope.formData.addSkuText != ''){
+				$scope.formData.addSkuText = $scope.formData.addSkuText.toUpperCase();
+	        $http({
+	    			url : "bundle/addOtherComp.htm",
+				    method : "POST",
+				    data: $scope.formData,
+				    headers: {
+					 "Accept": "application/json; charset=utf-8",
+	                "Cache-Control" : "no-cache",
+	                "Pragma" : "no-cache",
+	                "If-Modified-Since" : "0"
+	               }}).
+			  success(function(data, status, headers) {
+					$window.scrollTo(0,0);
+				  	$scope.formData = data;
+				  	$scope.optionpackprodlist = data.optionpackprodlist;
+				  	$scope.optionpackprodlistprev = angular.copy(data.optionpackprodlist);
+				  	$scope.editchargeshipflag = data.editChargeShipFlag;
+				  	$scope.bundletype = data.bundleType;
+				  	$scope.autoflag = data.autoFlag;
+				  	$scope.custflag = data.custFlag;
+				  	$scope.genericbundle = data.genericBundle;
+				  	$scope.readonly = data.readonly;
+				  	$scope.isshowpriceflag = data.isShowPriceFlag;
+				  	$scope.templateflag=data.templateFlag;
+
+				  	
+					angular.forEach($scope.optionpackprodlist, function(item){	
+			        	$scope.defaultingValues(item);
+					});
+					
+					$scope.addSkuText = '';
+					if (templateFlag == 'true')
+						if(data.warningMessage != undefined){
+							$scope.warningMessage = data.warningMessage;
+						}
+					  // $scope.warningMessage = 'Template price cannot be displayed until all below product instances are selected and the update button has been clicked';
+					$scope.showMsg(data.successMessage,data.errorMessage);
+					$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			  }).
+			  error(function(data, status, headers) {
+					$window.scrollTo(0,0);
+				  	console.log("Error in service");
+			  });
+			} else {
+				$window.scrollTo(0,0);
+				$scope.showMsg('','Please input product number to add');
+			}
+	};
+	 
+	 $scope.delChkAll= false;
+	 $scope.checkDelAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.delChkAll){
+					item.softdeleteflag=true;
+				}else{
+					item.softdeleteflag=false;
+				}
+			});
+	 };
+	 
+	 $scope.hideProdChkAll= false;
+	 $scope.chkHideProdAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.hideProdChkAll){
+					item.hideflag=true;
+				}else{
+					item.hideflag=false;
+				}
+			});
+	 };
+	 
+	 $scope.hidePriceChkAll= false;
+	 $scope.chkHidePriceAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.hidePriceChkAll){
+					item.pricehideflag=true;
+				}else{
+					item.pricehideflag=false;
+				}
+			});
+	 };
+	 
+	 
+	 $scope.localizeChkAll= false;
+	 $scope.chkLocalizeAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.localizeChkAll){
+					item.localizeflag=true;
+				}else{
+					item.localizeflag=false;
+				}
+			});
+	 };
+	 
+	 $scope.inBoxChkAll= false;
+	 $scope.chkInBoxAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.inBoxChkAll){
+					item.intheboxflag=true;
+				}else{
+					item.intheboxflag=false;
+				}
+			});
+	 };
+	 
+	 $scope.shipTogetherChkAll= false;
+	 $scope.chkShipTogetherChkAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.shipTogetherChkAll){
+					item.shiptogetherflag=true;
+				}else{
+					item.shiptogetherflag=false;
+				}
+			});
+	 }; 
+	 $scope.chargeShipChkAll= false;
+	 $scope.chkChargeShipAll=function(){
+		 angular.forEach($scope.optionpackprodlist, function(item){	
+				if($scope.chargeShipChkAll){
+					item.chargeshippingflag=true;
+				}else{
+					item.chargeshippingflag=false;
+				}
+			});
+	 }; 
+	 
+	 $scope.updateBundlePackComponent=function(){
+		 $scope.hideMsg();
+		 $scope.form = [];
+		 indexCount = 0;
+		 changedFlag = false;
+		 bundleId = $routeParams.bundleID;
+		 catalogId = $routeParams.catalogId;
+		 priceDescriptor = $routeParams.priceDescriptor;
+		 priceProfile = $routeParams.priceProfile;		
+		 bundleId = ((bundleId==null || bundleId==undefined)?'':bundleId) ;
+		 catalogId = ((catalogId==null || catalogId==undefined)?'':catalogId) ;
+		 priceDescriptor =  ((priceDescriptor==null || priceDescriptor==undefined)?'':priceDescriptor) ;
+		 priceProfile = ((priceProfile==null || priceProfile==undefined)?'':priceProfile) ;	
+		 
+		 angular.forEach($scope.optionpackprodlist, function(item){
+			 
+			 optionpackprod = {};
+			 optionpackprodprev = $scope.optionpackprodlistprev[indexCount];
+			 indexCount++;
+
+             if(item.softdeleteflag==true){
+            	 optionpackprod.softDeleteFlag = 'Y';
+			 }else{
+				 optionpackprod.softDeleteFlag = 'N';
+			 }
+	  		 if(item.hideflag==true){
+	  			optionpackprod.hideFlag = 'H';
+		     }else{
+		  		optionpackprod.hideFlag = 'S';
+		  	 }
+	  		 if(item.pricehideflag==true){
+	  			optionpackprod.priceHideFlag = 'H';
+		     }else{
+		    	 optionpackprod.priceHideFlag = 'S'; 
+		     }
+	  		 optionpackprod.baseModel = item.basemodel;
+	  		 optionpackprod.sourceProd = item.sourceprod;
+             if(item.localizeflag==true){
+            	 optionpackprod.localizeFlag = 'N';
+ 			 }else{
+ 				optionpackprod.localizeFlag = 'Y';
+ 			 }
+             optionpackprod.dealValue = item.dealvalue;
+             optionpackprod.quantity = item.quantity;
+             optionpackprod.shortDesc = item.shortdesc;
+             optionpackprod.dealId = item.dealid;
+             optionpackprod.configId = item.configid;
+             optionpackprod.price = item.price;
+             optionpackprod.priceDescriptor = item.pricedescriptor;
+             optionpackprod.contextId=item.contextid;
+             optionpackprod.chargeShippingFlag=item.chargeshippingflag;
+             optionpackprod.bundleCompID=item.bundlecompid;
+             optionpackprod.variableQtyFlag = item.variableqtyflag;
+             optionpackprod.baseProdFlag = item.baseprodflag;
+             optionpackprod.requiredFlag = item.requiredflag;
+             optionpackprod.preselectFlag = item.preselectflag;
+             optionpackprod.custFlag = 'N';
+             if(item.intheboxflag==true){
+		  		 optionpackprod.inTheBoxFlag = 'Y';
+		  	 }else{
+		  		 optionpackprod.inTheBoxFlag = 'N';
+		  	 }
+	  		 if(item.shiptogetherflag== true){
+	  			optionpackprod.shipTogetherFlag = 'Y';
+		     } else{
+			    optionpackprod.shipTogetherFlag = 'N';
+		     }
+	  		 if(item.chargeshippingflag== true){
+		  			optionpackprod.chargeShippingFlag = 'Y';
+			     } else{
+				    optionpackprod.chargeShippingFlag = 'N';
+			     }
+ 	  		 if(optionpackprod.softDeleteFlag == 'Y' || optionpackprod.hideFlag != optionpackprodprev.hideflag || optionpackprod.priceHideFlag != optionpackprodprev.pricehideflag||
+ 	  				optionpackprod.baseModel != optionpackprodprev.basemodel || optionpackprod.sourceProd != optionpackprodprev.sourceprod || 
+ 	  				optionpackprod.localizeFlag != optionpackprodprev.localizeflag || optionpackprod.dealValue != optionpackprodprev.dealvalue ||
+ 	  				optionpackprod.quantity != optionpackprodprev.quantity || optionpackprod.chargeShippingFlag != optionpackprodprev.chargeshippingflag){
+  	  	     changedFlag = true;
+	  		 $scope.form.push(optionpackprod);
+
+	     	}
+		 });
+		 
+		 if (changedFlag){
+		 $http({
+				url: "bundle/updateOptionPackComponents.htm?bundleTemplateID="+$routeParams.bundleTemplateID+"&templateFlag="+$routeParams.templateFlag+"&bundleCompID=" + $scope.optionPackSelection + "&custId="+$routeParams.custId+"&bundleID="+bundleId+"&catalogID="+catalogId+"&priceDescriptor="+priceDescriptor+"&priceProfile=" + priceProfile ,
+				method:"POST",
+				data:$scope.form,
+				headers: {
+	               "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	           }
+			 }).
+			  success(function(data, status, headers, config) {
+					$window.scrollTo(0,0);
+				  	$scope.optionpackprodlist = data.optionpackprodlist;
+				  	$scope.optionpackprodlistprev = angular.copy(data.optionpackprodlist);
+				  	$scope.editchargeshipflag = data.editChargeShipFlag;
+				  	$scope.bundletype = data.bundleType;
+				  	$scope.autoflag = data.autoFlag;
+				  	$scope.custflag = data.custFlag;
+				  	$scope.genericbundle = data.genericBundle;
+				  	$scope.readonly = data.readonly;
+				  	$scope.isshowpriceflag = data.isShowPriceFlag;
+				  	
+					angular.forEach($scope.optionpackprodlist, function(item){	
+    				  	$scope.defaultingValues(item);
+				    });
+					$scope.showMsg(data.successMessage,data.errorMessage);
+			  }).
+			  error(function(data, status, headers, config) {
+					$window.scrollTo(0,0);
+				  	console.log("Error in Bundle Option pack Service.");
+			  });
+		 }
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds"); 
+		};
+
+		$scope.showComponentOption = function(componentId){
+			 bundleCompID = $scope.optionPackSelection;
+			 bundleId = $routeParams.bundleID;
+			 catalogId = $routeParams.catalogId;
+			 priceDescriptor = $routeParams.priceDescriptor;
+			 if ($routeParams.templateFlag == "true")
+			     webStorage.session.add('OptionPackPrevPage','#/BundleOptionPack?templateFlag='+$routeParams.templateFlag+'&bundleTemplateID=' + $routeParams.bundleTemplateID + '&custId=' + $routeParams.custId +'&bundleCompID=' + ((bundleCompID== null || bundleCompID== undefined) ? '' : bundleCompID));
+			 else
+				 webStorage.session.add('OptionPackPrevPage','#/BundleOptionPack?templateFlag='+$routeParams.templateFlag+'&bundleTemplateID=' + $routeParams.bundleTemplateID + '&custId=' + $routeParams.custId +'&bundleCompID=' + ((bundleCompID== null || bundleCompID== undefined) ? '' : bundleCompID) + '&bundleID=' + ((bundleId== null || bundleId== undefined) ? '' : bundleId) + "&catalogId="+((catalogId== null || catalogId== undefined) ? '' : catalogId)+"&priceDescriptor="+((priceDescriptor== null || priceDescriptor== undefined) ? '' : priceDescriptor));
+	    	 document.location.href='#/ComponentOptionSelection?bundleTemplateID='+encodeURIComponent($routeParams.bundleTemplateID)+'&templateFlag='+$routeParams.templateFlag+'&task=onLoad&catalogID=&bdlCompID='+encodeURIComponent(componentId)+'&cbdID=&priceDesc=';
+		};
+		$scope.showComponentOptionNewTab = function(componentId){
+			 bundleCompID = $scope.optionPackSelection;
+			 bundleId = $routeParams.bundleID;
+			 catalogId = $routeParams.catalogId;
+			 priceDescriptor = $routeParams.priceDescriptor;
+			 if ($routeParams.templateFlag == "true")
+			     webStorage.session.add('OptionPackPrevPage','#/BundleOptionPack?templateFlag='+$routeParams.templateFlag+'&bundleTemplateID=' + $routeParams.bundleTemplateID + '&custId=' + $routeParams.custId +'&bundleCompID=' + ((bundleCompID== null || bundleCompID== undefined) ? '' : bundleCompID));
+			 else
+				 webStorage.session.add('OptionPackPrevPage','#/BundleOptionPack?templateFlag='+$routeParams.templateFlag+'&bundleTemplateID=' + $routeParams.bundleTemplateID + '&custId=' + $routeParams.custId +'&bundleCompID=' + ((bundleCompID== null || bundleCompID== undefined) ? '' : bundleCompID) + '&bundleID=' + ((bundleId== null || bundleId== undefined) ? '' : bundleId) + "&catalogId="+((catalogId== null || catalogId== undefined) ? '' : catalogId)+"&priceDescriptor="+((priceDescriptor== null || priceDescriptor== undefined) ? '' : priceDescriptor));
+	    	 return'#/ComponentOptionSelection?bundleTemplateID='+encodeURIComponent($routeParams.bundleTemplateID)+'&templateFlag='+$routeParams.templateFlag+'&task=onLoad&catalogID=&bdlCompID='+encodeURIComponent(componentId)+'&cbdID=&priceDesc=';
+		};
+		 $scope.addEclipseBdlComponent=function()
+		 {
+			 propagatedChanges = false;
+			 bundleCompID = $scope.optionPackSelection;
+			 bundleId = $routeParams.bundleID;
+			 catalogId = $routeParams.catalogId;
+			 priceDescriptor = $routeParams.priceDescriptor;
+			 if ($routeParams.templateFlag == "true")
+			     webStorage.session.add('OptionPackPrevPage','#/BundleOptionPack?templateFlag='+$routeParams.templateFlag+'&bundleTemplateID=' + $routeParams.bundleTemplateID + '&custId=' + $routeParams.custId +'&bundleCompID=' + ((bundleCompID== null || bundleCompID== undefined) ? '' : bundleCompID));
+			 else
+				 webStorage.session.add('OptionPackPrevPage','#/BundleOptionPack?templateFlag='+$routeParams.templateFlag+'&bundleTemplateID=' + $routeParams.bundleTemplateID + '&custId=' + $routeParams.custId +'&bundleCompID=' + ((bundleCompID== null || bundleCompID== undefined) ? '' : bundleCompID) + '&bundleID=' + ((bundleId== null || bundleId== undefined) ? '' : bundleId) + "&catalogId="+((catalogId== null || catalogId== undefined) ? '' : catalogId)+"&priceDescriptor="+((priceDescriptor== null || priceDescriptor== undefined) ? '' : priceDescriptor));
+			 if($routeParams.templateFlag == "true")
+		        document.location.href="#/EclipseSearchAndAdd?templateFlag="+$routeParams.templateFlag+"&bundleTemplateID="+$routeParams.bundleTemplateID+"&parentCompId="+bundleCompID;
+			 else
+    			 document.location.href="#/EclipseSearchAndAdd?templateFlag="+$routeParams.templateFlag+"&bundleTemplateID="+$routeParams.bundleTemplateID+"&parentCompId="+bundleCompID+"&bundleID="+((bundleId== null || bundleId== undefined) ? '' : bundleId)+"&catalogId="+((catalogId== null || catalogId== undefined) ? '' : catalogId)+"&priceDescriptor="+((priceDescriptor== null || priceDescriptor== undefined) ? '' : priceDescriptor); 
+		 };
+		 
+		 $scope.convertToDecimal2Function = function(item){
+				if(!item){
+					return "N/A";
+				}
+				
+				if(item.length != 0 ){
+					return item.toFixed(2);
+				}else{
+					return "";
+				}
+			};
+}]);
+
+function isNumber(evt) {
+    evt = (evt) ? evt : window.event;
+    var charCode = (evt.which) ? evt.which : evt.keyCode;
+    if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+        return false;
+    }
+    return true;
+};
+
+function rdd_chk(e)
+{
+    var v0 = e.value;
+    if (v0 == null)
+        return;
+
+    var ok = true;
+    var v1 = "";
+    for (var i=0; i<v0.length; i++)
+    {
+        var c = v0.charAt(i);
+        if (c >= '0' && c <= '9')
+            v1 += c;
+        else
+            ok = false;
+    }
+    if (!ok)
+    {
+        alert("Please enter a number for Quantity value.");
+        e.value = v1;
+    }
+};

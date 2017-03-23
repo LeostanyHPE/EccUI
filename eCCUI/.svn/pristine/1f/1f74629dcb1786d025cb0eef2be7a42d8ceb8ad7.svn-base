@@ -1,0 +1,23 @@
+package com.hp.ecc.ui.biz;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+import com.hp.ecc.ui.biz.ResponseStatus;
+
+/**
+ * an util class used by BizMgr
+ * 
+ * @author 
+ * @version 1.0
+ */
+public class BizMgrUtil {
+	public static ResponseStatus getResponseStatus(String statusCode,BizObject bizObj, String objectName) {
+		ResponseStatus rs = new ResponseStatus(statusCode, objectName);
+		rs.setBizObj(bizObj);
+		return rs;
+	}
+
+	public static ResponseStatus getResponseStatus(String statusCode,BizObject bizObj) {
+		ResponseStatus rs = new ResponseStatus(statusCode, bizObj);
+		return rs;
+	}
+}//class

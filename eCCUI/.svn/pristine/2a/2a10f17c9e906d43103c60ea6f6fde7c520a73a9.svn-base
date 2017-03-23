@@ -1,0 +1,1022 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.controller;
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.biz.catalog.CatalogProgramFilterMgr;
+import com.hp.ecc.ui.biz.catalog.StandardFilterMgr;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.category.Category;
+import com.hp.ecc.ui.biz.category.CategoryMgr;
+import com.hp.ecc.ui.biz.category.SearchMgr;
+import com.hp.ecc.ui.biz.csog.CsogDefaultsMgr;
+import com.hp.ecc.ui.biz.csog.DefaultDataUtil;
+import com.hp.ecc.ui.biz.csog.PrePopulateDefaultsMgr;
+import com.hp.ecc.ui.biz.csog.SogCatDefaultBean;
+import com.hp.ecc.ui.biz.csog.SogInfo;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.format.CatalogFormat;
+import com.hp.ecc.ui.biz.format.CatalogFormatInfo;
+import com.hp.ecc.ui.biz.format.CatalogFormatMgr;
+import com.hp.ecc.ui.biz.format.FileFormat;
+import com.hp.ecc.ui.biz.pricetier.PriceTierUtil;
+import com.hp.ecc.ui.biz.processor.catalog.ChildCatalogProcessor;
+import com.hp.ecc.ui.biz.processor.catalog.ListChildCatalogProcessor;
+import com.hp.ecc.ui.biz.processor.catalog.ViewChildCatalogOnlyProcessor;
+import com.hp.ecc.ui.biz.processor.catalog.ViewChildCatalogProcessor;
+import com.hp.ecc.ui.biz.processor.customer.CustomerProcessor;
+import com.hp.ecc.ui.biz.product.CatalogProductMgr;
+import com.hp.ecc.ui.biz.publish.Task;
+import com.hp.ecc.ui.biz.publish.TaskMgr;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.biz.admin.Auth;
+import com.hp.ecc.ui.common.biz.admin.AuthMgr;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.CatWebUtil;
+import com.hp.ecc.ui.common.web.catalog.master.MasterWebUtil;
+import com.hp.ecc.ui.db.dao.ChildCatalogDao;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.ChildCatalogBean;
+import com.hp.ecc.ui.view.beans.EditCatalogForm;
+import com.hp.ecc.ui.view.validator.Validator;
+import com.hp.ecc.ui.web.util.EditCatalogConverter;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author reddvino
+ *
+ */
+@Controller
+public class ChildCatalogController {
+	
+	/*
+	 * List Child Catalog Functionality STARTS
+	 * 
+	 */
+	private static final Logger logger = LoggerFactory.getLogger(ChildCatalogController.class);
+	
+	ListChildCatalogProcessor listChildCatalogProcessor = null;
+	
+	ChildCatalogController(){
+		listChildCatalogProcessor = new ListChildCatalogProcessor();
+	}
+	@Autowired
+	ChildCatalogProcessor childCatalogProcessor;
+	
+	@Autowired
+	CustomerProcessor customerProcessor;
+	
+	@RequestMapping(value = "/childCatalog/listChildCatalogs.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String listChildCatalogs(HttpServletRequest request){
+			JSONObject listChildJson = null;
+			listChildJson=	new JSONObject();
+			JSONObject jsonFormObject = null;
+			jsonFormObject = new JSONObject();
+			ChildCatalogBean form = null;
+			Gson  gson = null;
+			form = new ChildCatalogBean();
+			gson = new Gson();
+			EditCatalogForm form0 = new EditCatalogForm();
+			Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+            Customer currentCustomer = PagesUtil.getCustomer ( request );
+            String custKey = currentCustomer.getCustKey ();
+		    String custDun = currentCustomer.getCustDUN ();
+		    String custId = currentCustomer.getCustID ();
+		   
+		    String regionCode = PagesUtil.getRegionCode ( request );
+			///listChildJson.put("form", custJsonObject);
+		    String tenantCode = TenantConstants.getMixedSharedTenant(PagesUtil.getTenantCode(request));
+
+		    // added by ISHU
+		    if ( ses.isAuthorized ( PermissionCode.PUBLISH_IN_CSV_FORMAT_ONLY )
+		         && !ses.isAuthorized ( PermissionCode.PUBLISH_MVC_IN_ANY_FORMAT ) ) {
+		      form.setIsPublishInCSVFormatOnlyEnabled ( "true" );
+		      jsonFormObject.put("isPublishInCSVFormatOnlyEnabled", "true");
+		    } else {
+		      form.setIsPublishInCSVFormatOnlyEnabled ( "false" );
+		      jsonFormObject.put("isPublishInCSVFormatOnlyEnabled", "false");
+		    }
+		    if ( ses.isAuthorized ( PermissionCode.SCHEDULE_PUBLISH )
+		         || ses.isAuthorized ( PermissionCode.PUBLISH_SINGLE_STD_CATALOG ) ) {
+		      form.setIsSchedulePublishEnabled ( "true" );
+		      jsonFormObject.put("isSchedulePublishEnabled", "true");
+		    } else {
+		      form.setIsSchedulePublishEnabled ( "false" );
+		      jsonFormObject.put("isSchedulePublishEnabled", "false");
+		    }
+
+		    JSONArray dealList = listChildCatalogProcessor.processDeal ( custId, custDun, custKey, regionCode, PagesUtil.getDbRegionToConnect(request) );
+			boolean getAll = PagesUtil.isAuthViewPrivateCatalog ( ses );
+
+			JSONArray catalogList = listChildCatalogProcessor.processChildCatalog ( currentCustomer, getAll, PagesUtil.getDbRegionToConnect(request));
+			JSONArray pubCatalogList = listChildCatalogProcessor.processPublishCatalog ( form, custKey,regionCode, PagesUtil.getDbRegionToConnect(request),tenantCode );
+		   /// form.setCustomer ( currentCustomer );
+		    form.setCustomerID ( custId );
+		    form.setDUN ( custDun );
+
+			listChildJson.put("dealList", dealList);	
+			listChildJson.put("catalogList", listChildCatalogProcessor.getSynchronisedPubCatList ( pubCatalogList, catalogList ));	
+			listChildJson.put("supplierId", currentCustomer.getSupplierID());
+
+		    if ( ses.isAuthorized ( PermissionCode.CREATE_SUBCATALOG ) ) {
+		      form.setCanDeleteCatalog ( true );
+		      jsonFormObject.put("canDeleteCatalog", "true");
+		    } else {
+		      form.setCanDeleteCatalog ( false );
+		      jsonFormObject.put("canDeleteCatalog", "false");
+		    }
+		    listChildJson.put("form", jsonFormObject);
+			return listChildJson.toString();
+	}//listMasterCatalogs
+	
+	@RequestMapping(value = "/childCatalog/productCount.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String retrieveCatalogProductCount(Model model, HttpServletRequest request){
+		String childCatalogId = request.getParameter("childCatalogID");
+		Gson gson= null;
+		gson = new Gson();
+		HashMap<String, Object> map = null;
+		map = new HashMap<String, Object>();
+		
+		
+		int productSize = 0;
+		if(childCatalogId != null){
+		   productSize = listChildCatalogProcessor.retrieveCatalogProductCount(childCatalogId, PagesUtil.getDbRegionToConnect(request));		  
+		}
+	 	map.put("productCountCatalogId", childCatalogId);
+		map.put("catalogProductCount", productSize);
+		
+		return	gson.toJson(map);
+	}//retrieveCatalogProductCount
+	
+	@RequestMapping(value = "/childCatalog/deleteCatalogs.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String deleteChildCatalogs(Model model, HttpServletRequest request){
+		JSONObject listChildDeleteJson = null;
+		listChildDeleteJson=	new JSONObject();
+		
+		Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+		
+		    String catalogIds = request.getParameter("catalogIDs");
+		    if(!StrUtil.isEmpty(catalogIds)){
+			    String[] childListSelected = catalogIds.split(",");
+			    if ( childListSelected == null || childListSelected.length < 1 ) {
+			    	listChildDeleteJson.put("errorMsg", "You must select at least one catalog before clicking Delete.");
+			    }
+			    else {
+			      List list = listChildCatalogProcessor.deleteCatalogFromDB ( childListSelected, PagesUtil.getDbRegionToConnect(request) );
+			      listChildDeleteJson.put("successMsg", "The selected catalogs have been deleted.");
+			      
+			      logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> deleteChildCatalogs() : selected catalogs "+ catalogIds + " are deleted by "+ses.getLoginAccId());
+			    }
+		    }
+		return listChildDeleteJson.toJSONString();
+	}//deleteMasterCatalogs
+	
+	@RequestMapping(value = "/childCatalog/updateCatalogs.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String updateChildCatalogs(HttpServletRequest request){
+		JSONObject listChildUpdateJson = null;
+		listChildUpdateJson=	new JSONObject();
+			ChildCatalogBean form = new ChildCatalogBean();
+			Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+			Customer cust = ses.getCurrentCustomer ( true );
+			String cust_id =cust.getCustKey();
+			///String[] selectedCatalogs = form.getSelectedCatalogsStatus();
+			String catalogIds = request.getParameter("catalogIDs");
+			String[] selectedCatalogs = null;
+			if(!StrUtil.isEmpty(catalogIds)){
+				selectedCatalogs = catalogIds.split(",");
+			}else{
+				selectedCatalogs = null;
+			}
+				String status = request.getParameter("status");
+				String task = request.getParameter("task");
+				///String status = form.getStatusUpdate();
+				JSONObject jsonObject = listChildCatalogProcessor.processUpdateStatus(task, selectedCatalogs, status, cust_id, PagesUtil.getDbRegionToConnect(request));
+				
+				logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> updateChildCatalogs() : selected catalogs "+ catalogIds + " are updated by "+ses.getLoginAccId());
+				
+				return jsonObject.toJSONString();
+	}
+	
+	/*
+	 * List Child Catalog Functionality END
+	 * 
+	 */
+	
+	/* *************************************************************************************
+	 * **************** View Child Catalog Start ****************************************
+	 * *************************************************************************************/
+	public static final String MASTER_CAT_SHOW_FFS_FOR_OPTIONS_FLAG = "hp.comcat.web.catalog.viewCatalogAction.ShowFFSForOptions";
+
+	public static final String USER_CAT_SORT_INFO = "USER_CAT_SORT_INFO";
+
+	public static final String ECCMA = "ECCMA";
+	public static final String UNDP = "UNDP";
+	@Autowired
+	ViewChildCatalogProcessor viewChildCatalogProcessor;
+	@Autowired
+	ViewChildCatalogOnlyProcessor viewChildCatalogOnlyProcessor;
+	
+	@RequestMapping(value = "/childcatalog/viewChildCatalog.htm", headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody String viewChildCatalog(Model model, HttpServletRequest request){
+		
+		JSONObject viewChildCatalogData = new JSONObject();
+		Gson gson = new Gson();
+		EditCatalogForm form = new EditCatalogForm();
+		
+		
+		Session session = SessionMgr.getSessionMgr().getSession(request, false);
+		User user = (User) session.getUser();
+		AuthMgr authMgr = AuthMgr.getAuthMgr();
+		Auth auth = authMgr.getAuth(user);
+		session.setAttribute("AUTH", auth);
+		
+		String showFFSflag = (String) session
+				.getAttribute(MASTER_CAT_SHOW_FFS_FOR_OPTIONS_FLAG);
+		if ("true".equals(showFFSflag)) {
+			form.setShowFFSForOptions(true);
+		}
+		if (auth.isPermit(PermissionCode.CREATE_SUBCATALOG)) {
+			form.setCanEditCatalog(true);
+		} else {
+			form.setCanEditCatalog(false);
+		}
+		form.setCanArchieve(auth
+				.isPermit(PermissionCode.EDIT_SUBCATALOG_ARCHIVE));
+		if (auth.isPermit(PermissionCode.DELETE_PRODUCTS_IN_SUBCATALOG)) {
+			form.setIsDeleteProductEnabled("true");
+		} else {
+			form.setIsDeleteProductEnabled("false");
+		}
+		
+		/*if (auth.isPermit(PermissionCode.SET_PRODUCT_OPTIONS_IN_SUBCATALOG)) {
+			form.setIsSetProductOptionInSubCatEnabled("true");
+		} else {
+			form.setIsSetProductOptionInSubCatEnabled("false");
+		}*/	
+		
+		Customer cust = session.getCurrentCustomer(false);
+		String catalog_id = ( String ) request.getAttribute ( "catalogID" );
+		
+	    if ( catalog_id == null ) {
+	    	catalog_id = request.getParameter ( "catalogID" );
+		}
+		if ( catalog_id == null ) {
+			catalog_id = session.getAttribute ("catalogID").toString();
+	    }
+		form.setMasterID(catalog_id);
+		Catalog catalog = EditCatalogConverter.retrieveCatalogInfo(catalog_id, session.getFdbRegionToConnect());
+		session.setAttribute("CHILDCATALOGINFO", catalog);
+		
+		String custKey = cust.getCustKey();
+		String custDun = cust.getCustDUN();
+
+		String publishBatch = catalog.getPublishBatch();
+		form.setTermsAndCondition(catalog.getTermsAndCondition());
+		form.setPriceMerge(catalog.getPriceMerge());
+		
+		String modnum = catalog.getModNum();
+		form.setModNumber(modnum);
+		form.setFModDate(catalog.getModDate());
+		form.setCustomerType(cust.getCustType());
+		form.setCustomerName(cust.getCustName());
+		form.setDUN(custDun);
+		boolean fedCust=cust.isFedCust();
+		boolean gsaCust=cust.isGSACustomer();
+		viewChildCatalogData.put("fedCust",fedCust);
+		viewChildCatalogData.put("gsaCust",gsaCust);
+		// if Publish Batch dropdown is selected
+		if (publishBatch == null) {
+			form.setBatchViewDisplayed(false);
+		} else {
+			form.setBatchViewDisplayed(true);
+		}
+
+		EditCatalogConverter.setFormInfo(form, catalog, "view", session.getFdbRegionToConnect());
+		assignRegionalValues(form, PagesUtil.getDbRegionToConnect(request));
+		
+		// find categorization catalog and associated categorization
+		String fulfillMentSiteId = catalog.getFFSID();
+		form.setFulfillmentSiteId(fulfillMentSiteId);
+		
+		String fulfillMentSiteName = MasterWebUtil
+				.getFulFillMentSiteName(fulfillMentSiteId, PagesUtil.getDbRegionToConnect(request));
+		form.setFulfillmentSiteName(fulfillMentSiteName);
+		String catId = catalog.getCategorizationID();
+
+		form.setRegionCode(catalog.getRegionCode());
+		JSONArray priceprocList = new ChildCatalogDao().getPriceProcedure(cust,catalog.getPriceDescriptor(), PagesUtil.getDbRegionToConnect(request));
+		String prcProc = null;
+		String listFlag = null;
+
+		if (!StrUtil.isListEmpty(priceprocList)) {
+			prcProc = ((JSONObject) priceprocList.get(0)).get("prc_rule_desc").toString();///getProcedureName();
+			listFlag = ((JSONObject) priceprocList.get(0)).get("nvl(c.list_price_check,'n')").toString();///getListPriceCheckStr();
+		}
+		form.setPriceProcedure(prcProc != null ? prcProc : "");
+		form.setShopListFlag(listFlag != null ? listFlag : "N");
+		form.setPriceMerge(catalog.getPriceMerge());
+		form.setFModDate(catalog.getModDate());
+		form.setModNumber(modnum);
+		form.setExchangeRateType(catalog.getExchangeRateType());
+
+		// process list, attach nodeId to every product and make CAT99999
+		// categories empty
+		if (!StrUtil.isEmpty(catId)) {
+			Categorization catInfo = CategorizationMgr.getCategorization(Integer.parseInt(catId), PagesUtil.getDbRegionToConnect(request));
+			session.setAttribute("CATEGORIZATION_INFO", catInfo);
+		}
+
+/*		if (isShowStatus(request)) {
+			// TODO
+			String msg = convertStatusToMsg(form.getLoadStatus());
+			if (!StrUtil.isEmpty(msg)) {
+				vw.getMsgs().add(msg);
+			}
+			
+			System.out.println("msg is***"+msg);
+		}*/
+
+		CatalogMgr catalogMgr = new CatalogMgr();
+
+		// MDCP ORG ID
+		if (null != catalog.getMdcpOrgId()) {
+			form.setMdcpOrgId(catalog.getMdcpOrgId());
+			
+		} else {
+			String mdcp_id = catalogMgr.get_MdcpId(catalog, PagesUtil.getDbRegionToConnect(request));
+			if (mdcp_id != null) {
+				form.setMdcpOrgId(mdcp_id);
+			} else {
+				form.setMdcpOrgId("");
+			}
+			
+		}
+		
+		String[] stdNames =viewChildCatalogProcessor.getCatalogStandardFiltersNames(catalog.getId(), PagesUtil.getDbRegionToConnect(request));
+		form.setStandardFilterNames(stdNames);
+		String[] pkNames = viewChildCatalogProcessor.getCatalogProgramsNames(catalog.getId(), PagesUtil.getDbRegionToConnect(request));
+		form.setPgmKeyNames(pkNames);
+
+		if (catalog != null) {
+			if (catalog.getUnspscVersion() == null) {
+				form.setUnspscType(UNDP);
+			} else {
+				form.setUnspscType(catalog.getUnspscVersion());
+			}
+		} else {
+			form.setUnspscType(UNDP);
+		}
+		if (catalog != null) {
+			if (catalog.getB2biCustomerFlag() == null) {
+				form.setb2biCustomerFlag(false);
+			} else {
+				if (catalog.getB2biCustomerFlag().equals("Y"))
+					form.setb2biCustomerFlag(true);
+				else
+					form.setb2biCustomerFlag(false);
+			}
+		} else {
+			form.setb2biCustomerFlag(false);
+		}
+		Collection pgmKeys = PagesUtil.getPgmList(custKey, PagesUtil.getDbRegionToConnect(request));
+		viewChildCatalogData.put("pgm_list", pgmKeys);
+		viewChildCatalogData.put("form", gson.toJson(form));
+		
+		return viewChildCatalogData.toJSONString();
+	
+	}
+	
+	
+	/**
+	 * if the showStatus parameter is set
+	 * 
+	 */
+	protected boolean isShowStatus(HttpServletRequest request) {
+		String showStr = request.getParameter("showStatus");
+		boolean show = false;
+		if (!StrUtil.isEmpty(showStr)) {
+			show = (showStr.equalsIgnoreCase("yes")) ? true : false;
+		}
+		return show;
+	}
+
+	/**
+	 * convert the status flag to message
+	 * 
+	 */
+	protected String convertStatusToMsg(String status) {
+		String msg = null;
+		if (status.equalsIgnoreCase("L")) {
+			msg = "Catalog loading is in process.";
+		} else if (status.equalsIgnoreCase("V")) {
+			msg = "Catalog validation is in process.";
+		} else if (status.equalsIgnoreCase("F")) {
+			msg = "Catalog loading status is fail.";
+		}
+
+		return msg;
+
+	}
+	
+	private EditCatalogForm assignRegionalValues(EditCatalogForm form, String adbRegionToConnect) {
+
+		if (form.getPriceDescriptor() != null) {
+			String reg = PagesUtil.getRegion(form.getPriceDescriptor()
+					.substring(0, 2), adbRegionToConnect);
+			if (reg != null) {
+				form.setLARegionSaleCountry(reg.equalsIgnoreCase("LA") ? true
+						: false);
+				form.setAPRegionSaleCountry(reg.equalsIgnoreCase("AP") ? true
+						: false);
+				form.setEURegionSaleCountry(reg.equalsIgnoreCase("EU") ? true
+						: false);
+			}
+		}
+		return form;
+	}
+	@RequestMapping(value = "/childcatalog/viewOnlyCatalog.htm", headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody String viewChildCatalogOnly(Model model, HttpServletRequest request){
+			JSONObject viewChildCatalog=new JSONObject();
+			Gson gson=new Gson();
+			Customer customer = null;
+			Session session=SessionMgr.getSessionMgr().getSession(request, false);
+			EditCatalogForm editCatalogForm=new EditCatalogForm();
+			//Get child catalog  id 
+			String catalogID = request.getParameter ( "catalogID" );
+			
+			//Get customer key
+			customer = PagesUtil.getCustomer ( request );
+			if(request.getParameter("custKey")!=null && !request.getParameter("custKey").isEmpty()){
+				customer = customerProcessor.getCustomer(request.getParameter("custKey"), PagesUtil.getDbRegionToConnect(request));
+			    editCatalogForm.setCustomerId(customer.getCustId());
+			}
+		    String custKey = customer.getCustKey ();
+		    String custDun = customer.getCustDUN ();
+			String catalogId = editCatalogForm.getID ();
+
+			editCatalogForm.setCustomerName ( customer.getCustName () );
+		    editCatalogForm.setDUN ( custDun );
+		    viewChildCatalogOnlyProcessor.setFormInfo ( editCatalogForm, catalogID, "view" ,session.getFdbRegionToConnect());
+			if(request.getParameter("custKey")!=null && !request.getParameter("custKey").isEmpty()){
+			   editCatalogForm.setSupplierID(customer.getSupplierID());
+			}
+		    viewChildCatalog.put("form", gson.toJson(editCatalogForm));
+		
+		    return viewChildCatalog.toJSONString();		
+	}//viewChildCatalogOnly
+	
+	/* *************************************************************************************
+	 * **************** Create Child Catalog On Load Start ****************************************
+	 * *************************************************************************************/
+	
+	@RequestMapping(value = "/createChildCatalog/processRetrieval.htm", headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody String createChildCatalogProcessRetrieval(Model model, HttpServletRequest request){
+		JSONObject childCatalog = new JSONObject();
+		Catalog catalog = null;
+		Gson gson = new Gson();
+		Customer currentCustomer = null;
+		JSONArray langLst=null;
+		String custKey = null;
+		List categoryList=null;
+		String fmtName = null;
+		String fmtKey = null;
+		List formatList=null;
+		JSONArray pgmKeyOptions=null;
+		JSONArray custFormatList=null;
+		SogCatDefaultBean catDefaults = null;
+		currentCustomer =  PagesUtil.getCustomer ( request );
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+	    EditCatalogForm form =new EditCatalogForm();
+	    if ( ses.isAuthorized ( PermissionCode.SET_SUBCATALOG_STATUS ) ) {
+	        form.setIsSubCatalogStatusEnabled ( "true" );
+	      }
+	      else {
+	        form.setIsSubCatalogStatusEnabled ( "false" );
+
+	      }
+	    String catalog_id = request.getParameter("catalog_id");
+	    String op = request.getParameter("op");
+	    if("copy".equalsIgnoreCase(op)){
+	    	op="copy";
+	    }
+	    else{
+	    	op="create";
+	    }
+	    form.setOp(op);
+	    custKey = currentCustomer.getCustKey();
+	    String regionCode=ses.getUserRegionCode();
+	    String task = request.getParameter("action");
+	    // get Customer data for the Catalog Information area
+	    form.setID ( null ); 
+	    form.setCustomerName ( currentCustomer.getCustName () );
+	    form.setDUN ( currentCustomer.getCustDUN () );
+	    form.setSupplierID ( currentCustomer.getSupplierID () );
+	    form.setRegionCode ( currentCustomer.getRegionCode () );
+	    form.setPA ( currentCustomer.getPaNo () );
+	    form.setReleasePoint ( currentCustomer.getReleasePoint () );
+	    form.setChannelTypesArray (currentCustomer.getChannelTypesArray () );
+	    form.setLanguage ( currentCustomer.getDefaultLangCode());
+	    boolean fedCust=currentCustomer.isFedCust();
+		boolean gsaCust=currentCustomer.isGSACustomer();
+		childCatalog.put("fedCust", fedCust);
+		childCatalog.put("gsaCust", gsaCust);
+		
+	    //Get list of Languages
+	    langLst=childCatalogProcessor.getLanguages ( request );
+	    childCatalog.put("languageList",langLst);
+	    
+		
+		//Get ProgramKey Option List
+		pgmKeyOptions=childCatalogProcessor.getAvaliablePgmList ( custKey, PagesUtil.getDbRegionToConnect(request) );
+		childCatalog.put("programKeyOptions", pgmKeyOptions);	
+		
+		//Get the Category List
+		categoryList=childCatalogProcessor.getCategoryListByCustAndRegionWithTenant ( custKey,regionCode, PagesUtil.getDbRegionToConnect(request), TenantConstants.getMixedSharedTenant(PagesUtil.getTenantCode(request)));
+		childCatalog.put("categoryList",gson.toJson(categoryList));
+		
+	    if ( op.equals ( "create" ) ) {
+	    	// Get the Customer's current list of Master Catalogs
+	    	List masterList = EditCatalogConverter.retrieveMasterListByCustKeyForChild ( custKey , ses.getFdbRegionToConnect());
+	    	form.setMasterList ( masterList );
+	      
+	    	//Fetch the catalog defaults
+	    	CsogDefaultsMgr defaultMgr = ( CsogDefaultsMgr ) ses.getAttribute ( "csog_prepopulated_defaults" );
+	     if ( defaultMgr != null ) {
+			PrePopulateDefaultsMgr preMgr = new PrePopulateDefaultsMgr();
+			SogInfo sInfo = preMgr.getSogIdAndName(custKey, PagesUtil.getDbRegionToConnect(request));
+			if ( sInfo != null){
+				form.setSogId(sInfo.getSogId());
+				form.setSogName(sInfo.getSogName());
+	      	}
+	      	catDefaults = defaultMgr.getCatDefaults();
+	      	form.setDefaults ( catDefaults );
+	      if(task == null)
+	      	{
+	      		form.setCatalogFormat(catDefaults.getCatFormat());
+	      		form.setCatalogName(catDefaults.getCatalogName());
+	      	    form.setModNumber(catDefaults.getModNumber());
+	      	    form.setModDateStr(catDefaults.getCatModDate());
+	      		form.setLanguage(catDefaults.getLanguage());
+	      		form.setStatus(catDefaults.getStatus());
+	      		form.setCategoryType(catDefaults.getCategory());
+	      		System.out.println("catDefaults.getCategory()"+catDefaults.getCategory());
+	      		form.setExpiryDateStr(catDefaults.getCatExpiryDate());
+	      		form.setFilterList(catDefaults.getCatFilterList());
+	      	}	
+	      }
+	      else if ( "reload".equals ( task )) {
+	      	//setCrtEditCategory ( form, request, task );
+	    	 categoryList = PagesUtil.getCategoryListByCustAndRegion ( request );
+	    	 childCatalog.put("categoryList",gson.toJson(categoryList));
+	 		 String categorizationID = form.getCategoryType ();
+	 		 if ( StrUtil.isEmpty ( categorizationID ) ) {
+	 			 Customer cust = ses.getCurrentCustomer ( true );
+	 			 String catId = cust.getCategorizationID ();
+	 			 if ( !StrUtil.isEmpty ( catId ) ) {
+	 				 form.setCategoryType ( catId );
+	 			 } }
+		        String catFormat = form.getCatalogFormat();
+		        String catLanguage = form.getLanguage();
+		        
+		        List defaultFilterList = null;
+		        if((catDefaults != null) && (form.getReloadType() == IApplicationConstants.FORMAT_RELOAD))
+		        {
+		            	defaultFilterList = catDefaults.getCatFilterList(catFormat);
+			    }
+		  else
+		        {	
+			     	String []  stdFilterList = form.getStandardFilterKey();
+		        	if(stdFilterList != null)
+		        	{    
+		        	    if(defaultFilterList == null)
+		    	            defaultFilterList = new ArrayList();
+		        	    for (int i = 0; i < stdFilterList.length; i++) {
+		        	        
+		        	        DefaultDataUtil dataUtil = new DefaultDataUtil();
+		        	        dataUtil.setItemValue(stdFilterList[i]);
+		        	        defaultFilterList.add(dataUtil);
+		        	    }
+		        	}
+		        }	
+		        form.setFilterList(defaultFilterList);
+		  }
+	      else {
+	       // setCrtEditCategory ( form, request, task );
+	    	  categoryList = PagesUtil.getCategoryListByCustAndRegion ( request );
+	    	  childCatalog.put("categoryList",gson.toJson(categoryList));
+	 		 String categorizationID = form.getCategoryType ();
+	 		 if ( StrUtil.isEmpty ( categorizationID ) ) {
+	 			 Customer cust = ses.getCurrentCustomer ( true );
+	 			 String catId = cust.getCategorizationID ();
+	 			 if ( !StrUtil.isEmpty ( catId ) ) {
+	 				 form.setCategoryType ( catId );
+	 			 }
+	 		 }
+	      }
+	    }
+	    else {
+	      catalog = EditCatalogConverter.retrieveCatalogInfo ( catalog_id, ses.getFdbRegionToConnect() );
+	      EditCatalogConverter.setFormInfo ( form, catalog, op, ses.getFdbRegionToConnect() );
+	      //setCrtEditCategory ( form, request, task );
+	      categoryList = PagesUtil.getCategoryListByCustAndRegion ( request );
+	      childCatalog.put("categoryList",gson.toJson(categoryList));
+ 		  String categorizationID = form.getCategoryType ();
+ 		 if ( StrUtil.isEmpty ( categorizationID ) ) {
+ 			// Customer cust = ses.getCurrentCustomer ( true );
+ 			 String catId = currentCustomer.getCategorizationID ();
+
+ 			 if ( !StrUtil.isEmpty ( catId ) ) {
+ 				 form.setCategoryType ( catId );
+ 			 }
+ 		 }
+
+	    }
+
+	    /**
+		 * For Price tier based catalog generic program list must be loaded
+		 * instead of customer specific programs
+		 */
+		if ( "create".equalsIgnoreCase( op )|| ( "copy".equalsIgnoreCase( op )  && "Y".equalsIgnoreCase(form.getIsTiedToPriceTier()))) 
+			{
+			String genCustKey = PriceTierUtil.getGenericProgramCustomer(PagesUtil.getRegionCode(request), ses.getFdbRegionToConnect() , PagesUtil.getTenantCode ( request ));
+	
+			//get the generic program List
+			JSONArray genPgmList=null;
+			genPgmList=childCatalogProcessor.getAvaliablePgmList ( genCustKey, PagesUtil.getDbRegionToConnect(request) );
+			childCatalog.put("genPgmList",genPgmList);
+		} 
+		
+	    if ( ses.isAuthorized ( PermissionCode.PUBLISH_IN_CSV_FORMAT_ONLY ) && !ses.isAuthorized ( PermissionCode.PUBLISH_MVC_IN_ANY_FORMAT ) ) {
+	       CatalogFormatMgr cfMgr = CatalogFormatMgr.getCatalogFormatMgr ();
+	       CatalogFormatInfo catFormat = cfMgr.getDefaultCatalogFormatInfoByName ( "Excel" );
+	       formatList = new ArrayList ( 1 );
+	       formatList.add ( catFormat );
+	    }
+	    else {
+
+	      formatList = CatWebUtil.getCustFormatList ( request, catalog, op );
+	      custFormatList=childCatalogProcessor.getCustFormatList ( request, catalog, op , PagesUtil.getDbRegionToConnect(request));
+	      childCatalog.put("custFormatList",custFormatList);
+	    }
+
+	    if ( !StrUtil.isEmpty ( form.getCatalogFormat () ) ) {
+	      CatalogFormatInfo info = CatalogFormatMgr.getCatalogFormatMgr ().  getCatalogFormatByCatFormatKeyNew ( form. getCatalogFormat () );
+	      fmtName = info.getCatFormatName ();
+	      fmtKey = info.getCatFormatKey ();
+	      }
+	    
+	      else if ( !StrUtil.isListEmpty ( formatList ) ) {
+	      fmtName = ( ( CatalogFormatInfo ) formatList.get ( 0 ) ).getCatFormatName ();
+	      fmtKey = ( ( CatalogFormatInfo ) formatList.get ( 0 ) ).getCatFormatKey ();
+	    }
+	    String outputFmt = form.getCatalogFormat ();
+	    if ( fmtKey != null ) {
+	      TaskMgr taskMgr = new TaskMgr ();
+	      //stores the task and batch number in list
+	      List batchIdList = taskMgr.selectBatchNum ( fmtKey );
+	      if ( batchIdList.size () == 0 ) {
+	        form.setBatchDisplayed ( false );
+	      }
+	      else {
+	        form.setBatchDisplayed ( true );
+	       /* request.setAttribute ( "EditCatalogForm.optionsBatch"
+	                               , getDisplayListForBatchNum ( batchIdList ) );*///remove laetr
+	        JSONArray optionsBatch=null;
+	        optionsBatch=getDisplayListForBatchNum ( batchIdList );
+	        childCatalog.put("publishBatch", optionsBatch);
+	      }
+	    }
+	    List stdFilterOptions=null;
+	    stdFilterOptions=childCatalogProcessor.getStandardFiltersList ( fmtName, PagesUtil.getDbRegionToConnect(request) );
+	    childCatalog.put("stdFilterOptions", gson.toJson(stdFilterOptions));
+	    if (form.getCatalogFormat() == null && formatList != null&& formatList.size() > 0)
+	    {
+	    	CatalogFormatInfo fmt = (CatalogFormatInfo)formatList.get(0);
+	    	form.setCatalogFormat(fmt.getCatFormatKey());
+	    	}
+	    	JSONArray zoneList=null;
+	    	zoneList=childCatalogProcessor.getZones (PagesUtil.getDbRegionToConnect(request));
+	    	childCatalog.put("zoneList", zoneList);
+
+	    if ( isBorgIdFmt ( fmtKey, IApplicationConstants.C1B_EPRIME_TYPE ) ) {
+	      form.setIsBorgIDDisable ( false );
+	      if ( isBorgIdFmt ( fmtKey, IApplicationConstants.C1B_TYPE ) ) {
+	        if ( op.equals ( "create" ) ) {
+	          String borgID = null;
+	          if ( form.getBorgID () != null ) {
+	            borgID = form.getBorgID ().trim ();
+	          }
+	          if ( StrUtil.isEmpty ( borgID ) ) {
+	            form.setBorgID ( PagesUtil.getCustID ( request ) );
+	          }
+	        }
+	      }
+	    }
+	    if ( op.equalsIgnoreCase ( "copy" ) ) {
+	        CatalogProgramFilterMgr cMgr = CatalogProgramFilterMgr.
+	                                       getCatalogProgramFilterMgr ();
+	        int[] pgmKeys = cMgr.getCatalogProgramsKeys ( catalog_id,PagesUtil.getDbRegionToConnect(request) );
+	        if ( pgmKeys != null && pgmKeys.length > 0 ) {
+	          String[] pgmStrings = new String[pgmKeys.length];
+	          for ( int i = 0; i < pgmKeys.length; i++ ) {
+	            pgmStrings[i] = String.valueOf ( pgmKeys[i] );
+	          }
+	          form.setPgmKey ( pgmStrings );
+	        }
+	        StandardFilterMgr smgr = new StandardFilterMgr ();
+
+	        int[] stdKeys = smgr.getCatalogStandardFiltersKeys ( catalog_id,PagesUtil.getDbRegionToConnect(request) );
+	        String[] stdNames = smgr.getCatalogStandardFiltersNames ( catalog_id,PagesUtil.getDbRegionToConnect(request) );
+	        if ( stdKeys != null && stdKeys.length > 0 ) {
+	          String[] stdStrings = new String[stdKeys.length];
+
+	          for ( int j = 0; j < stdStrings.length; j++ ) {
+	            stdStrings[j] = String.valueOf ( stdKeys[j] );
+
+	          }
+	          form.setStandardFilterKey ( stdStrings );
+	        }
+	        // VK. Multilpe UNSPSC support.
+	        if(catalog != null){
+	      	  if(catalog.getUnspscVersion() == null){
+	      		  form.setUnspscType(UNDP); 
+	      	  }else{
+	      		  form.setUnspscType(catalog.getUnspscVersion()); 
+	      	  }  		  
+	        }else{
+	      	  form.setUnspscType(UNDP); 
+	        } 
+	        if(catalog != null){
+	      	  if(catalog.getB2biCustomerFlag() == null){
+	      		  form.setb2biCustomerFlag(false); 
+	      	  }else{
+	      		  if(catalog.getB2biCustomerFlag().equals("Y"))
+	      			  form.setb2biCustomerFlag(true);
+	      		  else
+	      			  form.setb2biCustomerFlag(false);
+	      	  }  		  
+	        }else{
+	      	  form.setb2biCustomerFlag(false); 
+	        } 
+	      }
+	    
+	    
+		if(isUnspscEnabled(form.getb2biCustomerFlag()))
+		{
+			form.setIsUnspscTypeDisable(false);
+		}
+		else
+		{
+		   form.setIsUnspscTypeDisable(true);
+		}		
+		
+		 CatalogMgr catalogMgr = new CatalogMgr ();
+		
+		//MDCP
+		 if(catalog != null){
+			if(catalog.getMdcpOrgId() != null){
+				form.setMdcpOrgId(catalog.getMdcpOrgId());
+			}
+			else
+			{
+				String mdcp_id = catalogMgr.get_MdcpId ( catalog, PagesUtil.getDbRegionToConnect(request) );
+		    	if(mdcp_id != null){
+		    		form.setMdcpOrgId(mdcp_id);
+		    	}
+		    	else{
+		    		form.setMdcpOrgId("");
+		    	}
+			}
+		 }
+	    childCatalog.put("form",gson.toJson(form)) ;
+		return childCatalog.toJSONString();
+
+	}//Create child catalog on load end
+	
+	/* *************************************************************************************
+	 * **************** Create Child Catalog save Start ****************************************
+	 * *************************************************************************************/
+	@RequestMapping(value = "/createChildCatalog/save.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String createChildCatalogSave(@RequestBody String Objform,Model model, HttpServletRequest request){
+			JSONObject childSave = null;
+			childSave = new JSONObject();
+			List retMsgList = new ArrayList ();
+			Catalog catalog=new Catalog();
+			String action = request.getParameter("action"); 
+			EditCatalogForm form = new Gson().fromJson(Objform, EditCatalogForm.class);
+			String catalog_id = request.getParameter("catalog_id");
+			String op =request.getParameter("op");
+			if("copy".equalsIgnoreCase(op)){
+		    	op="copy";
+		    }
+		    else{
+		    	op="create";
+		    }
+		    form.setOp(op);
+			String id = null;
+			Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+			String regionCode = ses.getUser().getRegion_code();
+			Customer currentCustomer = PagesUtil.getCustomer ( request );
+			String custKey = currentCustomer.getCustKey();
+			String userID = ses.getUser().getUserAccessId();
+			String catName=form.getCatalogName();
+			String tenantCode = PagesUtil.getTenantCode(request);
+			logger.debug(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave(): data used to created child catalog " + form.toString());
+		    catalog = childCatalogProcessor.createChildCatalog ( custKey, userID, form, retMsgList,op,regionCode,catalog_id, ses.getFdbRegionToConnect(), tenantCode );
+		    String catalogId=catalog.getId();
+		      if(catalog!=null){
+		    	  if(!StrUtil.isEmpty(catalog.getMsg())){
+		    		  childSave.put("fmtValid", catalog.getMsg()); }
+		    	  else if(catalog.getRetCode()==1032 || catalog.getRetCode()==1022){
+		    		  childSave.put("pdValid", "Failed to create catalog - The ePrime price descriptor and Account Code combination key must be unique for ePrime catalog. The value of empty ePrime price descriptor is treated as the default ePrime price descriptor.");
+		    		  logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave(): Failed to create catalog - The ePrime price descriptor and Account Code combination key must be unique for ePrime catalog. The value of empty ePrime price descriptor is treated as the default ePrime price descriptor.");
+		    	  }
+		    	  else if(catalog.getRetCode()==1034){
+		    		  childSave.put("pdValid","Child catalog with this catalog format is not allowed because, price tier of the selected master does not support this catalog format.");
+		    		  logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave() : Child catalog with this catalog format is not allowed because, price tier of the selected master does not support this catalog format.");
+		    	  }
+		    	  else if(catalog.getId()!=null){
+		    		  childSave.put("catalogId", catalogId);
+		    		  if("copy".equalsIgnoreCase(op)){
+		    			  childSave.put("successMsg", "Catalog (" + catName + ") was successfully Copied."); 
+		    			  logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave(): Catalog (" + catName + ") was successfully Copied for customer " + currentCustomer.getCustName() + " by "+ ses.getLoginAccId());  
+		    		  }		    		  				    		  
+		    		  else{
+		    			  childSave.put("successMsg", "Catalog (" + catName + ") was successfully Created."); 
+		    			  
+		    			  logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave(): Catalog (" + catName + ") was successfully Created for customer " + currentCustomer.getCustName() + " by "+ ses.getLoginAccId());
+		    		  } 
+		      	}
+		      }
+		      	else{
+		      		 if("copy".equalsIgnoreCase(op)){
+		      			childSave.put("FailMsg", "Failed to Copy Child Catalog"); 
+		      			logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave(): Failed to Create Child Catalog");
+		      		 }
+		      		 else{
+		      			 childSave.put("FailMsg", "Failed to Create Child Catalog");
+		      			 logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> createChildCatalogSave(): Failed to Create Child Catalog");
+		      		 }
+		      }
+		      return childSave.toJSONString();
+	}//save end
+
+	private boolean isUnspscEnabled ( boolean b2biCustFlag ) {
+		  if(b2biCustFlag)
+			  return true;
+		  else
+			  return false;
+	  }//isUnspscEnabled
+	
+	public static JSONArray getDisplayListForBatchNum ( List mylist ) {
+		JSONArray publishList=new JSONArray();
+	    //loop through the lists to get task ids and corresponding batch numbers
+	    for ( int i = 0; i < mylist.size (); i++ ) {
+	      Task list_task = ( Task ) mylist.get ( i );
+	      for ( int j = 0; j < list_task.getPublishBatchNum (); j++ ) {
+	        int count = j + 1;
+	        JSONObject task_obj = new JSONObject ();
+	        String idValue=list_task.getIdAsString () + ":" + count;
+	        String taskName= list_task.getTaskName () + ":" + count ;
+	        task_obj.put("id", idValue);
+	        task_obj.put("name", taskName);
+	        publishList.add ( task_obj );
+
+	      }
+
+	    }
+	    return publishList;
+	  }//getDisplayListForBatchNum
+	
+	private boolean isBorgIdFmt ( String outputFormatKey, int fmtType ) {
+	    String fmtName = null;
+	    FileFormat fFmt = null;
+	    String fmtID = null;
+	    boolean find = false;
+
+	    if ( !StrUtil.isEmpty ( outputFormatKey ) ) {
+	      CatalogFormat fmt =  CatalogFormatMgr.getCatalogFormatMgr ().
+	          getCatalogFormatByCatFormatKeyNew ( outputFormatKey );
+	      List fileFmts = fmt.getFileFormats ();
+	      for ( int ii = 0; ii < fileFmts.size (); ii++ ) {
+	        fFmt = ( FileFormat ) fileFmts.get ( ii );
+	        fmtID = fFmt.getFileFormatId ();
+
+	        if ( !StrUtil.isEmpty ( fmtID ) ) {
+	          if ( fmtType == IApplicationConstants.C1B_TYPE ) {
+	            if ( fmtID.equalsIgnoreCase ( "C1BCAT" ) ||
+	                 fmtID.equalsIgnoreCase ( "C1BPRC" ) ||
+	                 fmtID.equalsIgnoreCase ( "C1BCATPRC" ) ) {
+
+	              find = true;
+	            }
+	          }
+	          else {
+	            if ( fmtID.equalsIgnoreCase ( "C1BCAT" ) ||
+	                 fmtID.equalsIgnoreCase ( "C1BPRC" ) ||
+	                 fmtID.equalsIgnoreCase ( "C1BCATPRC" ) ||
+	                 fmtID.equalsIgnoreCase ( "EPCAT" ) ||
+	                 fmtID.equalsIgnoreCase ( "EPPBK" ) ||
+	                 fmtID.equalsIgnoreCase ( "EPPRDFIX" ) ||
+	                 fmtID.equalsIgnoreCase ( "EPPRDREG" ) ) {
+
+	              find = true;
+	            }
+	          }
+	        }
+	      }
+	    }
+
+	    return find;
+
+	  }//isBorgIdFmt
+	
+	/* *************************************************************************************
+	 * ****************  Child Catalog Start validate ****************************************
+	 * *************************************************************************************/
+	@RequestMapping(value = "/childcatalog/childCatalogValidate.htm", headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody String childCatalogValidate(Model model, HttpServletRequest request){
+		
+		JSONObject childCatalogValidate = new JSONObject();
+		Gson gson = new Gson();
+		EditCatalogForm form = new EditCatalogForm();
+		Session session = SessionMgr.getSessionMgr().getSession(request, false);
+		Customer cust = session.getCurrentCustomer(false);
+		String catalog_id = request.getParameter("catalog_id");
+		form.setMasterID(catalog_id);
+		Catalog catalog = EditCatalogConverter.retrieveCatalogInfo(catalog_id, session.getFdbRegionToConnect());
+		boolean isValid = true;
+		CatalogProductMgr cMgr = new CatalogProductMgr();
+		cMgr.setCatalogID(catalog.getId());
+		String dbRegionToConnect = session.getFdbRegionToConnect();
+		Validator validator = Validator.getValidator(catalog, dbRegionToConnect);
+		Collection alerts = null;
+		alerts = validator.validate(false, dbRegionToConnect);
+		if (catalog.getStatus().equals(Catalog.STATUS_INCOMPLETE)) {
+			isValid = false;
+		} else {
+			long alertCount = cMgr.getInvalidProductTotalCount(session.getFdbRegionToConnect());
+			if (alertCount > 0) {
+				isValid = false;
+			}
+		}
+		if (isValid) {
+			childCatalogValidate.put("msg","ValidData");
+			childCatalogValidate.put("link",false);
+		} else {
+			childCatalogValidate.put("msg","Error");
+			childCatalogValidate.put("link",true);
+		}
+		childCatalogValidate.put("form",gson.toJson(form));
+		return childCatalogValidate.toJSONString();
+	}//childCatalogValidate
+	
+	@RequestMapping(value = "/createChildCatalog/reloadStdFilter.htm", headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody String reloadStdFilter(Model model, HttpServletRequest request){
+		JSONObject childCatalog = new JSONObject();
+		 Gson gson = new Gson();
+		 List stdFilterOptions=null;
+		 String fmtName=null;
+		 String fmtId=request.getParameter("fmtId");
+		 String dbRegionToConnect=PagesUtil.getDbRegionToConnect(request);
+		  if ( !StrUtil.isEmpty ( fmtId ) ) {
+		      CatalogFormatInfo catalogFormatInfo = childCatalogProcessor. getCatalogFormatInfoByCatFormatKeyForChild ( fmtId,dbRegionToConnect);
+		      if(catalogFormatInfo!=null){
+		      fmtName = catalogFormatInfo.getCatFormatName ();
+		  }
+		  }
+		 stdFilterOptions=childCatalogProcessor.getStandardFiltersList ( fmtName, PagesUtil.getDbRegionToConnect(request) );
+		 childCatalog.put("stdFilterOptions", gson.toJson(stdFilterOptions));
+		
+		return childCatalog.toJSONString();
+	} //reloadStdFilter
+
+}

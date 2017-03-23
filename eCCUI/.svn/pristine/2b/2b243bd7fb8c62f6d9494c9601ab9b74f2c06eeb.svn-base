@@ -1,0 +1,313 @@
+eccApp.controller('LocalProductCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams', 'shareddata','dialog',
+  function ($scope, $http, $timeout, webStorage, $routeParams, shareddata,dialog) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.dataLoad=false;
+	
+	$scope.form = {};
+	$scope.addDataToTable = [];
+	$scope.ctgList = [];
+	$scope.prodList=[];
+	
+	$scope.prodId = '';
+	$scope.selectedModel = '';
+	$scope.selectedCntry = '';
+	$scope.isManageLocalProdEnabled = false;
+	
+	 $("#showhideclmDiv>a, #tinyDrop").mousedown(function(e) {
+	    	e.stopPropagation();
+	    });
+	 
+	 $scope.mouseDownHide = function(id){
+			$("#"+id).hide(200);
+	 };
+	 
+	 $scope.toggle = function(id) {
+			$("#"+id).fadeToggle(200);
+	 };
+	 
+	 $scope.toggleAutoFilter = function(id) {
+		 	$scope.search.PartNum = '';
+			$(id).toggle();	
+	 };
+			
+	$scope.loadLocalProduct = function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		$http.get("localProduct/getLocalProductList.htm?task=").
+		 success(function(data,status,header,config) {
+			 $scope.countryList=data.CountryList;
+			 $scope.isManageLocalProdEnabled = data.ManageLocalProdEnabled;
+			 var add_object = {"country": "Any", "cntry_cd":"any"};
+			 $scope.countryList.splice(0,0,add_object);
+			 $scope.selectedCntry=$scope.countryList[0].cntry_cd;			 			 
+			 
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+			  	//$.loader("close");
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Manage Part Num Service');
+		  });						
+	};
+	
+	
+	$scope.searchProd = function(){
+		$scope.search.PartNum = "";
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 1);
+	};
+	
+	
+	$scope.addToAnotherCountry = function(baseProd, prodId, country){
+		webStorage.session.add('PrevPage', '#/LocalProductList'); 
+ 		document.location.href='#/LocalProductEdit?toDo=addToAnotherCntry&partNumber='+encodeURIComponent(prodId)+'&baseModel='+encodeURIComponent(baseProd)+'&country='+country;
+	};
+	
+	$scope.addLocalProduct = function(){
+		webStorage.session.add('PrevPage', '#/LocalProductList'); 
+		document.location.href='#/LocalProductEdit?toDo=create';
+	};
+	
+	$scope.deleteLocalProductList=function(){			
+		$scope.deleteProds();		
+	};
+	
+	
+	 $scope.condtionalAlert = function (prodIds) {
+			var product = $scope.prodId;
+			if(product==undefined){
+				product="";
+			}
+			var model = $scope.selectedModel;
+			if(model==undefined){
+				model="";
+			}
+			var country = $scope.selectedCntry;
+			if(country=="-1"){
+				country="";
+			}
+		   $http({
+				url: 'localProduct/deleteLocalProducts.htm?prodIds='+prodIds.toString()+'&prodId='+product+'&model='+model+'&country='+country,
+				method:"POST",
+				data : {
+					
+				},
+			headers: {
+               "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+           },
+			 }).success(function(data,status,header,config) {
+				 if(data.successMsg != undefined){
+					 $scope.hideMsg();
+					 $scope.searchProd();
+					 $scope.showMsg(data.successMsg,'');
+				 }
+				 $scope.isManageLocalProdEnabled = data.ManageLocalProdEnabled;
+			});
+	    };
+	    
+	$scope.deleteProds = function(){
+		var arr = [];
+
+		if($('.deleteProd:checked').length) {
+	          var chkId = '';
+	          var prodIds = '';
+	          $('.deleteProd:checked').each(function() {
+	            chkId += $(this).val() + ",";
+	          });
+	          chkId =  chkId.slice(0,-1);
+	          arr = chkId.split(",");
+	          prodIds = arr;
+	          
+	          dialog.show({
+		            template: '<div class="hpe-main-content" title="Are you sure you want to delete?">' +
+		                          '<span>Are you sure you want to delete?</span>' + 
+		                          '<br>' +
+		                          '<a class="btn btn-inline"   ng-click="close(true)" ><span>Yes</span></a>' +
+		                          '<a class="btn btn-inline"   ng-click="close(false)"><span>No</span></a>' +
+		                      '</div>',
+		            controller: 'LocalProductCtrl',
+		            width: 600,
+		            param: $scope,
+		            draggable: true,
+		            title:'Warning'
+		        }).then(function (result) {
+		            if(result == true) {
+		            	$scope.condtionalAlert(prodIds);
+		            	$scope.scrollToMessage();
+		            }
+		           
+		        });
+	       
+	        }
+	        else {
+	        	 $scope.hideMsg();
+	        	 $scope.scrollToMessage();
+				 $scope.showMsg("Please select at least one Product to delete!","");
+				 return;
+	        }
+	};
+	
+	$scope.checkBoxFunctionality = function(){
+		$('#checkAllDelete').click(function(e){
+			var x = document.getElementsByClassName("deleteProd");
+			var i;
+			for (i = 0; i < x.length; i++) {
+			    if(x[i].disabled != true){
+			    	x[i].checked =this.checked;
+			    }
+			}
+	 	});
+		
+	};
+	
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    };
+    
+    $scope.grid = {
+    		header: ["Delete", "Part Num", "Model Num", "Country", "Add To Another Country"],
+        	data: $scope.addDataToTable,
+        	sort: [[1, "asc"]],
+        	colDefs: [
+        		{ "sClass": "left", "aTargets": [0,1,2,3,4] }
+        	],
+        	colViewBy: { 
+        		"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+        		"bShowAll": true,
+        		"sShowAll": "Show All",
+        		"sAlign": "left"
+        	}
+    };
+    
+    $scope.tablecolumns = [
+		                      {'id':'PartNum',			'value':'PartNum',			"key":"Part Num",			'columnName':'PROD',			'sort':'true'},
+		                      {'id':'ModelNum',			'value':'ModelNum', 		"key":"Model Num",			'columnName':'BASE_PROD',		'sort':'true'},
+		                      {'id':'Country',			'value':'Country',       	"key":"Country",			'columnName':'Country_CODE',  		'sort':'true'},
+		                      {'id':'AddToAnotherCountry','value':'AddToAnotherCountry', "key":"Add To Another Country",'columnName':'Add To Another Country',  	'sort':'false'}
+		                   ];
+		  
+	 $scope.selectedColumns = {
+		  	'PartNum':'true',
+			'ModelNum':'true',
+			'Country':'true',
+			'AddToAnotherCountry':'true'
+	 };
+	 
+	 $scope.search = {
+				'PartNum':''
+		};
+	 
+	 $scope.getData = ajaxGetResults;
+	 $scope.getDataSorted = getDataWithPaginationAndSort;
+	 
+	 function ajaxGetResults(scope, http, shareddata, recordOnHand, recordOnDemand) {
+	 	  	getDataWithPaginationAndSort(scope, http, shareddata, recordOnHand, recordOnDemand, "", "");
+	  }
+	 
+	 function getDataWithPaginationAndSort(scope, http, shareddata, recordOnHand, recordOnDemand, sortBy, sortOrder, sortLocale) {	
+	 	  	var prodForm = new Object();
+	 	  	
+	 	  	prodForm.searchProdId = $scope.search.PartNum;
+	 	  	prodForm.recordOnHand = recordOnHand;
+	 	  	prodForm.recordOnDemand = recordOnDemand;
+	 	  	prodForm.sortBy = sortBy;
+	 	  	prodForm.sortOrder =  sortOrder;
+	 	  	prodForm.sortLocale = sortLocale;
+	 	  	
+	 	   	$scope.loadTime = new Date().getTime();
+	 	  	$scope.urlToUse = "localProduct/searchLocalProduct.htm?task=search"+"&prodId="+encodeURIComponent($scope.prodId)+"&model="+$scope.selectedModel+"&country="+$scope.selectedCntry+"&filter="+ encodeURIComponent(angular.toJson(prodForm));
+	 	  	
+	 	  	$http({
+	 			url: $scope.urlToUse,
+	 			method:"GET",
+	 			headers: {
+	                 "Accept": "application/json; charset=utf-8",
+	 				"Cache-Control" : "no-cache",
+	 				"Pragma" : "no-cache",
+	 				"If-Modified-Since" : "0"
+	             }
+	 		 }).success(function(data,status,header,config) {
+	 			 $scope.productList=data.ProductList;
+	 			$scope.isManageLocalProdEnabled = data.ManageLocalProdEnabled;
+	 			 $scope.form = JSON.parse(data.form);
+	 			 if($scope.productList != undefined && $scope.productList != null && $scope.productList.length > 0){
+	 				 $scope.dataLoad = true;
+	 				 $scope.$emit('gotPageData',$http, $scope.form, $scope.productList);
+	 			 }else{
+	 				 $scope.dataLoad = false;
+	 				 $scope.hideMsg();
+	 				 $scope.showMsg('','No records found');
+	 			 }
+	 			
+	 			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	 		 }).error(function(data, status, headers, config) {
+	 			  ///	console.log("Session Expired please try to relogin.");
+	 				
+	 		 });
+	 	  	
+	 	  };
+	 	  
+	 	 $scope.sortColumn = function($parent, colId, colName, locale, needSort) { 
+	         if (needSort!="false") {
+	             $parent.reverse=!$parent.reverse; 
+	             $scope.sortBy = colName;
+	             $scope.sortOrder = ($parent.reverse)?"DESC":"ASC";
+	             $scope.sortLocale = locale;
+	             $scope.requireSort = true;
+	             $scope.getDataSorted($scope, $scope.http,shareddata, 0, $scope.pageSize, 
+	             	$scope.sortBy, $scope.sortOrder, $scope.sortLocale);
+	             
+	             $scope.initToStart();
+	             
+	             if ( !$scope.sortedColumn ) $scope.sortedColumn = colId;
+	             $scope["sortedTD_"+$scope.sortedColumn] = "";
+	             $scope["sortedTD_"+colId] = "sorted";
+	             $scope.sortedColumn = colId;
+	         }
+	     };
+	     
+	     $scope.showHide = function(id) {
+	 		if($scope.selectedColumns.id == "true")
+	 			$scope.selectedColumns.id = "false";
+	 		else
+	 			$scope.selectedColumns.id = "true";
+	 	};
+	 	
+	 	$scope.showList = function() {
+	 		if($scope.showClmDropDown == "true")
+	 			$scope.showClmDropDown = "false";
+	 		else
+	 			$scope.showClmDropDown = "true";
+	 	};
+	 	
+	 	$scope.showDropDown = function(){
+			if($("#tinyDrop").is(":visible")){
+				$("#tinyDrop").hide();
+			}else{
+				$("#tinyDrop").show();
+			}
+			
+			if($("#tinyDrop").is(":visible")){
+				$("#tinyDrop").hide();
+			}else{
+				$("#tinyDrop").show();
+			}
+		};
+		
+}]);

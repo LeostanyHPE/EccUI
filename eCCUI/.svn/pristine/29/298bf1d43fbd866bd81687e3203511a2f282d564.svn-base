@@ -1,0 +1,58 @@
+package com.hp.ecc.ui.biz.pricing;
+
+/**
+ * @author Andrey Svirsky
+ * @version 1.0
+ */
+
+public interface ProductPriceInfo {
+  /**
+   * Get product SKU
+   */
+  public String getSku ();
+
+  /**
+   * Get customer ID or null if not relevant
+   */
+  public String getCustomerId ();
+
+  /**
+   * Get product local price or null if not relevant
+   */
+  public String getLocalPrice ();
+
+  /**
+   * Get product list price or null if not relevant
+   */
+  public String getListPrice ();
+
+  /**
+   * Get product deal-specific price or null if not relevant
+   */
+  public String getDealPrice ();
+
+  /**
+   * Get product price descriptor
+   */
+  public PriceDescriptor getPriceDescriptor ();
+
+  /**
+   * Get product short description
+   */
+  public String getProductShortDescription ();
+
+  /**
+   * Get product long description
+   */
+  public String getProductLongDescription ();
+
+  /**
+   * Get product warranty code
+   */
+  public String getWarrantyCode ();
+
+  /**
+   * Get product unit of measure
+   */
+  public String getUom ();
+}

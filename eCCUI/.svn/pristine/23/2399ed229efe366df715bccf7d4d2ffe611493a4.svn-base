@@ -1,0 +1,280 @@
+/*
+ * Created on Aug 30, 2005
+ *
+ * To change the template for this generated file go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ */
+package com.hp.ecc.ui.biz.csog;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.hp.ecc.ui.biz.catalog.Program;
+import com.hp.ecc.ui.util.StrUtil;
+
+
+/**
+ * @author 
+ *
+ * Bean for displaying the details of master catalogs
+ * and bundle in Bundle Templates Exception Page
+ *
+ *
+ */
+public class SogCatalogBundleGUIObject {
+
+  private String fBundleTemplateID;
+  private String fBundleTemplateName;
+  private String fExistingBundleInstances;
+  private String fIncludeExcludeFlag; // indicates if bundle template is assigned to SOG
+  private String fCustomerName = "";
+  private String fCatalogID = "";
+  private String fCustomerID = "";
+  private String fCustomerKey = "";
+  private String fCustomerRegionCode = "";
+  private String fCatalogName = "";
+  private String fProgramName = "";
+  private String fProgramKey = "";
+  private String fOptionCodes = ""; //Blue part numbers -- getLocalizationStr
+  private String fCntryCodes = ""; //Red part numbers -- getLocCountryStr
+  private String fBundleName = "";
+
+
+// Contains the values pgmKey^pgmName for customer programs
+  private String[] fCustProgramKeyNames;
+  private List fPrograms;
+  //For metrics page
+  private String fBundleID = "";
+  private String fBundleStatus = "";
+  private String fSogID = "";
+  private String fPriceDescriptor = "";
+  private String fSalesCountry = "";
+  private int fBundleInstanceCount = 0;
+
+  private String fRegionCode = "";
+  private String fDbOperationFlag = "";
+
+
+  public String getIncludeExcludeFlag () {
+    return this.fIncludeExcludeFlag;
+  }
+
+  public void setIncludeExcludeFlag ( String flag ) {
+    this.fIncludeExcludeFlag = flag;
+  }
+
+  public String getCustomerName () {
+    return this.fCustomerName;
+  }
+
+  public void setCustomerName ( String custName ) {
+    this.fCustomerName = custName;
+  }
+
+  public String getCustomerID () {
+    return this.fCustomerID;
+  }
+
+  public void setCustomerID ( String custId ) {
+    this.fCustomerID = custId;
+  }
+
+  public String getCustomerKey () {
+    return this.fCustomerKey;
+  }
+
+  public void setCustomerKey ( String custKey ) {
+    this.fCustomerKey = custKey;
+  }
+
+  public String getCustomerRegionCode () {
+    return this.fCustomerRegionCode;
+  }
+
+  public void setCustomerRegionCode ( String reg_code ) {
+    this.fCustomerRegionCode = reg_code;
+  }
+
+  public String getBundleTemplateID () {
+    return this.fBundleTemplateID;
+  }
+
+  public void setBundleTemplateID ( String templateID ) {
+    this.fBundleTemplateID = templateID;
+  }
+
+  public String getBundleTemplateName () {
+    return this.fBundleTemplateName;
+  }
+
+  public void setBundleTemplateName ( String templateName ) {
+    this.fBundleTemplateName = templateName;
+  }
+
+
+  public String getCatalogName () {
+    return this.fCatalogName;
+  }
+
+  public void setCatalogName ( String catalogName ) {
+    this.fCatalogName = catalogName;
+  }
+
+  public String getSalesCountry () {
+    return this.fSalesCountry;
+  }
+
+  public void setSalesCountry ( String salesCountry ) {
+    this.fSalesCountry = salesCountry;
+  }
+
+  public String getProgramName () {
+    return this.fProgramName;
+  }
+
+  public void setProgramName ( String programName ) {
+    this.fProgramName = programName;
+  }
+
+  public String getProgramKey () {
+    return this.fProgramKey;
+  }
+
+  public void setProgramKey ( String programKey ) {
+    this.fProgramKey = programKey;
+  }
+
+  public String getOptionCodes () {
+    return this.fOptionCodes;
+  }
+
+  public void setOptionCodes ( String optionCodes ) {
+    this.fOptionCodes = optionCodes;
+  }
+
+  public String getCntryCodes () {
+    return this.fCntryCodes;
+  }
+
+  public void setCntryCodes ( String cntryCodes ) {
+    this.fCntryCodes = cntryCodes;
+  }
+
+  public String getCatalogID () {
+    return this.fCatalogID;
+  }
+
+  public void setCatalogID ( String catalogId ) {
+    this.fCatalogID = catalogId;
+  }
+
+  public String getPriceDescriptor () {
+    return this.fPriceDescriptor;
+  }
+
+  public void setPriceDescriptor ( String priceDesc ) {
+    this.fPriceDescriptor = priceDesc;
+  }
+
+  public String getBundleID () {
+    return fBundleID;
+  }
+
+  public void setBundleID ( String bundleId ) {
+    fBundleID = bundleId;
+  }
+
+  public String getBundleName () {
+    return this.fBundleName;
+  }
+
+  public void setBundleName ( String name ) {
+    this.fBundleName = name;
+  }
+
+  public String getBundleStatus () {
+    return fBundleStatus;
+  }
+
+  public void setBundleStatus ( String bundleStatus ) {
+    fBundleStatus = bundleStatus;
+  }
+
+  public String getSogID () {
+    return fSogID;
+  }
+
+  public void setSogID ( String sogID ) {
+    fSogID = sogID;
+  }
+
+
+  public int getBundleInstanceCount () {
+    return this.fBundleInstanceCount;
+  }
+
+  public void setBundleInstanceCount ( int count ) {
+    this.fBundleInstanceCount = count;
+  }
+
+
+  public String getExistingBundleInstances () {
+    return this.fExistingBundleInstances;
+  }
+
+  public void setExistingBundleInstances ( String fExistingBundleInstances ) {
+    this.fExistingBundleInstances = fExistingBundleInstances;
+  }
+
+  public String getRegionCode () {
+    return fRegionCode;
+  }
+
+  public void setRegionCode ( String regionCode ) {
+    fRegionCode = regionCode;
+  }
+
+  public String getDbOperationFlag () {
+    return this.fDbOperationFlag;
+  }
+
+  public void setDbOperationFlag ( String db_operation ) {
+    this.fDbOperationFlag = db_operation;
+  }
+
+  public String[] getCustProgramKeyNames () {
+    return this.fCustProgramKeyNames;
+  }
+
+  public void setCustProgramKeyNames ( String[] programs ) {
+    this.fCustProgramKeyNames = programs;
+  }
+
+  // Method will return Array List of Program Bean from the String[] fCustProgramKeyNames
+  // containing The String PgmKey^PgmName value for each of the customer Programs
+  public List getPrograms () {
+    if ( fCustProgramKeyNames.length <= 0 ) {
+      return null;
+    }
+    this.fPrograms = new ArrayList ();
+    for ( int i = 0; i < this.fCustProgramKeyNames.length; i++ ) {
+      Program pgm = new Program ();
+      List pgmKeyName = StrUtil.split ( fCustProgramKeyNames[i], "^" );
+      pgm.setProgramKey ( Integer.parseInt ( ( String ) pgmKeyName.get ( 0 ) ) );
+      pgm.setProgramName ( ( String ) pgmKeyName.get ( 1 ) );
+      this.fPrograms.add ( pgm );
+    }
+    return this.fPrograms;
+  }
+  
+	public List getfPrograms() {
+		
+		return  fPrograms;
+	}
+	
+	public void setfPrograms(List programs) {
+		
+		fPrograms = programs;
+	}
+
+}

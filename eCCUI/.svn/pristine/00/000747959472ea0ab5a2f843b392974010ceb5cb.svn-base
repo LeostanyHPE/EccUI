@@ -1,0 +1,159 @@
+package com.hp.ecc.ui.db.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+
+import com.hp.ecc.ui.biz.BizMgrUtil;
+import com.hp.ecc.ui.biz.ResponseStatus;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.product.MasterProductMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.ZeroPriceOption;
+import com.hp.ecc.ui.common.web.catalog.master.MasterWebUtil;
+import com.hp.ecc.ui.util.StrUtil;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+import hp.comcat.dax.fwk.common.web.util.pagination.Pagination;
+import hp.comcat.dax.fwk.common.web.util.sort.SortInfo;
+
+public class ProductOptionDao {
+
+	public ProductOptionDao( ) {
+
+	}
+
+	public JSONArray retrieveProductOptions(Product p,String adbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDb = daxMgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt stmt = null;
+		String contextID = p.getContextID();
+		String bundleFlag = p.getBundleFlag();
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" opt.CAT_CATALOG_ID = '");
+		whereClause.append(p.getCatalogID() + "' and opt.COP_BASE_MODEL = '");
+		whereClause.append(p.getProdId() + "' and opt.CIT_CONTEXT_ID ");
+		if (contextID == null || "".equalsIgnoreCase(contextID)) {
+			whereClause.append(" IS NULL ");
+		} else {
+			whereClause.append(" = '" + contextID + "'");
+		}
+		if (bundleFlag != null && !("".equalsIgnoreCase(bundleFlag))) {
+
+			whereClause.append(" and opt.COP_BUNDLE_FLAG = '");
+			whereClause.append(bundleFlag + "'");
+		}
+		stmt = daxMgr.makeParsedStmt("productOptions","selectOptionsListByContextID", p, null, null);
+		p.setString1(whereClause.toString());
+		stmt.setFetchSize(5000);
+
+		System.out.println("stmt is***" + stmt);
+		return daxDb.doSelectJson(stmt, p.getClass(), p);
+
+	}
+
+	public List getOptionsForBaseProdLoc(String baseProd, String catalogId,	String countryCode, SortInfo sort, Pagination pagination, String priceDescriptor, String adbRegionToConnect) {
+		if (StrUtil.isEmpty(baseProd)) {
+			return null;
+		}
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDb = daxMgr.getDaxDB(adbRegionToConnect);
+		
+		ZeroPriceOption option = new ZeroPriceOption();
+		option.setBaseProd(baseProd);
+		option.setCountryCode(countryCode);
+		option.setCatalogId(catalogId);
+		/*
+		 * Added priceDescriptor and regionCode in ZeroPriceOption bean to get
+		 * OM Status Code and Description- 
+		 */
+		option.setPriceDescriptor(priceDescriptor);
+		String regionCode = MasterWebUtil.getRegionCode(priceDescriptor.substring(0, 2), adbRegionToConnect);
+		option.setRegionCode(regionCode);
+		String sqlName = null;
+		if (StrUtil.isEmpty(countryCode) || countryCode == null) {
+			sqlName = "optionSelectWithoutCountry";
+		} else {
+			sqlName = "optionSelectWithCountry";
+		}
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt("localProduct", sqlName,	option, null, null);
+		return daxDb.doSelect(stmt, option.getClass(), null);
+	}
+
+	public static Product getProduct(String masterID, String pID, String adbRegionToConnect) {
+		MasterProductMgr m = new MasterProductMgr();
+		m.setCatMasterKey(masterID);
+
+		Product productRet = m.getItem(pID, adbRegionToConnect);
+
+		return productRet;
+	}//getProduct
+	
+	public List getProductOptions(String itemKey, Product p, String adbRegionToConnect){
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDb = daxMgr.getDaxDB(adbRegionToConnect);
+		String stmtId = null;
+		if (StrUtil.isEmpty(itemKey)) {
+			stmtId = "selectOptionsList";
+		} else {
+			stmtId = "selectOptionsListItemKey";
+		}
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt("productOptions", stmtId, p,	null, null);
+		stmt.setFetchSize(5000);
+		List eList = daxDb.doSelect(stmt, p.getClass(), p);
+		
+		return eList;
+	}//getProductOptions
+	
+	
+	public void updateFusionFlags ( Product prod, String adbRegionToConnect ) {
+	    DaxMgr daxMgr = DaxMgr.getInstance ();
+	    DaxDB db = daxMgr.getDaxDB (adbRegionToConnect);
+	    DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( "catalogProd", "updateOptions", prod, null, null );
+	    int returnVal = db.doUpdate ( pstmt, prod );
+   }
+	
+	public String validateProductCatalog ( Product p, String adbRegionToConnect ) {
+	    DaxMgr daxMgr = DaxMgr.getInstance ();
+	    DaxDB daxDB = daxMgr.getDaxDB (adbRegionToConnect);
+
+	    DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( "catalogProd", "validateProductCatalog", p, null, null );
+	    daxDB.doSP ( pstmt, p, p );
+	    
+	    if ( "0".equals ( p.getReturnStatus ().trim () ) ) {
+	      return null;
+	    }
+
+	    return p.getReturnStatus ().trim ();
+	  }
+	
+	public ResponseStatus updateOptions ( Product p, String adbRegionToConnect ) {
+	    if ( p.getOptions () == null || p.getOptions ().length () == 0 ) {
+	      p.setOptionsList ( null );
+	    }
+	    else {
+	      ArrayList optList = StrUtil.split ( p.getOptions (), "," );
+	      p.setOptionsList ( StrUtil.listToStrArray ( optList ) );
+	    }
+
+	    DaxMgr daxMgr = DaxMgr.getInstance ();
+	    DaxDB daxDB = daxMgr.getDaxDB (adbRegionToConnect);
+
+	    DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( "catalogProd", "masterUpdateProdSP", p, null, null );
+	    daxDB.doSP ( pstmt, p, p );
+
+	    if ( "0".equals ( p.getReturnStatus ().trim () ) ) {
+	      return null;
+	    }
+
+	    return BizMgrUtil.getResponseStatus ( "" + p.getReturnStatus () + "", p );
+	}
+	
+
+}//class

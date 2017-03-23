@@ -1,0 +1,50 @@
+package com.hp.ecc.ui.view.beans;
+
+
+public class ContentElem {
+  public ContentElem () {
+    this.init ();
+  }
+
+
+  private void init () {
+    this.fContent = null;
+    this.fLineNo = 0;
+  }
+
+
+  /**
+   * Get Content
+   */
+  public String getContent () {
+    return this.fContent;
+  }
+
+
+  /**
+   * Set Content
+   */
+  public void setContent ( String content ) {
+    this.fContent = content;
+  }
+
+
+  /**
+   * Get LineNo
+   */
+  public int getLineNo () {
+    return this.fLineNo;
+  }
+
+
+  /**
+   * Set LineNo
+   */
+  public void setLineNo ( int line_no ) {
+    this.fLineNo = line_no;
+  }
+
+
+  private String fContent;
+  private int fLineNo;
+}

@@ -1,0 +1,669 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.filter.ProdFilter;
+import com.hp.ecc.ui.biz.filter.ProdFilterMgr;
+import com.hp.ecc.ui.biz.processor.product.ProductFilterProcessor;
+import com.hp.ecc.ui.biz.processor.product.ProductSearchHelper;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.CatWebUtil;
+import com.hp.ecc.ui.common.util.FeCTX;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.LoadSubCategoriesForm;
+import com.hp.ecc.ui.view.beans.PriceMasterForm;
+import com.hp.ecc.ui.view.beans.ProdFilterForm;
+import com.hp.ecc.ui.view.beans.QuickManageForm;
+import com.hp.ecc.ui.view.beans.SearchProductsForm;
+import com.hp.ecc.ui.view.beans.StandCatProdDetailForm;
+import com.hp.ecc.ui.view.beans.ThirdPartyPricingForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author reddvino
+ *
+ */
+@Controller
+public class ProductFilterController {
+	ProductFilterProcessor productFilterProcessor = new ProductFilterProcessor();
+	
+	@RequestMapping(value = "/productFilter/loadFilteredProducts.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String loadFilterdProducts(HttpServletRequest request, @RequestParam(value = "filter", required = false) String filterStr){
+		
+		JSONObject loadFilterdProductData = null;
+		Session session = SessionMgr.getSessionMgr ().getSession ( request, false );
+		User user = session.getUser ();
+		Gson gson = new Gson();		
+		String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		ProdFilterForm filterForm = new Gson().fromJson(filterStr, ProdFilterForm.class);
+		String tenantCode = TenantConstants.getMixedSharedTenant(session.getCustomerTenantCode());	
+		filterForm.setTenantCode(tenantCode);
+		
+		retrieveFilterAttrsFromSession ( filterForm, session );
+		filterForm.setProductListingSource ( ProdFilterForm.PROD_SRC_SAVED_FILTER );
+		request.setAttribute ( "popupPage", "true" );
+		loadFilterdProductData = productFilterProcessor.loadFilteredProducts ( filterForm, session, user,adbRegionValue );
+		
+		loadFilterdProductData.put("form", gson.toJson(filterForm) );
+		
+		return loadFilterdProductData.toJSONString();
+	}//loadFilterdProducts
+	
+	@RequestMapping(value = "/productFilter/searchFilteredProducts.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String searchFilterdProducts(HttpServletRequest request, @RequestParam(value = "filter", required = false) String filterStr){
+		
+		JSONObject loadFilterdProductData = null;
+		Session session = SessionMgr.getSessionMgr ().getSession ( request, false );
+		User user = session.getUser ();
+		Gson gson = new Gson();		
+		String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		ProdFilterForm filterForm = new Gson().fromJson(filterStr, ProdFilterForm.class);
+		String tenantCode = TenantConstants.getMixedSharedTenant(PagesUtil.getTenantCode(request));	
+		filterForm.setTenantCode(tenantCode);
+		
+		SearchProductsForm searchProductsForm = gson.fromJson(filterStr, SearchProductsForm.class);
+		filterForm.setSearchByAttribute(searchProductsForm.getSearchByAttribute());
+		filterForm.setKeyword(searchProductsForm.getKeyword());
+		filterForm.setAfterDiscontinueDate(searchProductsForm.getAfterDiscontinueDate());
+		filterForm.setBeforeDiscontinueDate(searchProductsForm.getBeforeDiscontinueDate());
+		filterForm.setAfterEndOfLifeDate(searchProductsForm.getAfterEndOfLifeDate());
+		filterForm.setAfterLastModifiedDate(searchProductsForm.getAfterLastModifiedDate());
+		filterForm.setBeforeLastModifiedDate(searchProductsForm.getBeforeLastModifiedDate());
+		filterForm.setSearchScope(searchProductsForm.getSearchScope());
+		filterForm.setProductLine(searchProductsForm.getProductLine());
+		filterForm.setRecordOnDemand(searchProductsForm.getRecordOnDemand());
+	    retrieveFilterAttrsFromSession ( filterForm, session );
+		request.setAttribute ( "popupPage", "true" );
+		loadFilterdProductData = productFilterProcessor.searchProducts ( filterForm, session, user,adbRegionValue );
+				
+		loadFilterdProductData.put("form", gson.toJson(filterForm) );
+		return loadFilterdProductData.toJSONString();
+	}
+	
+	@RequestMapping(value = "/productFilter/categoryFilteredProducts.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String categoryFilterdProducts(HttpServletRequest request, @RequestParam(value = "filter", required = false) String filterStr){
+		
+		JSONObject loadFilterdProductData = null;
+		Session session = SessionMgr.getSessionMgr ().getSession ( request, false );
+		User user = session.getUser ();
+		Gson gson = new Gson();		
+		String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		ProdFilterForm filterForm = new Gson().fromJson(filterStr, ProdFilterForm.class);
+		String tenantCode = TenantConstants.getMixedSharedTenant(PagesUtil.getTenantCode(request));	
+		filterForm.setTenantCode(tenantCode);
+		
+		SearchProductsForm searchProductsForm = gson.fromJson(filterStr, SearchProductsForm.class);
+		filterForm.setSearchScope(searchProductsForm.getSearchScope());
+		filterForm.setCategoryID(searchProductsForm.getCategoryID());
+		filterForm.setProductListingSource(searchProductsForm.getProductListingSource());
+	    retrieveFilterAttrsFromSession ( filterForm, session );
+		request.setAttribute ( "popupPage", "true" );
+		loadFilterdProductData = productFilterProcessor.getProductsInCategory ( filterForm, session, user,adbRegionValue );
+		loadFilterdProductData.put("form", gson.toJson(filterForm) );
+		
+		return loadFilterdProductData.toJSONString();
+	}
+	
+	
+	@RequestMapping(value = "/productFilter/productFilterLogicStarts.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String actionStarts(HttpServletRequest request){
+		Session session = SessionMgr.getSessionMgr ().getSession ( request, false );
+		User user = session.getUser ();
+		Gson gson = new Gson();
+		///HttpSession session = request.getSession ();
+		String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		String formData = request.getParameter("form");
+		ProdFilterForm filterForm = new ProdFilterForm();
+		String task = request.getParameter("task");///filterForm.getTask ();
+		String filterID = request.getParameter("filterID");
+		//Integer.parseInt(
+		String recordOnHand = request.getParameter("recordOnHand"); 
+		String recordOnDemand = request.getParameter("recordOnDemand");
+		String sortBy = request.getParameter("sortBy");
+		String sortOrder = request.getParameter("sortOrder");
+		String filterProdId = request.getParameter("filterProdId");
+		
+		String ctgID = request.getParameter("ctgID");
+		String catalogID = request.getParameter("catalogID");
+		String[] catalogIDs = new String[] {catalogID};
+		String tenantCode = TenantConstants.getMixedSharedTenant(PagesUtil.getTenantCode(request));	
+		filterForm.setTenantCode(tenantCode);
+		
+		
+		filterForm.setTask(task);///.fromJson(formData, ProdFilterForm.class);
+		if(filterID != null){
+			filterForm.setFilterID(filterID);
+		}
+		if(ctgID != null){
+			filterForm.setCategorization(ctgID);
+		}
+		if(catalogID != null){
+			filterForm.setCatalogIDs(catalogIDs);
+		}
+		if(recordOnHand != null){
+			filterForm.setRecordOnHand(Integer.parseInt(recordOnHand));
+		}
+		
+		if(recordOnDemand != null){
+			filterForm.setRecordOnDemand(Integer.parseInt(recordOnDemand));
+		}
+		
+		if(sortBy != null){
+			filterForm.setSortBy(sortBy);
+		}
+		if(sortOrder != null){
+			filterForm.setSortOrder(sortOrder);
+		}
+		if(filterProdId != null){
+			filterForm.setFilterProdId(filterProdId);
+		}
+		JSONObject vw = null;
+		if ( ProdFilterForm.CREATE_PROD_FILTER.equals ( task ) ) {
+			vw = productFilterProcessor.createProdFilter (filterForm, user, adbRegionValue );
+			storeFilterAttrsInSession ( user, filterForm, session, adbRegionValue );
+		}
+		else if ( ProdFilterForm.EDIT_PROD_FILTER.equals ( task ) ) {
+			vw =  productFilterProcessor.retrieveProdFilter ( filterForm, user, adbRegionValue );
+			storeFilterAttrsInSession ( user, filterForm, session, adbRegionValue );
+		}
+		else if ( ProdFilterForm.LOAD_FILTERED_CATEGORIES.equals ( task ) ) {
+		    retrieveFilterAttrsFromSession ( filterForm, session );
+			request.setAttribute ( "popupPage", "true" );
+			vw = productFilterProcessor.loadFilteredCategories ( filterForm, session, user,adbRegionValue );
+		}
+		else if ( ProdFilterForm.SAVE_FILTERED_CATEGORIES.equals ( task ) ) { //removeFilterAttrsFromSession(session);
+			  retrieveFilterAttrsFromSession ( filterForm, session );
+			  request.setAttribute ( "popupPage", "true" );
+			  String dirtyFlagsString = request.getParameter("dirtyFlags");
+			  String selectedCategoriesString = request.getParameter("selectedCategories");
+			  if(dirtyFlagsString != null){
+				  filterForm.setDirtyFlag(dirtyFlagsString.split(","));
+			  }
+			  if(selectedCategoriesString != null){
+				  filterForm.setSelectedCategories(selectedCategoriesString.split(","));
+			  }
+			  vw = productFilterProcessor.saveFilteredCategories ( filterForm, session, user,adbRegionValue );
+		}
+	/*	else if ( ProdFilterForm.LOAD_FILTERED_PRODUCTS.equals ( task ) ) {
+		    retrieveFilterAttrsFromSession ( filterForm, session );
+			filterForm.setProductListingSource ( ProdFilterForm.PROD_SRC_SAVED_FILTER );
+			request.setAttribute ( "popupPage", "true" );
+			vw = productFilterProcessor.loadFilteredProducts ( filterForm, session, user,adbRegionValue );
+		}*/
+		/*else if ( ProdFilterForm.LOAD_CATEGORY_PRODUCTS.equals ( task ) ) {
+			if(formData != null){
+				SearchProductsForm searchProductsForm = gson.fromJson(formData, SearchProductsForm.class);
+				filterForm.setSearchScope(searchProductsForm.getSearchScope());
+				filterForm.setCategoryID(searchProductsForm.getCategoryID());
+				String productListingSource = request.getParameter("productListingSource");
+				if(productListingSource != null){
+					filterForm.setProductListingSource(productListingSource);
+				}
+			}
+		    retrieveFilterAttrsFromSession ( filterForm, session );
+			request.setAttribute ( "popupPage", "true" );
+			vw = productFilterProcessor.getProductsInCategory ( filterForm, session, user,adbRegionValue );
+		}*/
+		else if ( ProdFilterForm.SAVE_FILTERED_PRODUCTS.equals ( task ) ) { //removeFilterAttrsFromSession(session);
+			if(formData != null){
+				SearchProductsForm searchProductsForm = gson.fromJson(formData, SearchProductsForm.class);
+				filterForm.setSearchByAttribute(searchProductsForm.getSearchByAttribute());
+				filterForm.setKeyword(searchProductsForm.getKeyword());
+				filterForm.setAfterDiscontinueDate(searchProductsForm.getAfterDiscontinueDate());
+				filterForm.setBeforeDiscontinueDate(searchProductsForm.getBeforeDiscontinueDate());
+				filterForm.setAfterEndOfLifeDate(searchProductsForm.getAfterEndOfLifeDate());
+				filterForm.setAfterLastModifiedDate(searchProductsForm.getAfterLastModifiedDate());
+				filterForm.setBeforeLastModifiedDate(searchProductsForm.getBeforeLastModifiedDate());
+				filterForm.setSearchScope(searchProductsForm.getSearchScope());
+				filterForm.setProductLine(searchProductsForm.getProductLine());
+				String include = request.getParameter("include");
+				String exclude = request.getParameter("exclude");
+				if(include != null){
+					filterForm.setIncludedProducts(include.split(","));
+				}
+				
+				if(exclude != null){
+					filterForm.setExcludedProducts(exclude.split(","));
+				}
+				
+			}
+			  retrieveFilterAttrsFromSession ( filterForm, session );
+			  request.setAttribute ( "popupPage", "true" );
+			  vw = productFilterProcessor.saveFilteredProducts ( filterForm, session, user,adbRegionValue );
+		}
+		else if ( ProdFilterForm.SHOW_SEARCH_BLOCK.equals ( task ) ) {
+			    retrieveFilterAttrsFromSession ( filterForm, session );
+				request.setAttribute ( "popupPage", "true" );
+				vw = productFilterProcessor.showSearchProductsBlock ( filterForm, session, user,adbRegionValue );
+		}
+		/*else if ( ProdFilterForm.SEARCH_PRODUCTS.equals ( task ) ) {
+				if(formData != null){
+					SearchProductsForm searchProductsForm = gson.fromJson(formData, SearchProductsForm.class);
+					filterForm.setSearchByAttribute(searchProductsForm.getSearchByAttribute());
+					filterForm.setKeyword(searchProductsForm.getKeyword());
+					filterForm.setAfterDiscontinueDate(searchProductsForm.getAfterDiscontinueDate());
+					filterForm.setBeforeDiscontinueDate(searchProductsForm.getBeforeDiscontinueDate());
+					filterForm.setAfterEndOfLifeDate(searchProductsForm.getAfterEndOfLifeDate());
+					filterForm.setAfterLastModifiedDate(searchProductsForm.getAfterLastModifiedDate());
+					filterForm.setBeforeLastModifiedDate(searchProductsForm.getBeforeLastModifiedDate());
+					filterForm.setSearchScope(searchProductsForm.getSearchScope());
+					filterForm.setProductLine(searchProductsForm.getProductLine());
+				}
+			    retrieveFilterAttrsFromSession ( filterForm, session );
+				request.setAttribute ( "popupPage", "true" );
+				vw = productFilterProcessor.searchProducts ( filterForm, session, user,adbRegionValue );
+		}*/
+		else if ( ProdFilterForm.APPLY_FILTER.equals ( task ) ) { //request.setAttribute("popupPage","true");
+				  retrieveFilterAttrsFromSession ( filterForm, session );
+				  vw = productFilterProcessor.applyFilter ( filterForm, user,adbRegionValue );
+		}
+//		else if ( ( ProdFilterForm.SORT.equals ( task ) ) || ( ProdFilterForm.PAGINATE.equals ( task ) ) ) {
+//				String listingSource = filterForm.getProductListingSource ();
+//				retrieveFilterAttrsFromSession ( filterForm, session );
+//				request.setAttribute ( "popupPage", "true" );
+//				if ( ProdFilterForm.PROD_SRC_CATEGORY_TREE.equals ( listingSource ) ) {
+//					vw = productFilterProcessor.getProductsInCategory ( filterForm, ses, user,adbRegionValue );
+//				}
+//				else if ( ProdFilterForm.PROD_SRC_SAVED_FILTER.equals ( listingSource ) ) {
+//					vw = productFilterProcessor.loadFilteredProducts ( filterForm, ses, user,adbRegionValue );
+//				}
+//				else if ( ProdFilterForm.PROD_SRC_SEARCH.equals ( listingSource ) ) {
+//					vw = productFilterProcessor.searchProducts ( filterForm, ses, user, adbRegionValue );
+//				}
+//		}
+
+//		if ( filterForm.getPageSizeExceeded () ) {
+//			vw.put ("successMsg", "Number of rows per page can't exceede 10" );
+//		}
+
+//		vw.setMenuItem ( new MenuItem ( "/MaintainCatalogsX/Filter", null,
+//		                                "do/filter/ProdFilter?filterID="
+//		                                + filterForm.getFilterID ()
+//		                                + "&task=editProdFilter",
+//		                                true, true ) );
+		return vw.toJSONString();
+	}
+	
+	@RequestMapping(value = "/productFilter/treeSubNodes.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String retrieveSubNodes(HttpServletRequest request, LoadSubCategoriesForm form0){
+			Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+			User user = ses.getUser ();
+			Gson gson = new Gson();
+			HttpSession session = request.getSession ();
+			String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+			String formData = request.getParameter("form");
+			LoadSubCategoriesForm loadSubCatForm = null;
+			loadSubCatForm = new LoadSubCategoriesForm();
+			String task = request.getParameter("task");///filterForm.getTask ();
+			String nodePath = request.getParameter("nodePath");
+			String filterID = request.getParameter("filterID");
+			String ctgID = request.getParameter("ctgID");
+			String catalogID = request.getParameter("catalogID");
+			int nodeLevel = Integer.parseInt(request.getParameter("nodeLevel"));
+			String[] catalogIDs = new String[] {catalogID};
+			
+			ProdFilterMgr filterMgr = new ProdFilterMgr ();
+			ProdFilter filter = filterMgr.getFilter ( filterID ,ctgID, adbRegionValue);
+			filter.setCategoryID(ctgID);
+			filter.setLastModifiedBy(user.getLastModifiedBy());
+			List userModifiedNodeList = filter.getLoadRulesForNode (adbRegionValue);
+			
+			///&categoryToLocate=
+			///&parentSelectState=&
+			
+			loadSubCatForm.setTask(task);///.fromJson(formData, ProdFilterForm.class);
+			if(filterID != null){
+				loadSubCatForm.setCategoryToLoad(filterID+"^");
+			}
+			if(nodePath != null){
+				loadSubCatForm.setCategoryToLoad(nodePath);
+			}
+			if(ctgID != null){
+				loadSubCatForm.setCategorization(ctgID);
+			}
+			
+			JSONArray vw = null;
+			
+			if ( ThirdPartyPricingForm.LOAD_3PO_CATEGORIES.equals ( task ) ) {
+				vw = productFilterProcessor.loadSubCategories ( loadSubCatForm, user, 1, adbRegionValue, nodeLevel,userModifiedNodeList );
+			   /// vw = new CatForwardPath ( "/jsp/pricing/markup/loadSubCategories.jsp", false );
+			}
+			else if ( ProdFilterForm.LOAD_FILTERED_CATEGORIES.equals ( task ) ) {
+				vw = productFilterProcessor.loadSubCategories ( loadSubCatForm, user, 0, adbRegionValue, nodeLevel,userModifiedNodeList );
+			  ///  vw = new CatForwardPath ( "/jsp/filter/loadSubCategories.jsp", false );
+			}
+			else if ( QuickManageForm.LOAD_CATEGORIZATION.equals ( task ) ) {
+				vw = productFilterProcessor.loadSubCategories ( loadSubCatForm, user, 0, adbRegionValue, nodeLevel,userModifiedNodeList );
+			    ///vw = new CatForwardPath ( "/jsp/quickmanage/loadSubCategories.jsp", false );
+			}
+			return vw.toJSONString();
+		
+//		 retrieveFilterAttrsFromSession ( filterForm, session );
+//		 request.setAttribute ( "popupPage", "true" );
+//		 
+//		ProdFilterMgr filterMgr = new ProdFilterMgr ();
+//		ProdFilter filter = filterMgr.getFilter ( filterForm.getFilterID () , adbRegionValue);
+//		filter.loadRulesForNode (adbRegionValue);
+//		 Integer ctgID_1 = Integer.valueOf ( filter.getCategoryID () );
+//		 CategoryTreeNode ctgTreeNode1 = new CategoryTreeNode();
+//		 CategoryTreeBuilder ctgTreeBuilder = new FilterCategoryTreeBuilder ( user, ctgID_1, adbRegionValue );
+//		 JSONArray childrenData = ctgTreeBuilder.populateChildCategories ( ctgTreeNode1 ,adbRegionValue, (nodeLevel+1));
+//			TreeMap<String,JSONObject> treeMap = new TreeMap<String,JSONObject>();
+//			JSONObject  jsonObject3 = null;
+//			for(int w = 0; w < childrenData.size(); w++){
+//				jsonObject3 = null;
+//				jsonObject3 = (JSONObject)childrenData.get(w);
+//				treeMap.put(jsonObject3.get("text").toString(), jsonObject3);
+//			}
+//			Collection<JSONObject> list = treeMap.values();
+//			Iterator<JSONObject> itr = list.iterator();
+//			JSONArray jArray = new JSONArray();
+//			while(itr.hasNext()){
+//				jArray.add(itr.next());
+//			}
+//		/// vw = productFilterProcessor.loadFilteredCategories ( filterForm, ses, user,adbRegionValue );
+//		return jArray.toJSONString();
+	}///retrieveSubNodes
+	
+	@RequestMapping(value = "/productFilter/showProductDetailsDialog.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String loadDialogBox(HttpServletRequest request, StandCatProdDetailForm form0){
+		 JSONObject vw;
+		 Gson gson = null;
+		 vw = new JSONObject();
+		 gson = new Gson();
+		 Category log = FeCTX.getCTX ().getLog ();
+		 String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		/// StandCatProdDetailForm form = ( StandCatProdDetailForm ) form0;
+		 String formData = request.getParameter("form");   
+		 StandCatProdDetailForm form = gson.fromJson(formData, StandCatProdDetailForm.class);
+		    // set the path, for redirection.
+		 ///   vw = new CatForwardView ( "/catalogx/StandardCatProductDetail.jsp", "Standard Catalog Product Detail" );
+		    // Dispatches based on task's value.
+		Session session = SessionMgr.getSessionMgr ().getSession ( request, false );
+		  String task = form.getTask ();
+		    log.debug ( "task: " + task );
+		    if ( task == null || task.equals ( "ProductSelected" )
+		         || task.equals ( "priceDescriptorChange" )
+		         || task.equals ( "QuickManageProdSelect" ) ) {
+				      if ( task == null ) {
+				    	  task = "";
+				      }
+				      String productID = form.getProdId ();
+				      String ctgID = getCtgID ( form, request );
+				      String priceDescp = getprcDesc ( form, request );
+				      String cntryCD = getprccntryCd ( form, request );
+		
+				      List prcDescList = new ArrayList ();
+				      if ( task.equals ( "priceDescriptorChange" ) ) {
+				        form.setprcDescList ( form.getprcDescList () );
+				        ctgID = form.getCtgID ();
+				      }
+				      //List countryList = CatalogWebUtil.getSelectedCountryList(form.getSelectedCountryList(), request);
+				      Product productSel = null;
+		
+				      if ( task.equals ( "QuickManageProdSelect" )
+				           || task.equals ( "priceDescriptorChange" ) ) {
+				        request.setAttribute ( "popupPage", "true" );
+				        String prcDescString = request.getParameter("prcDescList");
+				        prcDescString = prcDescString.substring(1, prcDescString.length()-1);
+				        String[] myArray = prcDescString.split(",");///request.getParameterValues ( "prcDescList" );
+				        if ( myArray == null || myArray.length == 0 ) {
+				          myArray = new String[] {"no price descriptor available"};
+				        }
+				        if ( task.equals ( "QuickManageProdSelect" ) ) {
+				          priceDescp = myArray[0];
+				        }
+				        else if ( task.equals ( "priceDescriptorChange" ) ) {
+				          priceDescp = form.getselectedPriceDescriptor ();
+				        }
+		
+				        form.setprcDescList ( myArray );
+				        if ( cntryCD == null || cntryCD.length () == 0 ) {
+				          if ( priceDescp != null && priceDescp.length () > 1 ) {
+				            cntryCD = priceDescp.substring ( 0, 2 );
+				          }
+				        }
+				        productSel = productFilterProcessor.getProductDetailQckMng ( getProduct ( form, request )
+				        										, priceDescp, ctgID, cntryCD, adbRegionValue );
+				      }
+				      else {
+				        productSel = productFilterProcessor.getProductDetail ( ctgID, productID, priceDescp
+				        														, cntryCD, adbRegionValue );
+				      }
+		
+				      if ( productSel != null ) {
+				        form.setcatalogID ( productSel.getCatalogID () );
+				        form.setlanguage ( productSel.getHpLangCode () );
+				        form.setProdId ( productSel.getProdId () );
+				        form.setsource ( productSel.getSource () );
+				        form.setmanufacturer ( productSel.getMfg () );
+				        form.setsrtLeadTime ( productSel.getSrt () );
+				        form.setprogramSLA ( productSel.getPgmSLA () );
+				        form.setprovideremails ( productSel.getCpmSvcProviderEmails () );
+				        form.setsupplierURl ( productSel.getSupplierURL () );
+				        form.setshortDesc ( productSel.getShortDesc () );
+				        form.setlongDesc ( productSel.getLongDesc () );
+				        form.setDataSheetURL ( productSel.getDataSheetName () );
+				        form.setImageURL ( productSel.getImageName () );
+				        form.setfulfillmentSite ( productSel.getFFsID () );
+				        //form.setprogramName(productSel.getPrgName()); -- Abhinand Should be uncommented once the API provides this info.
+				        form.setmanufPartID ( productSel.getMfgPartID () );
+				        form.setxmsWarrantyInfo ( productSel.getWarrantyInfo () );
+				        form.setDataSheetNameLink ( productSel.getDataSheetName () );
+				        form.setImageNameLink ( productSel.getImageName () );
+				        //form.setxmsAvailabilityInfo(productSel.getXmsAvailabiltyList());
+		
+				        // Abhinand - This Portion should be revised based on the XMS Availability API.
+				        if ( productSel.getXmsAvailabiltyList () != null ) {
+				          //form.setxmsAvailability((String)(productSel.getXmsAvailabiltyList().get(0)));
+				          form.setxmsAvailabilityInfo ( productSel.getXmsAvailabiltyList () );
+				        }
+				      }
+				      else if ( productID != null ) {
+				        ArrayList prod_id_parts = StrUtil.split ( productID, "^" );
+				        if ( prod_id_parts != null && prod_id_parts.size () > 1 ) {
+				          form.setProdId ( ( String ) prod_id_parts.get ( prod_id_parts.size ()
+				              - 1 ) );
+				        }
+				        System.out.println ( "priceDescp: " + priceDescp );
+				        if ( priceDescp == null ) {
+				          priceDescp = "no price descriptor available";
+				        }
+				        if ( priceDescp != null ) {
+				          List descriptors = new ArrayList ();
+				          descriptors.add ( priceDescp );
+				          form.setPrcDesc ( priceDescp );
+				          form.setSelectedPriceDescriptor ( priceDescp );
+				          form.setPriceDescriptorList ( descriptors );
+				          form.setprcDescList ( new String[] {priceDescp} );
+				        }
+				      }
+				      vw.put("form", gson.toJson(form));
+				      return vw.toJSONString();
+		    }
+		    else {
+		      // Incase of nothing is found throw this error.
+		      throw new RuntimeException ( "invalid task: " + task );
+		    }
+
+	}
+	
+	@RequestMapping(value = "/productFilter/loadTreeSubNodes.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody String loadTreeWithTableColumnClick(HttpServletRequest request){
+			Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+			User user = ses.getUser ();
+			Gson gson = new Gson();
+			String nodePaths = request.getParameter("nodePath");
+			System.out.println("nodePath---"+nodePaths);
+			String nodes[] = nodePaths.split("\\^");
+			HttpSession session = request.getSession ();
+			String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+			String formData = request.getParameter("form");
+			String filterID = request.getParameter("filterID");
+			String ctgID = request.getParameter("ctgID");
+			String catalogID = request.getParameter("catalogID");
+			int nodeLevel = Integer.parseInt(request.getParameter("nodeLevel"));
+			String[] catalogIDs = new String[] {catalogID};
+			
+			ProdFilterMgr filterMgr = new ProdFilterMgr ();
+			ProdFilter filter = filterMgr.getFilter ( filterID ,ctgID, adbRegionValue);
+			List userModifiedNodeList = filter.getLoadRulesForNode (adbRegionValue);
+			
+			LoadSubCategoriesForm loadSubCatForm = null;
+			JSONArray vw = null;
+				loadSubCatForm = null;
+				loadSubCatForm = new LoadSubCategoriesForm();
+				loadSubCatForm.setTask("loadFilteredCategories");///.fromJson(formData, ProdFilterForm.class);
+				if(nodes.length > 0){
+					loadSubCatForm.setCategoryToLoad(nodes[0]+"^");
+				}
+				if(ctgID != null){
+					loadSubCatForm.setCategorization(ctgID);
+				}
+				vw = productFilterProcessor.loadSubCategoriesTree ( loadSubCatForm, user, 0, adbRegionValue, nodeLevel, nodes ,userModifiedNodeList,"", false);
+			
+			return vw.toJSONString();
+	}
+	
+	/* These methods which use HttpSession instead of normal request parameters are necessory
+	   because use of HTML frames in the GUI associated with this struts action. Only way to pass
+	   parameters to frames in a frame-set is to use encoded URL in frame's 'src' attribute which
+	   is awkward and limited to 255 bytes.
+	 */
+	private void storeFilterAttrsInSession ( User user, ProdFilterForm filterForm, Session session, String adbRegionValue ){ //removeFilterAttrsFromSession(session);
+		  if ( filterForm.getFilterID () != null ) {
+			  session.setAttribute ("hp.comcat.web.filter.ProdFilterAction.filterID", filterForm.getFilterID () );
+		  }
+		  if ( filterForm.getCategorization () != null ) {
+			  session.setAttribute ("hp.comcat.web.filter.ProdFilterAction.categorization", filterForm.getCategorization () );
+		  }
+		  if ( filterForm.getCatalogIDs () != null ) {
+			  session.setAttribute ("hp.comcat.web.filter.ProdFilterAction.catalogIDs", filterForm.getCatalogIDs () );
+			  ProductSearchHelper searchHelper = new ProductSearchHelper ( user, filterForm.getCatalogIDs (), adbRegionValue );
+			  session.setAttribute ( "hp.comcat.web.filter.ProdFilterAction.countries", searchHelper.getCountries () );
+			  session.setAttribute ( "hp.comcat.web.filter.ProdFilterAction.catalogNames", searchHelper.getCatalogNames () );
+			  session.setAttribute ("hp.comcat.web.filter.ProdFilterAction.priceDescriptors", searchHelper.getPriceDescriptors () );
+		  }
+	}///storeFilterAttrsInSession
+	
+	private void retrieveFilterAttrsFromSession ( ProdFilterForm filterForm, Session session ) {
+		if (filterForm.getFilterID () == null ) {
+			filterForm.setFilterID ( ( String )session.getAttribute ( "hp.comcat.web.filter.ProdFilterAction.filterID" ) );
+		}
+		if ( filterForm.getCategorization () == null ) {
+			filterForm.setCategorization ( (String ) session.getAttribute ( "hp.comcat.web.filter.ProdFilterAction.categorization" ) );
+		}
+		if ( filterForm.getCatalogIDs () == null ) {
+			filterForm.setCatalogIDs ( ( String[] )session.getAttribute ( "hp.comcat.web.filter.ProdFilterAction.catalogIDs" ) );
+		}
+		if ( filterForm.getCountries () == null ) {
+			filterForm.setCountries ( ( String[] )session.getAttribute ( "hp.comcat.web.filter.ProdFilterAction.countries" ) );
+		}
+		if ( filterForm.getCatalogNames () == null ) {
+			filterForm.setCatalogNames ( (String[] ) session.getAttribute ("hp.comcat.web.filter.ProdFilterAction.catalogNames" ) );
+		}
+		if ( filterForm.getPriceDescriptors () == null ) {
+			filterForm.setPriceDescriptors ( ( String[] ) session.getAttribute ("hp.comcat.web.filter.ProdFilterAction.priceDescriptors" ) );
+		}
+	}///retrieveFilterAttrsFromSession
+
+	private void removeFilterAttrsFromSession ( Session session ) {
+		session.removeAttribute ( "hp.comcat.web.filter.ProdFilterAction.filterID" );
+		session.removeAttribute ("hp.comcat.web.filter.ProdFilterAction.categorization" );
+		session.removeAttribute ( "hp.comcat.web.filter.ProdFilterAction.catalogID" );
+		session.removeAttribute ( "hp.comcat.web.filter.ProdFilterAction.countries" );
+		session.removeAttribute ( "hp.comcat.web.filter.ProdFilterAction.catalogNames" );
+		session.removeAttribute ("hp.comcat.web.filter.ProdFilterAction.priceDescriptors" );
+	}///removeFilterAttrsFromSession
+	
+	private String getCtgID ( StandCatProdDetailForm form , HttpServletRequest request ) {
+		String ctgID = ( String ) request.getAttribute ( "ctgID" );
+		if ( ctgID == null ) {
+			ctgID = request.getParameter ( "ctgID" );
+		}
+		if ( ctgID == null ) {
+			ctgID = form.getCatalogID ();
+		}
+		return ctgID;
+	}///getCtgID
+
+	private String getprcDesc ( StandCatProdDetailForm form, HttpServletRequest request ) {
+		String prcDescP = ( String ) request.getAttribute ( "prcDesc" );
+		if ( prcDescP == null ) {
+			prcDescP = request.getParameter ( "prcDesc" );
+		}
+		if ( prcDescP == null ) {
+			prcDescP = form.getSelectedPriceDescriptor ();
+		}
+		return prcDescP;
+	}///getprcDesc
+
+	private String getprccntryCd ( StandCatProdDetailForm form, HttpServletRequest request ) {
+		String cntryCD = ( String ) request.getAttribute ( "cntryCd" );
+		if ( cntryCD == null ) {
+			cntryCD = request.getParameter ( "cntryCd" );
+		}
+		if ( cntryCD == null ) {
+			cntryCD = form.getcntryCd ();
+		}
+		return cntryCD;
+	}///getprccntryCd
+
+	private String getCatalogID ( StandCatProdDetailForm form, HttpServletRequest request ) {
+		String catalogID = ( String ) request.getAttribute ( "catalogID" );
+		if ( catalogID == null ) {
+			catalogID = request.getParameter ( "catalogID" );
+		}
+		if ( catalogID == null ) {
+			catalogID = form.getProdId ();
+		}
+		return catalogID;
+	}///getCatalogID
+	
+	private String getProductID ( StandCatProdDetailForm form, HttpServletRequest request ) {
+		String productID = ( String ) request.getAttribute ( "prdId" );
+		if ( productID == null ) {
+			productID = request.getParameter ( "prdId" );
+		}
+		if ( productID == null ) {
+			productID = form.getProdId ();
+		}
+		return productID;
+	}///getProductID
+
+	private String getProduct ( StandCatProdDetailForm form, HttpServletRequest request ) {
+		String product = ( String ) request.getAttribute ( "prodId" );
+		if ( product == null ) {
+			product = request.getParameter ( "prodId" );
+		}
+		if ( product == null ) {
+			product = form.getProdId ();
+		}
+		return product;
+	}///getProduct
+	
+	
+
+
+}

@@ -1,0 +1,26 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.home;
+
+import org.json.simple.JSONArray;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.ses.Session;
+
+/**
+ * @author kn
+ *
+ */
+@Service
+public class AcessProcessor {
+	
+	public String changeAccess(String accountId){
+		
+		
+		return null;
+	}//changeAccess
+	
+
+}//class

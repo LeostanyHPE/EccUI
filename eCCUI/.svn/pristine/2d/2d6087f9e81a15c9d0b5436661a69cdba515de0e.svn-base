@@ -1,0 +1,289 @@
+/**
+ * <p>Title: PublishingMailUtility</p>
+ * <p>Description: Task Contoller for Batch Publish</p>
+ * <p>Copyright: Copyright (c) 2005</p>
+ * <p>Company: HP</p>
+ */
+package com.hp.ecc.ui.biz.publish;
+
+import java.net.InetAddress;
+import java.util.*;
+
+import com.hp.ecc.ui.apps.PublishDaemonHandler;
+import com.hp.ecc.ui.biz.archive.CatalogArchive;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.common.util.MessageSender;
+
+/**
+ * @author
+ * @version 1.0
+ * @see TaskController, PublishDaemon
+ * 
+ *      This Class handles Email activity for publishing.
+ */
+public class PublishingMailUtility {
+
+	//private Category log = null;
+
+	public PublishingMailUtility() {
+		CTX ctx = CTX.getCTX();
+		//log = ctx.getLog("PublishingMailUtility");
+	}
+
+	/**
+	 * notify the status to user
+	 * 
+	 */
+	protected void notifyUser(Task task, CatalogArchive archive,
+			TaskStatus status) {
+
+		String notify = task.getNotify();
+		if (notify.equalsIgnoreCase("Y")) {
+			if (task.getPublishMode().equalsIgnoreCase("S")) {
+				Catalog catalog = archive.getCatalog();
+				Customer customer = getCustomer(catalog, "default");
+				String creator = archive.getCreator();
+				String mailContent = buildMail(creator, catalog, customer,
+						status);
+				sendOut(task.getNotifyEmail(), catalog, mailContent, status);
+			} else {
+				String mailContent = buildMail(archive.getCreator(), task,
+						status);
+			
+				String formatKey = task.getPublishBatchFormatKey();
+				//log.debug("task format " + formatKey);
+				if (formatKey != null && !formatKey.equals("")) {
+					if (formatKey.equals("1221") || formatKey.equals("354")) {
+						sendOut(task, mailContent, status);
+					} else {
+						sendOut(task, mailContent, task.getNotifyEmail());
+					}
+				} else {
+					sendOut(task, mailContent, task.getNotifyEmail());
+				}
+			}
+		}
+	}
+
+	private void sendOut(String mailAddress, Catalog catalog, String content) {
+		sendOut(mailAddress, catalog, content, null);
+	}
+
+	private void sendOut(String mailAddress, Catalog catalog, String content,
+			TaskStatus status) {
+		MessageSender ms = new MessageSender();
+		ms.setTextMessage(content);
+		ms.setMessageFrom("comcat@hp.com");
+		ms.setMessageTo(mailAddress);
+		String hName = getHostName();
+		String sts = null;
+		if (status != null) {
+			sts = status.getLongMsg();
+		} else {
+			sts = "";
+		}
+		ms.setMessageSubject(hName + " - WW COMCAT Catalog "
+				+ catalog.getCatalogName() + " " + sts);
+		try {
+			ms.send();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			// TODO
+		}
+	}
+
+	private void sendOut(Task task, String content, String toAddress) {
+		MessageSender ms = new MessageSender();
+		ms.setTextMessage(content);
+		ms.setMessageFrom("comcat@hp.com");
+		// ms.setMessageTo(task.getNotifyEmail());
+		ms.setMessageTo(toAddress);
+		String hName = getHostName();
+		ms.setMessageSubject(hName + " - WW COMCAT Batch Publish Task "
+				+ task.getTaskName());
+		try {
+			ms.send();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			// TODO
+		}
+	}
+
+	/*
+	 * Ticket No : ASP000006594704 New method added to add status in mail
+	 * subject. Added by Sheena C G.
+	 */
+	private void sendOut(Task task, String content, TaskStatus status) {
+		MessageSender ms = new MessageSender();
+		ms.setTextMessage(content);
+		ms.setMessageFrom("comcat@hp.com");
+		ms.setMessageTo(task.getNotifyEmail());
+		String hName = getHostName();
+		ms.setMessageSubject(hName + " - WW COMCAT Batch Publish Task "
+				+ task.getTaskName() + " " + status.getLongMsg());
+		try {
+			ms.send();
+		} catch (Exception exception) {
+			exception.printStackTrace();
+			// TODO
+		}
+	}
+
+	private String buildMail(String creator, Task task, TaskStatus status) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Batch publish task \"");
+		sb.append(task.getTaskName());
+
+		sb.append("\" ");
+		sb.append("is triggered to be generated and published by ");
+		sb.append(creator);
+		sb.append(".\n");
+
+		sb.append("Email generation time is ");
+		sb.append((new Date()).toString());
+		sb.append(".\n");
+		sb.append("The status is ").append(status.getLongMsg());
+		sb.append("\n");
+
+		//log.debug("***** send out message: " + sb.toString());
+		return sb.toString();
+	}
+
+	/**
+	 * get customer object based on the cust_key in catalog
+	 * 
+	 */
+	private Customer getCustomer(Catalog catalog, String adbRegionToConnect) {
+		Customer cust = null;
+
+		/*
+		 * if (catalog != null){ CustomerMgr cMgr = new CustomerMgr(); String
+		 * custKey = catalog.getCustKey(); if (!StrUtil.isEmpty(custKey)) cust =
+		 * cMgr.getCustomer(custKey); }
+		 */
+		if (catalog != null) {
+			cust = catalog.getCustomer(adbRegionToConnect);
+
+		}
+		return cust;
+	}
+
+	private String getHostName() {
+		String hName = null;
+		try {
+			hName = InetAddress.getLocalHost().getHostName();
+			// log.debug("hName:" + hName);
+		} catch (Exception e) {
+			// do nothing
+			hName = "EComcatServer";
+		}
+		return hName;
+	}
+
+	private String buildMail(String creator, Catalog catalog,
+			Customer customer, TaskStatus status) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Catalog \"");
+		sb.append(catalog.getCatalogName());
+		sb.append("\"");
+		if (customer != null) {
+			sb.append("\" under customer - \"");
+			sb.append(customer.getCustName());
+		}
+
+		if (isC1BCatalog(catalog)) {
+			sb.append("\"(Account Code:");
+			sb.append(catalog.getBorgID());
+			sb.append(")\n");
+
+		} else if (customer != null) {
+			sb.append("\"(customer id:");
+			sb.append(customer.getCustID());
+			sb.append(")\n");
+		}
+
+		sb.append("is triggered to be generated and published by ");
+		sb.append(creator);
+		sb.append(".\n");
+		sb.append("The output format of catalog is ");
+		sb.append(catalog.getOutputFormatName());
+		sb.append(".\n");
+		sb.append("Email generation time is ");
+		sb.append((new Date()).toString());
+		sb.append(".\n");
+		sb.append("The status is ").append(status.getLongMsg());
+		sb.append("\n");
+
+		//log.debug("***** send out message: " + sb.toString());
+		return sb.toString();
+	}
+
+	private boolean isC1BCatalog(Catalog catalog) {
+		String outputID = catalog.getOutputFormatID();
+		return (outputID.startsWith("C1BCAT"));
+	}
+
+	protected void notifyFailedBatchSupport(Task task,
+			CatalogArchive batcharchive, TaskStatus status,
+			List generatedCatalogs, List failedCatalogs, Map catErrors) {
+		String mailContent = buildMail(task, batcharchive, status,
+				generatedCatalogs, failedCatalogs, catErrors);
+		String toAddress = PublishDaemonHandler.getSupportEmail();
+		sendOut(task, mailContent, toAddress);
+	}
+
+	private String buildMail(Task task, CatalogArchive batcharchive,
+			TaskStatus status, List generatedCatalogs, List failedCatalogs,
+			Map catErrors) {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Batch publish task \"");
+		sb.append(task.getTaskName());
+		sb.append("\" Batch ");
+		sb.append(batcharchive.getBatchPubNum());
+		sb.append(" is triggered to be generated and published by ");
+		sb.append(batcharchive.getCreator());
+		sb.append(".\n");
+		sb.append("Email generation time is ");
+		sb.append((new Date()).toString());
+		sb.append(".\n");
+		sb.append("Overall publish status is ");
+		sb.append(status.getLongMsg());
+		sb.append(".\n\n");
+		sb.append("Total catalogs	: ");
+		sb.append(generatedCatalogs.size() + failedCatalogs.size());
+		sb.append("\n");
+		sb.append("Successfuul		: ");
+		sb.append(generatedCatalogs.size());
+		sb.append("\n");
+		sb.append("Failed 			: ");
+		sb.append(failedCatalogs.size());
+		sb.append("\n\n\n");
+		sb.append("List of Failed Catalogs\n");
+		sb.append("---------------------------------------------\n");
+		sb.append("Catalog ID\tCatalog Name\tError\n");
+		sb.append("---------------------------------------------\n");
+		for (int catCount = 0; catCount < failedCatalogs.size(); catCount++) {
+			Catalog catalog = (Catalog) failedCatalogs.get(catCount);
+			CatalogError catError = (CatalogError) catErrors.get(catalog
+					.getId());
+			sb.append(catalog.getId());
+			sb.append("\t");
+			sb.append(catalog.getCatalogName());
+			sb.append("\t");
+			sb.append(catError.getShortMessage());
+			sb.append("\n");
+		}
+		sb.append("---------------------------------------------\n\n");
+		sb.append("Email generation time is ");
+		sb.append(new java.util.Date().toString());
+		sb.append(".\n");
+		sb.append("Server Name : ");
+		sb.append(getHostName());
+		sb.append("\n");
+		//log.debug("***** send out message: " + sb.toString());
+		return sb.toString();
+	}
+
+}

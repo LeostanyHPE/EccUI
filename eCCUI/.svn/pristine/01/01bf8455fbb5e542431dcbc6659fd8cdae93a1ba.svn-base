@@ -1,0 +1,1056 @@
+package com.hp.ecc.ui.biz.processor.catalog;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+import hp.comcat.dax.fwk.common.db.dax.DaxStmt;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.hp.ecc.ui.biz.BizMgrUtil;
+import com.hp.ecc.ui.biz.ResponseStatus;
+import com.hp.ecc.ui.biz.ResponseStatusInfo;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.biz.catalog.CatalogProgramFilterMgr;
+import com.hp.ecc.ui.biz.catalog.Program;
+import com.hp.ecc.ui.biz.catalog.StandardFilterMgr;
+import com.hp.ecc.ui.biz.catalog.crosssale.CrossSaleMgr;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.category.CategorizationSQLInfo;
+import com.hp.ecc.ui.biz.category.Category;
+import com.hp.ecc.ui.biz.category.CategoryMgr;
+import com.hp.ecc.ui.biz.category.SearchMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.PriceProcedureBean;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSite;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSiteMgr;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSiteProd;
+import com.hp.ecc.ui.biz.pdapi.PdapiMgr;
+import com.hp.ecc.ui.biz.pdapi.PdapiProduct;
+import com.hp.ecc.ui.biz.product.CatalogProductMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.ZeroPriceOption;
+import com.hp.ecc.ui.biz.product.ZeroPriceOptionMgr;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.web.catalog.master.MasterWebUtil;
+import com.hp.ecc.ui.db.dao.ChildCatalogDao;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.EditCatalogForm;
+import com.hp.ecc.ui.view.beans.PriceMasterForm;
+import com.hp.ecc.ui.view.beans.ProductOptionListForm;
+import com.hp.ecc.ui.view.beans.QuoteBean;
+import com.hp.ecc.ui.view.beans.StandardFilter;
+import com.hp.ecc.ui.view.controller.ChildCatalogProductController;
+import com.hp.ecc.ui.web.util.EditCatalogConverter;
+import com.hp.ecc.ui.web.util.HtmlUtil;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Service
+public class ViewChildCatalogProcessor {
+	private static final Logger logger = LoggerFactory.getLogger(ViewChildCatalogProcessor.class);
+	private MasterCatalogProductsUpdateProcessor masterCatalogProductsUpdateProcessor = new MasterCatalogProductsUpdateProcessor();
+	ChildCatalogDao childCatalogDao=new ChildCatalogDao();
+	private Categorization categoryHeader = null;
+	
+
+	public String[] getCatalogStandardFiltersNames ( String catalogID, String adbRegionToConnect ) {
+	    String[] names = null;
+
+	    List standardFilters = ( List ) getCatalogStandardFilters ( catalogID, adbRegionToConnect );
+	    if ( !StrUtil.isListEmpty ( standardFilters ) ) {
+	      names = new String[standardFilters.size ()];
+
+	      for ( int ii = 0; ii < standardFilters.size (); ii++ ) {
+	        StandardFilter p = ( StandardFilter ) standardFilters.get ( ii );
+	        names[ii] = p.getFilterName ();
+	      }
+	    }
+	    return names;
+	  }
+	
+	
+	public Collection getCatalogStandardFilters ( String catalogID, String adbRegionToConnect ) {
+	    Catalog catalog = new Catalog ();
+	    StandardFilter standardFilter = new StandardFilter ();
+	    List list = new ArrayList ();
+	    if ( !StrUtil.isEmpty ( catalogID ) ) {
+	    	catalog.setId ( catalogID );
+	 list=childCatalogDao.getCatalogStandardFilters("standard_filter", "catalogStandardFilters",catalog,StandardFilter.class, adbRegionToConnect);
+	    }
+	    return list;
+	}
+
+	 public String[] getCatalogProgramsNames ( String catalogID, String adbRegionToConnect ) {
+		    String[] names = null;
+
+		    List programs = ( List ) getCatalogPrograms ( catalogID, adbRegionToConnect );
+		    if ( !StrUtil.isListEmpty ( programs ) ) {
+		      names = new String[programs.size ()];
+
+		      for ( int ii = 0; ii < programs.size (); ii++ ) {
+		        Program p = ( Program ) programs.get ( ii );
+		        names[ii] = p.getProgramName ();
+		      }
+		    }
+		    return names;
+		  }
+	 
+	 
+	 public Collection getCatalogPrograms ( String catalogID, String adbRegionToConnect ) {
+		    Catalog catalog = new Catalog ();
+		    Program program = new Program ();
+		    List list = new ArrayList ();
+		    if ( !StrUtil.isEmpty ( catalogID ) ) {
+		    catalog.setId ( catalogID );
+		    list =childCatalogDao.getCatalogPrograms("catProgram", "getCatalogPrograms", catalog,Program.class, adbRegionToConnect);
+		    }
+		    return list;
+
+	 }
+	 
+	 public void setCanUploadReslr(Customer cust, EditCatalogForm form) {
+			String priceSrc = cust.getPriceSource();
+			if (priceSrc != null
+					&& (priceSrc.equalsIgnoreCase("SPH") || priceSrc
+							.equalsIgnoreCase("Reseller"))) {
+				form.setCanUploadReslr("true");
+			} else {
+				form.setCanUploadReslr("false");
+			}
+	}///setCanUploadReslr
+	 
+	 public JSONObject processRetrievalList(Catalog catalog, EditCatalogForm form,HttpServletRequest request) {
+		 	JSONObject childCatalogListJson = null;
+		 	childCatalogListJson = new JSONObject();
+		 	
+		 	boolean isFetchFromDB=false;
+		 	String queryId = form.getQueryId();
+			if( queryId==null  || queryId.equals("") ){
+				isFetchFromDB = true;
+			}
+		 
+			Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+			categoryHeader = (Categorization) ses.getAttribute("CATEGORIZATION_INFO");
+			JSONArray prodList = processProductList( form, request,catalog, PagesUtil.getDbRegionToConnect(request));
+			
+			ArrayList deletedProdIndexes = new ArrayList();
+			Iterator itr = prodList.iterator();
+			int i = 0;
+			while (itr.hasNext()) {
+				JSONObject currProd = (JSONObject) itr.next();
+				if ("Y".equalsIgnoreCase(currProd.get("cit_delete_flag").toString())){///DeleteFlag())) {
+					deletedProdIndexes.add("" + i);
+				}
+				i++;
+				
+				currProd = null;
+			}
+			form.setSelectedProducts((String[]) deletedProdIndexes.toArray(new String[0]));
+
+			form.setProductList(prodList);
+			childCatalogListJson.put("ChildProductList", prodList);
+			
+			
+			//Total count
+			if( prodList.size() > 0){				
+				if(form.getFilterProdId() !=null && form.getFilterProdId().length()>0 || form.getFilterPartNumber() !=null && form.getFilterPartNumber().length()>0 || form.getFilterConfigId() !=null && form.getFilterConfigId().length()>0 || form.getFilterSource() !=null && form.getFilterSource().length() >0 || form.getFilterProductLine() != null && form.getFilterProductLine().length()>0){
+					childCatalogListJson.put("recordCount", prodList.size());
+					form.setRecordCount(prodList.size());
+				}else{
+					int returnCountValue = -1;
+					/*if( ses.getAttribute("CHILD_CATALOG_PRODUCT_COUNT") != null){
+						returnCountValue = ((Integer) ses.getAttribute("CHILD_CATALOG_PRODUCT_COUNT")).intValue();				    	 
+				    }
+				    else{*/
+					if( isFetchFromDB){
+						long startTime1 = System.currentTimeMillis();
+						returnCountValue = childCatalogDao.retrieveCatalogProductCount(catalog.getId(), PagesUtil.getDbRegionToConnect(request));						
+				    	ses.setAttribute("CHILD_CATALOG_PRODUCT_COUNT"+catalog.getId(), new Integer(returnCountValue));
+				    	System.out.println("Time taken to get catalog product count: "+ (System.currentTimeMillis() - startTime1) + "millisec");
+				    }
+					else{
+						returnCountValue = ((Integer) ses.getAttribute("CHILD_CATALOG_PRODUCT_COUNT"+catalog.getId())).intValue();	
+					}
+					
+					form.setRecordCount(returnCountValue);	  
+					childCatalogListJson.put("recordCount", returnCountValue);
+				}
+				
+			}
+
+			if (isShowStatus(request)) {
+				String msg = convertStatusToMsg(form.getLoadStatus());
+				if (!StrUtil.isEmpty(msg)) {
+					childCatalogListJson.put("successMsg", msg);
+				}
+			}
+			
+			Gson gson = new Gson();
+			childCatalogListJson.put("form", gson.toJson(form));
+
+			return childCatalogListJson;
+		}
+	 
+	 private void checkCategoriesToAttach(JSONArray prodList, Catalog catalog, String dbRegionToConnect){
+	 	String catId = catalog.getCategorizationID();
+		// process list, attach nodeId to every product and make CAT99999 categories empty
+		if (!StrUtil.isEmpty(catId)) {			
+			if( categoryHeader == null ){
+				categoryHeader = CategorizationMgr.getCategorization(Integer.parseInt(catId), dbRegionToConnect);
+			}
+
+			attachCategoriesToProducts(prodList,false, dbRegionToConnect);
+
+			// check if current categorization is of COMCAT type and CAT99999 node is available
+			Category cat9999Node = CategoryMgr.getCAT9999Node(categoryHeader, dbRegionToConnect);
+			if (cat9999Node != null) {
+				// now find all product with CAT9999 and drop its productCategory property
+				Iterator prodsIt = prodList.iterator();
+				JSONObject _p;
+				JSONObject node;
+				while (prodsIt.hasNext()) {
+					_p = (JSONObject) prodsIt.next();
+					node = (JSONObject)_p.get("fCategories");
+					if (node != null&& node.get("nodeId").equals(cat9999Node.getNodeId())) {
+						logger.debug("Product " + _p.get("prodid")+ " is assigned to CAT99999 category");
+						_p.put("fCategories", null);///setCategory(null);
+					}
+				}
+			}			
+		}
+	 }//checkCategoriesToAttach
+	 
+		private JSONArray processProductList(EditCatalogForm form,HttpServletRequest request, Catalog cat, String adbRegionToConnect) {
+
+			String catalogId = cat.getId();
+
+			JSONArray products = null;
+			boolean get_prod = true;
+			String task = form.getTask();
+			if (!get_prod && !("search".equals(task))) {
+				return products;
+			}
+
+			String kw = form.getSearchKeywords();
+			if (!get_prod && StrUtil.isEmpty(kw)) {
+				///vw.getErrs().add("Please specifiy the keywords for searching products");
+				return products;
+			}
+
+			String styleId = request.getParameter("styleList");
+			System.out.println("ViewCatalogAction.processProductList(): From Session got styleid = " + styleId);
+			
+			if(styleId==null)
+			{
+				logger.debug("ViewCatalogAction.processProductList(): styleId is currentlly null as it is first call to this method");
+				styleId="0";
+			}
+				
+			products = retrieveProducts(cat, form, adbRegionToConnect);
+			
+			if (!StrUtil.isListEmpty(products)) {
+				boolean ffsOpt = form.getShowFFSForOptions();
+				for (Iterator it = products.iterator(); it.hasNext();){
+					JSONObject prod = (JSONObject) it.next();
+					if (ffsOpt) {
+						getFFSforOptions(prod, adbRegionToConnect);
+					} else {
+						///getUIOptions(prod);
+					}										
+				}	
+				logger.debug("ViewCatalogAction.processProductList(): List.size() = " + products.size());
+			} else {
+				if (products == null) {
+					products = new JSONArray();
+				}
+				logger.debug("ViewCatalogAction.processProductList(): List.size() =0");	
+			}			
+	
+			return products;
+		}
+		
+		// Commented for performance enhancement
+		/*
+		 * public List retrieveProducts ( String catalogId, EditCatalogForm form ,
+		 * int offset, int pageSize, SortInfo sortInfo, Pagination pagination )
+		 */
+		public JSONArray retrieveProducts(Catalog catalog, EditCatalogForm form, String adbRegionToConnect) {
+			String catalogId = catalog.getId();
+
+			CatalogProductMgr mgr = new CatalogProductMgr();
+			String kw = form.getSearchKeywords();
+			String scope = form.getSearchScope();
+			String searchProperty = form.getSearchProperty();
+			String searchPgmKey = null;
+
+			int scopeSearchType = PagesUtil.getSearchScopeType(scope);
+		
+			JSONArray products = null;
+			long total = 0;
+			if (StrUtil.isEmpty(scope)) {
+				scopeSearchType = 0;
+				searchProperty = Product.GROUP_TYPE_OF_BASEPROD;
+				kw = "";
+				searchPgmKey = "-1";				
+			}
+
+			String priceDesc = catalog.getPriceDescriptor();
+			
+
+			products = mgr.searchProductByType(catalog, searchProperty, kw,scopeSearchType, searchPgmKey, null, adbRegionToConnect,form.getRecordOnHand(), form.getRecordOnDemand(), form.getSortBy(), form.getSortOrder(), form.getFilterProdId(), form.getFilterPartNumber(),form.getFilterSource(), form.getFilterProductLine(), form.getFilterConfigId(), form.getQueryId());
+			 if( (form.getQueryId() == null || form.getQueryId().isEmpty()) || ( form.getQueryId() != null && catalog.isPostProcess()) ){			 
+				form.setQueryId(catalog.getQueryId());
+				
+				//get cross sell avail products for catalog
+				crossSellAvailProductsForCatalog(products, catalogId, adbRegionToConnect);
+				
+				//apply PDAPI logic
+				applyPdapiCategoriationForProducts(products, catalog, catalogId, adbRegionToConnect);
+				
+				
+				checkCategoriesToAttach(products, catalog, adbRegionToConnect);
+			}
+			
+			boolean redBlueMapFlag = false;
+			if (("Y").equalsIgnoreCase(catalog.getOfferEquivFlag())) {
+				redBlueMapFlag = true;
+			}
+			form.setRedBlueMapFlag(redBlueMapFlag);		
+			
+			return products;
+		}//retrieveProducts
+		
+		/*
+		 * logic for pdapi change
+		 */
+		private void applyPdapiCategoriationForProducts(JSONArray products, Catalog catalog, String catalogId, String dbRegionToConnect){
+			String catCatogrizationId = catalog.getCategorizationID();
+			PdapiMgr pdapiMgr = new PdapiMgr();
+			ArrayList ctgIdAl = (ArrayList) pdapiMgr.getPdapiCategorization(dbRegionToConnect);
+			boolean pdapiCtgApplied = false;
+			if (ctgIdAl != null && ctgIdAl.size() > 0) {
+				Iterator ctgIdAlIterator = ctgIdAl.iterator();
+				while (ctgIdAlIterator.hasNext()) {
+					String pdapiCtdId = (String) ctgIdAlIterator.next();
+					
+					if (catCatogrizationId != null) {
+						if (catCatogrizationId.equals(pdapiCtdId)) {
+							pdapiCtgApplied = true;
+							break;
+						}
+					}
+				}
+
+			} else {
+				// System.out.println("ViewCatalogAction >> retrieveProducts >>INSIDE ELSE ");
+			}
+			if (pdapiCtgApplied) {
+				List pdapiList = pdapiMgr.getProductList(catalogId, dbRegionToConnect);
+				if ((products != null && products.size() > 0) && (pdapiList != null && pdapiList.size() > 0)) {
+					products = updateProdListForPdalpi(products, pdapiList);
+				}
+			}
+			
+		}//applyPdapiCategoriationForProducts
+		
+		
+		public void crossSellAvailProductsForCatalog(JSONArray products, String catalogId, String adbRegionToConnect){
+			if (!StrUtil.isListEmpty(products)) {
+				Hashtable hwProdHt = CrossSaleMgr.getCrossSaleMgr().getCrossSaleOptionProdsByCatalog(catalogId, adbRegionToConnect);
+				
+				for (int i = 0; i < products.size(); i++) {
+					JSONObject product = (JSONObject) products.get(i);
+					
+					//To avoid memory issue
+					product.remove("optionProducts");					
+					
+					String prodId = product.get("prodid").toString();
+					Hashtable csAvailHwProdHt = new Hashtable();
+					HashMap optionMap = (HashMap) product.get("redBlueOptionsMap");
+					
+					if (!StrUtil.isMapEmpty(optionMap)) {
+						Iterator keyIterator = optionMap.keySet().iterator();
+						if (keyIterator.hasNext()) {
+							String baseModel = (String) keyIterator.next();
+							List partNbrList = (List) optionMap.get(baseModel);
+							Enumeration keyEnum = hwProdHt.keys();
+							JSONArray crossSellProdUrlHt = new JSONArray ();
+							for (; keyEnum.hasMoreElements();) {
+								String hwProd = (String) keyEnum.nextElement();
+								if (partNbrList.contains(hwProd)) {
+									StringBuffer sbf = new StringBuffer("key");
+									sbf.append("=");
+									sbf.append(HtmlUtil.URLEncode((String) hwProdHt.get(hwProd)));
+									sbf.append("&flag=C");
+									sbf.append("&sku=");
+									sbf.append(HtmlUtil.URLEncode(hwProd));
+									sbf.append("&catalogId=");
+									sbf.append(HtmlUtil.URLEncode(catalogId));
+									sbf.append("&desc=");
+									sbf.append(HtmlUtil.URLEncode((String) product.get("short_desc")));
+									 sbf.append ( "&baseModel=" );
+			                   		 if(!product.get("bundle_flag").equals("S"))
+			                   			 sbf.append( HtmlUtil.URLEncode ( (String)product.get("cop_base_model") ));
+			                   		 else
+			                   			sbf.append( HtmlUtil.URLEncode ( hwProd ));
+									
+									crossSellProdUrlHt.add(sbf.toString());
+								}
+
+							}
+							product.put("csAvailHwProdHt",crossSellProdUrlHt );
+						}
+
+					}
+					product.put("crossSellAvail", "Y");///setCrossSellAvail("Y");					
+				}
+				
+			} else {
+				// log.debug("List is empty");
+			}
+		}//crossSellAvailProductsForCatalog
+		
+		
+		private EditCatalogForm assignRegionalValues(EditCatalogForm form, String adbRegionToConnect) {
+
+			if (form.getPriceDescriptor() != null) {
+				String reg = PagesUtil.getRegion(form.getPriceDescriptor()
+						.substring(0, 2), adbRegionToConnect);
+				if (reg != null) {
+					form.setLARegionSaleCountry(reg.equalsIgnoreCase("LA") ? true
+							: false);
+					form.setAPRegionSaleCountry(reg.equalsIgnoreCase("AP") ? true
+							: false);
+					form.setEURegionSaleCountry(reg.equalsIgnoreCase("EU") ? true
+							: false);
+				}
+			}
+			return form;
+		}///assignRegionalValues
+		
+		/**
+		 * if the showStatus parameter is set
+		 * 
+		 */
+		protected boolean isShowStatus(HttpServletRequest request) {
+			String showStr = request.getParameter("showStatus");
+			boolean show = false;
+			if (!StrUtil.isEmpty(showStr)) {
+				show = (showStr.equalsIgnoreCase("yes")) ? true : false;
+			}
+			return show;
+		}///isShowStatus
+
+		/**
+		 * convert the status flag to message
+		 * 
+		 */
+		protected String convertStatusToMsg(String status) {
+			// String status = cat.getLoadStatus();
+			String msg = null;
+			// System.out.println("#### load status : (" + status + ")");
+			if (status.equalsIgnoreCase("L")) {
+				msg = "Catalog loading is in process.";
+			} else if (status.equalsIgnoreCase("V")) {
+				msg = "Catalog validation is in process.";
+			} else if (status.equalsIgnoreCase("F")) {
+				msg = "Catalog loading status is fail.";
+			}
+
+			return msg;
+
+		}///convertStatusToMsg
+
+		/*
+		 * This method takes pdapi product list and product list as parameter.It
+		 * iterate over the prodlist and compares the product id of the productwith
+		 * prod id of pdapi prod.If it matches then it sets the pdapi flag as true.
+		 * In this way it sets the flag as true or false for all the products in the
+		 * product list
+		 */
+
+		private JSONArray updateProdListForPdalpi(JSONArray prodList, List pdapiProdList) {
+
+			Iterator pdapiListIterator = pdapiProdList.iterator();
+			while (pdapiListIterator.hasNext()) {			
+				Iterator prodListIterator = prodList.iterator();
+				
+				PdapiProduct pdapiProduct = (PdapiProduct) pdapiListIterator.next();
+				while (prodListIterator.hasNext()) {
+					JSONObject product = (JSONObject) prodListIterator.next();
+					if (pdapiProduct.getProd().equals(product.get("prodid").toString())) {
+						
+						product.put("pdapiProductFlag", true);
+						break;
+
+					}
+				}
+			}
+
+			return prodList;
+		}///updateProdListForPdalpi
+		
+		public static void getFFSforOptions(JSONObject prod, String adbRegionToConnect) {
+			StringBuffer optionsWithFFS = new StringBuffer();
+			String options = prod.get("options").toString();///UIOptions();
+			List lst = null;
+
+			if (!StrUtil.isEmpty(options)) {
+				ArrayList optionList = StrUtil.split(options, ",");
+				lst = new ArrayList(optionList.size());
+
+				for (int i = 0; i < optionList.size(); i++) {
+					String currOption = (String) optionList.get(i);
+					Product p = new Product();
+					p.setProdId(currOption);
+					/*
+					 * FFS Manager API currently requires both ProdID and MfgPartID
+					 * to be pouplated with ProdID
+					 */
+					p.setMfgPartID(currOption);
+					p.setFFsID(prod.get("fs_id").toString());///FFsID());
+					lst.add(p);
+				}
+			} else if (prod.get("mfg_part_id").toString() != null) {
+				lst = new ArrayList(1);
+				Product p = new Product();
+				p.setProdId(prod.get("mfg_part_id").toString());
+				/*
+				 * FFS Manager API currently requires both ProdID and MfgPartID to
+				 * be pouplated with ProdID
+				 */
+				p.setMfgPartID(prod.get("mfg_part_id").toString());
+				p.setFFsID(prod.get("fs_id").toString());
+				lst.add(p);
+			} else {
+				optionsWithFFS.append("<nobr>(?)</nobr>");
+			}
+
+			if (lst != null) {
+				FulfillmentSiteMgr ffsMgr = new FulfillmentSiteMgr();
+				List results = ffsMgr.assignFSProdNumToProds(lst, adbRegionToConnect);
+
+				for (int i = 0; i < results.size(); i++) {
+					if (i > 0) {
+						optionsWithFFS.append(",<wbr><nobr>");
+					} else {
+						optionsWithFFS.append("<nobr>");
+					}
+					Product p = (Product) results.get(i);
+					optionsWithFFS.append(p.getProdId());
+					String ffsProdID = p.getSupplierPartID();
+					if ((ffsProdID != null) && (ffsProdID.trim().length() > 0)) {
+						optionsWithFFS.append("(").append(ffsProdID).append(")");
+					} else {
+						optionsWithFFS.append("(?)");
+					}
+					optionsWithFFS.append("</nobr>");
+				}
+			}
+			prod.put("options", optionsWithFFS.toString());///setUIOptions(optionsWithFFS.toString());
+		}///getFFSforOptions
+		
+		public static void getUIOptions(JSONObject prod) {
+			String options = (String)prod.get("options");///UIOptions();
+			if (!StrUtil.isEmpty(options)) {
+				ArrayList optionList = StrUtil.split(options, ",");
+				StringBuffer sb = new StringBuffer();
+				for (int i = 0; i < optionList.size(); i++) {
+					String currOption = (String) optionList.get(i);
+					if (i > 0) {
+						sb.append(",<wbr><nobr>");
+					} else {
+						sb.append("<nobr>");
+					}
+					sb.append(currOption);
+					sb.append("</nobr>");
+				}
+				prod.put("options", sb.toString());///prod.setUIOptions(sb.toString());
+			}
+		}///getUIOptions
+
+		/**
+		 * Attach category to products using current Categorization object
+		 * 
+		 * @param products
+		 *            -- list of products
+		 */
+		public void attachCategoriesToProducts(JSONArray products, boolean bInitNamePath, String adbRegionToConnect) {
+			if (this.categoryHeader == null) {
+				return;
+			}
+			HashMap prodToNodeMap = findProductNodes(products, adbRegionToConnect);
+			HashMap prodToNodeToAccessMap = (HashMap) prodToNodeMap.get("AccessModes");
+			Iterator it = products.iterator();
+			JSONObject p;
+			Object o_node;
+			Iterator sub_it;
+			while (it.hasNext()) {
+				p = (JSONObject) it.next();
+
+				if (p.get("bundle_flag").toString() != null && p.get("cop_base_model").toString() != null && p.get("bundle_flag").toString().equals("B")) {
+					o_node = prodToNodeMap.get(p.get("cop_base_model").toString());
+				} else {
+					o_node = prodToNodeMap.get(p.get("prodid").toString());
+
+					// single category
+				}
+				if (o_node instanceof Integer) {
+					p.put("nodeId", (Integer) o_node);///setNodeId((Integer) o_node);
+					if (prodToNodeToAccessMap != null && prodToNodeToAccessMap.get(p.get("prodid").toString() + "-"+ p.get("nodeId").toString()) != null) {
+						p.put("accessMode", (String) prodToNodeToAccessMap.get(p.get("prodid").toString()+ "-" +  p.get("nodeId").toString()));///setAccessMode((String) prodToNodeToAccessMap.get(p.get("prodid").toString()+ "-" + p.getNodeId()));
+					}
+				} else if (o_node instanceof List) {
+					// multiple categories
+					sub_it = ((List) o_node).iterator();
+					while (sub_it.hasNext()) {
+						p.put("nodeId", (Integer) sub_it.next());///p.setNodeId((Integer) sub_it.next());
+						p.put("accessMode",(String) prodToNodeToAccessMap.get(p.get("prodid").toString()+ "-" +  p.get("nodeId").toString()));///p.setAccessMode((String) prodToNodeToAccessMap.get(p.getProdId() + "-" + p.getNodeId()));
+					}
+				}
+				
+				o_node = null;
+				p = null; //nullifying
+			}
+
+			joinProductsAndCategories(products, bInitNamePath, adbRegionToConnect);
+		}///attachCategoriesToProducts
+		
+		/**
+		 * Find associated node ids for the list of products passed using current
+		 * categorization schema (specified in constructor)
+		 * 
+		 * @param products
+		 */
+		private HashMap findProductNodes(JSONArray products, String adbRegionToConnect) {
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB db = daxMgr.getDaxDB(adbRegionToConnect);
+			
+			HashMap results = new HashMap();
+			if (this.categoryHeader == null) {
+				return results;
+			}
+			JSONArray mergeList = new JSONArray();
+			if (products == null || products.size() == 0) {
+				return results;
+			}
+
+			StringBuilder sqlBuf = new StringBuilder();
+			sqlBuf.append("SELECT " + "{prodId}:=prod, " + "{ctgId}:=ctg_id, "
+					+ "{nodeId}:=node_id, " + "{accessMode}:=prod_access_mode"
+					+ " FROM CTG_PROD WHERE ctg_id IN (");
+			sqlBuf.append(categoryHeader.getId());
+			if (categoryHeader.getParentCtgId() != null) {
+				sqlBuf.append(',');
+				sqlBuf.append(categoryHeader.getParentCtgId());
+			}
+
+			sqlBuf.append(") and prod IN ({@q:inClauseList})");
+
+			CategorizationSQLInfo csi = new CategorizationSQLInfo();
+			JSONArray prodList = new JSONArray();
+
+			Iterator it = products.iterator();
+			JSONObject p;
+
+			while (it.hasNext()) {
+				p = (JSONObject) it.next();
+				// prodList.add(StrUtil.escapeProd(p.getProdId()));
+
+				if (p.get("bundle_flag").toString() != null && p.get("bundle_flag").toString() != null&& p.get("bundle_flag").toString().equals("B")) {
+					prodList.add(p.get("cop_base_model").toString());
+				} else {
+					prodList.add(p.get("prodid").toString());
+
+				}
+				if (prodList.size() == 200) {
+					csi.setInClauseList(prodList);
+					
+					DaxStmt stmt = daxMgr.makeStmt(sqlBuf.toString());
+					DaxParsedStmt pStmt = daxMgr.makeParsedStmt(stmt, csi, null,null);
+					pStmt.setFetchSize(200);
+					JSONArray lst = db.doSelectJson(pStmt, Product.class, csi);
+					mergeList.addAll(lst);
+					prodList.clear();
+				}
+			}
+			if (prodList.size() > 0) {
+				csi.setInClauseList(prodList);
+				
+				DaxStmt stmt = daxMgr.makeStmt(sqlBuf.toString());
+				DaxParsedStmt pStmt = daxMgr.makeParsedStmt(stmt, csi, null, null);
+				pStmt.setFetchSize(200);
+				JSONArray lst = db.doSelectJson(pStmt, Product.class, csi);
+				mergeList.addAll(lst);
+				prodList.clear();
+			}
+
+			it = mergeList.iterator();
+
+			Integer node_id, ctgId;
+			boolean isCurrentAvailable;
+			boolean isInherited = (this.categoryHeader.getParentCtgId() != null);
+
+			// key: prod+"-"+node
+			// value: ctgId
+			// Using this map we can ignore products coming from parents when
+			// products from current categorization available
+			HashMap prodNodeToCtgId = new HashMap();
+			HashMap prodNodeToAccessMode = new HashMap();
+			while (it.hasNext()) {
+				p = (JSONObject) it.next();
+				node_id = Integer.parseInt(p.get("node_id").toString());
+				ctgId = Integer.parseInt(p.get("ctg_id").toString());
+
+				prodNodeToCtgId.put(p.get("prod").toString() + "-" + node_id, ctgId);
+				prodNodeToAccessMode.put(p.get("prod").toString() + "-" + node_id,p.get("prod_access_mode").toString());
+
+				if (results.containsKey(p.get("prod").toString())) {
+					Object value = results.get(p.get("prod").toString());
+					List l = null;
+					if (value instanceof Integer) {
+						l = new LinkedList();
+						l.add(value);
+						results.put(p.get("prod").toString(), l);
+					} else {
+						l = (List) value;
+					}
+					if (l.indexOf(node_id) == -1) {
+						l.add(node_id);
+
+					}
+					if (isInherited) {
+						// need to check if there're products from current
+						// categorization
+						isCurrentAvailable = false;
+						ListIterator sub_it = l.listIterator();
+						while (sub_it.hasNext()) {
+							node_id = (Integer) sub_it.next();
+							ctgId = (Integer) prodNodeToCtgId.get(p.get("prod").toString()+ "-" + node_id);
+							if (ctgId.equals(this.categoryHeader.getId())) {
+								isCurrentAvailable = true;
+								break;
+							}
+						}
+
+						if (isCurrentAvailable) {
+							// remove all parent nodes
+							sub_it = l.listIterator();
+							while (sub_it.hasNext()) {
+								node_id = (Integer) sub_it.next();
+								ctgId = (Integer) prodNodeToCtgId.get(p.get("prod").toString()+ "-" + node_id);
+								if (ctgId.equals(this.categoryHeader
+										.getParentCtgId())) {
+									// System.out.println("Skipping node "+node_id+" for product "+p.getProdId()+" since it's available in current hierarchy");
+									sub_it.remove();
+								}
+							}
+						}
+					}
+				} else {
+					results.put(p.get("prod").toString(), node_id);
+				}
+			}
+			if (prodNodeToAccessMode != null && prodNodeToAccessMode.size() > 0) {
+				results.put("AccessModes", prodNodeToAccessMode);
+			}
+			return results;
+		}///findProductNodes
+		
+		
+		/**
+		 * This method assumes that list of products passed have different NodeId
+		 * properties. It grabs distinct list of them and get list of Categories.
+		 * Then method joins those two lists.
+		 * 
+		 * @param products
+		 *            -- list of products
+		 * @param bInitNamePath
+		 *            -- true if we need to read and cache parent categories as well
+		 */
+		private void joinProductsAndCategories(JSONArray products, boolean bInitNamePath, String adbRegionToConnect) {
+			if (products == null || products.size() == 0) {
+				return;
+			}
+
+			Set uniqNodes = new HashSet();
+			Iterator it = products.iterator();
+			Iterator sub_it;
+			List nodes = null;
+			JSONObject p;
+			Integer nodeId;
+			while (it.hasNext()) {
+				p = (JSONObject) it.next();
+				if(p.get("nodeId") != null){
+					nodes = StrUtil.strArrayToList(p.get("nodeId").toString().split(","));
+				}else{
+					nodes = null;
+				}
+				if (nodes != null) {
+					sub_it = nodes.iterator();
+					while (sub_it.hasNext()) {
+						uniqNodes.add(Integer.valueOf((String)sub_it.next()));
+					}
+				}
+				
+				nodes= null;
+				p = null;//nullifying
+			}
+			
+			
+			if (uniqNodes.size() > 0) {
+				CategoryMgr catMgr = CategoryMgr.getCategoryMgr(this.categoryHeader, "");
+				HashMap id2NodeMap = catMgr.getCategories(uniqNodes, adbRegionToConnect);
+				HashSet parentNodes = new HashSet();
+
+				it = products.iterator();
+				JSONArray fCategories = null;
+				while (it.hasNext()) {					
+					p = (JSONObject) it.next();
+					if( p.get("nodeId") == null){
+						p.put("showCategorizationFlag",false);
+						continue;
+					}
+					fCategories = new JSONArray();
+					
+					nodes = StrUtil.strArrayToList(p.get("nodeId").toString().split(","));
+					//nodes = gson.fromJson(nodesArray.toJSONString(), List.class);
+					if (nodes != null) {
+						sub_it = nodes.iterator();
+						while (sub_it.hasNext()) {
+							Category cat = (Category) id2NodeMap.get(Integer.valueOf(sub_it.next().toString()));
+							if (bInitNamePath && cat != null) {
+								StringTokenizer tok = new StringTokenizer(cat.getNodePath(), "^");
+								while (tok.hasMoreTokens()) {
+									Integer nId = Integer.valueOf(tok.nextToken());
+									parentNodes.add(nId);
+								}
+							}
+							//p.setCategory(cat);
+							//fCategories.add(gson.toJson(cat));
+						}
+						//p.put("fCategories",fCategories);	//As it is not used anywhere in this flow.					
+						p.put("showCategorizationFlag",true);						
+					}
+					else{
+						p.put("showCategorizationFlag",false);
+					}
+					fCategories = null;
+					nodes = null;
+					p = null;
+				}
+				
+				if (bInitNamePath && parentNodes.size() > 0) {
+					HashMap parentNodesMap = catMgr.getCategories(parentNodes, adbRegionToConnect);
+					catMgr.categoriesCashe.putAll(parentNodesMap);
+				}
+
+			}
+		}///joinProductsAndCategories
+		
+		 public JSONArray getPriceProcedure ( Customer cus, String salesCtry, String adbRegionToConnect ) {
+			 JSONArray returnArray = null;
+			 returnArray = childCatalogDao.getPriceProcedure(cus,salesCtry, adbRegionToConnect);
+			 return returnArray;
+		 }///getPriceProcedure
+		 
+		 public List getOptionList ( String productId, Product p,String catalogId, ProductOptionListForm form,String dbRegionToConnect) {
+		ZeroPriceOptionMgr zeroPriceOptionMgr = new ZeroPriceOptionMgr();
+		List optionList = zeroPriceOptionMgr.getOptionsForCatalog(productId,null, catalogId,  dbRegionToConnect);
+		FulfillmentSiteMgr fMgr = new FulfillmentSiteMgr();
+		this.assignFSProdNumTOptions(optionList, p.getFFsID(),dbRegionToConnect);
+		List optionListM = compareMark(optionList, p, form,dbRegionToConnect);
+		return optionListM;
+	}//getOptionList
+		
+		 public List assignFSProdNumTOptions ( List options, String fsID ,String dbRegionToConnect) {
+			    List resultList = new ArrayList ();
+
+			    DaxMgr mgr = DaxMgr.getInstance ();
+			    DaxDB db = mgr.getDaxDB (dbRegionToConnect);
+			    DaxParsedStmt pstmt = null;
+
+			    // Fulfillment Site ID cannot be null
+			    if ( fsID == null || StrUtil.isEmpty ( fsID ) ) {
+			      return options;
+			    }
+
+			    // Check whether the FFS is Direct FFS.
+			    FulfillmentSite ffsSite = new FulfillmentSite ();
+			    //Make the parsed statement.
+			    pstmt = mgr.makeParsedStmt ( "fulfillmentSite", "selectFulfillmentSite2"
+			                                 , ffsSite, null, null );
+			    ffsSite.setFfs_Id ( fsID );
+			    List ffsList = db.doSelect ( pstmt, FulfillmentSite.class, ffsSite );
+
+			    if ( ffsList != null && ffsList.size () > 0 ) {
+			      ffsSite = ( FulfillmentSite ) ffsList.get ( 0 );
+			      if ( ffsSite.getFfs_Direct_Flag ().equalsIgnoreCase ( "Y" ) ) {
+			        for ( int i = 0; i < options.size (); i++ ) {
+			        	ZeroPriceOption option = ( ZeroPriceOption ) options.get ( i );
+			          option.setFSPartNum ( option.getProdId () );
+			          resultList.add ( option );
+			        }
+			        return resultList;
+			      }
+			    }
+
+			    pstmt = null;
+			    FulfillmentSiteProd ffs_bean = null;
+			    //Make the parsed statement.
+			    pstmt = mgr.makeParsedStmt ( "fulfillmentSite"
+			                                 , "selectFulfillmentSiteProdByFfsIdProdId"
+			                                 , ffs_bean, null, null );
+
+			    List queryList = new ArrayList ();
+			    for ( int i = 0; i < options.size (); i++ ) {
+			      ZeroPriceOption option = ( ZeroPriceOption ) options.get ( i );
+			      ffs_bean = new FulfillmentSiteProd ();
+
+			      ffs_bean.setFfs_Id ( fsID );
+			      ffs_bean.setLocal_Prod ( option.getProdId () );
+			      queryList.add ( ffs_bean );
+			    }
+			    // do the query
+			    List list = db.doSelectBatch ( pstmt, FulfillmentSiteProd.class, queryList );
+
+			    Hashtable hash = new Hashtable ();
+			    for ( int i = 0; i < list.size (); i++ ) {
+			      FulfillmentSiteProd fulfillmentSiteProd = ( FulfillmentSiteProd ) list.
+			                                                get ( i );
+			      hash.put ( fulfillmentSiteProd.getLocal_Prod ()
+			                 , fulfillmentSiteProd.getFfs_Prod () );
+			    }
+			    for ( int i = 0; i < options.size (); i++ ) {
+			      ZeroPriceOption option = ( ZeroPriceOption ) options.get ( i );
+			      option.setFSPartNum ( ( String ) hash.get ( option.getProdId () ) );
+			      resultList.add ( option );
+			    }
+			    return resultList;
+			  }//assignFSProdNumTOptions
+		 
+	private List compareMark(List optionList, Product p,ProductOptionListForm form,String dbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDB = daxMgr.getDaxDB(dbRegionToConnect);
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt("productOptions",
+				"selectOptionsList", p, null, null);
+		List eList = daxDB.doSelect(stmt, p.getClass(), p);
+
+		if (StrUtil.isListEmpty(eList)) {
+			return optionList;
+		}
+
+		ArrayList newList = new ArrayList();
+		for (int i = 0; i < optionList.size(); i++) {
+			ZeroPriceOption zProd = (ZeroPriceOption) (optionList.get(i));
+			String localProd = ((zProd).getProdId()).trim();
+			String cntryCode = ((zProd).getCountryCode());
+			String prodCntry = localProd + "^"+ ((cntryCode == null) ? "" : cntryCode.trim());
+			for (int j = 0; j < eList.size(); j++) {
+				String eOption = ((Product) (eList.get(j))).getOptions().trim();
+				String eCntryCode = ((Product) (eList.get(j))).getCntryCode();
+				String eProdCntry = eOption + "^"
+						+ ((eCntryCode == null) ? "" : eCntryCode.trim());
+				if (eOption.equalsIgnoreCase(localProd)) {
+					newList.add(eOption);
+					((ZeroPriceOption) (optionList.get(i)))
+							.setExistingOption("Y");
+					break;
+				} else {
+					((ZeroPriceOption) (optionList.get(i)))
+							.setExistingOption("N");
+				}
+			}
+		}
+		if( newList.size() > 0){
+			form.setListSelected(StrUtil.listToStrArray(newList));
+		}
+		else{
+			int size = newList.size();
+			String[] results = new String[size];			
+			form.setListSelected(results);
+		}
+		return optionList;
+
+}//compareMark
+	
+	public void addOption ( Product prod, CatalogProductMgr mgr,String dbRegionToConnect, JSONObject childProductOptionData ) {
+
+	    ResponseStatus rs =  mgr.updateProductOptions ( prod ,dbRegionToConnect);
+	    
+	    String status=prod.getReturnStatus();
+	    if ( status.equals ( "622" ) ) {
+	    	childProductOptionData.put("FailMsg", "Failed to update the options for Product "  + prod.getProdId () + ".");
+	    	logger.debug("addOption() : Failed to update the options for Product "  + prod.getProdId ());
+	    }
+	    else{
+	    	childProductOptionData.put("catalogId",mgr.getCatalogID ());
+	    	//childProductOptionData.put("successMsg","Successfully Assigned Localized products.");
+	    	addMsg(rs,childProductOptionData);	    	
+	    }
+	    	   
+        
+       
+	    
+	  }//addOption
+	
+	
+	public void addMsg ( ResponseStatus rs, JSONObject childProductOptionData  ) {
+	    int statusType = rs.getType ();
+	    String msg = rs.getMessage ();
+	    switch ( statusType ) {
+	      case ResponseStatusInfo.ERROR:
+	    	  childProductOptionData.put("FailMsg", msg );
+	        break;
+	      case ResponseStatusInfo.OK:
+	    	  childProductOptionData.put("successMsg", msg );
+	        break;
+	      case ResponseStatusInfo.WARNING:
+	    	  childProductOptionData.put("confirmationMsg", msg );
+	        break;
+	    }
+	    
+	    logger.debug("addMsg() : " + msg);
+	  }
+	
+	 public String retrieveQuoteId(String catalogId, String productId, String adbRegionToConnect) {
+			String quoteId = null;
+			List quotes = childCatalogDao.retrieveQuoteId(catalogId, productId, adbRegionToConnect);
+		
+			if (quotes.size() > 0) {
+				QuoteBean mObject = (QuoteBean) quotes.get(0);
+				quoteId = mObject.getResult();
+			}
+			else{
+				quoteId="";
+			}
+		
+			return quoteId;
+		}// retrieveQuoteId
+	 
+}//class

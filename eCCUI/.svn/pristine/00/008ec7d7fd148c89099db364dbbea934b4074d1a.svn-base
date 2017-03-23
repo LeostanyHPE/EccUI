@@ -1,0 +1,427 @@
+package com.hp.ecc.ui.biz.product;
+
+import com.hp.ecc.ui.biz.product.ProductItemStatusInfo;
+import com.hp.ecc.ui.biz.product.ProductItemStatusInfoDBConsts;
+import com.hp.ecc.ui.biz.product.ProductItemStatusInfoErrorConstants;
+import com.hp.ecc.ui.biz.product.ProductItemStatusInfoException;
+import com.hp.ecc.ui.biz.product.ProductItemStatusPrice;
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class ProductItemStatusInfoMgr {
+	
+	DaxMgr daxMgr = null;
+	DaxDB daxDB = null;
+	
+	public ProductItemStatusInfoMgr(String dbRegionToConnect){
+	  daxMgr = DaxMgr.getInstance ();
+	  daxDB = daxMgr.getDaxDB (dbRegionToConnect);
+	}
+
+	  /**
+	   * This method retreives the ProductItemStatusInfo from the database
+	   * for a given SKU.
+	   * <br/>
+	   * @param String sku
+	   * @param String tenantCode
+	   * @return ProductItemStatusInfo
+	   * @throws ProductItemStatusInfoException
+	   */
+	  public ProductItemStatusInfo getProductItemStatusInfo ( String sku ,String tenantCode) throws
+	      ProductItemStatusInfoException {
+	    DaxParsedStmt pstmt = null;
+	    ProductItemStatusInfo p = new ProductItemStatusInfo ();
+	    List results = null;
+
+	    p.setSku ( sku );
+	    p.setTenantCode(tenantCode);
+	    
+	    getSKUMainInfo ( p );
+	    getSKUVistaInfo ( p );
+	    getSKUCostBase ( p );
+	    getPriceDetails ( p );
+		getOrderabilityStatus( p );
+	    return p;
+	  }
+
+	  /**
+	   * This method retrieves the SKU details and updates the input parameter with
+	   * SKU, shortdescription, manufacturercode, manufacturername, productauthorizationcode,
+	   * stockcode, activitycode and visionflag values from the database
+	   * @param ProductItemStatusInfo p
+	   */
+	  public void getSKUMainInfo ( ProductItemStatusInfo p ) throws
+	      ProductItemStatusInfoException {
+	    ProductItemStatusInfo prodStatusMainInfo = new ProductItemStatusInfo ();
+	    prodStatusMainInfo.setSku ( p.getSku () );
+	    prodStatusMainInfo.setTenantCode(p.getTenantCode());
+	    DaxParsedStmt pstmt = null;
+	    List results = null;
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_SKU_MAIN_INFO,
+	                                    prodStatusMainInfo, null, null );
+
+	    results = daxDB.doSelect ( pstmt, null, prodStatusMainInfo );
+
+	    if ( results.size () > 0 ) {
+	      prodStatusMainInfo = ( ProductItemStatusInfo ) results.get ( 0 );
+	      p.setSku ( prodStatusMainInfo.getSku () );
+	      p.setShortDescription ( prodStatusMainInfo.getShortDescription () );
+	      p.setManufacturerCode ( prodStatusMainInfo.getManufacturerCode () );
+	      p.setManufacturerName ( prodStatusMainInfo.getManufacturerName () );
+	      p.setProductAuthorizationCode ( prodStatusMainInfo.
+	                                      getProductAuthorizationCode () );
+	      p.setStockCode ( prodStatusMainInfo.getStockCode () );
+	      p.setActivityCode ( prodStatusMainInfo.getActivityCode () );
+	      p.setVisionFlag ( prodStatusMainInfo.getVisionFlag () );
+	    }
+	    else {
+	      throw new ProductItemStatusInfoException (
+	          ProductItemStatusInfoErrorConstants.SKU_NOT_FOUND, p );
+	    }
+	  }
+
+	/**
+	   * This method retrieves the GPSy orderability details and updates the input parameter with
+	   * SKU, shortdescription, manufacturercode, manufacturername, productauthorizationcode,
+	   * stockcode, activitycode and visionflag values from the database
+	   * @param ProductItemStatusInfo p
+	   */
+	  public void getOrderabilityStatus ( ProductItemStatusInfo p ) throws
+	      ProductItemStatusInfoException {
+	    ProductItemStatusInfo prodStatusMainInfo = new ProductItemStatusInfo ();
+	    prodStatusMainInfo.setSku ( p.getSku () );
+	    DaxParsedStmt pstmt = null;
+	    List results = null;
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_ORDERABILITY_INFO,
+	                                    prodStatusMainInfo, null, null );
+
+	    results = daxDB.doSelect ( pstmt, null, prodStatusMainInfo );
+		if ( results.size () > 0 ) {
+			prodStatusMainInfo = ( ProductItemStatusInfo ) results.get ( 0 );
+			p.setOrderabilityFlagStr(prodStatusMainInfo.getOrderabilityFlagStr());
+		}
+		
+	  }
+	  /**
+	   * This method retrieves the vista details of SKU and updates the input parameter with
+	   * vistacategorycode, vistacategorydescription, vistaclasscode and vistaclassdescription
+	   * values from the database
+	   * @param ProductItemStatusInfo p
+	   */
+	  public void getSKUVistaInfo ( ProductItemStatusInfo p ) {
+	    ProductItemStatusInfo prodStatusVistaInfo = new ProductItemStatusInfo ();
+	    prodStatusVistaInfo.setSku ( p.getSku () );
+	    prodStatusVistaInfo.setTenantCode(p.getTenantCode());
+	    DaxParsedStmt pstmt = null;
+	    List results = null;
+
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_SKU_VISTA_INFO,
+	                                    prodStatusVistaInfo, null, null );
+
+	    results = daxDB.doSelect ( pstmt, null, prodStatusVistaInfo );
+
+	    if ( results.size () > 0 ) {
+	      prodStatusVistaInfo = ( ProductItemStatusInfo ) results.get ( 0 );
+	      p.setVistaCategoryCode ( prodStatusVistaInfo.getVistaCategoryCode () );
+	      p.setVistaCategoryDescription ( prodStatusVistaInfo.
+	                                      getVistaCategoryDescription () );
+	      p.setVistaClassCode ( prodStatusVistaInfo.getVistaClassCode () );
+	      p.setVistaClassDescription ( prodStatusVistaInfo.getVistaClassDescription () );
+	    }
+	  }
+
+	  /**
+	   * This method retrieves the cost base details and updates the input parameter with
+	   * cost base, cost base source and last modifed date of costbase from the database
+	   * @param ProductItemStatusInfo p
+	   */
+	  public void getSKUCostBase ( ProductItemStatusInfo p ) {
+	    ProductItemStatusInfo prodStatusCostBase = new ProductItemStatusInfo ();
+	    prodStatusCostBase.setSku ( p.getSku () );
+	    prodStatusCostBase.setTenantCode(p.getTenantCode());
+	    DaxParsedStmt pstmt = null;
+	    List results = null;
+
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_SKU_COST_BASE,
+	                                    prodStatusCostBase, null, null );
+
+	    results = daxDB.doSelect ( pstmt, null, prodStatusCostBase );
+
+	    if ( results.size () > 0 ) {
+	      prodStatusCostBase = ( ProductItemStatusInfo ) results.get ( 0 );
+	      p.setCostBase ( prodStatusCostBase.getCostBase () );
+	      p.setCostBaseSource ( prodStatusCostBase.getCostBaseSource () );
+	      p.setCostBaseLastModified ( prodStatusCostBase.getCostBaseLastModified () );
+	    }
+	  }
+
+
+	  /**
+	   * This method retrieves the price details and updates the input parameter with
+	   * list price and street price values from the database
+	   * @param ProductItemStatusInfo p
+	   */
+	  private void getPriceDetails ( ProductItemStatusInfo p ) {
+	    DaxParsedStmt pstmt;
+	    ProductItemStatusPrice price = new ProductItemStatusPrice ();
+	    List priceResults = null;
+	    price.setSku ( p.getSku () );
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_SKU_PRICES,
+	                                    price, null, null );
+
+	    priceResults = daxDB.doSelect ( pstmt, null, price );
+
+	    if ( priceResults.size () > 0 ) {
+	      Iterator priceResultsIterator = priceResults.iterator ();
+	      while ( priceResultsIterator.hasNext () ) {
+	        price = ( ProductItemStatusPrice ) priceResultsIterator.next ();
+	        if ( price.getPriceDescriptor ().equals ( ProductItemStatusInfoDBConsts.
+	                                                  PRICE_DESCRIPTOR_LISTPRICE ) ) {
+	          p.setListPrice ( price.getPrice () );
+	          p.setListPriceSource ( price.getSource () );
+	          //System.out.println("\n\n DATEEEEEEEEEEEEEEE "+price.getLastModifiedDate());
+	          //System.out.println("\n\n DATEEEEEEEEEEEEEEE ");
+	          //System.out.println("\n\n CLASSSSSSSSSSSSSSS "+price.getLastModifiedDate().getClass().getName());
+	          p.setListPriceLastModified ( price.getLastModifiedDate () );
+	        }
+
+	        if ( price.getPriceDescriptor ().equals ( ProductItemStatusInfoDBConsts.
+	                                                  PRICE_DESCRIPTOR_STREETPRICE ) ) {
+	          p.setStreetPrice ( price.getPrice () );
+	          p.setStreetPriceSource ( price.getSource () );
+	          p.setStreetPriceLastModified ( price.getLastModifiedDate () );
+	        }
+	        
+	        if (price.getPriceDescriptor().equals(ProductItemStatusInfoDBConsts.PRICE_DESCRIPTOR_GLPLISTPRICE)) {
+				p.setGlpListPrice(price.getPrice());
+			    p.setGlpListPriceSource(price.getSource());
+				p.setGlpListPriceLastModified(price.getLastModifiedDate());
+			}
+	      }
+	    }
+	  }
+
+	  /**
+	   * This method retreives the ProductItemStatusInfo from the database
+	   * for a given SKU and an accountId. The accountId being the customer's id,
+	   * the SKU is searched for the presence in any of the catalogs of the customer.
+	   * <br/>
+	   *
+	   * @param String sku
+	   * @param String accountId
+	   * @return ProductItemStatusInfo
+	   * @throws ProductItemStatusInfoException
+	   */
+	  public ProductItemStatusInfo getProductItemStatusInfo ( String sku
+	      , String accountId,String tenantCode ) throws ProductItemStatusInfoException {
+	    ProductItemStatusInfo p = getProductItemStatusInfo ( sku,tenantCode );
+
+	    p.setAccountId ( accountId );
+	    p.setTenantCode(tenantCode);
+	    getAccountAuthModelList ( p );
+	    getNetPrice ( p );
+	    return p;
+	  }
+
+	  private void getNetPrice ( ProductItemStatusInfo p ) throws
+	      ProductItemStatusInfoException {
+	    DaxParsedStmt pstmt = null;
+	    List results = null;
+	    ProductItemStatusInfo prodItemStatusInfo = new ProductItemStatusInfo ();
+
+	    prodItemStatusInfo.setSku ( p.getSku () );
+	    prodItemStatusInfo.setAccountId ( p.getAccountId () );
+	    prodItemStatusInfo.setTenantCode( p.getTenantCode() );
+
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_NET_PRICE,
+	                                    prodItemStatusInfo, null, null );
+	    results = daxDB.doSelect ( pstmt, ProductItemStatusInfo.class
+	                               , prodItemStatusInfo );
+
+	    if ( results.size () > 0 ) {
+	      p.setNetPrice ( ( ( ProductItemStatusInfo ) results.get ( 0 ) ).
+	                      getNetPrice () );
+	      p.setNetPriceSource ( ( ( ProductItemStatusInfo ) results.get ( 0 ) ).
+	                            getNetPriceSource () );
+	      p.setNetPriceLastModified ( ( ( ProductItemStatusInfo ) results.get ( 0 ) ).
+	                                  getNetPriceLastModified () );
+	    }
+	    else {
+	      throw new ProductItemStatusInfoException (
+	          ProductItemStatusInfoErrorConstants.SKU_NOT_IN_CATALOG, p );
+	    }
+	  }
+
+	  private void getAccountAuthModelList ( ProductItemStatusInfo p ) {
+	    DaxParsedStmt pstmt = null;
+	    List results = null;
+	    StringBuffer accountAuthorizationCode = new StringBuffer ();
+	    ProductItemStatusInfo prodItemStatusInfo = new ProductItemStatusInfo ();
+
+	    prodItemStatusInfo.setSku ( p.getSku () );
+	    prodItemStatusInfo.setAccountId ( p.getAccountId () );
+	    prodItemStatusInfo.setTenantCode(p.getTenantCode());
+
+	    pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                    GROUP_ITEM_STATUS_INQUIRY,
+	                                    ProductItemStatusInfoDBConsts.
+	                                    STATEMENT_GET_ACCOUNT_AUTH_MODEL_LIST,
+	                                    prodItemStatusInfo, null, null );
+
+	    results = daxDB.doSelect ( pstmt, ProductItemStatusInfo.class
+	                               , prodItemStatusInfo );
+
+	    Iterator resultsIterator = results.iterator ();
+	    while ( resultsIterator.hasNext () ) {
+	      accountAuthorizationCode.append ( ( ( ProductItemStatusInfo )
+	                                          resultsIterator.next () ).
+	                                        getAccountAuthorizationCode () );
+	      accountAuthorizationCode.append ( "," );
+	    }
+	    if ( accountAuthorizationCode.length () > 0 ) {
+	      accountAuthorizationCode.deleteCharAt ( accountAuthorizationCode.length ()
+	                                              - 1 );
+	      p.setAccountAuthorizationCode ( accountAuthorizationCode.toString () );
+	    }
+	  }
+
+	  /**
+	   * The method searches for the presence of an SKU in the system
+	   * for a given pattern of string. The pattern supplied is assumed
+	   * to be the starting characters of the SKU.
+	   * <br/>
+	 * @param tenantCode 
+	   *
+	   * @param String pattern
+	   * @return List
+	   * @throws ProductItemStatusInfoException
+	   */
+	  public List getSkuSearchList ( String pattern, String tenantCode ) throws
+	      ProductItemStatusInfoException {
+	    DaxParsedStmt pstmt = null;
+	    ProductItemStatusInfo p = new ProductItemStatusInfo ();
+	    List results = null;
+	    List skuSearchResults = new ArrayList ();
+
+	    if ( pattern != null && !pattern.equals ( "" ) ) {
+
+	      p.setSku ( pattern + "%" );
+	      p.setTenantCode ( tenantCode );
+	      pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                      GROUP_ITEM_STATUS_INQUIRY,
+	                                      ProductItemStatusInfoDBConsts.
+	                                      STATEMENT_GET_SKU_LIST,
+	                                      p, null, null );
+	      results = daxDB.doSelect ( pstmt, ProductItemStatusInfo.class, p );
+
+	      if ( results.size () > 0 ) {
+	        Iterator resultsIterator = results.iterator ();
+	        while ( resultsIterator.hasNext () ) {
+	          skuSearchResults.add ( ( ( ProductItemStatusInfo ) resultsIterator.
+	                                   next () ).getSku () );
+	        }
+	      }
+	      else {
+	        throw new ProductItemStatusInfoException (
+	            ProductItemStatusInfoErrorConstants.SKU_PATTERN_NOT_FOUND, p );
+	      }
+	    }
+
+	    return skuSearchResults;
+	  }
+
+	  /**
+	   * The method searches for the presence of an Customer in the system
+	   * for a given pattern of string. The pattern supplied is assumed
+	   * to be the starting characters of the AccountId of the customer.
+	 * @param tenantCode 
+	   *
+	   * @param String pattern
+	   * @return List
+	   * @throws ProductItemStatusInfoException
+	   */
+	  public List getAccountSearchList ( String pattern, String tenantCode ) throws
+	      ProductItemStatusInfoException {
+	    DaxParsedStmt pstmt = null;
+	    ProductItemStatusInfo p = new ProductItemStatusInfo ();
+	    List results = null;
+	    List accountIdSearchResults = new ArrayList ();
+
+	    if ( pattern != null && !pattern.equals ( "" ) ) {
+
+	      p.setAccountId ( pattern + "%" );
+	      p.setTenantCode( tenantCode );
+	      pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	                                      GROUP_ITEM_STATUS_INQUIRY,
+	                                      ProductItemStatusInfoDBConsts.
+	                                      STATEMENT_GET_ACCOUNT_ID_LIST,
+	                                      p, null, null );
+	      results = daxDB.doSelect ( pstmt, ProductItemStatusInfo.class, p );
+
+	      if ( results.size () > 0 ) {
+	        Iterator resultsIterator = results.iterator ();
+	        while ( resultsIterator.hasNext () ) {
+	          accountIdSearchResults.add ( ( ( ProductItemStatusInfo )
+	                                         resultsIterator.next () ).getAccountId () );
+	        }
+	      }
+	      else {
+	        throw new ProductItemStatusInfoException (
+	            ProductItemStatusInfoErrorConstants.ACCOUNT_PATTERN_NOT_FOUND, p );
+	      }
+	    }
+
+	    return accountIdSearchResults;
+	  }
+
+	  public int saveItemStatus (ProductItemStatusInfo p, String stmtId)
+		{
+		  DaxParsedStmt pstmt = null;
+		  pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	              GROUP_ITEM_STATUS_INQUIRY,
+	              stmtId,
+	              p, null, null );
+		  int retVal = daxDB.doUpdate(pstmt, p);
+		  return retVal;
+		}
+	  
+	  public int insertSuperUserLog(String msg,String comments, String email)
+		{
+		  DaxParsedStmt pstmt = null;
+		  DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+		  bean.setString1(msg);
+		  bean.setString2(comments);
+		  bean.setString3(email);
+		  pstmt = daxMgr.makeParsedStmt ( ProductItemStatusInfoDBConsts.
+	            GROUP_ITEM_STATUS_INQUIRY,
+	            ProductItemStatusInfoDBConsts.INSERT_SU_LOG,
+	            bean, null, null );
+		  int retVal = daxDB.doUpdate(pstmt, bean);
+		  
+		  return retVal;
+		}
+	}

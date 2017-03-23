@@ -1,0 +1,21 @@
+package com.hp.ecc.ui.upload;
+
+import com.hp.ecc.ui.upload.common.UploadObject;
+import com.hp.ecc.ui.upload.process.UploadUtilityDelegator;
+
+
+public class UploadProcess {
+
+	  public void processUpload(UploadObject upldObj) {
+		  System.out.println("In processUpload");
+		  try{
+			  UploadUtilityDelegator uploadUtilityDelegator = new UploadUtilityDelegator();
+			  uploadUtilityDelegator.delegateToUpload(upldObj);
+		  }
+		  catch(Exception e)
+		  {
+			  e.printStackTrace();
+		  }
+	  	
+	  } 
+}

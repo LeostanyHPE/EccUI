@@ -1,0 +1,64 @@
+/**
+ * @author reddvino
+ * @version 1.0
+ */
+
+package com.hp.ecc.ui.biz.category;
+
+import java.util.Iterator;
+
+public class QuickManageTreeNode extends CategoryTreeNode {public String
+    marshallToHTML () {if ( getParent () != null ) {return
+    "<B><I>Marshalling must start at root node</I></B>";
+}
+
+StringBuffer buff = new StringBuffer ( 1024 * 4 );
+marshallToHTML ( buff );
+return buff.toString ();
+}
+
+private void marshallToHTML ( StringBuffer buff ) {if ( this.getChildrenCount ()
+    > 0 ) {
+  buff.append ( "<UL>\n" );
+
+}
+Iterator itr = getAllChildCategories ().iterator ();
+while ( itr.hasNext () ) {QuickManageTreeNode currCtgTreeNode = (
+    QuickManageTreeNode ) itr.next ();
+
+buff.append ( "<LI id=\"" ).append ( currCtgTreeNode.getNodePath () ).append (
+    "\" " );
+if ( currCtgTreeNode.hasChildren () ) {buff.append ( "class=\"expanded\" " );
+buff.append ( "onclick=\"expandCollapseNode(this);\">\n" );
+}
+else if ( currCtgTreeNode.getChildrenCount () > 0 ) {buff.append (
+    "class=\"notloaded\" " );
+buff.append ( "onclick=\"expandCollapseNode(this);\">\n" );
+}
+else {buff.append ( "class=\"leaf\" " );
+buff.append ( "onclick=\"expandCollapseNode(this);\">\n" );
+}
+
+buff.append ( "<nobr>" );
+
+buff.append ( "<INPUT TYPE=\"hidden\" NAME=\"dirtyFlag\"/>\n" );
+buff.append ( "<a href=\"javascript:void(0)\" " );
+buff.append ( "onClick=\"loadCategoryProducts('" ).append ( ""
+    + currCtgTreeNode.getNodeId () ).append ( "');\">\n" );
+//buff.append("<img border=0 hspace=0 vspace=0 width=3 height=0 src=\"/comcat/images/misc/dot_clear.gif\">").append(currCtgTreeNode.getNodeName());
+buff.append ( currCtgTreeNode.getNodeName () );
+buff.append ( "</a>\n" );
+
+buff.append ( "</nobr>" );
+
+//Recurse further.
+currCtgTreeNode.marshallToHTML ( buff );
+
+buff.append ( "</LI>\n" );
+}
+
+if ( this.getChildrenCount () > 0 ) {
+  buff.append ( "</UL>\n" );
+}
+}
+}

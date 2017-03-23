@@ -1,0 +1,59 @@
+package com.hp.ecc.ui.biz.references;
+
+
+
+public class PricingDescriptorInfo {
+  
+	String isoCurrencyCode;
+	String regionCode;
+	String priceDescriptor6;
+	String priceDescriptor7;
+	String hpCurrencyCode;
+	String hpCountryCode;
+	String pricingTerm;
+	
+	public String getIsoCurrencyCode() {
+		return isoCurrencyCode;
+	}
+	public void setIsoCurrencyCode(String isoCurrencyCode) {
+		this.isoCurrencyCode = isoCurrencyCode;
+	}
+	public String getRegionCode() {
+		return regionCode;
+	}
+	public void setRegionCode(String regionCode) {
+		this.regionCode = regionCode;
+	}
+	public String getPriceDescriptor6() {
+		return priceDescriptor6;
+	}
+	public void setPriceDescriptor6(String priceDescriptor6) {
+		this.priceDescriptor6 = priceDescriptor6;
+	}
+	public String getPriceDescriptor7() {
+		return priceDescriptor7;
+	}
+	public void setPriceDescriptor7(String priceDescriptor7) {
+		this.priceDescriptor7 = priceDescriptor7;
+	}
+	public String getHpCurrencyCode() {
+		return hpCurrencyCode;
+	}
+	public void setHpCurrencyCode(String hpCurrencyCode) {
+		this.hpCurrencyCode = hpCurrencyCode;
+	}
+	public String getHpCountryCode() {
+		return hpCountryCode;
+	}
+	public void setHpCountryCode(String hpCountryCode) {
+		this.hpCountryCode = hpCountryCode;
+	}
+	public String getPricingTerm() {
+		return pricingTerm;
+	}
+	public void setPricingTerm(String pricingTerm) {
+		this.pricingTerm = pricingTerm;
+	}
+	
+	
+}

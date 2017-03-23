@@ -1,0 +1,361 @@
+<div class="row" id="PubScheduleCtrl" ng-controller="publishCatalogScheduleCtrl" ng-init="init()">
+<div id="messageDiv"></div>	
+	<div id="successMess" class="alert success" ng-show="successMessage!='' && errorMessage!=undefined">{{successMessage}}</div>
+	<div id="errorMess" class="alert error" ng-show="errorMessage!='' && errorMessage!=undefined"><span>{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline"><span>{{form.publishModeTitle}}</span></h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns" ng-show="form.publishMode == 'B' && (form.catalogType == '1' || form.catalogType == '3')">
+				<div class="generals">
+					<span>Catalogs:</span>
+					<textarea rows="5" cols="3" ng-bind="form.catalogListInfo"></textarea>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="form.publishMode == 'S'">
+				<div class="generals">
+					<span>Catalog Name:</span>
+					<div id="catalogName" class="div_input" name="catalogName" ng-bind="form.catalogName"></div>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.publishMode == 'S'">
+				<div class="generals">
+					<span>Catalog ID:</span>
+					<div id="catalogID" class="div_input" name="formatName" ng-bind="form.catalogID"></div>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="form.publishMode == 'S'">
+				<div class="generals">
+					<span>Format:</span>
+					<div id="format" class="div_input" ng-bind="form.formatName"></div>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.publishMode == 'S' && form.catalogType == '3'">
+				<div class="generals">
+					<span>Customer:</span>
+					<div id="customerName" class="div_input" name="customerName" ng-bind="form.customerName"></div>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="(form.isPriceTier == true && form.useBackendPublisher == true) || (form.catalogType == '1' && form.catFormatKey != '1000' && form.catFormatKey != '12') || (form.catalogType != '1')">
+				<div class="generals">
+					<span>Notify :</span>
+					<input style="margin-top:3px;" type="checkbox" ng-model="notifyFlag" id="notifyFlag" ng-change="taskFormNotifyCheckClick()" /> 
+				</div>
+			</div>
+			<div class="four columns" ng-show="(form.isPriceTier == true && form.useBackendPublisher == true) || (form.catalogType == '1' && form.catFormatKey != '1000' && form.catFormatKey != '12') || (form.catalogType != '1')  ">
+				<div class="generals">
+					<span>Notify Email:</span> 
+					<input id="notifyEmail" type="text" ng-model="notifyEmail" ng-disabled="notifyEmailStatus"></input>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows" >
+			<div class="four columns" ng-show="form.publishMode == 'B' && form.catalogType == '3'">
+				<div class="generals">
+					<span>Task Name:</span>
+					<input id="taskName" type="text" name="taskName" ng-change="checkName(this)" ng-model="taskName" ></input>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.publishMode == 'B' && form.catalogType == '3'">
+       			<div class="generals">
+           			<span>Catalog Format Name:</span>
+           			<select ng-model="form.catFormatKey" ng-options="item.cat_format_key as item.cat_format_name for item in catFormatList" ng-change="getCatalogList()"></select> 
+        		</div>
+    		</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="form.publishMode == 'B' && form.catalogType == '3'">
+				<div class="generals">
+					<span>Maximum number of batches:</span> 
+					<select name="batchNum" ng-model="batchNum" id="batchNum" ng-options="item as item for item in numOfBatchList"></select>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.publishMode == 'B' && form.catalogType == '3'">
+				<div class="generals" >
+					<span>Concatenate output? :</span>
+					<input style="margin-top:3px;" type="checkbox" ng-model="concatFlag" /> 
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="form.useBackendPublisher != true">
+				<div class="generals" >
+					<span>Publish Catalog with Warning :</span>
+					<input style="margin-top:3px;" type="checkbox" ng-model="catWarning" ng-init="catWarning=true" />
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.useBackendPublisher != true">
+				<div class="generals">
+					<span>Priority:</span>
+					<select name="priority" ng-model="priority" id="priority" ng-disabled="!catWarning" ng-options="item as item for item in numOfPriorityList"></select>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows" >
+			<div class="four columns" ng-show="form.useBackendPublisher == true">
+				<div class="generals">
+					<span>Publish type:</span> 
+					<input type="radio" style="margin: 0px 5px 7px 0px;" ng-model="publishType" value="SINGLE_CATALOG"  ng-checked="form.catalogType == '1' && form.catFormatKey != '1000' && form.catFormatKey != '12'"/>This Catalog<br>
+					<input type="radio" style="margin: 0px 5px 7px 0px;" ng-model="publishType" value="ALL_CATALOGS" ng-checked="form.catalogType == '1' && form.catFormatKey != '1000' && form.catFormatKey != '12'"/> All Customer's {{form.formatName}} Catalogs<br>
+					<input type="radio" style="margin: 0px 5px 7px 35%;" ng-model="publishType" value="2E"/>All Customer's {{form.formatName}} Catalogs<br> 
+					<div style="margin-left:38%;">(with refresh from deal)</div><br>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.useBackendPublisher == true && (roleId != 6 && roleId != 7 && roleId != 8 && roleId != 9 && roleId != 10 && roleId != 13)">
+				<div class="generals">
+					<span> Incremental: </span>
+					<input  type="checkbox" ng-show="form.switchModeAllowedFlag == true" ng-model="incremental" ng-change="setReasonCodeStatus()" />
+					<div id="switchModeAllowedFlagFalse" ng-show="(form.catalogType == '1' && form.catFormatKey != '1000' && form.catFormatKey != '12') || (form.catalogType != '1' && form.switchModeAllowedFlag == false)">{{form.incremental}}</div>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.useBackendPublisher == true && form.switchModeAllowedFlag == true">
+				<div class="generals">
+					<span>with Reason Code: </span> 
+					<input style="margin-top:3px;" 	type="checkbox" ng-model="reasonCode" ng-disabled="!incremental" />
+				</div>
+			</div>
+		</div>
+		<!-- <div id="catalogTypeAndCatFormatKey4">
+			<div id="switchModeAllowedFlagTrue1">
+				<input  type="checkbox" ng-model="incremental" ng-change="setReasonCodeStatus()" /> 
+				<span style="float: none;">with Reason Code: </span> 
+				<input  type="checkbox" ng-model="reasonCode" ng-disabled="!incremental" />
+			</div>
+		</div> -->
+		<div class="customer_rows">
+			<!-- <div id="isPriceTierAndUseBackendPublisher2">
+				<div class="four columns">
+					<div class="generals" >
+						<input 	type="checkbox" ng-model="incremental" /> 
+						<span style="float: none;">Incremental</span>
+					</div>
+				</div>
+			</div> -->
+			<div id="useBackendPublisherPresent2">
+			    <div class="four columns" ng-show="form.useBackendPublisher != true">
+					<div class="generals" >
+						<span>Publish Valid Items Only :</span>
+						<input style="margin-top:3px;"  type="checkbox" ng-model="pubValidItemsOnly" ng-init="pubValidItemsOnly=true" /> 
+					</div>
+				</div>
+				<div class="four columns" ng-show="form.useBackendPublisher != true">
+					<div class="generals">
+						<span>Incremental :</span>
+						<input style="margin-top:3px;"  type="checkbox" ng-model="incremental" ng-change="setReasonCodeStatus()" /> 
+					</div>
+				</div>
+				<div class="four columns" ng-show="form.useBackendPublisher != true">
+					<div class="generals" >
+						<span>With Reason Code :</span>
+						<input style="margin-top:3px;"  type="checkbox" ng-model="reasonCode" ng-disabled="!incremental" />
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="targets_list">
+				<div class="generals">
+					<span>Send Via:</span> 
+					<select ng-model="sendVia" ng-options="item for item in targets_list" ng-change="targetListOnChange()"></select>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.useBackendPublisher != true">
+				<div class="generals">
+					<span>Email:</span> 
+					<input type="text" placeholder="" id="email" maxlength="100" ng-model="email"></input>
+				</div>
+			</div>
+			<div class="four columns" ng-show="form.useBackendPublisher != true">
+				<div class="generals">
+					<span style="width: 100%;margin-left: -25%;">(Separated by commas, maximum size permissible is 100)</span> 
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns" ng-show="(form.catalogType == '1' && form.catFormatKey != '1000' && form.catFormatKey != '12') || form.catalogType != '1' ">
+				<div class="generals">
+					<span>Comment:</span>
+					<textarea rows="5" cols="3" ng-model="form.comment"></textarea>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows" ng-show="form.publishMode == 'S' && form.useBackendPublisher != true">
+			<div class="four columns">
+				<div class="generals" >
+					<span>Event-Based :</span>
+					<input style="margin-top:3px;" type="checkbox" ng-model="eventBased" ng-change="updateScheduleView()" /> 
+				</div>
+			</div>
+		</div>
+		<div  class="customer_rows" ng-show="form.isPriceTier == true && form.useBackendPublisher == true" >
+			<div class="tweleve columns">
+				<div class="generals">
+					<span>*If incremental flag is unchecked, complete price tier (full version) will be published to the store.</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="customer_rows" ng-show="form.useBackendPublisher != true">
+		<h1 class="h1Underline"><span>Schedule</span></h1>
+	</div>
+	<div class="customer_rows form-border" ng-show="form.useBackendPublisher != true">
+		<div class="customer_rows">
+			<div class="six columns">
+				<div class="generals">
+					<label style="width:22%">Schedules:</label>
+					<select size="6" multiple style="width: 75%; height: 80px;" id="sch_list" ng-model="sch_list" ng-options="item as item for item in schedules_list"></select>
+				</div>
+			</div>
+			<div class="four columns" ng-show="roleId !='2'">
+				<a class="btn btn-inline" ng-click="addSchedule()"> <span id="add">Add</span></a> 
+				<a class="btn btn-inline btn-Critical btn-del" ng-click="condtionalAlertDelete()"><span id="delete"><i class="icon-trash"></i>Delete</span></a>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<h1 class="h1Underline row" style="height: 0px;"></h1>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Choose a Schedule:</span>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Start Day:</span>
+              		<input type="text" class="startDayClass"  ng-model="startDay" />
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>End Day:</span>
+              		<input type="text" class="endDayClass"  ng-model="endDay" />
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="two columns" style="border: 2px solid #C4C4C4;padding: 15px 0px 15px 10px;margin-right:5px">
+				<div class="generals">
+					<span>Once</span>
+					<input type="radio" ng-disabled="eventBased" ng-model="selectedPeriod0" value="once" name="selectedPeriod" ng-click="showSchedulePane(0)" ng-checked="true"/>
+				</div>
+				<div class="generals">
+					<span>Daily</span>
+					<input type="radio" ng-disabled="eventBased" ng-model="selectedPeriod1" value="daily" name="selectedPeriod" ng-click="showSchedulePane(1)" />
+				</div>
+				<div class="generals">
+					<span>Weekly</span>
+					<input type="radio" ng-disabled="eventBased" ng-model="selectedPeriod2" value="weekly" name="selectedPeriod" ng-click="showSchedulePane(2)" />
+				</div>
+				<div class="generals">
+					<span>Weekdays</span>
+					<input type="radio" ng-disabled="eventBased" ng-model="selectedPeriod3" value="weekdays" name="selectedPeriod" ng-click="showSchedulePane(3)" />
+				</div>
+				<div class="generals">
+					<span>Monthly</span>
+					<input type="radio" ng-disabled="eventBased" ng-model="selectedPeriod4" value="monthly" name="selectedPeriod" ng-click="showSchedulePane(4)" />
+				</div>
+			</div>
+			<div class="three columns" style="border: 2px solid #C4C4C4;padding: 15px 0px 15px 10px;" ng-show="selRadioBtn == 0">
+				<div class="generals">
+					<span>Pick a date:</span>
+            		<input type="text" class="dteWhen0Class"  ng-model="dteWhen0"/>
+				</div>
+				<div class="generals">
+					<span>Pick a Time:</span> 
+					<select name="pk_time0" ng-model="pk_time0" id="pk_time0" ng-options="item as item for item in timeList"></select>
+				</div>
+			</div>
+			<div class="five columns" style="border: 2px solid #C4C4C4;padding: 15px 0px 15px 10px;" ng-show="selRadioBtn == 1">
+				<div class="five columns">
+					<div class="generals" ng-show="form.publishMode == 'S'">
+						<span style="width:25%;">Pick a time:</span>
+						<select  multiple size="4" style="width: 100px; height: 115px;" name="pk_time1" ng-model="pk_time1" id="pk_time1" ng-options="item as item for item in timeList"></select>
+					</div>
+					<div class="generals" ng-show="form.publishMode == 'B'">
+						<span style="width:25%;">Start time:</span>
+						<select multiple size="4" style="width: 100px; height: 115px;v" name="pk_time1" ng-model="pk_time1" id="pk_time1" ng-options="item as item for item in timeList"></select>
+					</div>
+					<div class="generals" ng-show="form.publishMode == 'B'">
+						<span style="width:25%;">Number of times:</span> 
+						<select name="num_of_times" ng-model="num_of_times" id="num_of_times" ng-options="item as item for item in numOfTimeList"></select>
+					</div>
+				</div>
+				<div class="five columns">
+					<div class="generals">
+						<span style="width:25%;">Exceptions:</span> 
+						<select size="5" style="width: 100px; height: 115px;"	ng-model="sel_dte1" id="sel_dte1" ng-options="item for item in exceptionList" multiple></select>
+						<input type="text" class="exceptionDates" ng-model="selExpDate" style="display:none" >
+					</div>
+				</div>
+				<div class="two columns">
+					<div class="generals">
+						<a  class="btn btn-inline btn-Critical btn-del" ng-click="condtionalAlertDelete1()"><i class="icon-trash"></i>Delete</a>
+					</div>
+				</div>
+			</div>
+			<div class="five columns" style="border: 2px solid #C4C4C4;padding: 15px 0px 15px 10px;" ng-show="selRadioBtn == 2">
+				<div class="five columns">
+					<div class="generals">
+						<span>Pick a day:</span>
+						<select name="pk_date2" ng-model="pk_date2" id="pk_date2" ng-options="item as item for item in weeksNameList"></select>
+					</div>
+					<div class="generals">
+						<span>Pick a time:</span> 
+						<select name="pk_time2" ng-model="pk_time2" id="pk_time2" ng-options="item as item for item in timeList"></select>
+					</div>
+				</div>
+				<div class="five columns">
+					<div class="generals">
+						<span>Exceptions:</span> 
+						<select size="5" style="width: 100px; height: 115px;" ng-model="sel_dte2" id="sel_dte2" ng-options="item for item in exceptionList" multiple></select>
+						<input type="text" class="exceptionDates" ng-model="selExpDate" style="display:none" >
+					</div>
+				</div>
+				<div class="two columns">
+					<div class="generals">
+						<a class="btn btn-inline btn-Critical btn-del" ng-click="condtionalAlertDelete1()"><i class="icon-trash"></i>Delete</a>
+					</div>
+				</div>
+			</div>
+			<div class="five columns" style="border: 2px solid #C4C4C4;padding: 15px 0px 15px 10px;" ng-show="selRadioBtn == 4">
+				<div class="five columns">
+					<div class="generals">
+						<span>Pick a day:</span> 
+						<select name="pk_date3" ng-model="pk_date3" id="pk_date3" ng-options="item as item for item in daysList"></select>
+					</div>
+					<div class="generals">
+						<span>Pick a time:</span>
+						<select name="pk_time3" ng-model="pk_time3" id="pk_time3" ng-options="item as item for item in timeList"></select>
+					</div>
+				</div>
+				<div class="five columns">
+					<div class="generals">
+						<span>Exceptions:</span> 
+						<select size="5" style="width: 100px; height: 115px;"	ng-model="sel_dte3" id="sel_dte3" ng-options="item for item in exceptionList" multiple></select>
+						<input type="text" class="exceptionDates" ng-model="selExpDate" style="display:none" >
+					</div>
+				</div>
+				<div class="two columns">
+					<div class="generals">
+						<a class="btn btn-inline btn-Critical btn-del" ng-click="condtionalAlertDelete1()"><i class="icon-trash"></i>Delete</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="customer_rows">
+		<a class="btn btn-inline"  property="task1" ng-click="runNow()" ng-show="roleId != '2' && form.publishMode != 'B'"><span id="runNow">Run Now</span></a>
+		<a class="btn btn-inline"  ng-click="saveOnClick('save')" ng-show="roleId != '2' && form.useBackendPublisher != true"><span id="save">Save</span></a>
+		<a class="btn btn-inline"  action="path" property="task"	ng-click="cancelSchedule()"><span id="cancel">Cancel</span></a>
+	</div>
+</div>

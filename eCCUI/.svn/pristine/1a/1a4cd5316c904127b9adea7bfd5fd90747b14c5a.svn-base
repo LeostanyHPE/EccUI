@@ -1,0 +1,330 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.content;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.content.ContentSearch;
+import com.hp.ecc.ui.common.biz.role.Role;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.db.dao.ManageContentDao;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.SubCategoryLoader;
+import com.hp.ecc.ui.view.beans.ManageContentForm;
+
+/**
+ * @author reddvino
+ *
+ */
+@Service
+public class ManageContentProcessor {
+	private ManageContentDao manageContentDao = new ManageContentDao();
+	private SubCategoryLoader loader;
+
+
+	public JSONArray getAllCategorizations(String adbRegionToConnect) {
+		return manageContentDao.getAllCategorizations(adbRegionToConnect);
+	}
+	
+	
+	public JSONArray showStdCatMgr (	SubCategoryLoader loader, 
+										String adbRegionToConnect, 
+										String loginUserRole, 
+										ManageContentForm form , 
+										Session session, 
+										List catalogList,
+										Categorization comcatMaster) {
+		JSONObject returnObject = new JSONObject();
+		form.setPageType ( IApplicationConstants.PG_TYPE_STD_CAT_MGR );
+		
+		//set categorizations
+		///List allCtg = CategorizationMgr.getAllCategorizations ( adbRegionToConnect);
+		Categorization dummyCtg = new Categorization ();
+		dummyCtg.setId ( new Integer ( 0 ) );
+		dummyCtg.setName ( "None" );
+	///	allCtg.add ( 0, dummyCtg );
+	///	form.setCtgList ( allCtg );
+		
+		//set catalogs
+		CatalogMgr cm = new CatalogMgr ();
+		if ( catalogList == null ) {
+		catalogList = new ArrayList ();
+		}
+		
+		Catalog dummyCat = new Catalog ();
+		dummyCat.setId ( "None" );
+		catalogList.add ( 0, dummyCat );
+		
+		form.setCatalogList ( catalogList );
+		
+		//set ids
+		String ctgId = form.getCtgId ();
+		String catalogId = form.getCatalogId ();
+		Categorization currentCtg;
+		Catalog currentCat;
+		
+		if ( ( StrUtil.isEmpty ( ctgId ) || "0".equals ( ctgId ) )
+		&& ( StrUtil.isEmpty ( catalogId ) || "None".equals ( catalogId ) ) ) {
+		currentCtg = comcatMaster;
+		ctgId = currentCtg.getId ().toString ();
+		form.setCtgId ( ctgId );
+		form.setCatalogId ( "None" );
+		catalogId = "None";
+		loader.setUpdatable ( this.isUpdatable ( currentCtg, null , loginUserRole) );
+		form.setHpLangCode ( ContentSearch.getCtgHpLangCode ( currentCtg.getId ().toString (), adbRegionToConnect ) );
+		
+		session.setAttribute ( IApplicationConstants.SESSION_CONTENT_LANG_CODE
+		                , form.getHpLangCode () );
+		} // neither ctg or catalog is selected
+		else if ( ( !StrUtil.isEmpty ( ctgId ) ) && ( !"0".equals ( ctgId ) ) ) {
+		form.setCtgId ( ctgId );
+		form.setCatalogId ( "None" );
+		catalogId = "None";
+		
+		currentCtg = CategorizationMgr.getCategorization ( Integer.parseInt (ctgId ), adbRegionToConnect );
+		loader.setUpdatable ( this.isUpdatable ( currentCtg, null, loginUserRole ) );
+		form.setHpLangCode ( ContentSearch.getCtgHpLangCode ( currentCtg.getId ().toString (), adbRegionToConnect) );
+		
+		session.setAttribute ( IApplicationConstants.SESSION_CONTENT_LANG_CODE , form.getHpLangCode () );
+		} // ctg was selected
+		else {
+		form.setCatalogId ( catalogId );
+		
+		currentCtg = getCatalogCtg ( cm.getCatalogInfo ( catalogId ,  adbRegionToConnect),adbRegionToConnect, comcatMaster );
+		form.setCtgId ( "0" );
+		loader.setUpdatable ( this.isUpdatable ( currentCtg, catalogId, loginUserRole ) );
+		form.setHpLangCode ( ContentSearch.getCatHpLangCode ( catalogId ,adbRegionToConnect) );
+		
+		session.removeAttribute ( IApplicationConstants.SESSION_CONTENT_LANG_CODE );
+		}
+		
+		loader.setCatalogId ( catalogId );
+		loader.setHpLangCode ( form.getHpLangCode () );
+		loader.setTreeId ( currentCtg.getId ().toString () );
+		JSONArray topLevelNodes = loader.retrieveSubNodes ( null , adbRegionToConnect,"nodes",0);
+		JSONArray returnFinal = new JSONArray();
+		JSONObject root = new JSONObject ();
+	      
+		root.put("id", "0" );
+		/*root.put("text", "<a onClick=angular.element(document.getElementById('manageContentId')).scope().viewRightViewOfManageContentRoot('"+
+				currentCtg.getId ().toString ()+"','"+loader.getUpdatable ()+"','"+loader.getHpLangCode ()+"','"+
+				java.net.URLEncoder.encode ( catalogId )+"','"+currentCtg.getDisplayLabel ()+"','root')>" +
+				"Categorization: " + currentCtg.getDisplayLabel () +"</a>");*/
+		root.put("updatable", loader.getUpdatable ());
+		root.put("hpLangCode", loader.getHpLangCode ());
+		root.put("root", "root");
+		root.put("collapsed", "true");
+		root.put("text", "Categorization: " + currentCtg.getDisplayLabel ());
+		root.put("tipText",  "click sub nodes to see the content detail" );
+		root.put("classes" ,"important");
+		root.put("nodeType", "Parent" );
+		root.put("nodeLevel", "0" );
+	    root.put("children",topLevelNodes);
+	    root.put("hasChildren",true);
+	    root.put("treeId",currentCtg.getId ().toString ());
+	    returnObject.put ( IApplicationConstants.CTG_TREE_DATA_SOURCE, root );
+	  ///  returnObject.put("categorization", manageContentProcessor.getAllCategorizations(adbRegionToConnect));
+		returnFinal.add(root);
+		return returnFinal;
+	}
+	public JSONArray showCatMgrWithoutCust (	SubCategoryLoader loader, 
+												String adbRegionToConnect , 
+												String loginUserRole, 
+												Session session, ManageContentForm form ,
+												Categorization comcatMaster) {
+		JSONObject returnObject = new JSONObject();
+			form.setPageType ( IApplicationConstants.PG_TYPE_CAT_MGR_NO_CUST );
+			String ctgId = form.getCtgId ();
+			Categorization currentCtg;
+			if ( StrUtil.isEmpty ( ctgId ) ) {
+			currentCtg = comcatMaster;
+			ctgId = currentCtg.getId ().toString ();
+			form.setCtgId ( ctgId );
+			}
+			else {
+			currentCtg = CategorizationMgr.getCategorization ( Integer.parseInt ( ctgId ),  adbRegionToConnect );
+			}
+			
+			
+			///form.setCtgList ( CategorizationMgr.getAllCategorizations ( adbRegionToConnect) );
+			form.setCatalogList ( null );
+			if(currentCtg != null){
+			form.setHpLangCode ( ContentSearch.getCtgHpLangCode ( currentCtg.getId ().toString () , adbRegionToConnect) );
+			}
+			session.setAttribute ( IApplicationConstants.SESSION_CONTENT_LANG_CODE , form.getHpLangCode () );
+			
+			loader.setTreeId ( ctgId );
+			loader.setCatalogId ( null );
+			loader.setHpLangCode ( form.getHpLangCode () );
+			loader.setUpdatable ( this.isUpdatable ( currentCtg, null, loginUserRole ) );
+			JSONArray topLevelNodes = loader.retrieveSubNodes ( null , adbRegionToConnect,"nodes",0);
+			JSONArray returnFinal = new JSONArray();
+			JSONObject root = new JSONObject ();
+		      
+			root.put("id", "0" );
+			root.put("updatable", this.isUpdatable ( currentCtg, null, loginUserRole ));
+			root.put("hpLangCode", form.getHpLangCode ());
+			root.put("root", "root");
+			root.put("collapsed", "true");
+			root.put("text", "Categorization: " + currentCtg.getDisplayLabel ());
+			root.put("tipText",  "click sub nodes to see the content detail" );
+//			String link = request.getContextPath () +
+//					request.getServletPath () +
+//					"/content/CategoryContentMgmt?treeId=" + ctgId +
+//					"&updatable=" + this.isUpdatable ( currentCtg, null, loginUserRole ) +"&lc=" + form.getHpLangCode ();
+			///root.put("link", link );
+			root.put("classes" ,"important");
+			root.put("nodeType", "Parent" );
+			root.put("nodeLevel", "0" );
+		    root.put("children",topLevelNodes);
+		    root.put("hasChildren",true);
+		    root.put("treeId",ctgId);
+		   	returnObject.put ( IApplicationConstants.CTG_TREE_DATA_SOURCE, root );
+		   /// returnObject.put("categorization", this.getAllCategorizations(adbRegionToConnect));
+			returnFinal.add(root);
+			return returnFinal;
+	}
+	
+	public JSONArray retrieveSubNodesToLoadTree (SubCategoryLoader loader, String nodeID, String adbRegionToConnect,int nodeLevel){
+		JSONArray topLevelNodes = null;
+		topLevelNodes = loader.retrieveSubNodes ( nodeID , adbRegionToConnect,"subNodes",nodeLevel);
+		return topLevelNodes;
+	}
+			
+	public JSONArray showCatMgrWithCust (	SubCategoryLoader loader, 
+											String adbRegionToConnect , 
+											String loginUserRole, 
+											Session session, 
+											ManageContentForm form,
+											String currentCustKey ,
+											List catalogList,
+											Categorization comcatMaster) {
+		
+		JSONObject returnObject = new JSONObject();
+			form.setPageType ( IApplicationConstants.PG_TYPE_CAT_MGR_CUST );
+			
+			String catalogId = form.getCatalogId ();
+			Catalog currentCat;
+			
+			CatalogMgr cm = new CatalogMgr ();
+			if ( ( catalogList == null ) || ( catalogList.size () == 0 ) ) {
+				form.setCatalogList ( null );
+				form.setCtgList ( null );
+				return null;
+			}
+			else {
+				if ( StrUtil.isEmpty ( catalogId ) ) {
+				currentCat = ( Catalog ) catalogList.get ( 0 );
+				catalogId = currentCat.getId ();
+				form.setCatalogId ( catalogId );
+				}
+				else {
+				currentCat = cm.getCatalogInfo ( catalogId , adbRegionToConnect);
+				}
+				
+				form.setCatalogList ( catalogList );
+				form.setCtgList ( null );
+				
+				Categorization currentCtg = this.getCatalogCtg ( currentCat,adbRegionToConnect, comcatMaster );
+				form.setHpLangCode ( ContentSearch.getCatHpLangCode ( catalogId, adbRegionToConnect ) );
+				
+				session.removeAttribute ( IApplicationConstants.SESSION_CONTENT_LANG_CODE );
+				
+				loader.setCatalogId ( currentCat.getId () );
+				loader.setUpdatable ( this.isUpdatable ( currentCtg, catalogId ,loginUserRole) );
+				loader.setHpLangCode ( form.getHpLangCode () );
+				loader.setTreeId ( currentCtg.getId ().toString () );
+						
+				JSONArray topLevelNodes = loader.retrieveSubNodes ( null , adbRegionToConnect,"nodes",0);
+				JSONArray returnFinal = new JSONArray();
+				JSONObject root = new JSONObject ();
+			      
+				root.put("id", "0" );
+				root.put("tipText",  "click sub nodes to see the content detail" );
+				root.put("updatable", this.isUpdatable ( currentCtg, catalogId ,loginUserRole));
+				root.put("hpLangCode", form.getHpLangCode ());
+				root.put("root", "root");
+				root.put("collapsed", "true");
+				root.put("text", "Categorization: " + currentCtg.getDisplayLabel ());
+				root.put("tipText",  "click sub nodes to see the content detail" );
+				root.put("classes" ,"important");
+			    root.put("nodeType", "Parent" );
+			    root.put("nodeLevel", "0" );
+			    root.put("children",topLevelNodes);
+			    root.put("hasChildren",true);
+			    root.put("treeId",currentCtg.getId ().toString ());
+			    root.put("catId", java.net.URLEncoder.encode ( catalogId ));
+//				String link = request.getContextPath () +
+//						request.getServletPath () +
+//						"/content/CategoryContentMgmt?treeId="
+//						+ currentCtg.getId ().toString () +
+//						"&updatable=" + this.isUpdatable ( currentCtg, catalogId ,loginUserRole) +
+//						"&lc=" + form.getHpLangCode () +
+//						"&catId=" + java.net.URLEncoder.encode ( catalogId );
+				returnFinal.add(root);
+			    returnObject.put ( IApplicationConstants.CTG_TREE_DATA_SOURCE, returnFinal );
+			   
+				return returnFinal;
+			}
+	}
+
+
+	public Categorization getCatalogCtg ( Catalog cat,String adbRegionToConnect, Categorization  comcatMaster) {
+		    if ( cat == null ) {
+		      return null;
+		    }
+
+		    if ( !StrUtil.isEmpty ( cat.getContentCtgID () ) ) {
+		      return CategorizationMgr.getCategorization ( Integer.parseInt ( cat.getContentCtgID () ),adbRegionToConnect );
+		    }
+		    else if ( !StrUtil.isEmpty ( cat.getBrowseCtgID () ) ) {
+		      return CategorizationMgr.getCategorization ( Integer.parseInt ( cat.getBrowseCtgID () ), adbRegionToConnect );
+		    }
+		    else {
+		      return comcatMaster;
+		    }
+	}///getCatalogCtg
+	public String isUpdatable ( Categorization ctg, String catalogId, String userRoleId ) {
+		    if ( ( Role.ROLE_ID_SALES_REP.equals ( userRoleId ) )
+		         || ( Role.ROLE_ID_STD_SALES_REP.equals ( userRoleId ) )
+		         || ( Role.ROLE_ID_PRICE_MGR.equals ( userRoleId ) )
+		         || ( Role.ROLE_ID_STD_PRICE_MGR.equals ( userRoleId ) ) ) {
+		      return "NO";
+		    }
+
+		    if ( catalogId != null ) {
+		      return "YES";
+		    }
+
+		    if ( ctg.isMaster () ) {
+		      //provisioner is editable by sys admin and regional admin
+		      //other masters are not editable
+		      if (
+		          ctg.getType ().equalsIgnoreCase ( IApplicationConstants.PROVISIONER_CTG_TYPE )
+		          && (
+		          ( Role.ROLE_ID_REGIONAL_ADMIN.equals ( userRoleId ) )
+		          || ( Role.ROLE_ID_SYSTEM_ADMIN.equals ( userRoleId ) )
+		          )
+		          ) {
+		        return "YES";
+		      }
+		      else {
+		        return "NO";
+		      }
+		    }
+
+		    return "YES";
+	 }///isUpdatable
+
+}

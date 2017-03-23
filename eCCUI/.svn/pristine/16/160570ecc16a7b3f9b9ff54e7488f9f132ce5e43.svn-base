@@ -1,0 +1,135 @@
+package com.hp.ecc.ui.biz.quickManage;
+
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) 2001</p>
+ * <p>Company: </p>
+ * @author unascribed
+ * @version 1.0
+ */
+
+public class QuickMgInfo {
+
+  private String[] addList;
+  private String[] delList;
+  //private String[] catalogList;
+  private String catalogID;
+  private String catalogName;
+  private int delProdsCnt;
+  private int addProdsCnt;
+  private String lastModifiedBy;
+  private String source;
+  private static final String DEL_MSG =
+      " product(s) is(are) deleted from catalog - ";
+  private static final String ADD_MSG =
+      " product(s) is(are) added into catalog - ";
+  private static final int ADD = 1;
+  private static final int DELETE = 2;
+
+
+  public QuickMgInfo () {
+  }
+
+  public String getCatalogID () {
+    return catalogID;
+  }
+
+  public void setCatalogID ( String id ) {
+    catalogID = id;
+
+  }
+
+  public String getCatalogName () {
+    return catalogName;
+  }
+
+  public void setCatalogName ( String name ) {
+    catalogName = name;
+
+  }
+
+  public void setAddProds ( String[] list ) {
+    addList = list;
+  }
+
+  public String[] getAddProds () {
+    return addList;
+  }
+
+  public void setDelProds ( String[] list ) {
+    this.delList = list;
+  }
+
+  public String[] getDelProds () {
+    return delList;
+  }
+
+
+  public String getSource () {
+    return source;
+  }
+
+  public void setSource ( String source ) {
+    this.source = source;
+  }
+
+  public void setLastModifiedBy ( String modifiedBy ) {
+    this.lastModifiedBy = modifiedBy;
+  }
+
+  public String getLastModifiedBy () {
+    return lastModifiedBy;
+  }
+
+  public int getDelProdsCnt () {
+    return delProdsCnt;
+  }
+
+  public void setDelProdsCnt ( int prodsCnt ) {
+    delProdsCnt = prodsCnt;
+  }
+
+  public int getAddProdsCnt () {
+    return addProdsCnt;
+  }
+
+  public void setAddProdsCnt ( int prodsCnt ) {
+    addProdsCnt = prodsCnt;
+  }
+
+  public String getAddMsg () {
+    return composeMsg ( ADD );
+
+  }
+
+  public String getDelMsg () {
+    return composeMsg ( DELETE );
+
+  }
+
+  private String composeMsg ( int optType ) {
+    StringBuffer sb = new StringBuffer ();
+    int cnt;
+
+    if ( optType == ADD ) {
+      cnt = getAddProdsCnt ();
+      sb.append ( cnt ).append ( ADD_MSG );
+    }
+    if ( optType == DELETE ) {
+      cnt = getDelProdsCnt ();
+      sb.append ( cnt ).append ( DEL_MSG );
+    }
+
+    String name = getCatalogName ();
+    if ( name != null ) {
+      sb.append ( name ).append ( "." );
+    }
+    else {
+      sb.append ( getCatalogID () ).append ( "." );
+    }
+    return sb.toString ();
+
+  }
+}

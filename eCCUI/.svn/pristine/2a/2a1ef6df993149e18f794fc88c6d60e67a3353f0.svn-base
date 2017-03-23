@@ -1,0 +1,153 @@
+package com.hp.ecc.ui.biz.content;
+
+import hp.comcat.dax.fwk.common.db.dax.*;
+import hp.comcat.dax.fwk.common.util.CatRuntimeException;
+
+import java.io.*;
+
+import com.hp.ecc.ui.biz.archive.CatalogArchiveUtil;
+import com.hp.ecc.ui.util.StrUtil;
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: mayanki
+ * Date: Oct 13, 2003
+ * Time: 4:36:17 PM
+ * To change this template use Options | File Templates.
+ */
+public class LockMgr {
+  private final static String GROUP_ID = "Lock_Content";
+  private final static String CREATE_LOCK_STMNT_ID = "CreateLockAndContent";
+  private final static String DELETE_LOCK_STMNT_ID = "DeleteLock";
+
+  public LockAndContentInfo createLockForCatalog ( LockAndContentInfo lcInfo, String adbRegionToConnect  ) {
+	    try {
+	      //call the stored proc
+	      DaxMgr mgr = DaxMgr.getInstance ();
+	      DaxParsedStmt stmt = mgr.makeParsedStmt ( "Lock_Content"
+	                                                , "CreateLock4Catalog"
+	                                                , LockAndContentInfo.class, null, null );
+	      DaxDB db = mgr.getDaxDB (adbRegionToConnect);
+	      // if cust key is null?
+	      db.doSP ( stmt, lcInfo, lcInfo );
+	      return lcInfo;
+	    }
+	    catch ( Exception e ) {
+	      //e.printStackTrace();
+	      System.out.println ( "Exxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxception is  ->  "
+	                           + e );
+	      throw new CatRuntimeException ( "failed to Create the Lock", e );
+	      //return null;
+	    }
+  }
+
+  public LockAndContentInfo removeLockFromCatalog ( LockAndContentInfo lcInfo, String adbRegionToConnect  ) {
+	    try {
+	      //call the stored proc
+	      DaxMgr mgr = DaxMgr.getInstance ();
+	      DaxParsedStmt stmt = mgr.makeParsedStmt ( "Lock_Content", "RemoveLock4Catalog", lcInfo, null, null );
+	      DaxDB db = mgr.getDaxDB (adbRegionToConnect);
+	      db.doSP ( stmt, lcInfo, lcInfo );
+	      return lcInfo;
+	    }
+	    catch ( Exception e ) {
+	      // e.printStackTrace();
+	      System.out.println ( "Exxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxception is  ->  " + e );
+	      throw new CatRuntimeException ( "failed to Remove the Lock", e );
+	    }
+
+  }
+
+  public LockAndContentInfo createLockForCustomer ( LockAndContentInfo lcInfo, String adbRegionToConnect  ) {
+    lcInfo.setDisableLDescFlag ( "N" );
+    try {
+      //call the stored proc
+      DaxMgr mgr = DaxMgr.getInstance ();
+      DaxParsedStmt stmt = mgr.makeParsedStmt ( "Lock_Content" , "CreateLock4Customer", LockAndContentInfo.class, null, null );
+      DaxDB db = mgr.getDaxDB (adbRegionToConnect);
+      // if cust key is null?
+      db.doSP ( stmt, lcInfo, lcInfo );
+      return lcInfo;
+    }
+    catch ( Exception e ) {
+      //e.printStackTrace();
+      System.out.println ("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEException is  ->  "
+          + e );
+      throw new CatRuntimeException ( "failed to Create the Lock", e );
+      //return null;
+    }
+  }
+
+  public LockAndContentInfo removeLockFromCustomer ( LockAndContentInfo lcInfo, String adbRegionToConnect  ) {
+    try {
+      //call the stored proc
+      DaxMgr mgr = DaxMgr.getInstance ();
+      DaxParsedStmt stmt = mgr.makeParsedStmt ( "Lock_Content" , "RemoveLock4Customer", lcInfo, null, null );
+      DaxDB db = mgr.getDaxDB (adbRegionToConnect);
+      db.doSP ( stmt, lcInfo, lcInfo );
+      return lcInfo;
+    }
+    catch ( Exception e ) {
+      // e.printStackTrace();
+      throw new CatRuntimeException ( "failed to Remove the Lock", e );
+    }
+  }
+ public void shiftFile ( String currLocation, String catalogId ) {
+    if ( currLocation != null || ( "" ).equals ( currLocation ) ) {
+      try {
+        int i = 0;
+        String s;
+        String catId = "cat";
+        File f = new File ( currLocation );
+        String encoding = "UTF-8";
+        BufferedReader r = CatalogArchiveUtil.getFileReader ( f, encoding );
+        String newDir = f.getParent () + catId;
+        String nFile = newDir + "/" + f.getName ();
+        File of = new File ( newDir );
+        boolean b = false;
+        if ( !of.exists () ) {
+          b = of.mkdir ();
+          System.out.println ( b + "--" + newDir + "--" + nFile );
+        }
+        else {
+          System.out.println ( "Directory exists" );
+          b = true;
+        }
+        File newFile = new File ( nFile );
+        boolean b1 = false;
+        if ( b == true ) {
+          if ( !newFile.exists () ) {
+            b1 = newFile.createNewFile ();
+          }
+          else {
+            System.out.println ( "File exists" );
+            b1 = true;
+          }
+          if ( b1 == true ) {
+            FileWriter out = new FileWriter ( newFile );
+            for ( i = 0, s = r.readLine (); s != null; s = r.readLine (), i++ ) {
+
+              if ( StrUtil.isEmpty ( s ) ) {
+                continue;
+              }
+              System.out.println ( "string is -> " + s );
+              out.write ( s );
+            }
+            out.close ();
+            r.close ();
+          }
+          else {
+            System.out.println ( "File is not created successfully." );
+          }
+        }
+        else {
+          System.out.println ( "Directory is not created." );
+        }
+      }
+      catch ( IOException ioe ) {
+        ioe.printStackTrace ();
+      }
+    }
+  }
+
+}

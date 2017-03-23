@@ -1,0 +1,1612 @@
+eccApp.controller('ManageCategoriesCtrl',['$scope', '$http', '$timeout', 'webStorage', 'dialog', '$routeParams', 'shareddata',
+  function ($scope, $http, $timeout, webStorage, dialog, $routeParams, shareddata) {
+
+	$scope.successMessage	= '';
+	$scope.errorMessage		= '';
+	
+	$scope.parentNodeName	= '';
+	$scope.parentNodeForm	= '';
+	$scope.parentPage		= 'Normal';
+	$scope.childNodeName	= '';
+	$scope.childNodeForm	= '';
+	$scope.childPage		= 'Update';
+	$scope.pageStatus		= 'Parent';
+	$scope.selChildNode		= '';
+	$scope.selParentNode	= '';
+	$scope.categorizationId	= '';
+	$scope.selCustStatus	= false;
+	$scope.cutCopyStatus	= false;
+	$scope.recordStatus		= false;
+	$scope.recursiveStatus	= false;
+	$scope.uncategStatus	= false;
+	$scope.switchTableStatus= true;		
+	$scope.clipBoardMessage = '';
+	
+	$scope.treeNodesList		= [];
+	$scope.form					= [];
+	$scope.form.selectedProducts= [];
+	$scope.childContentForm		= [];
+	$scope.parentContentForm	= [];
+	$scope.categoryLocalesList	= [];
+	$scope.categoriezationsList	= [];
+	$scope.manageCatTreeData	= [];
+	$scope.addDataToParentTable	= [];
+	$scope.addDataToChildTable	= [];
+	$scope.parentProdList		= [];
+	$scope.childProdList		= [];
+	$scope.productsList			= [];
+	$scope.treeCatgorizationData= [];
+	$scope.orderableList	= ["Y","N"];
+	$scope.typeList		= [{"id":"E","name":"Ebuy"},{"id":"D","name":"Configurable"},{"id":"I","name":"Individual Items"},{"id":"O","name":"Options"},{"id":"C","name":"Search"}];
+	$scope.createForm = {};
+	$scope.createForm.orderable='Y';
+	$scope.numberVal=/^[0-9]+$/;
+	$scope.url="";
+	
+	$scope.recordOnHand = 0;
+	$scope.recordOnDemand = $('table.goto tr td select[name=paginationLimit]').val() * 2;
+	$scope.sortBy = '';
+	$scope.sortOrder = '';
+	$scope.sortLocale = '';
+	
+	$scope.parentTabChkAll = false;
+	$scope.childTabChkAll = false;
+	
+	$scope.selectedParentProducts	= [];
+	$scope.selectedChildProducts	= [];
+	
+	 $("#showhideclmDiv>a, #tinyDrop1, #tinyDrop2").mousedown(function(e) {
+	    	e.stopPropagation();
+	    });
+	 
+	 $scope.mouseDownHide = function(id){
+		$("#"+id).hide(200);
+	 };
+	 
+	 $scope.toggle = function(id) {
+		$("#"+id).fadeToggle(200);
+	 };
+	 
+	 $scope.toggleAutoFilter = function(id) {
+		$(id).toggle();	
+	 };
+	 
+	 function toggleDisplay(){
+
+			 $(document).off('click').on('click','h1 .w-toggle-visi, h1 .label-unit',function(){
+				var elementToToggle = $(this).parent().siblings('.id-body');
+		       if(elementToToggle.css('display')=='block'){
+		       	elementToToggle.slideUp(300);         	  
+		              $(this).parent().find('.w-toggle-visi').find('img').attr("src","resources/images/ecc/row_tb.png");
+		              $('#expandCollapseAll>a').html('Expand All').attr('data-mode', 'expandall');
+		              $('#qdexpcollAll').attr('src','img/open_all.png');
+		              
+		       }else {
+		              $(this).parent().find('.w-toggle-visi').find('img').attr("src","resources/images/ecc/row_tb_up.png");
+		              elementToToggle.slideDown(250);
+		              $('#expandCollapseAll>a').html('Collapse All').attr('data-mode', 'collapseall');
+		              $('#qdexpcollAll').attr('src','img/close_all.png');
+		       }
+			});
+		};
+	
+	$scope.loadManageCategories=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Manage Categories Task\"");
+
+		$scope.selectCustomer = webStorage.local.get('selCustData');
+		if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+			$scope.selCustStatus	= true;
+		}
+		
+		$scope.clipBoardMessage = webStorage.session.get('clipboarProducts');
+		if($scope.clipBoardMessage == undefined || $scope.clipBoardMessage.length == 0){
+			$scope.cutCopyStatus = false;
+			$scope.clipBoardMessage = "";
+		}else{
+			
+			$scope.cutCopyStatus = true;
+		}
+		
+		var productForm = new Object();
+ 	  	productForm.recordOnHand = $scope.recordOnHand;
+ 	  	productForm.recordOnDemand = $scope.recordOnDemand;
+ 	  	productForm.sortBy = $scope.sortBy;
+ 	  	productForm.sortOrder = $scope.sortOrder;
+ 	  	productForm.sortLocale = $scope.sortLocale;
+ 	  	
+		if($routeParams.catalogId){
+			$scope.url="category/ContentExplorer.htm?catalogId="+$routeParams.catalogId + "&filter="+angular.toJson(productForm);
+		}else{
+			$scope.loadProdData(productForm);
+			$scope.loadTreeData(productForm);
+			return;
+		}
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: $scope.url,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			$scope.treeNodesList	= [];
+			$scope.pageStatus		= 'Parent';
+			$scope.switchTableStatus= true;
+			$scope.showCopyCutPasteBtns(data.products);
+			$scope.parentProdList		= data.products;
+			//$scope.showCopyCutPasteBtns(data.products);
+		 	$scope.manageCatTreeData	= JSON.parse(data.TreeNodes);
+			$scope.manageCatTreeData[0].collapsed= true;
+			$scope.manageCatTreeData[0].servFlag = true;
+			$scope.manageCatTreeData[0].nodeType = 'Parent';
+			$scope.categorizationId	= $scope.manageCatTreeData[0].categorizationId;
+			$scope.parentNodeName	= $scope.manageCatTreeData[0].title;
+			$scope.selParentNode	= $scope.manageCatTreeData[0];
+			$scope.treeNodesList.push($scope.manageCatTreeData[0]);
+			$scope.treeNodesList[0].children=[];
+			angular.forEach($scope.manageCatTreeData, function(item,index){	
+				if(index!=0){
+					if(item.childrenCount!=0){
+						item.collapsed	= true;
+						item.index		= index-1;
+						item.servFlag	= false;
+						item.nodeType	= 'Child';
+					}else{
+						item.index		= index-1;
+						item.servFlag	= false;
+						item.nodeType	= 'Child';
+					}
+					$scope.treeNodesList[0].children.push(item);
+				}
+			});
+			$scope.parentContentForm		= JSON.parse(data.ContentForm);
+			$scope.form					= JSON.parse(data.form);
+			$scope.categoryLocalesList	= JSON.parse(data.categoryLocales);
+			$scope.selLocale			= $scope.form.locale;
+			$scope.categoriezationsList	= JSON.parse(data.categoriezations);
+			$scope.selCatez				= Number($scope.form.categorizationId);
+			$scope.productsList			= data.catalogs;
+			if($scope.productsList){
+				$scope.productsList.splice(0,0,{"cat_catalog_id":"2","cat_format_name":"","cat_catalog_name":"Current customer products","cpd_price_descriptor":""});
+				$scope.productsList.splice(0,0,{"cat_catalog_id":"1","cat_format_name":"","cat_catalog_name":"Products pool","cpd_price_descriptor":""});
+				if($routeParams.catalogId){
+					$scope.selProductsSet=$routeParams.catalogId;
+				}
+				else{
+				$scope.selProductsSet		= "1";
+				}
+			}
+			
+			 $scope.$emit('gotPageData',$http, data, $scope.parentProdList);
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories Service');	
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.showCopyCutPasteBtns = function(products){
+		if(products){
+			if(products.length > 0){
+				$scope.recordStatus = true; 
+			 }else{
+	        	$scope.recordStatus = false;
+				$scope.showMsg('','No Products Found! ');
+				$scope.scrollToMessage();
+			 }
+		}	
+	};
+	$scope.loadTreeData = function(productForm){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/DefaultTreeView.htm?filter="+angular.toJson(productForm),
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			$scope.treeNodesList	= [];
+		 	$scope.manageCatTreeData	= JSON.parse(data.TreeNodes);
+			$scope.manageCatTreeData[0].collapsed= true;
+			$scope.manageCatTreeData[0].servFlag = true;
+			$scope.manageCatTreeData[0].nodeType = 'Parent';
+			$scope.categorizationId	= $scope.manageCatTreeData[0].categorizationId;
+			$scope.parentNodeName	= $scope.manageCatTreeData[0].title;
+			$scope.selParentNode	= $scope.manageCatTreeData[0];
+			$scope.treeNodesList.push($scope.manageCatTreeData[0]);
+			$scope.treeNodesList[0].children=[];
+			angular.forEach($scope.manageCatTreeData, function(item,index){	
+				if(index!=0){
+					if(item.childrenCount!=0){
+						item.collapsed	= true;
+						item.index		= index-1;
+						item.servFlag	= false;
+						item.nodeType	= 'Child';
+					}else{
+						item.index		= index-1;
+						item.servFlag	= false;
+						item.nodeType	= 'Child';
+					}
+					$scope.treeNodesList[0].children.push(item);
+				}
+			});
+			$scope.form					= JSON.parse(data.form);
+			$scope.selLocale			= $scope.form.locale;
+			$scope.selCatez				= Number($scope.form.categorizationId);
+			$scope.categoryLocalesList	= JSON.parse(data.categoryLocales);
+			$scope.categoriezationsList	= JSON.parse(data.categoriezations);
+			$scope.productsList			= data.catalogs;
+			if($scope.productsList){
+				$scope.productsList.splice(0,0,{"cat_catalog_id":"2","cat_format_name":"","cat_catalog_name":"Current customer products","cpd_price_descriptor":""});
+				$scope.productsList.splice(0,0,{"cat_catalog_id":"1","cat_format_name":"","cat_catalog_name":"Products pool","cpd_price_descriptor":""});
+				if($routeParams.catalogId){
+					$scope.selProductsSet=$routeParams.catalogId;
+				}
+				else{
+				$scope.selProductsSet		= "1";
+				}
+			}
+			$scope.treeCatgorizationData =  JSON.parse(data.treeCategorization);
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories Service');	
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.loadProdData = function(productForm){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/DefaultContentView.htm?filter="+angular.toJson(productForm),
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			$scope.pageStatus		= 'Parent';
+			$scope.switchTableStatus= true;
+			$scope.showCopyCutPasteBtns(data.products);
+			$scope.parentProdList		= data.products;
+			$scope.parentContentForm		= JSON.parse(data.ContentForm);
+			$scope.$emit('gotPageData',$http, data, $scope.parentProdList);
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories Service');	
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.parentTable = {
+    		header: ["Sku", "Short Description", "Category"],
+    		data: $scope.addDataToParentTable,
+    		sort: [[1, "asc"]],
+    		colDefs: [
+    			{ "sClass": "center", "aTargets": [0] },
+    			{ "sClass": "center unsortable", "aTargets": [0] },
+    			{ "sClass": "left", "aTargets": [1,2,3] },
+    			//{ "sClass": "left unsortable", "aTargets": [6] },
+    			// For the colunms that bSortable is false, set its sClass as unsortable, this is required if you includes ColReorderWithResize.js for your datatable
+    			//{ "sClass": "right", "aTargets": [4] },
+    			{ "bSortable": false, "aTargets": [0] }
+    		],
+    		colViewBy: { // define view by function styleif sDom has C, this is required
+    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    			//"aiExclude": [0],//define the column don>t need to display in view by
+    			"bShowAll": true,
+    			"sShowAll": "Show All",
+    			"sAlign": "left"
+    		}
+	};
+	$scope.assignNodeFuncPermission = function(){
+        $scope.createPermis = true;
+		$scope.deletePermis = true;
+		$scope.updatePermis = true;
+		if($scope.childContentForm.accessMode.indexOf("E")==-1){
+        	$scope.createPermis=false;
+        }
+		if($scope.childContentForm.accessMode.indexOf("D")==-1){
+			$scope.deletePermis=false;
+		}
+		if($scope.childContentForm.accessMode.indexOf("M")==-1){
+			$scope.updatePermis=false;
+		}
+		if($scope.treeCatgorizationData.masterFlag==1){
+			$scope.createPermis=false;
+			$scope.deletePermis=false;
+		}
+	};
+	$scope.childTable = {
+		header: ["Sku", "Short Description"],
+		data: $scope.addDataToChildTable,
+		sort: [[1, "asc"]],
+		colDefs: [
+			{ "sClass": "center", "aTargets": [0] },
+			{ "sClass": "center unsortable", "aTargets": [0] },
+			{ "sClass": "left", "aTargets": [1,2] },
+			//{ "sClass": "left unsortable", "aTargets": [6] },
+			// For the colunms that bSortable is false, set its sClass as unsortable, this is required if you includes ColReorderWithResize.js for your datatable
+			//{ "sClass": "right", "aTargets": [4] },
+			{ "bSortable": false, "aTargets": [0] }
+		],
+		colViewBy: { // define view by function styleif sDom has C, this is required
+			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+			//"aiExclude": [0],//define the column don>t need to display in view by
+			"bShowAll": true,
+			"sShowAll": "Show All",
+			"sAlign": "left"
+		}
+	};
+	$scope.loadProductData = function(node){
+		if(node.nodeType=='Parent'){
+			$scope.selectedParentProducts	= [];
+        	$scope.pageStatus		= 'Parent';
+        	$scope.switchTableStatus= true;
+        	$scope.uncategStatus = false;
+        	$scope.selParentNode	= node;
+        	$scope.createForm = {};
+        	$scope.createForm.orderable='Y';
+    		$("#loadTime").html("");
+    		$scope.loadTime = new Date().getTime();
+    		$scope.search.Sku = "";
+	 	  	$scope.sortBy = "";
+	 	  	$scope.sortOrder = "";
+	 	  	$scope.sortLocale = "";
+    		ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 1);
+        	
+        }else{
+        	$scope.selectedChildProducts	= [];
+        	$scope.createForm = {};
+        	$scope.createForm.orderable='Y';
+        	$scope.selChildNode=node;
+        	$scope.hideMsg();
+		  	$scope.showMsg('','');	
+        	$scope.pageStatus		= 'Child';
+        	$scope.recursiveStatus = false;
+        	$scope.childNodeTitle	= node.treeNodeName;
+        	document.getElementById("checkAll_2").checked = false;
+        	$("#loadTime").html("");
+    		ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 1);
+        }
+	};
+	
+	$scope.getData = ajaxGetResults;
+	$scope.getDataSorted = getDataWithPaginationAndSort;
+	
+    function ajaxGetResults(scope, http, shareddata, recordOnHand, recordOnDemand) {
+ 	  	getDataWithPaginationAndSort(scope, http, shareddata, recordOnHand, recordOnDemand, "", "");
+ 	}
+	 
+	function getDataWithPaginationAndSort(scope, http, shareddata, recordOnHand, recordOnDemand, sortBy, sortOrder, sortLocale) {	
+	  	var productForm = new Object();
+	  	$scope.hideMsg();
+	  	productForm.filterProdId = $scope.search.Sku;
+	  	productForm.recordOnHand = recordOnHand;
+	  	productForm.recordOnDemand = recordOnDemand;
+	  	productForm.sortBy = $scope.sortBy;
+	  	productForm.sortOrder =  $scope.sortOrder;
+	  	productForm.sortLocale = $scope.sortLocale;
+	  	
+	  	if($scope.pageStatus == 'Parent')
+	  		productForm.categorizationId = $scope.selParentNode.categorizationId;
+	  	else if($scope.pageStatus == 'Child'){
+	  		productForm.categorizationId = $scope.selChildNode.categorizationId;
+	  		productForm.nodeId = $scope.selChildNode.nodeId;
+	  	}
+	  	
+	  	$scope.loadTime = new Date().getTime();
+	  	$scope.urlToUse = "category/ContentView.htm?filter="+ encodeURIComponent(angular.toJson(productForm));
+	  	
+	  	$http({
+			url: $scope.urlToUse,
+			method:"GET",
+			headers: {
+	             "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+	         }
+		 }).success(function(data,status,header,config) {
+			$scope.showCopyCutPasteBtns(data.products);
+			if($scope.pageStatus == 'Parent'){
+				 $scope.parentProdList	= data.products;
+	   			 $scope.parentCotentForm= JSON.parse(data.ContentForm);
+	   			 $scope.switchTableStatus= true;
+	   			 $scope.treeNodesList[0].servFlag=true;
+	   			$scope.$emit('gotPageData',$http, data, $scope.parentProdList);
+			}else if($scope.pageStatus == 'Child'){
+				 $scope.childProdList	= data.products;
+				 $scope.childContentForm= JSON.parse(data.ContentForm);
+				 $scope.switchTableStatus= false;
+				 $scope.assignNodeFuncPermission();
+				 $scope.$emit('gotPageData',$http, data, $scope.childProdList);
+	 	  	}
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+		 });
+	};
+	$scope.loadNodeData=function(node){
+		if(node.servFlag || node.nodeLevel==0){
+			return;
+		}else{
+			$http({
+				url: "category/TreeView.htm?nodeId="+node.nodeId,
+				method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            }
+			 }).success(function(data, status, headers, config) {
+				 $scope.pushChildNodes(data,node);
+				 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			  }).error(function(data, status, headers, config) {
+				  $scope.hideMsg();
+				  $scope.showMsg('','Error in manage categories Service');
+				  $scope.scrollToMessage();
+			  });
+		}
+		
+	};
+	$scope.pushChildNodes=function(data,selChildNode){
+		$scope.childNodeList=[];
+		var indexArray="";
+		$scope.childNodeList=JSON.parse(data.TreeNodes);
+		angular.forEach($scope.childNodeList, function(item,index){	
+			item.collapsed	= true;
+			item.index		= selChildNode.index+","+index;
+			item.servFlag	= false;
+			item.nodeType	= 'Child';
+	    });
+		if(selChildNode.nodeLevel==1){
+			$scope.treeNodesList[0].children[selChildNode.index].servFlag=true;
+			$scope.treeNodesList[0].children[selChildNode.index].children=[];
+			$scope.treeNodesList[0].children[selChildNode.index].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==2){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==3){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==4){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==5){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==6){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==7){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==8){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==9){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].children=$scope.childNodeList;
+		}
+		if(selChildNode.nodeLevel==10){
+			indexArray = (selChildNode.index).split(",");
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].children[indexArray[9]].servFlag=true;
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].children[indexArray[9]].children=[];
+			$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].children[indexArray[9]].children=$scope.childNodeList;
+		}
+	};
+	
+	$scope.setCheckedFlag = function(item){
+		var selProd= "";
+		if($scope.pageStatus=='Parent'){
+			 if(!item.accessMode){
+				 item.accessMode="EVDM";
+			 }
+			 selProd=item.accessMode+","+item.prod+",";
+			 if(item.fNodes){
+				 angular.forEach(item.fNodes, function(node){	
+					 if(node != '[' && node !=']')
+						 selProd = selProd+""+node;
+				 });
+			 }else{
+				 selProd = selProd+"null";
+			 }
+			 
+			 if(item.chkFlag){
+			 	$scope.selectedParentProducts.push(selProd);
+			 }
+			 else{
+			 	$scope.selectedParentProducts.splice($scope.selectedParentProducts.indexOf(selProd),1);
+			 }
+		}
+		if($scope.pageStatus=='Child'){
+			 if(!item.prod_access_mode){
+				 item.prod_access_mode="EVDM";
+			 }
+			 selProd=item.prod_access_mode+","+item.prod+","+$scope.selChildNode.nodeId;
+			 if(item.chkFlag){
+				 $scope.selectedChildProducts.push(selProd);
+			 }
+			 else{
+				 $scope.selectedChildProducts.splice($scope.selectedChildProducts.indexOf(selProd),1);
+			 }
+		}
+	};
+	$scope.chkAllBoxes = function(){
+		var selProd= "";
+		if($scope.pageStatus=='Parent'){
+			angular.forEach($scope.parentProdList, function(item){	
+				 if(!item.accessMode){
+					 item.accessMode="EVDM";
+				 }
+				 selProd=item.accessMode+","+item.prod+",";
+				 if(item.fNodes){
+					 angular.forEach(item.fNodes, function(node){	
+						 if(node != '[' && node !=']')
+							 selProd = selProd+""+node;
+					 });
+				 }else{
+					 selProd = selProd+"null";
+				 }
+				 
+				 if($scope.parentTabChkAll){
+					 item.chkFlag = true;
+					 $scope.selectedParentProducts.push(selProd);
+				 }else{
+					 item.chkFlag = false;
+					 $scope.selectedParentProducts.splice($scope.selectedParentProducts.indexOf(selProd),1);
+				 }
+			});
+		}
+		if($scope.pageStatus=='Child'){
+			 angular.forEach($scope.childProdList, function(item){	
+				 if(!item.accessMode){
+					 item.accessMode="EVDM";
+				 }
+				 selProd=item.accessMode+","+item.prod+",";
+				 if($scope.selChildNode.nodeId){
+					 selProd = selProd+$scope.selChildNode.nodeId;
+				 }else{
+					 selProd = selProd+"null";
+				 }
+				 
+				 if($scope.childTabChkAll){
+					 item.chkFlag = true;
+					 $scope.selectedChildProducts.push(selProd);
+				 }else{
+					 item.chkFlag = false;
+					 $scope.selectedChildProducts.splice($scope.selectedChildProducts.indexOf(selProd),1);
+				 }
+			});
+		}
+	};
+	
+	$scope.reloadManageCategories = function(){
+		var oldSelProduct="";
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		var finalUrl="";
+		
+		var productForm = new Object();
+ 	  	productForm.recordOnHand = $scope.recordOnHand;
+ 	  	productForm.recordOnDemand = $scope.recordOnDemand;
+ 	  	productForm.sortBy = $scope.sortBy;
+ 	  	productForm.sortOrder = $scope.sortOrder;
+ 	  	productForm.sortLocale = $scope.sortLocale;
+		productForm.categorizationId = $scope.selCatez;
+ 	  	
+		if($scope.selCustStatus){
+			finalUrl="category/ContentExplorer.htm?categorizationId="+$scope.selCatez+"&locale="+$scope.selLocale+ "&filter="+angular.toJson(productForm);
+		}else{
+			finalUrl="category/ContentExplorer.htm?categorizationId="+$scope.selCatez+"&locale="+$scope.selLocale+"&catalogId="+$scope.selProductsSet + "&filter="+angular.toJson(productForm);
+			oldSelProduct= $scope.selProductsSet;
+		}
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: finalUrl,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 
+			$scope.treeNodesList	= [];
+			$scope.selectedParentProducts	= [];
+			$scope.selectedChildProducts	= [];
+			$scope.pageStatus		= 'Parent';
+			$scope.parentPage		= 'Normal';
+			$scope.switchTableStatus= true;
+			$scope.parentProdList	= data.products;
+			$scope.parentContentForm = JSON.parse(data.ContentForm);
+		 	$scope.manageCatTreeData	= JSON.parse(data.TreeNodes);
+			$scope.manageCatTreeData[0].collapsed= true;
+			$scope.manageCatTreeData[0].nodeType = 'Parent';
+			$scope.categorizationId	= $scope.manageCatTreeData[0].categorizationId;
+			$scope.parentNodeName	= $scope.manageCatTreeData[0].title;
+			$scope.selParentNode	= $scope.manageCatTreeData[0];
+			$scope.treeNodesList.push($scope.manageCatTreeData[0]);
+			$scope.treeNodesList[0].children=[];
+			angular.forEach($scope.manageCatTreeData, function(item,index){	
+				if(index!=0){
+					if(item.childrenCount!=0){
+						item.collapsed	= true;
+						item.index		= index-1;
+						item.servFlag	= false;
+						item.nodeType	= 'Child';
+					}else{
+						item.index		= index-1;
+						item.servFlag	= false;
+						item.nodeType	= 'Child';
+					}
+					$scope.treeNodesList[0].children.push(item);
+				}
+			});
+			
+			$scope.form					= JSON.parse(data.form);
+			$scope.categoryLocalesList	= JSON.parse(data.categoryLocales);
+			$scope.selLocale			= $scope.form.locale;
+			$scope.categoriezationsList	= JSON.parse(data.categoriezations);
+			$scope.selCatez				= Number($scope.form.categorizationId);
+			$scope.productsList			= data.catalogs;
+			if($scope.productsList){
+				$scope.productsList.splice(0,0,{"cat_catalog_id":"2","cat_format_name":"","cat_catalog_name":"Current customer products","cpd_price_descriptor":""});
+				$scope.productsList.splice(0,0,{"cat_catalog_id":"1","cat_format_name":"","cat_catalog_name":"Products pool","cpd_price_descriptor":""});
+				if(oldSelProduct==''){
+					$scope.selProductsSet = "1";
+				}else{
+					$scope.selProductsSet = oldSelProduct;
+				}
+			}
+			$scope.parentContentForm.recordCount = data.recordCount;
+			$scope.treeCatgorizationData =  JSON.parse(data.treeCategorization);
+			$scope.$emit('gotPageData',$http, $scope.parentContentForm, $scope.parentProdList);
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.reloadTotalTreeData=function(){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/TreeView.htm",
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 	$scope.treeNodesList		= [];
+			 	$scope.manageCatTreeData	= JSON.parse(data.TreeNodes);
+				$scope.manageCatTreeData[0].collapsed= false;
+				$scope.manageCatTreeData[0].nodeType = 'Parent';
+				$scope.categorizationId	= $scope.manageCatTreeData[0].categorizationId;
+				$scope.parentNodeName	=$scope.manageCatTreeData[0].title;
+				$scope.treeNodesList.push($scope.manageCatTreeData[0]);
+				$scope.treeNodesList[0].children=[];
+				angular.forEach($scope.manageCatTreeData, function(item,index){	
+					if(index!=0){
+						if(item.childrenCount!=0){
+							item.collapsed	= true;
+							item.index		= index-1;
+							item.servFlag	= false;
+							item.nodeType	= 'Child';
+						}
+						$scope.treeNodesList[0].children.push(item);
+					}
+				});
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories parent create Service');	
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.reloadTreeData = function(){
+		var indexArray="";
+		if($scope.selChildNode.nodeLevel==1 || $scope.selParentNode.nodeLevel==0){
+			$scope.reloadTotalTreeData();
+		}
+		if($scope.selChildNode.nodeLevel==2){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.reloadTotalTreeData();
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==3){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==4){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==5){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==6){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==7){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==8){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==9){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]]);
+			}
+		}
+		if($scope.selChildNode.nodeLevel==10){
+			indexArray = ($scope.selChildNode.index).split(",");
+			if($scope.selChildNode.childrenCount==0){
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]]);
+			}else{
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].collapsed=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].servFlag=false;
+				$scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]].children=[];
+				$scope.loadNodeData($scope.treeNodesList[0].children[indexArray[0]].children[indexArray[1]].children[indexArray[2]].children[indexArray[3]].children[indexArray[4]].children[indexArray[5]].children[indexArray[6]].children[indexArray[7]].children[indexArray[8]]);
+			}
+		}
+	};
+	$scope.createParentCategory=function(){
+		$scope.ContentForm=[];
+		if(!$scope.createForm.categoryName){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter Category Name');
+			$scope.scrollToMessage();
+			return;
+		}
+		if(!$scope.createForm.extCategoryName){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter Category Id');
+			$scope.scrollToMessage();
+			return
+		}
+		if($scope.createForm.multi){
+			if(!($scope.createForm.multi).match($scope.numberVal))  
+		      { 
+				 $scope.hideMsg();
+				 $scope.showMsg('','Max : Please enter valid number');
+				 $scope.scrollToMessage();
+				return;
+		      }
+		}
+		if($scope.createForm.open){
+			if(!($scope.createForm.open).match($scope.numberVal))  
+		      { 
+				 $scope.hideMsg();
+				 $scope.showMsg('','Open : Please enter valid number');
+				 $scope.scrollToMessage();
+				return;
+		      }
+		}
+		
+		$scope.createForm.categorizationId	=	$scope.categorizationId;
+		if($scope.parentContentForm.fedCust && $scope.createForm.typeSelectList){
+			$scope.createForm.type	=	$scope.createForm.typeSelectList.toString();
+		}
+		$scope.ContentForm = $scope.createForm;
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/CreateCategory.htm",
+			method:"POST",
+			data: $scope.ContentForm,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if(data.Message=='Success'){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.MessageContent,'');
+				 $scope.parentPage	= 'Normal';
+				 $scope.scrollToMessage();
+				 $scope.createdNode= JSON.parse(data.treeNode);
+				 $scope.reloadTreeData();
+			 }
+			 if(data.Message=='Error'){
+				 if(data.refresh){
+					 $scope.parentPage	= 'Normal';
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+					 $scope.reloadTreeData();
+				 }else{
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+				 }
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories parent create Service');
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.createCategory=function(){
+		$scope.ContentForm=[];
+		if(!$scope.createForm.categoryName){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter Category Name');
+			$scope.scrollToMessage();
+			return;
+		}
+		if(!$scope.createForm.extCategoryName){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter Category Id');
+			$scope.scrollToMessage();
+			return;
+		}
+		if($scope.createForm.multi){
+			if(!($scope.createForm.multi).match($scope.numberVal))  
+		      { 
+				 $scope.hideMsg();
+				 $scope.showMsg('','Max : Please enter valid number');
+				 $scope.scrollToMessage();
+				return;
+		      }
+		}
+		if($scope.createForm.open){
+			if(!($scope.createForm.open).match($scope.numberVal))  
+		      { 
+				 $scope.hideMsg();
+				 $scope.showMsg('','Open : Please enter valid number');
+				 $scope.scrollToMessage();
+				return;
+		      }
+		}
+		$scope.createForm.categorizationId	= $scope.categorizationId;
+		$scope.createForm.nodeId			= $scope.selChildNode.nodeId;
+		if($scope.childContentForm.fedCust && $scope.createForm.typeSelectList){
+			$scope.createForm.type	= $scope.createForm.typeSelectList.toString();
+		}
+		$scope.ContentForm = $scope.createForm;
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/CreateCategory.htm",
+			method:"POST",
+			data: $scope.ContentForm,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if(data.Message=='Success'){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.MessageContent,'');
+				 $scope.childPage = 'Update';
+				 $scope.scrollToMessage();
+				 $scope.createdNode= JSON.parse(data.treeNode);
+				 $scope.selChildNode.servFlag=false;
+				 if($scope.selChildNode.childrenCount=='0'){
+					 $scope.reloadTreeData();
+				 }else{
+					 $scope.loadNodeData($scope.selChildNode);
+				 }
+				 
+			 }
+			 if(data.Message=='Error'){
+				 if(data.refresh){
+					 $scope.childPage = 'Update';
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+					 $scope.selChildNode.servFlag=false;
+					 $scope.loadNodeData($scope.selChildNode);
+				 }else{
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+				 }
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories child create Service');	
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.updateCategory=function(){
+		if(!$scope.childContentForm.categoryName){
+			$scope.hideMsg();
+			$scope.showMsg('','Name shouldn\'t empty');
+			$scope.scrollToMessage();
+			return;
+		}
+		if($scope.childContentForm.fedCust && $scope.childContentForm.typeSelectList){
+			$scope.childContentForm.type	= $scope.childContentForm.typeSelectList.toString();
+		}
+		if($scope.childContentForm.multi){
+			if(!($scope.childContentForm.multi).match($scope.numberVal))  
+		      { 
+				 $scope.hideMsg();
+				 $scope.showMsg('','Max : Please enter valid number');
+				 $scope.scrollToMessage();
+				return;
+		      }
+		}
+		if($scope.childContentForm.open){
+			if(!($scope.childContentForm.open).match($scope.numberVal))  
+		      { 
+				 $scope.hideMsg();
+				 $scope.showMsg('','Open : Please enter valid number');
+				 $scope.scrollToMessage();
+				return;
+		      }
+		}
+		$scope.ContentForm=$scope.childContentForm;
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/UpdateCategory.htm",
+			method:"POST",
+			data: $scope.ContentForm,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if(data.Message=='Success'){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.MessageContent,'');
+				 $scope.scrollToMessage();
+				 $scope.createdNode= JSON.parse(data.treeNode);
+				 $scope.reloadTreeData();
+			 }
+			 if(data.Message=='Error'){
+				 if(data.refresh){
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+					 $scope.reloadTreeData();
+				 }else{
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+				 }
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories Service');	
+			  $scope.scrollToMessage();
+		  });
+	};
+	$scope.deleteCategory=function(){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/DeleteCategory.htm?categorizationId="+$scope.selChildNode.categorizationId+"&nodeId="+$scope.selChildNode.nodeId,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if(data.Message=='Success'){
+				 $scope.pageStatus = 'Parent';
+				 $scope.hideMsg();
+				 $scope.showMsg(data.MessageContent,'');
+				 $scope.scrollToMessage();
+				 $scope.createdNode= JSON.parse(data.treeNode);
+				 $scope.reloadTreeData();
+			 }
+			 if(data.Message=='Error'){
+				 if(data.refresh){
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+					 $scope.scrollToMessage();
+					 $scope.reloadTreeData();
+				 }else{
+					 $scope.hideMsg();
+					 $scope.showMsg('',data.MessageContent);
+				 }
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories Service');				
+		  });
+	};
+	$scope.cutSelProducts=function(){
+		if($scope.pageStatus=='Parent'){
+			$scope.form.selectedProducts = $scope.selectedParentProducts;
+		}else{
+			$scope.form.selectedProducts = $scope.selectedChildProducts;
+		}
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+            url: 'category/CutProducts.htm',
+            method:"POST",
+            data: $scope.form,
+            headers: {
+                "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+          	}
+		 }).success(function(data, status, headers, config) {
+			 if(data.Message=='Success'){
+				 if(data.NotCutProducts){
+					 $scope.hideMsg();
+					 $scope.showMsg('', data.MessageContent);
+					 $scope.scrollToMessage();
+				 }else{
+					 $scope.clipBoardMessage= "Products in clipboard : "+data.clipboard_products;
+					 $scope.cutCopyStatus = true;
+					 webStorage.session.add('clipboardProducts', $scope.clipBoardMessage);
+					 $scope.hideMsg();
+					 $scope.showMsg(data.MessageContent,'');
+					 $scope.scrollToMessage();
+				 }
+			 }
+			 if(data.Message=='Error'){
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.MessageContent);
+				 $scope.scrollToMessage();
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.copySelProducts=function(){
+		if($scope.pageStatus=='Parent'){
+			$scope.form.selectedProducts = $scope.selectedParentProducts;
+		}else{
+			$scope.form.selectedProducts = $scope.selectedChildProducts;
+		}
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+            url: 'category/CopyProducts.htm',
+            method:"POST",
+            data: $scope.form,
+            headers: {
+                "Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+          	}
+		 }).success(function(data, status, headers, config) {
+			 $scope.finalMessage	= data.MessageContent;
+			 if(data.Message=='Success'){
+				 
+				 if(data.NotCutProducts){
+					 $scope.hideMsg();
+					 $scope.showMsg('', data.MessageContent);
+					 $scope.scrollToMessage();
+				 }else{
+					 $scope.clipBoardMessage= "Products in clipboard : "+data.clipboard_products;
+					 webStorage.session.add('clipboardProducts', $scope.clipBoardMessage);
+					 $scope.cutCopyStatus = true;
+					 $scope.hideMsg();
+					 $scope.showMsg(data.MessageContent,'');
+					 $scope.scrollToMessage();
+				 }
+			 }
+			 if(data.Message=='Error'){
+				 if(data.NotCutProducts != ""){
+					 $scope.finalMessage=$scope.finalMessage+" "+data.NotCutProducts;
+				 }
+				 $scope.hideMsg();
+				 $scope.showMsg('',$scope.finalMessage);
+				 $scope.scrollToMessage();
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.pastSelProducts=function(){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		var pasteUrl="";
+		if($scope.pageStatus == 'Parent'){
+			pasteUrl="category/PasteProducts.htm?categorizationId="+$scope.categorizationId;
+		}else{
+			pasteUrl="category/PasteProducts.htm?categorizationId="+$scope.categorizationId+"&nodeId="+$scope.selChildNode.nodeId;
+		}
+		$http({
+			url: pasteUrl,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if(data.Message=='Success'){
+				 if($scope.pageStatus == 'Parent'){
+					 $scope.loadProductData($scope.selParentNode);
+				 }else{
+					 $scope.loadProductData($scope.selChildNode);
+				 }
+				
+				 $scope.clipBoardMessage = "";
+				 $scope.cutCopyStatus = false;
+				 webStorage.session.remove('clipboardProducts');
+				 $scope.hideMsg();
+				 $scope.showMsg(data.MessageContent,'');
+				 $scope.scrollToMessage();
+			 }
+			 if(data.Message=='Error'){
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.MessageContent);
+				 $scope.scrollToMessage();
+			}
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.uncategorizedOnly = function(){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		
+		var productForm = new Object();
+ 	  	productForm.recordOnHand = $scope.recordOnHand;
+ 	  	productForm.recordOnDemand = $scope.recordOnDemand;
+ 	  	productForm.sortBy = $scope.sortBy;
+ 	  	productForm.sortOrder = $scope.sortOrder;
+ 	  	productForm.sortLocale = $scope.sortLocale;
+ 	  	productForm.uncategorizedOnlyFlag = $scope.uncategStatus;
+ 	  	productForm.categorizationId = $scope.categorizationId;
+		
+		$http({
+			url: "category/ContentView.htm?filter="+angular.toJson(productForm)+"&categorizationId="+$scope.categorizationId+"&catalogId=2",
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if($scope.uncategStatus){
+				 $scope.childProdList	= data.products;
+				 //$scope.pageStatus = "Child";
+				 $scope.switchTableStatus= false;
+				 $scope.treeNodesList[0].servFlag=false;
+				 $scope.childContentForm= JSON.parse(data.ContentForm);
+				 $scope.assignNodeFuncPermission();
+				 $scope.$emit('gotPageData',$http, $scope.childContentForm, $scope.childProdList);
+			 }else{
+				 $scope.parentProdList	= data.products;
+				 $scope.switchTableStatus= true;
+				 //$scope.pageStatus = "Parent";
+				 $scope.treeNodesList[0].servFlag=false;
+				 $scope.$emit('gotPageData',$http, $scope.parentContentForm, $scope.parentProdList);
+			 }
+			 
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.recursive = function(){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		
+		var productForm = new Object();
+ 	  	productForm.recordOnHand = $scope.recordOnHand;
+ 	  	productForm.recordOnDemand = $scope.recordOnDemand;
+ 	  	productForm.sortBy = $scope.sortBy;
+ 	  	productForm.sortOrder = $scope.sortOrder;
+ 	  	productForm.sortLocale = $scope.sortLocale;
+ 	  	productForm.uncategorizedOnlyFlag = $scope.uncategStatus;
+ 	  	productForm.categorizationId = $scope.categorizationId;
+ 	  	productForm.nodeId = $scope.selChildNode.nodeId;
+		
+		$http({
+			url: "category/ContentView.htm?filter="+angular.toJson(productForm)+"&nodeId="+$scope.selChildNode.nodeId+"&categorizationId="+$scope.categorizationId+"&recurseFlag="+$scope.recursiveStatus+"&catalogId=2",
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 if($scope.recursiveStatus){
+				 $scope.parentProdList = data.products ;
+				 $scope.contentForm = JSON.parse(data.ContentForm);
+				 $scope.contentForm.recordCount = data.recordCount;
+				 $scope.switchTableStatus= true;
+				 $scope.treeNodesList[0].servFlag=false;
+				 $scope.$emit('gotPageData',$http, $scope.contentForm, $scope.parentProdList);
+			 }else{
+				 $scope.childProdList = data.products ;
+				 $scope.contentForm = JSON.parse(data.ContentForm);
+				 $scope.contentForm.recordCount = data.recordCount;
+				 $scope.switchTableStatus= false;
+				 $scope.treeNodesList[0].servFlag=false;
+				 $scope.assignNodeFuncPermission();
+				 $scope.$emit('gotPageData',$http, $scope.contentForm, $scope.childProdList);
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.changeChildLocale=function(){
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/LocaleCategoryName.htm?nodeId="+$scope.selChildNode.nodeId+"&locale="+$scope.childContentForm.locale+"&categorizationId="+$scope.categorizationId,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 $scope.localeData=JSON.parse(data.ContentForm);
+			 $scope.childContentForm.categoryName=$scope.localeData.categoryName;
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+	};
+	$scope.getProductNodes=function(node_path){
+		var indexArray="";
+		$scope.parentIndex = "";
+		indexArray = node_path.split("^");
+		angular.forEach($scope.treeNodesList[0].children, function(item,index){	
+			if(indexArray[0]==item.nodeId){
+				$scope.parentIndex = index;
+			}
+		});
+		
+		$scope.hideMsg();
+		$scope.showMsg('','');
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "category/ProductTreeView.htm?categorizationId="+$scope.categorizationId+"&nodePath="+node_path+"&index="+$scope.parentIndex,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {
+			 $scope.treeNodesList[0].collapsed=false;
+			 $scope.selProdNodes= JSON.parse(data.TreeNode);
+			 $scope.treeNodesList[0].children.splice($scope.parentIndex,1);
+			 $scope.treeNodesList[0].children.push($scope.selProdNodes);
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  $scope.hideMsg();
+			  $scope.showMsg('','Error in manage categories reload Service');	
+			  $scope.scrollToMessage();
+		 });
+		
+	};
+	 $scope.parentTablecolumns = [
+		                      {'id':'Sku',				'value':'Sku',				 "key":"Sku",				'columnName':'PROD',				'sort':'true'},
+		                      {'id':'ShortDescription',	'value':'Short Description', "key":"ShortDescription",	'columnName':'SHORT_DESC',			'sort':'true'},
+		                      {'id':'Category',			'value':'Category',       	"key":"Category",			'columnName':'Category',  			'sort':'false'}
+		                   ];
+	 
+	 $scope.childTablecolumns = [
+			                  {'id':'Sku',				'value':'Sku',				 "key":"Sku",				'columnName':'PROD',					'sort':'true'},
+			                  {'id':'ShortDescription',	'value':'Short Description', "key":"ShortDescription",	'columnName':'SHORT_DESC',	'sort':'true'}
+			                      
+			                   ];
+		  
+	 $scope.parentSelectedColumns = {
+		  	'Sku':'true',
+			'ShortDescription':'true',
+			'Category':'true'
+	 };
+	 
+	 $scope.childSelectedColumns = {
+			  	'Sku':'true',
+				'ShortDescription':'true'
+				
+		 };
+	 
+	 $scope.search = {
+				'Sku':''
+ 		};
+	 
+		 		
+	/*
+     * Conditional Popup method
+     */
+    $scope.condtionalAlert = function () {
+        dialog.show({
+            template: '<div class="hpe-main-content" title="Empty the recycle bin?">' +
+                          '<span>Are you sure you want to delete this category ? </span>' +
+                          '<br />' +
+                          '<br />' +
+                          '<a class="btn btn-inline"   ng-click="close(true)" ><span>Ok</span></a>' +
+                          '<a class="btn btn-inline"   ng-click="close(false)"><span>Cancel</span></a>' +
+                      '</div>',
+            controller: 'ManageCategoriesCtrl',
+            width: 400,
+            draggable: true,
+            title:'Warning'
+        }).then(function (result) {
+        	if(result == true){
+        		$scope.deleteCategory();
+        		$scope.scrollToMessage();
+        	}
+        });
+    };
+	
+	$scope.finalCategory = function(option) {
+		return option.type+"----"+option.name+"("+option.defaultLocale+")";
+	};
+	$scope.finalProduct = function(option){
+		if(option.cat_format_name=='' && option.cpd_price_descriptor==''){
+			return option.cat_catalog_name;
+		}else{
+			return option.cat_catalog_name+", "+option.cat_format_name+", "+option.cpd_price_descriptor;
+		}
+	};
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    };
+    
+    $scope.sortColumn = function($parent, colId, colName, locale, needSort) { 
+        if (needSort!="false") {
+            $parent.reverse=!$parent.reverse; 
+            $scope.sortBy = colName;
+            $scope.sortOrder = ($parent.reverse)?"DESC":"ASC";
+            $scope.sortLocale = locale;
+            $scope.requireSort = true;
+            $scope.getDataSorted($scope, $scope.http,shareddata, 0, $scope.pageSize, 
+            	$scope.sortBy, $scope.sortOrder, $scope.sortLocale);
+            
+            $scope.initToStart();
+            
+            if ( !$scope.sortedColumn ) $scope.sortedColumn = colId;
+            $scope["sortedTD_"+$scope.sortedColumn] = "";
+            $scope["sortedTD_"+colId] = "sorted";
+            $scope.sortedColumn = colId;
+        }
+    };
+    
+    $scope.showHide = function(id) {
+		if($scope.selectedColumns.id == "true")
+			$scope.selectedColumns.id = "false";
+		else
+			$scope.selectedColumns.id = "true";
+	};
+	
+	$scope.showList = function() {
+		if($scope.showClmDropDown == "true")
+			$scope.showClmDropDown = "false";
+		else
+			$scope.showClmDropDown = "true";
+	};
+	
+	$scope.showDropDown = function(){
+		if($("#tinyDrop1").is(":visible")){
+			$("#tinyDrop1").hide();
+		}else{
+			$("#tinyDrop1").show();
+		}
+		
+		if($("#tinyDrop2").is(":visible")){
+			$("#tinyDrop2").hide();
+		}else{
+			$("#tinyDrop2").show();
+		}
+	};
+}]);
+
+eccApp.directive("ngomParentAutoFilterWithSelectAll", function() {
+    return {
+        restrict:'C',
+		transclude: true,
+		template: 
+			'<th></th>'+
+			'<th ng-repeat="name in parentTablecolumns" ng-show="parentSelectedColumns[name.id]" perspective="{{name.perspective}}">' +
+			'<input ng-show="$parent.search[name.id] != undefined && parentSelectedColumns[name.id]" filter-on="{{name.id}}" type=text ng-model="$parent.search[name.id]"></th>'
+    };
+});
+
+eccApp.directive("ngomChildAutoFilterWithSelectAll", function() {
+    return {
+        restrict:'C',
+		transclude: true,
+		template: 
+			'<th></th>'+
+			'<th ng-repeat="name in childTablecolumns" ng-show="childSelectedColumns[name.id]" perspective="{{name.perspective}}">' +
+			'<input ng-show="$parent.search[name.id] != undefined && childSelectedColumns[name.id]" filter-on="{{name.id}}" type=text ng-model="$parent.search[name.id]"></th>'
+    };
+});
+

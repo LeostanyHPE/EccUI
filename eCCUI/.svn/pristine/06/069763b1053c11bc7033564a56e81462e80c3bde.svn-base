@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<comcat-dax-config>
+
+ <stmt-group id="quote">      
+   <stmt id="getQuote">   
+   select 
+    		{quoteVersion}:=QUOTE_VERSION,
+	        {quoteDesc}:=QUOTE_DESC,
+	        {mdcpId}:=MDCP_ORG_ID,
+	        {custName}:=CUST_NAME,
+	        {regionCode}:=REGION_CODE,
+	        {listCountryCode}:=LIST_CNTRY_CD,
+	        {countryCode}:=CNTRY_CD,
+	        {prcTermCode}:=PRC_TERM_CD,
+	        {startDate}:=START_DATE,
+	        {endDate}:=END_DATE,
+	        {currCode}:=CURR_CD,
+	        {quoteStatus}:=QUOTE_STATUS,
+	        {quoteAsset}:=QUOTE_ASSET,
+	        {priceDescriptor}:=PRICE_DESCRIPTOR,
+	        {specialPricingFl}:=SPECIAL_PRICING_FL,
+	        {totalNetPrice}:=NET_PRICE,
+	        {spNetPrice}:=SP_NET_PRICE,
+	        {gDunsId}:=GLOBAL_ULTIMATE_DUNS_ID
+	        
+	   from quote_info where QUOTE_ID={?:quoteId} AND CATALOG_ID={?:catalogId}
+	             
+      </stmt>
+   
+     <stmt id="getQuoteProds">              
+            SELECT 
+	        {lineType}:=LINE_TYPE,
+	        {pl}:=PL,
+	        {prod}:=PROD,
+	        {shortDesc}:=SHORT_DESC,
+	        {localPrice}:=LOCAL_PRICE,
+	        {netPrice}:=NET_PRICE,
+	        {bundleId}:=BUNDLE_ID
+            from quote_item_detail
+            where QUOTE_ID={?:quoteId}
+             
+      </stmt>  
+   
+   <stmt id="getAllQuoteProds">   
+   select 
+   			{quoteId}:=QUOTE_ID,
+    	    {netPrice}:=NET_PRICE,
+	        {lineType}:=LINE_TYPE,
+	        {prod}:=PROD,
+	        {shortDesc}:=SHORT_DESC,
+	        {localPrice}:=LOCAL_PRICE,
+	        {bundleId}:=BUNDLE_ID
+       from (
+       SELECT qi.QUOTE_ID QUOTE_ID,qid.QUOTE_ID QID_QUOTE_ID,qi.NET_PRICE,qid.LINE_TYPE, qid.PROD PROD, qid.SHORT_DESC, qid.LOCAL_PRICE,qi.CATALOG_ID QI_CATALOG_ID,qid.BUNDLE_ID from quote_info qi left OUTER JOIN quote_item_detail qid  ON qi.QUOTE_ID = qid.QUOTE_ID 
+       UNION
+       SELECT qi.QUOTE_ID QI_QUOTE_ID,qid.QUOTE_ID QID_QUOTE_ID,qi.NET_PRICE,qid.LINE_TYPE,qid.PROD PROD, qid.SHORT_DESC, qid.LOCAL_PRICE,qi.CATALOG_ID QI_CATALOG_ID,qid.BUNDLE_ID from quote_info qi RIGHT OUTER JOIN quote_item_detail qid ON qi.QUOTE_ID= qid.QUOTE_ID         
+            )
+           where QI_CATALOG_ID={?:catalogId} AND QUOTE_ID LIKE '%{string1}%' AND PROD LIKE '%{string2}%'
+      </stmt>     
+ <!--  end --> 
+      
+      <stmt id="getQuotesForCatalog">              
+            SELECT 
+	        {quoteId}:=QUOTE_ID,
+            {quoteDesc}:=QUOTE_DESC,
+            {mdcpId}:=MDCP_ORG_ID,
+            {custName}:=CUST_NAME,
+            {startDate}:=START_DATE,
+            {endDate}:=END_DATE
+            from quote_info
+            where CATALOG_ID = {?:catalogId} order by QUOTE_ID
+             
+      </stmt>
+      
+      <stmt id="getSelectedQuotes">                
+            SELECT 
+	        {quoteId}:=qm.QUOTE_ID
+            from quote_info qi,
+            cat_quote_mapping qm
+            where qi.CATALOG_ID = {?:id}
+            AND qm.quote_id = qi.quote_id
+             
+      </stmt>
+      
+      <stmt id="getSearchQuotes">                          
+            SELECT distinct 
+            {quoteId}:=QUOTE_ID 
+            from quote_item_detail 
+            where BUNDLE_ID like {q:bundleId}
+            and QUOTE_ID in (select QUOTE_ID from quote_info where CATALOG_ID = {?:id})
+             
+      </stmt>
+
+        <stmt id="getMdcpDetails" >
+    SELECT 
+    {mdcpOrgId}:= MDCP_ORG_ID,
+    {mdcpOrgName}:= MDCP_ORG_NAME,
+    {mdcpOrgCntryCode}:= MDCP_ORG_CNTRY_CD,
+    {domUltDunsNo}:= DMSTC_ULT_DUNS_NR,
+    {gloUltDunsNo}:= GLBL_ULT_DUNS_NR
+    FROM CUST_MDCP_MAPPING
+    WHERE CUST_KEY = {?:custKey}
+    
+      </stmt>
+      
+      <stmt id="deleteMdcpDetails" >
+   DELETE FROM CUST_MDCP_MAPPING where CUST_KEY ={?:custKey} AND MDCP_ORG_ID = {q:mdcpOrgId} AND GLBL_ULT_DUNS_NR = {q:gloUltDunsNo}
+      </stmt>
+      
+      <stmt id="insertMdcpDetails">
+
+    INSERT into CUST_MDCP_MAPPING (CUST_KEY, MDCP_ORG_ID, MDCP_ORG_NAME, MDCP_ORG_CNTRY_CD, DMSTC_ULT_DUNS_NR, GLBL_ULT_DUNS_NR, CREATED_DATE, CREATED_BY, LAST_MODIFIED_DATE, LAST_MODIFIED_BY)
+
+    VALUES ({q:custKey}, {q:mdcpOrgId}, {q:mdcpOrgName}, {q:mdcpOrgCntryCode}, {q:domUltDunsNo}, {q:gloUltDunsNo}, SYSDATE, {q:lastModifiedBy}, SYSDATE, {q:lastModifiedBy})
+
+</stmt>
+
+      <stmt id="updateQuoteMappingSP">
+     	    <![CDATA[		call Fe_MASTER.INSERT_QUOTE_MAPPING(
+				    {i:catalogId},
+				    {i:quoteList|QUOTE_LIST_TBL},
+				    {i:lastModifiedBy},
+				    {o:status}
+				)
+			]]>
+     	   </stmt>
+  </stmt-group>
+
+</comcat-dax-config>

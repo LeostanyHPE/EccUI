@@ -1,0 +1,48 @@
+<div class="row" id="newUserProfileCtrl" ng-controller="newUserProfileCtrl" ng-init="init()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+   	<div class="customer_rows">
+    	<h1 class="h1Underline">				
+			<span>Add New User </span>
+		</h1>
+  	</div>
+    <div class="customer_rows form-border">
+  		<div class="customer_rows">
+        	<div class="four columns">
+	           	<div class="generals">
+	                <span> Email:</span>
+	                <input type="text" id="email" name="email" class="div_input" ng-model="userProfile.email"></input>
+	           	</div>
+	        	<div class="generals">
+	               <span> Phone: </span>
+	               <input type="text" id="userName" name="userName" class="div_input" ng-model="userProfile.phone"></input>
+	           </div>
+	           	<div class="generals">
+	               <span> Customer Type: </span>	               
+	               <div class="div_input"  ng-bind="custTypeLabel"></div>
+	           </div>
+		   	</div>
+		   	<div class="four columns">
+	           	<div class="generals">
+	               <span> Name: </span>
+	               <input type="text" id="userName" name="userName" class="div_input" ng-model="userProfile.name"></input>
+	           </div>
+	           	<div class="generals">
+	               <span> Region: </span>	               
+	               <div class="div_input"   ng-bind="dataset.regionname"></div>
+	           </div>
+		   	</div>
+	       	<div class="four columns">
+	        	<div class="generals">
+	               	<span> Roles: </span>
+	             	<select multiple size="10" ng-model="selectedRoles" style="height:70px;width:50%;" ng-options="roleTypes.role_id as roleTypes.role_name for roleTypes in allRoleTypesList">
+					</select>
+	           </div>
+	        </div>
+ 		</div>
+    <div class="customer_rows">
+       <a class="btn btn-inline" ng-click="saveUserProfile()"><span id="save">Add</span></a> 
+       <a class="btn btn-inline" ng-click="cancel()"><span id="Cancel">Back to Manage User Profile</span></a>
+	</div>
+	</div>
+</div>

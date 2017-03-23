@@ -1,0 +1,216 @@
+package com.hp.ecc.ui.biz.pfcodes;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+
+public class PfCodesUploadBean extends BizObject {
+	public PfCodesUploadBean() {
+
+	}
+
+	private String uploadId = "uploadId";
+	private String uploadType = "uploadType";
+	private String lastModifiedBy = "lastModifiedBy";
+	private String podPf = "podPf";
+	public static final String VALIDATION_MSG = "validationMsg";
+	private String podCode = "podCode";
+	private String podCat = "podCat";
+	private String podProcessingStatus = "podProcessingStatus";
+	private String podAction = "podAction";
+	private String createdDate = "createdDate";
+	private String createdBy = "createdBy";
+	private String lastModifiedDate = "lastModifiedDate";
+	 private String podRegion="podRegion";
+	 private int ctgId;
+	 private int rowNumber;
+	 
+	 
+
+		public int getRowNumber() {
+		return rowNumber;
+	}
+
+	public void setRowNumber(int rowNumber) {
+		this.rowNumber = rowNumber;
+	}
+
+		/**
+	 * @return the ctgId
+	 */
+	public int getCtgId() {
+		return ctgId;
+	}
+
+	/**
+	 * @param ctgId the ctgId to set
+	 */
+	public void setCtgId(int ctgId) {
+		this.ctgId = ctgId;
+	}
+
+	/**
+	 * @return the podRegion
+	 */
+	public String getPodRegion() {
+		return podRegion;
+	}
+
+	/**
+	 * @param podRegion the podRegion to set
+	 */
+	public void setPodRegion(String podRegion) {
+		this.podRegion = podRegion;
+	}
+
+	/**
+	 * @return the lastModifiedBy
+	 */
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	/**
+	 * @param lastModifiedBy the lastModifiedBy to set
+	 */
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
+	}
+
+	/**
+	 * @return the podPf
+	 */
+	public String getPodPf() {
+		 return ( String ) getValue ( this.podPf );
+	}
+
+	/**
+	 * @param podPf the podPf to set
+	 */
+	public void setPodPf(String podPf) {
+		setValue ( this.podPf, podPf );
+	}
+
+	/**
+	 * @return the podCode
+	 */
+	public String getPodCode() {
+		 return ( String ) getValue ( this.podCode );
+	}
+
+	/**
+	 * @param podCode the podCode to set
+	 */
+	public void setPodCode(String podCode) {
+		setValue ( this.podCode, podCode );
+	}
+
+	/**
+	 * @return the podCat
+	 */
+	public String getPodCat() {
+		return podCat;
+	}
+
+	/**
+	 * @param podCat the podCat to set
+	 */
+	public void setPodCat(String podCat) {
+		this.podCat = podCat;
+	}
+
+	/**
+	 * @param uploadId the uploadId to set
+	 */
+	public void setUploadId(String uploadId) {
+		this.uploadId = uploadId;
+	}
+
+	/**
+	 * get/set validation id
+	 */
+	public String getValidationMsg() {
+		return (String) getValue(this.VALIDATION_MSG);
+	}
+
+	public void setValidationMsg(String val_msg) {
+		setValue(val_msg, this.VALIDATION_MSG);
+	}
+
+	public String getUploadStatus() {
+		return uploadStatus;
+	}
+
+	public void setUploadStatus(String uploadStatus) {
+		this.uploadStatus = uploadStatus;
+	}
+
+	public String getLoaderId() {
+		return loaderId;
+	}
+
+	public void setLoaderId(String loaderId) {
+		this.loaderId = loaderId;
+	}
+
+	private String uploadStatus;
+
+	private String loaderId;
+
+
+	public String getPodProcessingStatus() {
+		return podProcessingStatus;
+	}
+
+	public void setPodProcessingStatus(String podProcessingStatus) {
+		this.podProcessingStatus = podProcessingStatus;
+	}
+
+	public String getPodAction() {
+		return podAction;
+	}
+
+	public void setPodAction(String podAction) {
+		this.podAction = podAction;
+	}
+
+	public String getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(String createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getLastModifiedDate() {
+		return lastModifiedDate;
+	}
+
+	public void setLastModifiedDate(String lastModifiedDate) {
+		this.lastModifiedDate = lastModifiedDate;
+	}
+
+	public void setUploadId(long uploadId) {
+		setValue(this.uploadId, new Long(uploadId));
+	}
+
+	public long getUploadId() {
+		Long retVal = (Long) getValue(uploadId);
+		return (retVal != null) ? retVal.longValue() : -1;
+	}
+
+	public void setUploadType(String uploadType) {
+		this.uploadType = uploadType;
+	}
+
+	public String getUploadType() {
+		return uploadType;
+	}
+
+}

@@ -1,0 +1,81 @@
+package com.hp.ecc.ui.biz.pricelogic;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.List;
+
+public class PriceLogicMgr {
+	 /**
+	   * Create PriceLogicMgr Instance
+	   */
+	  static public PriceLogicMgr getPriceLogicMgr () {
+	    PriceLogicMgr mgr = new PriceLogicMgr ();
+	    return mgr;
+	  }
+
+	  /**
+	   * Get Price rule List
+	   * @return List the list of PriceLogicBean
+	   */
+	  public List getPriceLogicList (String dbRegionToConnect) {
+
+	    PriceLogicBean bean = new PriceLogicBean ();
+
+	    // get DaxMgr singleton
+	    DaxMgr mgr = DaxMgr.getInstance ();
+
+	    // make the parsed statement, si and pg are SortInfo and Pagination
+	    DaxParsedStmt pstmt = mgr.makeParsedStmt ( "PriceLogic", "selectPriceLogic",
+	                                               bean, null, null );
+
+	    // do the query
+	    DaxDB db = mgr.getDaxDB (dbRegionToConnect);
+	    List list = db.doSelect ( pstmt, null, bean );
+	    return list;
+	  }
+
+
+	  public List getPriceLogicListByID ( String ruleid ) {
+
+	    PriceLogicBean bean = new PriceLogicBean ();
+	    bean.setRuleID ( ruleid );
+	    // get DaxMgr singleton
+	    DaxMgr mgr = DaxMgr.getInstance ();
+
+	    // make the parsed statement, si and pg are SortInfo and Pagination
+	    DaxParsedStmt pstmt = mgr.makeParsedStmt ( "PriceLogic"
+	                                               , "selectPriceLogicByID",
+	                                               bean, null, null );
+
+	    // do the query
+	    DaxDB db = mgr.getDaxDB ();
+	    List list = db.doSelect ( pstmt, null, bean );
+	    return list;
+	  }
+
+	  public PriceLogicBean getPriceLogicByRegion ( String regionCode, String dbRegionToConnect ) {
+
+	    PriceLogicBean bean = new PriceLogicBean ();
+	    bean.setRegionCode ( regionCode );
+	    // get DaxMgr singleton
+	    DaxMgr mgr = DaxMgr.getInstance ();
+
+	    // make the parsed statement, si and pg are SortInfo and Pagination
+	    DaxParsedStmt pstmt = mgr.makeParsedStmt ( "PriceLogic"
+	                                               , "selectPriceLogicByRegion",
+	                                               bean, null, null );
+
+	    // do the query
+	    DaxDB db = mgr.getDaxDB (dbRegionToConnect);
+	    List list = db.doSelect ( pstmt, null, bean );
+
+	    if(list != null && list.size() >0){
+	    	return ( PriceLogicBean ) list.get ( 0 );
+	    }else{
+	    	return new PriceLogicBean();
+	    }
+	  }
+
+	}

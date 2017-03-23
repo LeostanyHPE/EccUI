@@ -1,0 +1,271 @@
+eccApp.controller('EditCatalogCrtl',['$scope', '$http', '$timeout','webStorage','dateParser','$routeParams','changeDateParserNewForChild', 
+  function($scope, $http, $timeout,webStorage,dateParser,$routeParams,changeDateParserNewForChild) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.catalog_id = $routeParams.catalog_id;
+	$scope.formJsonList = [];
+	$scope.form = [];
+	
+	$scope.dateFormat="";
+	$scope.dateFormatWhileRetreving = "";
+	
+	$scope.changeDateParserNewForChild=changeDateParserNewForChild;
+	
+	$scope.catScopeList = [{"id":"Public","value":"PUBLIC"},{"id":"PRIVATE","value":"PRIVATE"}];
+	
+	$scope.statusList = ["COMPLETE","INCOMPLETE"];
+	$scope.roleId = webStorage.local.get('userRoleId');
+	$scope.initLoad = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Edit Child Catalog Task\"");
+
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.hideMsg();
+		try { 
+			$scope.custDetails=webStorage.local.get('selCustData');
+			$scope.selCustName=$scope.custDetails.cust_name;
+			$scope.selCustId	=$scope.custDetails.cust_id;
+			$scope.selCustKey	=$scope.custDetails.cust_key;
+		} catch(e) { 
+			$scope.customerId='';
+			console.log('Not Data Selected');
+		}
+		
+		$scope.url='catalog/editCatalog.htm?catalog_id='+$scope.catalog_id+'';
+		var req = {
+			type: "GET",
+            url: $scope.url,
+            headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+            dataType: "json"
+		};
+		$http(req).success(function(data, status, headers, config) {
+			$scope.unspscVersion = [{"id":"Undp","value":"UNDP"},{"id":"Eccma","value":"ECCMA"}];
+			$scope.getZonesJsonArray = data.getZonesJsonArray;
+			if($scope.getZonesJsonArray){$scope.getZonesJsonArray.push({'price_descriptor':''}); }
+			$scope.genPgmList = data.genPgmList;
+			$scope.categoryList = JSON.parse(data.catgeoryJsonList);
+			$scope.form = JSON.parse(data.formData);
+			$scope.fedCust=data.fedCust;
+            $scope.gsaCust=data.gsaCust;
+			$scope.form.fCategoryType = Number($scope.form.fCategoryType);
+			var string1 = "Public";
+			if($scope.form.fCatalogScope){
+				if (string1.toLowerCase() === $scope.form.fCatalogScope.toLowerCase())
+				{
+					$scope.form.fCatalogScope = string1;
+				}
+			}
+			if($scope.form.fCatalogFormat){
+				$scope.form.fCatalogFormat = Number($scope.form.fCatalogFormat);
+			}
+			$scope.form.fUnspscType = $scope.form.fUnspscType.trim();
+			if($scope.form.fExpiryDate){
+				$scope.formattedExpiryDate	= $scope.changeDateParserNewForChild.changeDateFormat($scope.form.fExpiryDate,'dd-M-yy');
+			}
+			
+			if($scope.form.fModDate){
+				$scope.fModDate=$scope.changeDateParserNewForChild.changeDateFormat($scope.form.fModDate,'dd-M-yy');
+			}
+			
+			$scope.batchIdList = data.batchIdList;
+			$scope.formatList = data.formatList;
+			$scope.pkNames = data.pkNames;
+			$scope.stdNames = data.stdNames;
+			
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Edit Catalog Service');
+		  });
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+	
+	$scope.SaveEditCatalog = function(){
+		if($scope.form.eprimePriceDescriptor){
+			if(($scope.form.eprimePriceDescriptor).length < 7 || (/[^A-Z|^0-9]/.test($scope.form.eprimePriceDescriptor))){
+				 $scope.hideMsg();
+				 $scope.showMsg('','ePrime Price Descriptor:  Price descriptor must have exactly 7 upper case characters or digits');
+				 $scope.scrollToMessage();
+				return;
+			}
+		}
+		
+		if(!$scope.form.fCatalogName){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Please Enter Catalog  Name');
+			 $scope.scrollToMessage();
+			return;
+		}
+	
+		if ($scope.isExpiryDatePassed($scope.formattedExpiryDate) && "COMPLETE" == $scope.form.fStatus.toUpperCase()) {
+			 $scope.hideMsg();
+			 $scope.showMsg('','Status can not be set to COMPLETE if the Expiry Day is older than today' );
+			 $scope.scrollToMessage();
+			return;
+		}
+		
+		if($scope.formattedExpiryDate){
+			
+			$scope.form.fExpiryDate=$scope.parseDateFormat($scope.formattedExpiryDate);
+		}
+		if($scope.form.fModNumber){
+			var modNumber=$scope.form.fModNumber;
+			if($scope.fedCust){
+				var numbers=/^[0-9]+$/;
+				if(!modNumber.match(numbers))  
+			      { 
+					 $scope.hideMsg();
+					 $scope.showMsg('','Mod Number: Please enter valid number');
+					 $scope.scrollToMessage();
+					return;
+			      }
+			}
+			if($scope.gsaCust){
+				var letterNumber =/^[0-9a-zA-Z]+$/;
+				if(!modNumber.match(letterNumber))  
+			      { 
+					 $scope.hideMsg();
+					 $scope.showMsg('','Mod Number: Please enter valid number');
+					 $scope.scrollToMessage();
+					return;
+			      }
+			}
+		}
+		if($scope.fModDate){
+			$scope.form.fModDate=$scope.parseDateFormat($scope.fModDate);
+		}
+
+		if ($scope.form.zonePriceDescriptor === "" && $scope.form.applyFreightCharge){
+			 $scope.hideMsg();
+			 $scope.showMsg('','If Freight Charges are applied then Freight zone descriptor can not be empty.' );
+			 $scope.scrollToMessage();
+			return;
+		}
+		
+		if(!$scope.form.applyFreightCharge){
+			$scope.form.zonePriceDescriptor = ""; 
+		} 
+
+		
+		var req = {
+				method: "POST",
+	            url: 'catalog/editSaveCatalog.htm',
+	            data:$scope.form,
+				};
+		$http(req).success(function(data, status, headers, config) {
+			 $scope.hideMsg();			
+			if(data.successMsg != undefined){
+				 $scope.showMsg(data.successMsg,'');
+				 document.location.href="#/ViewChildCatalog?childId="+data.catalogId;
+				 webStorage.session.add('messageAfterSaveCatalog', data.successMsg);
+			 }else if(data.FailMsg != undefined){
+				 $scope.showMsg('',data.FailMsg);
+				 $scope.scrollToMessage();
+			 }else if(data.pdValid != undefined){
+				 $scope.showMsg('',data.pdValid);
+				 $scope.scrollToMessage();
+			 }
+			 else if(data.fmtValid != undefined){
+				 $scope.showMsg('',data.fmtValid);
+				 $scope.scrollToMessage();
+			 }
+			 else{
+				 $scope.showMsg(data.successMsg,'');
+			 }
+			
+		}).error(function(data, status, headers, config) {
+			$scope.hideMsg();
+			$scope.showMsg('','Error in Edit Catalog Service');
+	  });
+	};
+	
+	$scope.finalCategory = function(option) {
+	       
+		return option.type+"----"+option.name+"("+option.defaultLocale+")";
+	};
+	
+	$scope.parseDateFormat = function(currentDate){
+	    var monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"];
+	    
+	    var d                      =new Date(currentDate);
+	    var day                 = ('0'+d.getDate()).slice(-2);
+	    var hours             = ('0' + d.getUTCHours()).slice(-2) ;
+	    var mins               = ('0' + d.getUTCMinutes()).slice(-2) ;
+	    var secs                = ('0' + d.getUTCSeconds()).slice(-2) ;
+	  
+	    $scope.dateFormat=monthArray[d.getMonth()]+" "+day+", "+d.getFullYear()+" "+hours+":"+mins+":"+secs+" AM";
+	   return $scope.dateFormat;
+	};
+	
+	$scope.parseDateFormat = function(currentDate){
+        var monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"];
+        var d        = new Date(currentDate.replace("-",""));
+        var day      = ('0'+d.getDate()).slice(-2);
+        var hours    = ('0' + d.getUTCHours()).slice(-2) ;
+        var mins     = ('0' + d.getUTCMinutes()).slice(-2) ;
+        var secs     = ('0' + d.getUTCSeconds()).slice(-2) ;
+        $scope.dateFormat=monthArray[d.getMonth()]+" "+day+", "+d.getFullYear()+" "+hours+":"+mins+":"+secs+" AM";
+        return $scope.dateFormat;
+    };
+	$scope.isExpiryDatePassed = function(expiryDate){
+		var expieryDate = new Date(expiryDate); //Year, Month, Date
+		var d = new Date();
+		if (expieryDate < d) {
+           return true;
+        }else {
+            return false;
+        }
+	};
+	
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	
+	$scope.showMsg=function(success, error){
+     	$scope.successMessage=success;
+     	$scope.errorMessage=error;
+     };
+     $scope.hideMsg=function(){
+     	$scope.successMessage='';
+     	$scope.errorMessage='';
+     };
+     
+     $scope.cancelEditChildCatalog=function(){
+    	 document.location.href=webStorage.session.get('PrevPage');	
+ 	 };
+     
+     $(".expiryDate").datepicker({
+         changeMonth: true,
+         changeYear: true,
+         showOn: "both",
+         buttonImage: "resources/images/hp/calender.png",
+         buttonImageOnly: true,
+         buttonText: "",
+         dateFormat: "dd-M-yy",
+         //minDate: 0,
+         onSelect : function(dateText, inst) {
+ 	    	$scope.formattedExpiryDate = dateText;
+ 		}
+    });
+     $(".calmodDate").datepicker({
+	     changeMonth: true,
+	     changeYear: true,
+	     showOn: "both",
+	     buttonImage: "resources/images/hp/calender.png",
+	     buttonImageOnly: true,
+	     buttonText: "",
+	     dateFormat: "dd-M-yy",
+	    // minDate: 0,
+	     onSelect : function(dateText, inst) {
+	    	$scope.fModDate = dateText;
+		}
+	});
+
+	
+}]);

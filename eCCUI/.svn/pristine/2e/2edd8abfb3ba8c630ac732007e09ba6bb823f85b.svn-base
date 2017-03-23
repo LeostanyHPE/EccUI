@@ -1,0 +1,36 @@
+package com.hp.ecc.ui.upload.validation;
+
+public interface IFormatDetail {
+
+	  /**
+	   * Returns the column header.
+	   */
+	  public String getColumnHeader ();
+
+	  /**
+	   * Returns the page number of this validation.
+	   */
+	  public int getPageNo ();
+
+	  /**
+	   * Returns the col number.
+	   */
+	  public int getColumnNo ();
+
+	  /**
+	   * Returns the bean field name corresponding to the column name.
+	   */
+	  public String getBeanFieldName ();
+
+	  /**
+	   * Returns the default value
+	   */
+	  public String getDefaultValue ();
+
+	  /**
+	   * Returns the default value
+	   */
+	  public String getBizObjectName ();
+
+	}
+

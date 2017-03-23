@@ -1,0 +1,362 @@
+<div class="row" ng-controller="priceTierProductListCtrl" ng-init="loadPriceTierData()" id ="priceTierHeader">
+ 	<div id="idSuccessMessage" class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div id="idErrorMessage" class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div> 
+	<div class="alert warning" ng-show="warningGroupMessage!=''" ><span ng-bind-html="warningGroupMessage"></span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">				
+			<span>View Price Tier And Its Product Offering Details</span>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+	        <div class="four columns">
+	           <div class="generals">
+	                <span>Price Tier Name:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.cat_catalog_name"></div>
+	           </div>	  
+	            <div class="generals">
+	                <span>EPrime Customer Type:</span>
+	                <div class="div_input" ng-bind="ePrimeCustomerType"></div>
+	           </div>
+	           <div class="generals">
+	                <span>Price Tier ID:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.cat_catalog_id"></div>
+	           </div>	
+	           <div class="generals">
+	                <span>Publish Status:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.cat_status"></div>
+	           </div>
+	           <div class="generals">
+	                <span>Sale Country:</span>
+	                <div class="div_input" ng-bind="saleCountry"></div>
+	           </div>            	          	           		       
+	        </div>
+	        <div class="four columns">
+	           <div class="generals">
+	                <span>Categorization:</span>
+	                <div class="div_input" ng-bind="categorization"></div>
+	           </div>	
+	           <div class="generals">
+	                <span>Price Descriptor:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.cpd_price_descriptor"></div>
+	           </div>  
+	           <div class="generals">
+	                <span>Language:</span>
+	                <div class="div_input" ng-bind="language"></div>
+	           </div>
+	           <div class="generals">
+	                <span>Shop List Price Flag:</span>
+	                <div class="div_input" ng-bind="shopListPriceFlag"></div>
+	           </div>
+	           <div class="generals">
+	                <span>Fulfillment Site:</span>
+	                <div class="div_input" ng-bind="fulfillmentSite"></div>
+	           </div>
+	        </div>
+	        <div class="four columns">
+	          <div class="generals" id="offerId">
+	                <span>Offer ID:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.offer_id"></div>
+	           </div>		
+	           <div class="generals" id="priceMergeId">
+	                <span>Price Merge ID:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.cat_price_merge_id"></div>
+	           </div>
+	           <div class="generals" id="priceProfile">
+	                <span>Pricing Profile:</span>
+	                <div class="div_input" ng-bind="priceProfile"></div>
+	           </div>
+	           <div class="generals" id="publicSector">
+	                <span>Public Sector:</span>
+	                <div class="div_input" ng-bind="publicSector"></div>
+	           </div>  	  
+	           <div class="generals" id="priceProcedure">
+	                <span>Price Procedure:</span>
+	                <div class="div_input" ng-bind="priceProcedure"></div>
+	           </div>
+	           <div class="generals" id="exchangeRateType">
+	                <span>Exchange Rate Type:</span>
+	                <div class="div_input" ng-bind="displayPriceTierData.exch_rate_opt_cd"></div>
+	           </div>		           	          	           		       
+	        </div>	
+		</div>	
+		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:0px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	        <div class="four columns">
+	           <div class="generals">
+	              <span>Include General Catalog:</span>
+	              <div class="div_input" ng-bind="includeGenCatalog"></div>
+	           </div>	  
+	           <div class="generals">
+	              <span>Exclude Configs:</span>
+	              <div class="div_input" ng-bind="displayPriceTierData.cat_config_exclude_flag"></div>
+	           </div>
+	           <div class="generals" id ="excludeHStockCd">
+	              <span>Exclude H Stock Code:</span>
+	              <div class="div_input" ng-bind="displayPriceTierData.cat_excl_h_stock_cd"></div>
+	           </div>	  		           		                                 	           		      
+	        </div>
+	        <div class="four columns">
+	           <div class="generals">
+	               <span> Include Cross Sell:</span>
+	               <div class="div_input" ng-bind="displayPriceTierData.cat_cross_sell_included"></div>
+	           </div>	            
+			   <div class="generals">
+	               <span>Exclude Products from Hierarchy:</span>
+	               <div class="div_input" ng-bind="displayPriceTierData.program_prod_disp_flag"></div>
+	           </div>	         	                                 	           		     
+	        </div>
+	        <div class="four columns">
+	           <div class="generals">
+	                <span>Catalog List:</span>
+	                <select id="selection" multiple  style="width: 55%;height:60px;margin-top: 5px;" ng-model="CatalogList"  ng-options="item as item for item in displayCatalogList"></select>
+	            </div>	  	                                 	           		      
+	        </div>
+		</div>	 
+		<div class="customer_rows" >				
+			<div id="idDealList" class="twelve columns">	
+				<section  style="border-bottom: 0px;">
+					 <div class="generals"><span>Deal List:</span></div> 			    		
+					<div class="table-scroll">
+						<table id="dealList" class="dataGrid" >
+							<thead>
+								<tr class="GridHeaderRow">										
+											<th class="center">Deal ID</th>
+											<th class="center">Default Price Descriptor</th>
+											<th class="center">Deal Start Date</th>
+											<th class="center">Deal End Date</th>
+											<th class="center">Default Sales Country</th>
+											<th class="center">Deal Type </th>
+											<th class="center">Requestor</th>
+											<th class="center">Approver</th>
+											<th class="center">Last Update Date</th>
+											<th class="center">Apply Deal Pricing Only</th> 
+											<th class="center" ng-show="regionCode =='US' && publicSector=='Y' ">Contract Price List Type ID</th>										 								
+											<th class="center">Replacement For Deal ID</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'"  ng-repeat="deal in dealList">										
+											<td>{{deal.deal_id}}</td>
+											<td>{{deal.price_descriptor}}</td>
+											<td>{{deal.start_date}}</td>
+											<td>{{deal.end_date}}</td>										
+											<td>{{deal.country}}</td>
+											<td>{{deal.dealtype}}</td>
+											<td>{{deal.requestor}}</td>
+											<td>{{deal.approver}}</td>
+											<td>{{deal.last_modified_date}}</td>										
+											<td>{{deal.pricing}}</td>
+											<td ng-show="regionCode == 'US' && publicSector=='Y' ">{{deal.contract_price_list_type_id}}</td>										 									
+											<td>{{deal.original_deal_id}}</td>																				
+									</tr>
+								</tbody>
+							</table> 
+						</div>
+				</section>				
+			</div> 
+		</div> 
+		<div class="customer_rows" >				
+			<div id="idPurchaseAgreement" class="twelve columns">	
+				<section  style="border-bottom: 0px;">
+					 <div class="generals"><span>Purchase Agreement:</span></div> 			    		
+					<div class="table-scroll">
+						<table id="PurchaseAgreement" class="dataGrid" >
+								<thead>
+									<tr class="GridHeaderRow">										
+											<th class="center">Purchase Agreement#</th>
+											<th class="center">CAC Code</th>
+											<th class="center">GEO Code</th>										 
+									</tr>
+								</thead>
+								<tbody>
+									<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'"  ng-repeat="pa in PurchaseAgreement">										
+											<td>{{pa.cap_pa_no}}</td>
+											<td>{{pa.cap_cac_code}}</td>
+											<td>{{pa.cap_disc_geo}}</td>										 																		
+									</tr>
+								</tbody>
+							</table> 
+						</div>
+				</section>				
+			</div> 
+		</div>   		
+		<div class="customer_rows">
+			<h1 class="h1Underline row" style="height:0px;"></h1>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>PLC Check:</span>
+					<div class="div_input" ng-bind="displayPriceTierData.cat_plc_ord_flg"></div>
+		        </div>
+		        <div class="generals">
+		            <span>OM Check:</span>
+		            <div class="div_input" ng-bind="displayPriceTierData.cat_fusn_ord_fl"></div>
+		        </div>	            	                                 	           		     
+	     	</div>
+	     	<div class="four columns">
+		        <div class="generals">
+					<span>Offer Equivalent Part #:</span>
+					<div class="div_input" ng-bind="displayPriceTierData.partnum_offer_equiv_flag"></div>
+				</div>
+				<div class="generals">
+					<span>LCLP Check:</span>
+					<div class="div_input" ng-bind="displayPriceTierData.partnum_ordcheck_flag"></div>
+				</div>		  	                                 	           		      
+	      	</div>
+	     	<div class="four columns">
+	     		<div class="generals" id="applyStdCatPrice">
+					<span>Apply Standard Catalog Pricing:</span>
+					<div class="div_input" ng-bind="displayPriceTierData.cat_tier_prc_flag"></div>
+		        </div>
+	     	</div>
+	    </div>
+		<div class="customer_rows">
+			<h1 class="h1Underline row" style="height:0px;"></h1>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Selected Localization Option Categories:</span>					
+	                <textarea  rows="" cols="" ng-model="optioncategory" disabled> </textarea>					 
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Selected Localization Option Codes:</span>
+					<textarea  rows="" cols="" ng-model="displayPriceTierData.cat_options" disabled> </textarea>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Selected Localization Option Countries:</span>
+					<div class="div_input" ng-bind="displayPriceTierData.cat_countries"></div>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<h1 class="h1Underline row" style="height:0px;"></h1>
+		</div>
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Comment:</span>
+					<textarea  rows="6" cols="1" ng-bind="displayPriceTierData.cat_comments" disabled> </textarea>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+	                <span>Current Propagation Status:</span>
+	                <div class="div_input"  ng-bind="displayCurrPropagationStatus"></div>
+	           	</div>
+	           	<div class="generals">
+	                <span>Last Propagation Time:</span>
+	                <div class="div_input"  ng-bind="displayLastPropatationTimeStamp.last_modified_date"></div>
+	           	</div> 
+			</div>
+		</div>
+		<div class="customer_rows">
+		    <h1 class="h1Underline row" style="height:0px;"></h1>
+		</div>
+		<div class="customer_rows">
+			<div class="twelve columns">				
+				<a class="btn btn-inline" href="#EditPriceTier?priceTierID={{ptId}}" ng-click="editPriceTier()"><span id="Edit">Edit</span></a>  
+				<a class="btn btn-inline" href="#PriceTierList" ng-click="cancelPriceTierProductListHeader()"><span id="Cancel">Cancel</span></a>
+				<a class="btn btn-inline" href="#/UpdatePriceTierListMultiProds?priceTierID={{ptId}}&priceTierName={{priceTierName}}&searchProperty=null&searchScope=null&searchKeywords=null" ng-click="UpdateProductAttributes()"><span id="UpdateProductAttributes">Update Product Attributes</span></a>					
+				<a class="btn btn-inline" ng-click="PropagateToCatalog()"><span id="PropagateToCatalog">Propagate to Catalog</span></a>		         			
+			</div>
+		</div>			 
+	</div>		
+	<div class="customer_rows" style="margin-top: 5px;">
+		<div class="customer_rows">
+			<div class="accordion"> 
+			<section>
+				<h2><span class="accordion-icon icon-minus"></span>Product List</h2>
+				<div class="customer_rows" style="margin-top: -5px;">
+					<div class="customer_rows">
+						<div id="showhideclmDiv" class="btn btn-refresh" ng-init="mouseDownHide('tinyDropz');">
+							<div ng-click="toggle('tinyDropz');">
+								<span data-dropdown="tinyDrop">Show/Hide Column</span>
+							</div>
+							<ul id="tinyDropz" class="f-dropdown" stop-event="mousedown">
+								<li ng-repeat="column in tablecolumns">
+									<input type="checkbox" ng-model="selectedColumns[column.id]" ng-true-value="true" ng-false-value="false">
+									{{column.key | removeBR}}
+								</li>
+							</ul>
+						</div>
+						<div hpe-button btn-text="Search By" btn-type="Primary" btn-icon="icon-filter" onclick="toggleAutoFilter('.autoFilter')"></div>
+						<div style="display:inline; margin-left:5px; ">
+							<span style="color:#696969; font-size:12px; font-weight:bold; margin-right:5px">Show FullfillMent Site Part#:</span>
+							<input  type="checkbox" ng-model="ffsPartNumber" style="margin:-10px 0px 0px 0px" ng-change="loadFulfillmentSitePartProducts(ffsPartNumber)">
+						</div>
+						<div class="dataTables_filter" id="ecc_hpegrid1_filter"><label>Filter: <input type="text" ng-model="searchText"></label></div>
+					</div>
+					<div class="gridTable"  style="width: 100%;overflow: auto;">
+						<table id="tableGrid" class="dataGrid" style="width: 100%;">
+							<thead>
+								<tr class="TableHeaderRow">
+									<th ng-repeat="name in tablecolumns" class="table_details" perspective="{{name.perspective}}"
+									ng-show="selectedColumns[name.id]"
+									ng-class="{sortedASC: ($parent.reverse==true && sortedColumn == name.columnName),sortedDESC: ($parent.reverse==false && sortedColumn == name.columnName)};",
+									ng-click="sortColumn($parent, name.id, name.columnName, name.sortLocale, name.sort);">
+									<span class="tblHeaderTxt" ng-bind-html="name.key"></span> <!-- ng-hide="regionCode =='EU' && name.key=='FulfillmentSiteId'" -->
+									<ng-switch on="name.sort"><span ng-switch-when="false"></span><span class="icn_srt" ng-switch-default>
+            						<a href="javascript:void(0)">&nbsp;</a></span></ng-switch></th>
+		            			</tr>
+								<tr class="autoFilter font_black table_details ngomAutoFilter"></tr>
+							</thead>
+							<tbody>
+								<tr ng-class="{ odd : $index%2==0, even : !($index%2==0)}" ng-repeat="item in aaData | filter:searchText | orderBy:predicate:reverse | startFrom:(currentPage-startIndex)*itemsPerPage | limitTo:itemsPerPage ">
+						            <td ng-class="sortedTD_{{columnNames[0].id}}" ng-show="selectedColumns.status" ng-bind-html="to_trusted(item.status)"></td>
+						            <td ng-class="sortedTD_{{columnNames[1].id}}" ng-show="selectedColumns.baseModel" ng-bind-html="to_trusted(item.baseModel)"></td>
+						            <td ng-class="sortedTD_{{columnNames[2].id}}" ng-show="selectedColumns.partNumber" ng-bind-html="to_trusted(item.partNumber)"></td>
+						            <td ng-class="sortedTD_{{columnNames[3].id}}" ng-show="selectedColumns.priceSourceID">{{item.dealID}}</td>
+						            <td ng-class="sortedTD_{{columnNames[4].id}}" ng-show="selectedColumns.description">{{item.description}}</td>
+						            <td ng-class="sortedTD_{{columnNames[5].id}}" ng-show="selectedColumns.netPrice" ng-bind-html="to_trusted(item.netPrice)"></td>
+						            <td ng-class="sortedTD_{{columnNames[6].id}}" ng-show="selectedColumns.priceSource">{{item.priceSource}}</td>
+						            <td ng-class="sortedTD_{{columnNames[7].id}}" ng-show="selectedColumns.configID">{{item.configId}}</td>
+						            <td ng-class="sortedTD_{{columnNames[8].id}}" ng-show="selectedColumns.source">{{item.source}}</td>
+						            <td ng-class="sortedTD_{{columnNames[9].id}}" ng-show="selectedColumns.productLine">{{item.pl}}</td>
+						            <td ng-class="sortedTD_{{columnNames[10].id}}" ng-show="selectedColumns.contextID">{{item.contextID}}</td>
+						            <td ng-class="sortedTD_{{columnNames[11].id}}" ng-show="selectedColumns.gADate">{{item.releaseDate}}</td>
+						            <td ng-class="sortedTD_{{columnNames[12].id}}" ng-show="selectedColumns.pEDate">{{item.endOflifeDate}}</td>
+						            <td ng-class="sortedTD_{{columnNames[13].id}}" ng-show="selectedColumns.eMDate">{{item.discountDate}}</td>
+						            <td ng-class="sortedTD_{{columnNames[14].id}}" ng-show="selectedColumns.esDate">{{item.marketingObsoleteDate}}</td>
+						            <td ng-class="sortedTD_{{columnNames[15].id}}" ng-show="selectedColumns.crossSell" ng-bind-html="to_trusted(item.crossSellitem)"></td>
+						            <td ng-class="sortedTD_{{columnNames[16].id}}" ng-show="selectedColumns.fulfillmentSiteId" ng-bind-html="to_trusted(item.fullFillmentSiteId)"></td> <!-- ng-hide="regionCode =='EU'" -->
+						            <td ng-class="sortedTD_{{columnNames[17].id}}" ng-show="selectedColumns.program">{{item.pgmName}}</td>
+						            <td ng-class="sortedTD_{{columnNames[18].id}}" ng-show="selectedColumns.partType">{{item.partType}}</td>
+						            <td ng-class="sortedTD_{{columnNames[19].id}}" ng-show="selectedColumns.contract">{{item.contract}}</td>
+						       </tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="customer_rows">
+						<div class="pagination ossPagination"></div>
+					</div>
+					<div class="customer_rows" style="margin-top:5px;">
+				  		<div class="three columns">
+				  			<div class="generals">
+				  				<img border=0 src="resources/images/ecc/arrow_grey.gif" style="float: left;margin: -2px 5px 0px 0px;">
+				                <label style="width: 75%;">Indicates that no options available for product.</label>
+				            </div>
+				  		</div>
+				  		<div class="three columns">
+				  			<div class="generals">
+				  				<img border=0 src="resources/images/ecc/arrow_blue.gif"  style="float: left;margin: -2px 5px 0px 0px;">
+				                <label style="width: 75%;">Indicates that options available for product.</label>
+				            </div>
+				  		</div>
+				  	</div>	
+				</div>
+			</section>
+			</div>
+		</div>
+  	</div>		 
+</div>	
+
+	

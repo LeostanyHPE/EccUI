@@ -1,0 +1,161 @@
+package com.hp.ecc.ui.db.dao;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.BizMgrUtil;
+import com.hp.ecc.ui.biz.ResponseStatus;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategoryMgr;
+import com.hp.ecc.ui.biz.category.SearchMgr;
+import com.hp.ecc.ui.biz.misc.Supplier;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.ZeroPriceOption;
+import com.hp.ecc.ui.util.StrUtil;
+
+@Service
+public class ManualProductOptionDao {
+	
+	private static final String EXCEPTION = "EXCEPTION";
+
+	  private static final String OTHERS = "999";
+
+	  private static final String SQL_GROUP_ID = "localProduct";
+	  
+	  public Categorization comcatCategorization;
+	
+	
+	public JSONArray getOptions(String productNumber, String countryCode, String dbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDb =  daxMgr.getDaxDB(dbRegionToConnect);
+		
+		if ( StrUtil.isEmpty ( productNumber ) ) {
+		      return null;
+		}
+	    //System.out.println("----getOptionsForBaseProd-----" + baseProd);
+	    ZeroPriceOption option = new ZeroPriceOption ();
+	    option.setBaseProd ( productNumber );
+	    option.setCountryCode ( countryCode );
+	    String sqlName = null;
+	    if ( StrUtil.isEmpty ( countryCode ) || countryCode == null ) {
+	      sqlName = "optionSelect";
+	    }
+	    else {
+	      sqlName = "optionSelectByCountry";
+	    }		    
+	   
+	    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( this.SQL_GROUP_ID, sqlName, option, null, null );
+	    
+	    return daxDb.doSelectJson( stmt, option.getClass (), null );
+	}//getOptions
+	
+	public JSONArray retrieveSuppliers(String supplier,String getSupplierInfoRegion, Object parameter, Object bindBean,String adbRegionToConnect) {		 
+		DaxMgr daxMgr = DaxMgr.getInstance ();		
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( supplier, getSupplierInfoRegion, parameter, null, null );
+		
+		JSONArray list = daxDB.doSelectJson(pstmt, Supplier.class, parameter);
+			
+		return list;			
+	}//retrieveSuppliers
+
+
+	public ResponseStatus saveProduct(Product p, String lastModifiedBy,String dbRegion) {
+		String MANUAL_ADD = "MANUAL ADD";		
+		SearchMgr searchM;			
+
+		String statusCode = null;
+		p.setProdId(p.getProdId().toUpperCase().trim());
+		if (exists(p.getProdId(),dbRegion)) {
+			statusCode = ResponseStatus.NO_ADD_WITH_DUPLICATION;
+		} else {
+			p.setLastModifiedBy(lastModifiedBy);
+			if (StrUtil.isEmpty(p.getSource())) {
+				p.setSource(MANUAL_ADD);
+			}
+			p.setLocalActivityFlag("A");
+			p.setHpLangCode("99");
+			Date date = p.getProdExpireDate();
+			if (date == null) {
+				date = getExpireDate();
+				p.setProdExpireDate(date);
+			}
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB db = daxMgr.getDaxDB(dbRegion);
+
+			db.setAutoCommit(false);
+			DaxParsedStmt saveProdStmt = daxMgr.makeParsedStmt(
+					"ManualAddProductMgr", "saveProduct", p, null, null);
+			DaxParsedStmt updProdStmt = daxMgr.makeParsedStmt(
+					"ManualAddProductMgr", "updateProduct", p, null, null);
+
+			DaxParsedStmt saveLocalProdStmt = daxMgr.makeParsedStmt(
+					"ManualAddProductMgr", "saveLocalProduct", p, null, null);
+			DaxParsedStmt updLocalProdStmt = daxMgr.makeParsedStmt(
+					"ManualAddProductMgr", "updateLocalProduct", p, null, null);
+			DaxParsedStmt updateProductStatus = daxMgr
+					.makeParsedStmt("ManualAddProductMgr",
+							"updateProductStatus", p, null, null);
+
+			try {
+				db.doSave(updProdStmt, saveProdStmt, p);
+				String source = p.getSource();
+				p.setSource(""); // no source for prod_local_lang table
+				db.doSave(updLocalProdStmt, saveLocalProdStmt, p);
+				db.doSP(updateProductStatus, null, p);
+				p.setSource(source);
+				if (p.getCategory() != null) {
+					ArrayList list = new ArrayList(1);
+					list.add(p);
+					CategoryMgr catMgr = CategoryMgr.getCategoryMgr(
+							comcatCategorization, lastModifiedBy);
+					catMgr.copyProducts(list, p.getCategory(), dbRegion);
+				}
+
+				statusCode = ResponseStatus.ADD_OK;
+
+				db.finish(false);
+			} catch (Exception e) {
+				statusCode = ResponseStatus.ADD_FAIL;
+			}
+		}
+		
+		return BizMgrUtil.getResponseStatus(statusCode, p, p.getProdId());		
+	}//saveProduct	
+	
+	private boolean exists(String prodId,String dbRegion) {
+		return getProduct(prodId,dbRegion) != null;
+	}
+	
+	private Product getProduct(String prodId,String dbReion) {
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		Product p = new Product();
+		p.setProdId(prodId);
+		p.setHpLangCode("99");
+
+		pstmt = mgr.makeParsedStmt("ManualAddProductMgr", "getProduct", p,null, null);
+		DaxDB db = mgr.getDaxDB(dbReion);
+
+		return (Product) db.doGet(pstmt, Product.class, p);
+	}//getProduct
+	
+	private Date getExpireDate () {
+		int VALID_PERIOD = 14;
+	    Calendar calendar = Calendar.getInstance ();
+	    calendar.add ( Calendar.DAY_OF_YEAR, VALID_PERIOD );
+	    return calendar.getTime ();
+	}
+	
+
+}//class

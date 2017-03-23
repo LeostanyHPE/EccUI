@@ -1,0 +1,105 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.beans;
+
+/**
+ * @author duvvurso
+ *
+ */
+public class SogLocCountryOptionsForm {
+	
+	 public String ID ;
+
+	  public String OPT_CATEGORY_NAME ;
+
+	  public String OPTIONS ;
+
+	  public String REGION_CODE;
+
+	  public String PRICE_DESCRIPTOR;
+
+	  public String country;
+	  
+	  public String cntry_cd;
+
+	  public String COUNTRIESNAME;
+
+	  public String COUNTRIESNAMEAPPENDED;
+
+	public String getID() {
+		return ID;
+	}
+
+	public void setID(String iD) {
+		ID = iD;
+	}
+
+	public String getOPT_CATEGORY_NAME() {
+		return OPT_CATEGORY_NAME;
+	}
+
+	public void setOPT_CATEGORY_NAME(String oPT_CATEGORY_NAME) {
+		OPT_CATEGORY_NAME = oPT_CATEGORY_NAME;
+	}
+
+	public String getOPTIONS() {
+		return OPTIONS;
+	}
+
+	public void setOPTIONS(String oPTIONS) {
+		OPTIONS = oPTIONS;
+	}
+
+	public String getREGION_CODE() {
+		return REGION_CODE;
+	}
+
+	public void setREGION_CODE(String rEGION_CODE) {
+		REGION_CODE = rEGION_CODE;
+	}
+
+	public String getPRICE_DESCRIPTOR() {
+		return PRICE_DESCRIPTOR;
+	}
+
+	public void setPRICE_DESCRIPTOR(String pRICE_DESCRIPTOR) {
+		PRICE_DESCRIPTOR = pRICE_DESCRIPTOR;
+	}
+
+
+	public String getCOUNTRIESNAME() {
+		return COUNTRIESNAME;
+	}
+
+	public void setCOUNTRIESNAME(String cOUNTRIESNAME) {
+		COUNTRIESNAME = cOUNTRIESNAME;
+	}
+
+	public String getCOUNTRIESNAMEAPPENDED() {
+		return COUNTRIESNAMEAPPENDED;
+	}
+
+	public void setCOUNTRIESNAMEAPPENDED(String cOUNTRIESNAMEAPPENDED) {
+		COUNTRIESNAMEAPPENDED = cOUNTRIESNAMEAPPENDED;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public String getCntry_cd() {
+		return cntry_cd;
+	}
+
+	public void setCntry_cd(String cntry_cd) {
+		this.cntry_cd = cntry_cd;
+	}
+	  
+	  
+
+}

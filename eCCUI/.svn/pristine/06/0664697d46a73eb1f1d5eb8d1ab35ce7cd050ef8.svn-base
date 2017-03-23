@@ -1,0 +1,282 @@
+<div class="row"  ng-controller="createPriceTier" data-ng-init="loadPriceTierDetails()">
+   	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">
+			<span>Create Price Tier</span>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+	        <div class="four columns">
+	           <div class="generals">
+                    <span>Price Tier Name:</span>
+                    <input type="text" class="div_input" value="" ng-model="form.fPriceTierName" maxlength="60"></input>
+                </div>
+                <div class="generals">
+	              <span>Sale Country:</span>
+	              <select   ng-model="form.fPriceOBDesc" ng-options="item.cntry_cd as item.country for item in saleCountry" ng-change="changeSaleCountry()">
+		          </select> 
+	        	</div>
+	        	<div class="generals">
+	              <span>Price Descriptor:</span>
+                   <select  ng-model="form.prcDescriptor" ng-change="changePriceDescriptor()" ng-options="item.price_descriptor as item.price_descriptor for item in priceDescriptor">
+		       	   </select>
+	           	</div>
+	           	<!-- <div class="generals">
+                    <span>FulFillMent Site:</span>
+                    <select ng-model="form.fFFSID" ng-options="item.ffs_id as item.ffs_id +' - '+item.ffs_name for item in fulfillmentSiteList"></select>div style="margin-top:20px"><a href="#" ng-click="showPopup()">search</a></div>
+                </div> -->
+		    	<div class="generals">
+	              <span>FulFilMent Site:</span>
+                  <input type="text"  placeholder="" ng-model="form.fFFSID" readonly=true></input>
+                  <a class="btn btn-inline" style="margin-top: 0px;" ng-click="showFulfillmentList()">Search</a>
+	            </div>
+				<div class="generals" id="public_sector_div">
+		    		<span>Public Sector:</span>
+		    		<input id="pubSecDiv" style="margin-top: 3px;" type="checkbox" ng-model="form.pubSec" ng-change="noPriceProfile()"/>
+		    	</div>
+            </div>
+
+	        <div class="four columns">
+	           <div class="generals">
+	           		<span>Status:</span>
+	                 <select  ng-model="form.status" ng-options="item.name as item.name for item in statusList">
+		       	   </select>
+		       </div>
+                <div class="generals" style="margin: 5px 0px;">
+	        		<input style="margin: 0px 10px 0px 0px ;width: 15px;height: 15px;" type="checkbox" ng-model="form.selSaleCntry" ng-click="allSaleCountries()"/>
+	    			<span style="float: none;">All sale countries</span>
+	            </div>
+	            <div class="generals">
+	                <span>Language Locale:</span>
+	                 <select  ng-model="form.fLanguage" ng-options="item.lang_cd as item.lang_name + '/' + item.java_lang_cd for item in localeList">
+		       	   </select>
+	            </div>
+	            <div class="generals" id="price_profile_div">
+	                <span>Pricing Profile:(Profile Name (Profile ID))</span>
+	                <select id="priceProfile" ng-model="form.fPriceProfile" ng-options="item.profile_id as item.profile_desc for item in priceProfileList" ng-change="reloadProfile()">
+		       	   </select>
+	            </div>
+				<div class="generals" id="price_procedure_div">
+		    		<span>Price Procedure:</span>
+		    		<div class="div_input">{{form.prcproc}}</div>
+		    	</div>
+	        </div>
+            <div class="four columns">
+	           <div class="generals">
+                    <span>Eprime Customer Type:</span>
+                    <div class="div_input">Multi</div>
+               </div>
+		       <div class="generals">
+                    <span>Categorization:</span>
+                    <div class="div_input">PM Level4</div>
+               </div>
+               <div class="generals">
+                    <span>Shop List Price Flag:</span>
+                    <div class="div_input">N</div>
+                </div>
+                <div class="generals" id="exchange_rate_type_div">
+                    <span>Exchange Rate Type:</span>
+                    <select ng-model="form.exchRateType" ng-options="item as item for item in exchangeRateList">
+		       	   </select>
+                </div>
+		    </div>
+        </div>
+        <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:0px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+		  	<div class="twelve columns">
+		    	<div class="generals">
+		    		<span class="twelve columns">Deal List:</span>
+    				<table id="search_result" class="TableBackground search_result" style="width:100%;">
+						<thead>
+							<tr class="TableHeaderRow">
+								<th><input type="checkbox" id="selectAll"></input></th>
+								<th>Deal ID</th>
+								<th>Default Price Descriptor</th>
+								<th>Deal Start Date</th>
+								<th>Deal End Date</th>
+								<th>Default Sales Country</th>
+								<th>Deal Type</th>
+								<th>Requestor</th>
+								<th>Approver</th>
+								<th>Last Update Date</th>
+								<th>Apply Deal Pricing Only</th>
+								<th>Contract Price List Type ID</th>
+								<th>Replacement for Deal ID</th>								
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+		    	</div>
+		    </div>
+		</div>
+		<div id="purchase_agreement_div">
+			 <div class="customer_rows">
+				<h1 class="h1Underline row" style="height:0px;"></h1>
+			</div>
+			<div class="customer_rows">
+				<div class="twelve columns">
+					<div class="generals">
+						<span class="twelve columns">Purchase Agreement:</span>
+						<table id="search_pa" class="TableBackground search_result" style="width: 100%;">
+							<thead>
+								<tr class="TableHeaderRow">
+									<th>New?</th>
+									<th>Purchase Agreement #</th>
+									<th>CAC Code</th>
+									<th>GEO Code</th>
+									<th>Price Term</th>								
+								</tr>
+							</thead>
+							<tbody>
+								<td><input style="margin-top: 15px;" type="checkbox" ng-model="form.isNewPaSelected" ng-click="TogglePaBoxChange();"></input></td>
+									<td><div id="patext" style="display:none;width:100%"><input type="text" ng-model="form.fPurchaseAgreementNo" maxlength="10"></input></div>
+										<div id="palist"><select ng-model="form.fPurchaseAgreementNo" style="width:100%" ng-options="item.pa_no + '~' + item.cac_code  + '~' + item.disc_geo  + '~' +item.prc_term_cd as item.pa_no for item in pa" ng-change="reloadPurchaseAgreement()">
+														 </select>
+										</div>
+									</td>
+									<td><select id="cacCode" ng-model="form.fCacCode" style="width:100%" ng-options="item.cac_code as item.cac_code for item in cac" ng-disabled="!form.isNewPaSelected"></select></td>
+									<td><select id="geoCode" ng-model="form.fGeoCode" style="width:100%" ng-options="item.geo_code as item.geo_code for item in geo" ng-disabled="!form.isNewPaSelected"></select></td>
+									<td><select id="priceTerm" ng-model="form.fPriceTerm" style="width:100%" ng-options="item.price_term as item.price_term for item in priceTerm" ng-disabled="!form.isNewPaSelected"></select></td>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div><font size="2" color="brown">* Allowed to enter new PA Account Details, Only when 'New' Checkbox is checked, Otherwise Existing PA Account is available for Selection.</font></div>
+		</div>
+	  	<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:0px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+		  	<div class="four columns">
+		    	<div class="generals">
+		    		<span>Include Standard Catalog:</span>
+		    		<select  ng-model="form.fIncludeFlag" ng-options="item.id as item.name for item in includeStandardMode">
+			       	</select>
+		    	</div>
+		    </div>
+		    <div class="four columns" id="apply_std_cat_pricing_div">
+		    	<div class="generals">
+		    		<span>Apply Standard Catalog Pricing:</span>
+		    		<input style="margin-top:5px;" type="checkbox" ng-model="form.fApplyStdPricing"/>
+		    	</div>
+		   	</div>
+		</div>
+		<div class="customer_rows">
+	   		<div class="three columns">
+		    	<div class="generals">
+	              <label>Available Catalogs</label>
+	              <select multiple size="10" ng-model="stdCatalogsLB" style="width: 100%;height:60px;margin-top:-5px;" ng-options="item as item.cat_catalog_name for item in availableStdCatalogs"></select>
+		        </div>
+	        </div>
+	        <div class="one columns" style="text-align: center; margin-top: 20px;">
+	        	<img alt="" width="25px" height="25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;" ng-click="selectStdCatalog()"/><br/>
+				<img alt="" width="25px" height="25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;" ng-click="deSelectStdCatalog()"/>
+	        </div>
+	    	<div class="three columns">
+	            <div class="generals">
+	              <label>Selected Catalogs</label>
+	              <select multiple size="10" style="width: 100%;height:60px;margin-top:-5px;" ng-model="stdCatalogsRB" ng-options="item as item.cat_catalog_name for item in selectedStdCatalogs"></select>
+	           </div>
+	    	</div>
+	    	<div class="three columns">
+	    		<div class="generals" style="margin-left: 30px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.configExcludeFlag"/>
+	    			<span style="float: none;">Exclude Configs:</span>
+                </div>
+                <div class="generals" style="margin-top: 5px;margin-left: 30px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fExcludeProdFlag"/>
+	    			<span style="float: none;">Exclude Products from Hierarchy</span>
+                </div>
+                <div class="generals" style="margin-top: 5px;margin-left: 30px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fCSIncludeFlag"/>
+	    			<span style="float: none;">Include Cross Sell</span>
+                </div>
+                <div class="generals" style="margin-top: 5px;margin-left: 30px;" id="excludeHStock">
+	    			<input class="form-chk" type="checkbox" ng-model="form.excludeHStockCodeFlag"/>
+	    			<span style="float: none;">Exclude H Stock Code</span>
+                </div>
+	    	</div>
+	    	<div class="two columns">
+	    		<div class="generals">
+	    			<input class="form-chk" type="checkbox" ng-model="form.plcCheck" />
+	    			<span style="float: none;">PLC Check</span>
+                </div>
+                <div class="generals" style="margin-top: 5px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fOfferEquivFlag"/>
+	    			<span style="float: none;">Offer Equivalent Part #</span>
+                </div>
+                <div class="generals" style="margin-top: 5px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fOrderCheckFlag" />
+	    			<span style="float: none;">LCLP Check</span>
+                </div>
+                <div class="generals" style="margin-top: 5px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fusionCheck" />
+	    			<span style="float: none;">OM Check</span>
+                </div>
+	    	</div>
+	    </div>
+        <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:5px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<div class="twelve columns">
+	    		<div class="generals">
+	              <span>Default Localization Option Categories:</span>
+                  <div class="div_input"/>
+	           	</div>
+	    	</div>
+	    	<div class="three columns">
+		    	<div class="generals">
+	              <label>Available</label>
+	              <select size="10" name="FromLB" ng-model="localizationLBVal" style="width: 100%;height:60px;margin-top:-5px;" ng-options="item as item.opt_category_name for item in allOptionList"></select>
+		        </div>
+	        </div>
+	        <div class="one columns" style="text-align: center; margin-top: 20px;">
+	        	<img alt="" width="25px" height="25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;" ng-click="localizationFromLB()"/><br/>
+				<img alt="" width="25px" height="25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;" ng-click="localizationFromRB()"/>
+	        </div>
+	    	<div class="three columns">
+	           <div class="generals">
+	              <label>Selected</label>
+	              <select size="10" name="ToLB" style="width: 100%;height:60px;margin-top:-5px;" ng-model="localizationRBVal" ng-options="item as item.opt_category_name for item in selOptionList"></select>
+	           </div>
+	    	</div>
+		</div>
+		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:0px;"></h1>
+	  	</div>
+		<div class="customer_rows">
+			<div class="four columns">
+		    	<div class="generals">
+	            	<label>Selected Localization Option Codes:</label>
+	              	<textarea style="width:75%;" rows="" cols="" ng-model="form.options" disabled=""> </textarea>
+	            </div>
+	        </div>
+	    	<div class="four columns">
+	            <div class="generals">
+	              <label>Selected Localization Option Countries:</label>
+	              <textarea style="width:75%;" rows="6" cols="1" ng-model="form.countries" disabled=""> </textarea>
+	              
+	           </div>
+	    	</div>
+	    	<div class="four columns">
+	            <div class="generals">
+	              <label>Comment:</label>
+	              <textarea style="width:75%;" ng-model="form.comment" maxlength="50"> </textarea>
+	           </div>
+	    	</div>
+			
+	    </div>
+	  	<div class="customer_rows" style="margin-top:5px;">
+	        <a class="btn btn-inline"  ng-click="saveCreatePriceTier()"><span id="save">Save</span></a> 
+	        <a class="btn btn-inline"  ng-click="cancelCreatePriceTier()"><span id="Cancel">Cancel</span></a>
+	        <a class="btn btn-inline"  ng-click="resetCreatePriceTier()"><span id="Cancel">Reset</span></a>
+	  	</div>
+    </div>
+    <input type="hidden" id="form.localeSelHidden" name="form.localeSelHidden"/>
+</div>

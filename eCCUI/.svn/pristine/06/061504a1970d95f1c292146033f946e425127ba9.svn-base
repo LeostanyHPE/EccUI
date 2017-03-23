@@ -1,0 +1,52 @@
+eccApp.controller('selectLanguageCrtl',['$scope', '$http','$timeout','webStorage',
+  function($scope, $http,$timeout,webStorage) {
+	$scope.successMessage = '';
+	$scope.errorMessage = '';
+
+	$scope.encodingList = [];
+	$scope.selectedEncoding = '';
+
+	$scope.init = function() {
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Select Language Task\"");
+		
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+		 $scope.selectedEncoding = webStorage.local.get('userEncoding');
+		if($scope.selectedEncoding==null || $scope.selectedEncoding==undefined ||$scope.selectedEncoding=='') {
+			$http.get("selectLanguage/getSelectedEncoding.htm").
+			  success(function(data) {	
+				  $scope.selectedEncoding = data;
+				  webStorage.local.add('userEncoding', data);
+			});
+		} 
+		
+	};
+
+	$scope.save = function() {
+		if($scope.selectedEncoding==undefined || $scope.selectedEncoding==''){
+			$scope.hideMsg();
+			$scope.showMsg('','Please select a language to be set successfully');
+			return false;
+		} else {
+			$scope.hideMsg();
+			webStorage.local.add('userEncoding', $scope.selectedEncoding);			
+			$scope.successMessage = "Language has been set successfully.";
+		}
+	};
+	
+	$scope.reset = function() {
+		$scope.selectedEncoding = webStorage.local.get('userEncoding');
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+	};
+	
+	$scope.showMsg = function(success, error) {
+		$scope.successMessage = success;
+		$scope.errorMessage = error;
+	};
+	$scope.hideMsg = function() {
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+	};
+}]);

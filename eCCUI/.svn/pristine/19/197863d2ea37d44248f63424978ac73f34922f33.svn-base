@@ -1,0 +1,188 @@
+<div class="row" ng-controller="quickManageCtrl" id="quickManageID" ng-init="loadQuickManageData()">
+  <div id="messageDiv"></div>
+  <div id="successMess" class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+  <div id="errorMess" class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+  
+  <div class="customer_rows" style="border: 4px solid #f2f2f2;margin-top:10px;">
+   		<div class="four columns" style="border-right: 4px solid #f2f2f2;">
+   			<div class="customer_rows" style="padding: 10px 0px 5px 10px;" >
+	 			<div class="generals">
+	              <label>Selected Catalogs :</label>
+	              <div class="div_input" style="  height: 80px; width: 100%;  margin-top: -5px;" >
+	              	<select multiple size="10" style="width: 70%;height:70px;margin-top: 0px;"  ng-model="selCatlogs" ng-options="item as item for item in selCatNames">
+					</select>
+	              </div>
+	            </div>
+	            <div class="generals">
+	                <a class="btn btn-inline" ng-click="reloadTreeData()">Reload</a>
+	            </div>
+		    </div>
+   			<div class="customer_rows" style="border-top: 4px solid #f2f2f2;overflow: auto;height: 735px;padding-top: 10px;">
+			   <div
+			   	  data-tree-idquickmanage = "quickmanageTree"
+			      data-angular-treeviewquickmanage ="true"
+			      data-tree-modelquickmanage ="treeData"
+			      data-node-idquickmanage ="id"
+			      data-node-labelquickmanage ="text"
+			      data-node-childrenquickmanage ="children" style="margin-left: -5px;">
+			    </div>  
+   			</div>
+   		</div>
+   		<div class="eight columns" style="padding: 2px 15px;overflow: auto;height: 860px;" >
+			 <div id = "searchProductsDiv">
+				<div class="customer_rows">
+					<h1 class="h1Underline">				
+						<div class="label-unit">
+							<span>Complex Product Search</span>
+						</div>
+					</h1>
+				</div>
+				<div class="customer_rows">
+		            <div class="two columns">
+		                  <div class="generals" >
+		                      <span style="width: 100%;">Search Product In :</span>
+		                  </div>
+		            </div>
+		            <div class="three columns">
+		                <div class="generals">
+		                	 <input type="radio" id="UNSPSCHierarchyId" style="float: left; margin-top: 5px;"  value="0" name="hierarchyName" checked ng-model="productFilter_UNSPSCHierarchy"></input>
+		                     <label style="padding: 5px 5px;">UNSPSC Hierarchy</label>
+		                </div>
+		            </div>
+		            
+		            <div class="three columns">
+		                <div class="generals">
+		                     <input type="radio" id="productPoolId" style="float: left; margin-top: 5px;"  value="1" name="hierarchyName" ng-model="productFilter_productPool"></input>
+		                     <label style="padding: 5px 5px;">Product Pool</label>					                
+		                </div>
+		            </div>
+			    </div>
+					    
+			    <div class="customer_rows" style="margin-top:5px;">
+		            <div class="four columns">
+		                <div class="generals">
+		                	<span >Search Parameter:</span>
+							<select  ng-model="productFilter_searchParameters" id="searchParameters">
+								<option value="">Select Prod Attribute</option> 
+								<option value="SKU">Product SKU</option>
+								<option value="SHORT_DESC">Product Short Desc</option>
+								<option value="CLASS_CODE">Product Class Code</option>
+								<option value="MFG_ID">Product Mfg ID</option>
+								<option value="MFG_NAME">Product Mfg Name</option>
+								<option value="CUST_SKU">Customer Specific SKU</option>
+								<option value="STOCK_CODE">Product Stock Code</option>
+								<option value="ACTIVITY_CODE">Product Activity Code</option>
+								<option value="VISION_FLAG">Product Vision Flag</option>
+								<option value="HIERARCHY">Product Hierarchy</option>
+				       		</select>			
+			       		 </div>
+		            </div>
+		            <div class="four columns">
+		                <div class="generals">
+							 <span>Keyword:</span>
+		                     <input type="text" id="keywordId"  value=""  ng-model="productFilter_keyWord"></input>		
+		                 </div>
+		    		</div>
+		    		<div class="four columns">
+		                <div class="generals">
+		                	<span>Product Line:</span>
+							<select ng-model="productFilter_productLine" id="productFilter_productLine" ng-options="item.pl as item.pl_desc for item in plList" ng-change="changeEventOfPL()">    
+			       		   	</select>
+			       		 </div>
+		            </div>	
+			  </div>
+			  <div class="customer_rows">
+		            <div class="four columns">
+		            	<div class="generals">
+	                    	<span style="width:100%">Discontinue Date:</span>
+	                  	</div>
+		              	<div class="generals">
+		                  	<span>After</span>
+               			  	<input type="text" id="discontinueDateAfter" class="discontinueDateAfter" value="" ng-model="discontinueDateAfter"></input>
+		              	</div>
+		              	<div class="generals">
+							<span>Before</span>
+               				<input type="text" id="discontinueDateBefore" class="discontinueDateBefore" value="" ng-model="discontinueDateBefore"></input>
+		           		</div>
+		            </div>
+		            <div class="four columns">
+		                <div class="generals">
+		                     <span style="width:100%">End of Life Date:</span>
+		                </div>
+		                <div class="generals">
+		                    <span>After</span>
+		            		<input type="text" id="endOfLifeDateAfter" class="endOfLifeDateAfter" value="" ng-model="endOfLifeDateAfter"></input>
+		                </div>
+		                <div class="generals">
+							<span>Before</span>
+			            	<input type="text" id="endOfLifeDateBefore" class="endOfLifeDateBefore" value="" ng-model="endOfLifeDateBefore"></input>
+			          	</div>
+		    		</div>
+		    		<div class="four columns">
+		               <div class="generals">
+		                  <span style="width:100%">Last Modified Date:</span>
+		               </div>
+		               <div class="generals">
+		                  <span>After</span>
+		   				  <input type="text" id="lastModifiedDateAfter" class="lastModifiedDateAfter" value="" ng-model="lastModifiedDateAfter"></input>
+		               </div>
+		               <div class="generals">
+						  <span>Before</span>
+		            	  <input type="text" id="lastModifiedDateBefore" class="lastModifiedDateBefore" value="" ng-model="lastModifiedDateBefore"></input>
+		          	   </div>
+		            </div>
+			  </div>
+			  <div class="search">
+	             <a class="btn btn-inline"  ng-click="searchFunction()">Search</a>
+	             <a class="btn btn-inline" id="testBtn"  ng-click="resetFunction()">Reset</a>
+		      </div>
+			</div>
+			<div class="customer_rows">
+				<h1 class="h1Underline" style="height:0px;"></h1>
+			</div>
+			<div id="productResultsDiv">
+				<div id="noRecordsFoundId" style="display:block;">
+					<div class="customer_rows">
+				      	<div class="twelve columns">
+				      		<div class="generals">
+								<span id="message" style="color: green;">No Products Found.</span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="recordsFoundId" style="display:none;">
+				     <div class="customer_rows">
+				      	<div class="twelve columns">
+							<section>
+								<div id="productsListDiv" style="display:none;">
+									<table id="search_result" class="TableBackground search_result" style="display:none;">
+										<thead>
+											<tr class="TableHeaderRow">
+												<th>Hidden</th> 
+												<th>Add</th>
+												<th>Del</th>
+												<th>Prod</th>
+												<th>Descriptor</th>
+												<th>Catalog Availability</th>
+												<th>Orderable</th>
+												<th>Discontinue Date</th>
+												<th>Discontinue Flag</th>
+												<th>End Of Life</th>
+												<th>Open Category</th>	
+											</tr>
+										</thead>
+										<tbody></tbody>
+									</table>
+								</div>
+							</section>
+						</div>
+    				 </div>
+    				 <div class="search">
+				         <a class="btn btn-inline"  ng-click="saveChangesToProductsFunction()">Save Changes</a>
+				        <!--  <a class="btn btn-inline"  ng-click="cancelFunction()">Cancel</a> -->
+				     </div>
+   				</div>
+			</div>
+   		</div>
+   </div>
+</div>

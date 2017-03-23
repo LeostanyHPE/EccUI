@@ -1,0 +1,32 @@
+<div class="row" ng-controller="copySogCtrl" ng-init="loadCopySog()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}}</div>
+	<div class="alert error" ng-show="errorMessage!=''">{{errorMessage}}</div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Copy Standard Offering Group</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="four columns">
+			<div class="generals">
+				<span>SOG ID:</span>
+				<div class="div_input">{{form.sogId}}</div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>SOG Name:</span> <input type="text" ng-model="form.sogName"></input>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>SOG Description:</span>
+				<textarea rows="6" cols="1" ng-model="form.sogDescription"> </textarea>
+			</div>
+		</div>
+		<div class="search">
+			<a class="btn btn-inline" ng-click="copySog()">Create</a> 
+			<a class="btn btn-inline" ng-click="cancelCopySog()">Cancel</a>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,694 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.sog;
+
+import hp.comcat.dax.fwk.common.util.StrUtil;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.bundle.BundleSearchCriteria;
+import com.hp.ecc.ui.biz.catalog.ProgramForm;
+import com.hp.ecc.ui.biz.csog.CsogConstants;
+import com.hp.ecc.ui.biz.csog.SogBundleTemplate;
+import com.hp.ecc.ui.biz.csog.SogCatalogBundleGUIObject;
+import com.hp.ecc.ui.biz.csog.SogItem;
+import com.hp.ecc.ui.biz.csog.SogManager;
+import com.hp.ecc.ui.biz.csog.SogPropagationInfo;
+import com.hp.ecc.ui.biz.misc.Country;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.db.dao.SogDao;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.view.beans.SogAssignBundleTemplateForm;
+import com.hp.ecc.ui.view.beans.SogBundleTemplateExceptionForm;
+import com.hp.ecc.ui.view.beans.SogStdCatalogForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author duvvurso
+ *
+ */
+@Service
+public class SogBundleTemplateProcessor {
+	
+	SogDao sogDao = null;
+	
+	public SogBundleTemplateProcessor(){
+		sogDao = new SogDao();
+	}
+
+	
+	private static final Logger logger = LoggerFactory.getLogger(SogBundleTemplateProcessor.class);
+	
+	public JSONObject processRetrieve( SogAssignBundleTemplateForm form, String loginUserId, String regionCode, String dbRegionToConnect) {
+		
+		Gson gson = new Gson();
+		String sogId = form.getSogId();
+		String sogName = form.getSogName();
+		JSONObject jObj = new JSONObject();
+
+		// Create Bundle search criteria object from parameters in form
+		BundleSearchCriteria criteria = new BundleSearchCriteria();
+		
+			criteria.setSogId(sogId);
+			criteria.setID(form.getTemplateID());
+			criteria.setName(form.getTemplateName());
+			criteria.setUserRole(loginUserId);
+			criteria.setRegionCode(regionCode);
+			criteria.setEndDateFrom(form.getEndDateFrom());
+			criteria.setEndDateTo(form.getEndDateTo());
+			criteria.setStartDateFrom(form.getStartDateFrom());
+			criteria.setStartDateTo(form.getStartDateTo());
+			criteria.setIncludedProd(form.getPart());
+			criteria.setSearchAssignedOnly(form.getIsSearchAssignedOnly());
+			criteria.setStatus(form.getStatus());
+
+			logger.debug("~~~~~~ SET search criteria to session");
+	
+
+		SogManager sogMgr = new SogManager();
+		// get list of generic bundle templates
+		List genericBTList = getGenericBundleTemplatesForSog(criteria, dbRegionToConnect);
+
+		// set the indexes for assigned bundle templates to displayed them as
+		// selected.
+		ArrayList assignedBundleTemplateIndexes = new ArrayList();
+
+		if (!StrUtil.isListEmpty(genericBTList)) {
+			for (int i = 0; i < genericBTList.size(); i++) {
+				SogBundleTemplate currBTItem = (SogBundleTemplate) genericBTList
+						.get(i);
+				if ("N".equalsIgnoreCase(currBTItem.getDeleteFlag())) {
+					assignedBundleTemplateIndexes.add("" + i);
+				}
+			}
+		}
+		form.setSelectedBundleTemplates((String[]) assignedBundleTemplateIndexes.toArray(new String[0]));
+
+		if (!StrUtil.isListEmpty(genericBTList)) {
+			form.setBundleTemplateList(genericBTList);
+			// if bundle templates are present only then check if propagate
+			// button needs to be enabled
+			SogPropagationInfo propagationInfo = sogMgr.getSogPropagationInfo(sogId, CsogConstants.BNDL_TMPL, dbRegionToConnect);
+			form.setPropagateFlag(propagationInfo.getPropagationFlag());
+		}
+		
+		 jObj.put("form", gson.toJson(form));
+		 
+		 return jObj;
+	}
+	
+	
+	  /**
+	   * Invoked when user selects/unselects bundle templates to assign/unassign to SOG.
+	   * The method determines the list of bundle templates to be newly assigned and
+	   * the bundle templates whose delete flag needs to be updated and invokes the
+	   * assignUnassignBundleTemplates() method on SogManager.
+	   * Finally the  bundle templates propagate flag should be enabled for the
+	   * Bundle template inheritable default item.
+	   *
+	   *
+	   */
+	  public JSONObject processUpdateSelection ( SogAssignBundleTemplateForm form, String loginUserId, String regionCode, String dbRegionToConnect ) {
+
+		//SogManager sogMgr = new SogManager();
+	    String sogId = form.getSogId ();
+
+	    String[] selectedBundleTemplates = form.getSelectedBundleTemplates ();
+
+	    // allBundleTemplateIds array contains value templateId;deleteFlag for all the bundle
+	    // templates in the current page.
+	    String[] allBundleTemplateIds = form.getAllBundleTemplateIds ();
+
+	     /*Constucts 2 list of bundle templates from the allBundleTemplateIds array
+	     * a) bundle templates  to be newly assigned to SOG.
+	     * b) already assigned Bundle templates whose delete flag needs to be updated as 'Y' or 'N'
+	     */
+	    SogItem sogItem = null;
+	    int len = 0;
+	    if ( allBundleTemplateIds != null ) {
+	      List updateBundleTemplateList = new ArrayList ();
+	      List assignBundleTemplateList = new ArrayList ();
+
+	      len = allBundleTemplateIds.length;
+
+	      //initialize bundleTemplateDeleteFlags array to value 'Y' for
+	      // unselected  bundl templ and 'N' for selected bundle templ
+	      String bundleTemplateDeleteFlags[] = new String[len];
+	      for ( int i = 0; i < bundleTemplateDeleteFlags.length; i++ ) {
+	        bundleTemplateDeleteFlags[i] = "Y";
+	      }
+	      if ( selectedBundleTemplates != null ) {
+	        for ( int i = 0; i < selectedBundleTemplates.length; i++ ) {
+	          int selectPosition = Integer.parseInt ( selectedBundleTemplates[i] );
+	          bundleTemplateDeleteFlags[selectPosition] = "N";
+	        }
+	      }
+	      ArrayList currBundleTemplate = null;
+	      for ( int i = 0; i < allBundleTemplateIds.length; i++ ) {
+	        //get the template id  and the db value of delete flag by
+	        // splitting templateId;deleteFlag value from array allBundleTemplateIds
+	        String originalBTDeleteFlag = null;
+	        String bundleTemplateid = null;
+	        currBundleTemplate = StrUtil.split ( allBundleTemplateIds[i], ";" );
+	        if ( currBundleTemplate != null ) {
+	          bundleTemplateid = ( String ) currBundleTemplate.get ( 0 );
+
+	          try {
+	            originalBTDeleteFlag = ( String ) currBundleTemplate.get ( 1 );
+	          }
+	          catch ( IndexOutOfBoundsException ie ) {
+	            //delete flag will be null for bundle templates not assigned to CSOG 	
+	          }
+	        }
+	        if ( bundleTemplateDeleteFlags[i].equalsIgnoreCase (
+	            originalBTDeleteFlag ) ) { // User did not change bundle template delete flag in the browser
+	          // Hence no action is required for the current bundle template
+	        }
+	        else {
+	          logger.debug ( "Current Bundle Template : " + bundleTemplateid );
+	          logger.debug ( "Delete flag value as per user selection : "
+	                      + bundleTemplateDeleteFlags[i] );
+	          logger.debug ( "Database Delete flag value   : " + originalBTDeleteFlag );
+	          if ( originalBTDeleteFlag == null ) {
+	            // When originalBTDeleteFlag value is null indicating bundle template not assigned to SOG
+	            // and user selects the bundle template(delete flag 'N')
+	            //  then assign new item to SOG
+	            if ( "N".equalsIgnoreCase ( bundleTemplateDeleteFlags[i] ) ) {
+	              logger.debug ( "ASSIGN NEW BUNDLE TEMPLATE TO SOG - "
+	                          + bundleTemplateid );
+	              sogItem = getNextSogItemKey (dbRegionToConnect);
+	              sogItem.setItemKey ( sogId + "-ITEM-" + sogItem.getItemKey () );
+	              initializeSogItem ( sogItem, sogId, bundleTemplateid
+	                                  , bundleTemplateDeleteFlags[i], loginUserId );
+	              assignBundleTemplateList.add ( sogItem );
+	            }
+	          }
+	          else {
+	            //originalBTDeleteFlag not null indicating item already exists for SOG.
+	            // and delete flag changed then Update SOg item
+	            logger.debug ( "UPDATE DELETE FLAG FOR BUNDLE TEMPLATE IN SOG - "
+	                        + bundleTemplateid );
+	            sogItem = new SogItem ();
+	            initializeSogItem ( sogItem, sogId, bundleTemplateid
+	                                , bundleTemplateDeleteFlags[i], loginUserId );
+	            updateBundleTemplateList.add ( sogItem );
+	          }
+
+	        }
+	      }
+	      //propInfo - to update propagate flag to 'Y' for bundle template item.
+	      SogPropagationInfo propInfo = new SogPropagationInfo ();
+	      propInfo.setSogId ( sogId );
+	      propInfo.setSogItemCode ( IApplicationConstants.BNDL_TMPL );
+	      propInfo.setPropagationFlag ( SogManager.YES );
+
+		  boolean errStatus = assignUnassignBundleTemplates ( assignBundleTemplateList, updateBundleTemplateList, propInfo, dbRegionToConnect );
+	    }
+	    return processRetrieve ( form, loginUserId, regionCode, dbRegionToConnect );
+	    
+	  }//processUpdateSelectionBundleTemplate
+	  
+	  
+	private void initializeSogItem(SogItem sogItem, String sogId, String bundleTemplateId, String bundleTemplateDeleteFlag, String loginUserID) {
+		if (sogItem != null) {
+			sogItem.setSogId(sogId);
+			sogItem.setItemCode(IApplicationConstants.BNDL_TMPL);
+			sogItem.setItemValue(bundleTemplateId);
+			sogItem.setDeleteFlag(bundleTemplateDeleteFlag);
+			sogItem.setLastModifiedBy(loginUserID);
+			sogItem.setStatusFlag("I");
+		}
+
+	}//initializeSogItem
+	
+	
+	public List getGenericBundleTemplatesForSog(BundleSearchCriteria criteria, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		return sogDao.getSogBundleTemplates(IApplicationConstants.GROUP_SOG_BUNDLE_TEMPLATE_QUERY, IApplicationConstants.GET_GENERIC_BUNDLE_TEMPLATE_QUERY, criteria, criteria, dbRegionToConnect);
+	}//getGenericBundleTemplatesForSog
+	
+	public SogItem getNextSogItemKey(String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		SogItem sogItem = new SogItem ();
+	    List sogItemKeyList= sogDao.getNextSogItemKey(IApplicationConstants.GROUP_SOG_ITEM_QUERY, IApplicationConstants.GET_SOG_ITEM_NEXT_SEQ, sogItem, sogItem, dbRegionToConnect);
+	    return ( SogItem ) sogItemKeyList.get ( 0 );
+	}//getNextSogItemKey
+	
+	public boolean assignUnassignBundleTemplates(List assignBundleTemplateList, List updateBundleTemplateList, SogPropagationInfo propInfo, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		return sogDao.assignUnassignBundleTemplates( assignBundleTemplateList, updateBundleTemplateList, propInfo, dbRegionToConnect);
+	}//assignUnassignBundleTemplates
+	
+	
+	public String processUpdateException( SogBundleTemplateExceptionForm form, String loginUserId, String regionCode, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		
+	    SogManager sogMgr = new SogManager ();
+	    String sogId = form.getSogId ();
+	    String templateId = form.getTemplateID ();
+	    //String loginUserID = PagesUtil.getLoginUserID ( request );
+	    String[] selectedCatalogBundles = form.getSelectedCatalogBundles ();
+	    String[] dbCatalogBundles = form.getDBCatalogBundles ();
+	    String[] dbCatalogBundleOptions = form.getDBCatalogBundleOptions ();
+
+	    // Get the array from form for each of the catalog bundle options
+	    String[] bundleName = form.getBundleName ();
+	    String[] programKey = form.getProgramKey ();
+	    String[] optionCodes = form.getOptionCodes ();
+	    String[] cntryCodes = form.getCntryCodes ();
+
+	    /* Constucts list of catalog bundle exceptions objects the dbCatalogBundles array
+	     * a) Exceptions to be added with include or Exclude flag.( AI and AE)
+	     * b) Exceptions whose include exclude needs to be updated. (U)
+	     * c) Included Exceptions whose options have been modified (M)
+	     */
+
+	    int len = 0;
+	    if ( dbCatalogBundles != null ) {
+	      List catalogBundlesList = new ArrayList ();
+	      logger.debug ( "DB CATALOG BUNDLE " + dbCatalogBundles.length );
+	      len = dbCatalogBundles.length;
+
+	      String catalogBundleInclExclFlags[] = new String[len];
+	      // initialize the catalogBundleInclExclFlags to "E' for unselected
+	      // catalog bundles and 'I' for selected.
+	      for ( int i = 0; i < catalogBundleInclExclFlags.length; i++ ) {
+	        catalogBundleInclExclFlags[i] = "E";
+	      }
+	      if ( selectedCatalogBundles != null ) {
+	        for ( int i = 0; i < selectedCatalogBundles.length; i++ ) {
+	          int selectPosition = Integer.parseInt ( selectedCatalogBundles[i] );
+	          catalogBundleInclExclFlags[selectPosition] = "I";
+	        }
+	      }
+	      String dbIncludeExcludeFlag = null;
+	      String catalogID = null;
+	      String customerKey = null;
+	      for ( int i = 0; i < dbCatalogBundles.length; i++ ) {
+	        // Get the master catalog bundle info as currently in DB
+	        ArrayList currCatalogBndl = StrUtil.split ( dbCatalogBundles[i], ";" );
+	        catalogID = ( String ) currCatalogBndl.get ( 0 );
+	        customerKey = ( String ) currCatalogBndl.get ( 1 );
+	        try {
+	          dbIncludeExcludeFlag = ( String ) currCatalogBndl.get ( 2 );
+
+	        }
+	        catch ( IndexOutOfBoundsException ie ) {
+	          //incl exclude flag will be null for master catalogs not set as exceptions	
+	          dbIncludeExcludeFlag = null;
+	        }
+
+	        // Get the exception options for this master catalog
+	        ArrayList dbCatalogBundleOption = StrUtil.splitWithEmptyInList (
+	            dbCatalogBundleOptions[i], ";" );
+	        logger.debug ( "Array List is " + dbCatalogBundleOption );
+	        String dbBundleName = ( String ) dbCatalogBundleOption.get ( 0 );
+	        String dbProgram = ( String ) dbCatalogBundleOption.get ( 1 );
+	        String dbOptionCodes = ( String ) dbCatalogBundleOption.get ( 2 );
+	        String dbOptionCntry = ( String ) dbCatalogBundleOption.get ( 3 );
+
+	        if ( catalogBundleInclExclFlags[i].equalsIgnoreCase (
+	            dbIncludeExcludeFlag ) ) { // User did not change product include exclude flag in the page
+	          //  Check if user has modified any options
+	          if ( "I".equalsIgnoreCase ( dbIncludeExcludeFlag ) ) {
+	             if ( !bundleName[i].equalsIgnoreCase ( dbBundleName ) ||
+	                 !programKey[i].equalsIgnoreCase ( dbProgram ) ||
+	                 !optionCodes[i].equalsIgnoreCase ( dbOptionCodes ) ||
+	                 !cntryCodes[i].equalsIgnoreCase ( dbOptionCntry ) ) {
+				  logger.debug ( "ALREADY INCLUDED MASTER CATALOG -  OPTIONS MODIFIED " );
+	              SogCatalogBundleGUIObject catalogBundle = new
+	                  SogCatalogBundleGUIObject ();
+	              catalogBundle.setCatalogID ( catalogID );
+	              catalogBundle.setCustomerKey ( customerKey );
+	              catalogBundle.setIncludeExcludeFlag ( "I" );
+	              catalogBundle.setDbOperationFlag ( "M" );
+	              catalogBundlesList.add ( catalogBundle );
+	              // determine which exception option has been modefied.
+	              // Set value as NOT_MODIFIED if eception option is not changed
+	              if ( !bundleName[i].equalsIgnoreCase ( dbBundleName ) ) {
+	                catalogBundle.setBundleName ( bundleName[i] );
+	              }
+	              else {
+	                catalogBundle.setBundleName ( IApplicationConstants.NOT_MODIFIED );
+	              }
+	              if ( !programKey[i].equalsIgnoreCase ( dbProgram ) ) {
+	                catalogBundle.setProgramKey ( programKey[i] );
+	              }
+	              else {
+	                catalogBundle.setProgramKey ( IApplicationConstants.NOT_MODIFIED );
+	              }
+	              if ( !optionCodes[i].equalsIgnoreCase ( dbOptionCodes ) ) {
+	                catalogBundle.setOptionCodes ( optionCodes[i] );
+	              }
+	              else {
+	                catalogBundle.setOptionCodes ( IApplicationConstants.NOT_MODIFIED );
+	              }
+	              if ( !cntryCodes[i].equalsIgnoreCase ( dbOptionCntry ) ) {
+	                catalogBundle.setCntryCodes ( cntryCodes[i] );
+	              }
+	              else {
+	                catalogBundle.setCntryCodes ( IApplicationConstants.NOT_MODIFIED );
+	              }
+	            }
+
+	          }
+
+	        }
+	        else {
+	          logger.debug ( "Master Catalog Id : " + catalogID );
+	          logger.debug ( "Selected  as exception  : "
+	                      + catalogBundleInclExclFlags[i] );
+	          logger.debug ( "Originally included as exception  : "
+	                      + dbIncludeExcludeFlag );
+	          SogCatalogBundleGUIObject catalogBundle = new
+	              SogCatalogBundleGUIObject ();
+	          catalogBundle.setCatalogID ( catalogID );
+	          catalogBundle.setCustomerKey ( customerKey );
+	          catalogBundle.setIncludeExcludeFlag ( catalogBundleInclExclFlags[i] );
+
+	          // For newly included exception
+	          if ( dbIncludeExcludeFlag == null ) {
+	            if ( "I".equalsIgnoreCase ( catalogBundleInclExclFlags[i] ) ) {
+	              logger.debug (
+	                  "-----> Add new catalog bundle as Exception-incl/excl flag as I"
+	                  + catalogID );
+
+	              catalogBundle.setBundleName ( bundleName[i] );
+	              catalogBundle.setProgramKey ( programKey[i] );
+	              catalogBundle.setOptionCodes ( optionCodes[i] );
+	              catalogBundle.setCntryCodes ( cntryCodes[i] );
+	              catalogBundle.setDbOperationFlag ( "AI" );
+	              catalogBundlesList.add ( catalogBundle );
+	            }
+	            if ( "E".equalsIgnoreCase ( catalogBundleInclExclFlags[i] ) ) {
+	              logger.debug (
+	                  "-----> Add new catalog bundle as Exception with incl/excl flag as E "
+	                  + catalogID );
+
+	              catalogBundle.setBundleName ( bundleName[i] );
+	              catalogBundle.setProgramKey ( programKey[i] );
+	              catalogBundle.setOptionCodes ( optionCodes[i] );
+	              catalogBundle.setCntryCodes ( cntryCodes[i] );
+	              catalogBundle.setDbOperationFlag ( "AE" );
+	              catalogBundlesList.add ( catalogBundle );
+	            }
+
+	          }
+	          //for excluded exception
+	          else {
+	         
+	            if("E".equalsIgnoreCase ( catalogBundleInclExclFlags[i])){
+					logger.debug (
+								 "-----> Update Incl-Excl flag for Catalog bundle- dbOp = UE "
+								 + catalogID );
+	            	catalogBundle.setDbOperationFlag ( "UE" );
+	            }
+	            else {
+					logger.debug ( "-----> Update Incl-Excl flag for Catalog bundle- dbOp = UI "
+												 + catalogID );
+					catalogBundle.setBundleName ( bundleName[i] );
+					catalogBundle.setProgramKey ( programKey[i] );
+					catalogBundle.setOptionCodes ( optionCodes[i] );
+					catalogBundle.setCntryCodes ( cntryCodes[i] );
+					catalogBundle.setDbOperationFlag ( "UI" );
+	            	
+	            }
+	            catalogBundlesList.add ( catalogBundle );
+
+	          }
+
+	        }
+	      }
+	      SogCatalogBundleGUIObject[] array = ( SogCatalogBundleGUIObject[] )catalogBundlesList.toArray ( new SogCatalogBundleGUIObject[0] );
+
+	      // update exceptions
+	      sogMgr.updateBundleTemplateExceptions (
+	          sogId,
+	          templateId,
+	          loginUserId,
+	          ( SogCatalogBundleGUIObject[] ) catalogBundlesList.toArray ( new SogCatalogBundleGUIObject[0] ),
+	          dbRegionToConnect);
+
+	    }
+	    return processRetrieveException(form, loginUserId, regionCode, dbRegionToConnect);
+
+		
+		
+		//return null;
+	    
+	}//processUpdateBundleTemplateException
+
+
+	public String processRetrieveException(SogBundleTemplateExceptionForm form, String loginUserId, String regionCode, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+
+		SogManager sogMgr = new SogManager ();
+	    JSONObject jObj = new JSONObject();
+
+	    // get country list and price descriptor for search criteria
+	    String cntryList = getCountryListByRegion ( regionCode, dbRegionToConnect );
+	    jObj.put("countryList", cntryList);
+	    String cntryCode = form.getCountry ();
+	    String prcDescList = getPriceDescriptorListByCountry ( cntryCode, null, regionCode, dbRegionToConnect );
+	    jObj.put("prcDescList", prcDescList);
+
+	    String cntry = form.getCountry ();
+	    logger.debug ( "COUNTRY SELECTED BY USER ---> " + cntry );
+	    if ( cntry != null && SogManager.REGION_SPECIFIC.equalsIgnoreCase ( cntry ) ) {
+	      cntry = null;
+
+	    }
+	    String prcDesc = form.getPrcDescriptor ();
+	    logger.debug ( "PRICE DESCRIPTOR SELECTED BY USER ---> " + prcDesc );
+	    if ( prcDesc != null
+	         && "Select Price Descriptor".equalsIgnoreCase ( prcDesc ) ) {
+	      prcDesc = null;
+
+	    }
+
+	    List catalogBundleList = sogMgr.getMasterCatalogsForBundlTemplException (
+	        form.getSogId (), form.getTemplateID (), form.getTemplateName ()
+	        , form.getCustID (),
+	        form.getCustName (), form.getCatalogId (), form.getCatalogName ()
+	        , cntry,
+	        prcDesc, regionCode, form.getIsSearchExculdedOnly (), dbRegionToConnect );
+	    
+	    ArrayList includedCatalogBundles = new ArrayList ();
+
+	    // display bundle templates with include/exclude falg as 'Y' as selected.
+	    // Also by default if exception not set for master catalog (incl/excl flag null)
+	    // show as selected
+	    if ( !StrUtil.isListEmpty ( catalogBundleList ) ) {
+	      for ( int i = 0; i < catalogBundleList.size (); i++ ) {
+	        SogCatalogBundleGUIObject catalogBundlItem = ( SogCatalogBundleGUIObject ) catalogBundleList.get ( i );
+	        if ( "I".equalsIgnoreCase ( catalogBundlItem.getIncludeExcludeFlag () )
+	             || catalogBundlItem.getIncludeExcludeFlag () == null ) {
+	          includedCatalogBundles.add ( "" + i );
+	        }
+	        List programs = new ArrayList ();
+	        if ( catalogBundlItem.getCustProgramKeyNames().length <= 0 ) {
+	        	programs.add(new ProgramForm());
+	          }else {
+	          
+	        	  for ( int j = 0; j < catalogBundlItem.getCustProgramKeyNames().length; j++ ) {
+	        		  ProgramForm pgm = new ProgramForm();
+	        		  List pgmKeyName = StrUtil.split ( catalogBundlItem.getCustProgramKeyNames()[j], "^" );
+	        		  pgm.setfPgmKey( ( String ) pgmKeyName.get ( 0 ) );
+	        		  pgm.setfPgmName( ( String ) pgmKeyName.get ( 1 ) );
+	        		  programs.add ( pgm );
+	        	  }
+	          }
+	        catalogBundlItem.setfPrograms(programs);
+	        
+	       
+	      }
+	      List catBundleList = new ArrayList();
+	      catBundleList.addAll(catalogBundleList);
+		    if ( !StrUtil.isListEmpty ( catalogBundleList ) ) {
+		    	SogCatalogBundleGUIObject catalogBundlItem = null;
+		      for ( int i = 0; i < catalogBundleList.size (); i++ ) {
+		        catalogBundlItem = ( SogCatalogBundleGUIObject ) catalogBundleList.get ( i );
+		        SogCatalogBundleGUIObject catalogBundlItemj = null;
+		        for (int j=0;j<i;j++){
+		        	catalogBundlItemj = ( SogCatalogBundleGUIObject ) catalogBundleList.get ( j );
+		        	if (catalogBundlItem.getCatalogID().equalsIgnoreCase(catalogBundlItemj.getCatalogID()) && catalogBundlItem.getExistingBundleInstances().equalsIgnoreCase(catalogBundlItemj.getExistingBundleInstances()))
+		        		catBundleList.remove(catalogBundlItem);
+		        }
+		      }
+		    }
+	      catalogBundleList = catBundleList;
+	      form.setSelectedCatalogBundles ( ( String[] ) includedCatalogBundles.
+	                                       toArray ( new String[0] ) );
+	      form.setCatalogBundleList ( catalogBundleList );
+	    } else{
+	    	jObj.put("error", "No Catalog Masters found matching the search criteria.");
+	    	return jObj.toJSONString();
+	    }
+			    
+	    jObj.put("form", new Gson().toJson(form));
+		return jObj.toJSONString();
+	}//processRetrieveBundleTemplateException
+	
+	
+	public String processFwdToPage(boolean pFlag, String regionCode,
+			Object form, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+
+		SogManager mgr = new SogManager();
+		JSONObject jObj = new JSONObject();
+
+		jObj.put("form", new Gson().toJson(form));
+		// get country list and price descriptor for search criteria
+		String cntryList = getCountryListByRegion(regionCode, dbRegionToConnect);
+		jObj.put("countryList", cntryList);
+		String cntryCode;
+		String prcDescList = null;
+		if (!pFlag) {
+			SogBundleTemplateExceptionForm form0 = (SogBundleTemplateExceptionForm) form;
+			cntryCode = form0.getCountry();
+			prcDescList = getPriceDescriptorListByCountry(cntryCode, null,
+					regionCode, dbRegionToConnect);
+		} else {
+			SogStdCatalogForm form0 = (SogStdCatalogForm) form;
+			// cntryCode = form0.getCountry();
+			// if(form0!=null){
+			if (form0.getSogStdCatCountries() != null
+					&& !(form0.getSogStdCatCountries())
+							.equals(SogManager.REGION_SPECIFIC)) {
+				List countriesList = new ArrayList();
+				countriesList.add(form0.getSogStdCatCountries());
+
+				prcDescList = getPriceDescriptorListByCountry(null,
+						countriesList, regionCode, dbRegionToConnect)
+						.toString();
+				// }
+			} else {
+				prcDescList = getPriceDescriptorListByCountry(null, null,
+						regionCode, dbRegionToConnect).toString();
+			}
+		}
+		jObj.put("prcDescList", prcDescList);
+		return jObj.toJSONString();
+	}// processFwdToPage
+	
+	
+	public String getCountryListByRegion(String regionCode, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		
+		List list = new ArrayList();
+		
+		 Country country = new Country ();
+		 country.setRegionCode ( regionCode );
+		 if ( regionCode.equals ( IApplicationConstants.CONST_GOBAL_REG ) ) {
+			 list = sogDao.getCountryListByRegion(IApplicationConstants.sqlGroupId,IApplicationConstants.CONST_GET_COUNTRY_BY_GLOBAL,country,country, dbRegionToConnect);
+		 }else{
+			 list = sogDao.getCountryListByRegion(IApplicationConstants.sqlGroupId,IApplicationConstants.CONST_GET_COUNTRY_BY_REGION,country,country, dbRegionToConnect);
+		 }
+		
+		   if ( list == null ) {
+			      list = new ArrayList();
+
+			    }
+			    Country c = new Country ();
+			    c.setCountryName ( "Select Country" );
+			    c.setCountryCode ( IApplicationConstants.REGION_SPECIFIC );
+			    list.add ( 0, c );
+			    
+			    if(!"GL".equalsIgnoreCase(regionCode)){
+				    Country c1 = new Country ();
+				    c1.setCountryName ( "All Country" );
+				    c1.setCountryCode ( "all_country" );
+				    list.add ( 1, c1 );
+			    }
+			    
+		   return new Gson().toJson(list);
+
+	}//getCountryListByRegion
+	
+	public String getPriceDescriptorListByCountry(String cntryCode, List countriesList, String regionCode, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		
+		JSONArray list = new JSONArray();
+	    if ( countriesList==null && (cntryCode == null || IApplicationConstants.REGION_SPECIFIC.equalsIgnoreCase ( cntryCode ) || "".equalsIgnoreCase ( cntryCode ) )) {
+	        DaxDataBeanGeneral whereBean = new DaxDataBeanGeneral ();
+	        StringBuffer whereClause = new StringBuffer ();
+	        whereClause.append ( "where region_code ='" + regionCode + "'" );
+	        whereBean.setString1 ( whereClause.toString () );
+
+	    	
+	        list = sogDao.getPriceDesc ( IApplicationConstants.CONST_STMT_GRP_ID, IApplicationConstants.CONST_GET_PRICE_DESC_BY_REGION, whereBean, whereBean, dbRegionToConnect);
+	       }
+	       else if(countriesList==null) {
+	         list = getPriceDescByCountry ( cntryCode, dbRegionToConnect );
+	       }else{
+	    	   DaxDataBeanGeneral whereBean = new DaxDataBeanGeneral ();
+			   String whereClause = getPriceDescByCountrysWhereClause ( countriesList );
+			   whereBean.setString1 ( whereClause );
+	    	   //list = getPriceDescByCountries ( countriesList );
+			    list = sogDao.getPriceDesc ( IApplicationConstants.CONST_STMT_GRP_ID, IApplicationConstants.CONST_GET_PRICE_DESC_BY_COUNTRYS, whereBean, whereBean,dbRegionToConnect);
+	       }
+	       if ( list == null ) {
+	         list = new JSONArray();
+	       }
+		
+		return new Gson().toJson(list);
+	}//getPriceDescriptorListByCountry
+
+
+	
+	private JSONArray getPriceDescByCountry(String cntryCode, String dbRegionToConnect) {
+		// TODO Auto-generated method stub
+		
+	    DaxDataBeanGeneral whereBean = new DaxDataBeanGeneral ();
+	    String whereClause = new String();
+	    if ( StrUtil.isEmpty ( cntryCode ) ) {
+	    	whereClause = getPriceDescByCountrysWhereClause ( new ArrayList() );
+	    }else{
+	    	List countryL = new ArrayList ();
+			countryL.add ( cntryCode );
+	    	whereClause = getPriceDescByCountrysWhereClause ( countryL );
+	    }
+	    
+	    whereBean.setString1 ( whereClause );
+		
+		return sogDao.getPriceDesc ( IApplicationConstants.CONST_STMT_GRP_ID, IApplicationConstants.CONST_GET_PRICE_DESC_BY_COUNTRYS, whereBean, whereBean, dbRegionToConnect );			 
+	}//getPriceDescByCountry
+	
+	private String getPriceDescByCountrysWhereClause(List list) {
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append("");
+		if (StrUtil.isListEmpty(list)) {
+			return whereClause.toString();
+		}
+		
+		for (int i = 0; i < list.size(); i++) {
+			String countryCode = ((String) list.get(i)).trim();
+			if (!countryCode.equalsIgnoreCase(IApplicationConstants.CONST_NO_SELECT)) {
+				;
+			}
+			{
+				if (whereClause.length() == 0) {
+					whereClause.append("where HP_CNTRY_CD = '" + countryCode
+							+ "'");
+				} else {
+					whereClause.append(" or HP_CNTRY_CD = '" + countryCode
+							+ "'");
+				}
+			}
+		}
+		return whereClause.toString();
+	}//getPriceDescByCountrysWhereClause
+	
+
+}//class

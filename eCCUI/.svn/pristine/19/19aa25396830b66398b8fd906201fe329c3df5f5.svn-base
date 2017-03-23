@@ -1,0 +1,15 @@
+<comcat-dax-config>
+	<stmt-group id="orderability">
+	
+		<stmt id="getProdOrderability">
+			SELECT 	DISTINCT {cntryCode}:= CNTRY_CD, 
+					{orderableFlag}:= ORDERABLE_FLAG
+			FROM LOCAL_PRICE
+			WHERE 
+				PROD = {?:productNo} AND
+				((PRICE_DESCRIPTOR IN ({@q:priceDescriptors})) OR (CNTRY_CD IN ({@q:cntryCds}))) AND
+				ORDERABLE_FLAG = 'Y'
+		</stmt>
+		
+	</stmt-group>
+</comcat-dax-config>

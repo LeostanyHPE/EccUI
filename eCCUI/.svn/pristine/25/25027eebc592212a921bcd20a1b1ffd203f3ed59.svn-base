@@ -1,0 +1,48 @@
+<div class="row" id="uploadProductDescription" ng-controller="ProdDescriptionUploadCtrl"	ng-init="loadDescriptionUpload()">
+	<div class="alert success" ng-show="successMessage!=''"><span>{{successMessage}}</span></div>
+	<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div>	
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Upload Product Description File in Excel Format</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Customer Name :</span> <div class="div_input" ng-bind="form.customerName"></div>
+				</div>
+                <div class="generals">
+					<span>Customer Id :</span> <div class="div_input" ng-bind="form.customerId"></div>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Customer DUNS :</span> <div class="div_input" ng-bind="form.customerDUNS"></div>
+				</div>
+                <div class="generals">
+					<span>Supplier ID/DUNs :</span> <div class="div_input" ng-bind="form.supplierId"></div>
+				</div>			
+			</div>
+			<div class="four columns">
+				<div class="generals">
+	                  <span>File(*.xls) :</span>
+	                  <a class="btn btn-inline" ng-accept="'.xls,'" ng-file-select ng-model="files">Choose File</a>
+	             </div>
+	             <ul>
+			        <li ng-repeat="f in files" style="font:smaller">{{f.name}}</li>
+    			</ul>	
+			</div>
+		</div>
+		<div class="customer_rows">
+			<h1 class="h1Underline row" style="height:0px;"></h1>
+		</div>
+		<div class="twelve columns">
+			<a class="btn btn-inline" ng-click="upload(files)">Upload</a>
+			<a class="btn btn-inline" ng-click="redirectToCatalogList()"><span id="validate">Done</span></a>
+		</div>
+		<div class="twelve columns">
+		    Note: custom descriptions uploaded to this catalog master will be shared across all catalogs of the customer  
+        </div>
+	</div>
+</div>

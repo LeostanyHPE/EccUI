@@ -1,0 +1,262 @@
+<div class="row" ng-controller="sogPrePopulateCtrl" >
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div> 
+	<div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Manage Sog Prepopulate Defaults</span>
+		</h1>
+	</div> 
+	<ul class="nav nav-tabs" id="myTab" style="margin-top: 20px">
+	  <li class="active"><a href="#catalogMaster">Catalog Master</a></li>
+	  <li><a href="#catalog">Catalog</a></li>
+	  <li><a href="#customerProfile">Customer Profile</a></li>
+	</ul>
+	<div id='content' class="tab-content">
+		 <div class="tab-pane row active" id="catalogMaster" style="margin: 0px; border-bottom: 1px solid rgb(221, 221, 221); border-left: 1px solid rgb(221, 221, 221); border-right: 1px solid rgb(221, 221, 221);   padding: 20px 30px 20px 30px;"  >
+		 	<div class="customer_rows" ng-controller="sogCatalogMasterCtrl" ng-init="loadSogCatalogMaster()">
+				<div class="customer_rows">
+					<div class="four columns">
+						<div class="generals">
+							<span>SOG ID:</span>
+							<div class="div_input" ng-bind="form.sogId"></div>
+						</div>
+					</div>
+					<div class="four columns" >
+						<div class="generals">
+							<span>SOG Name:</span>
+							<div class="div_input" ng-bind="form.sogName"></div>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span style="width:30%">Catalog Master Name:</span>
+							<span style="clear:none;width:35%"> SOG ID + ISO COUNTRY CODE +</span>
+							<input type="text" style="width: 120px;" ng-model = "form.catalogMasterName"></input>
+						</div>
+					</div>
+				</div>
+				<div class="customer_rows">
+				    <h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+			  	<div class="customer_rows">
+					<div class="four columns">
+						<div class="generals">
+							<span>Default Price Descriptor:</span>
+							<div class="div_input"></div>
+						</div>
+					</div>
+					<div class="four columns" >
+						<div class="generals">
+							<div class="customer_rows id-body">
+					   			<div class="twelve columns">
+					    			<div class="table-scroll">
+							    		<table id="catCustList" class="dataGrid">
+											<thead>
+												<tr class="GridHeaderRow">
+													<th class="center">Sales Country</th>
+													<th class="center">Price Descriptor</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'" ng-repeat="cntryAndPrcDesc in form.cnryCodeCntyNameAndPriceDescList" ng-show="showCountry(cntryAndPrcDesc.countryAndPriceDescList)">
+													<td>{{cntryAndPrcDesc.countryCode}}-{{cntryAndPrcDesc.countryName}}</td>
+													<td ><select style="width: 100%;margin-bottom: 0px;" ng-model="cntryAndPrcDesc.priceDescriptor" ng-options="item.PRICE_DESCRIPTOR as item.PRICE_DESCRIPTOR for item in cntryAndPrcDesc.countryAndPriceDescList"></select></td> 
+												</tr>
+											</tbody>
+										</table> 
+									</div>
+						   		</div>
+			   				</div>
+						</div>
+					</div>
+				</div>
+				<div class="customer_rows">
+			    	<h1 class="h1Underline row" style="height:0px;"></h1>
+			  	</div>
+				<div class="customer_rows">
+				    <div class="four columns">
+						<div class="generals">
+							<span>Fullfilment Site Id:</span>
+							<input type="text" ng-model="form.ffsIdSelect"></input>
+		                  	<a class="btn btn-inline" ng-click="showFulfillmentList()">Search</a>
+						</div>
+						<div class="generals">
+							<span>Catalog Master Header Style:</span>
+							<select ng-model="form.catalogMasterHeaderStyle" ng-options="item.value as item.id for item in catalogMasterHeaderStyles"></select>
+						</div>
+						<div class="generals">
+							<span>Include Cross-Sell:</span>
+							<input style="margin: 3px 0px 0px 0px;" type="checkbox" ng-model="form.crossSellIncluded" />
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>OM Check:</span>
+							<input style="margin: 3px 0px 0px 0px;" type="checkbox" ng-model="form.omCheck" />
+						</div>
+						<div class="generals">
+							<span>PLC Check:</span>
+							<input style="margin: 3px 0px 0px 0px;" type="checkbox"  ng-model="form.plcCheck" />
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>LCLP:</span>
+							<input style="margin: 3px 0px 0px 0px;" type="checkbox" ng-model="form.gpsyOrderableCheck" />
+						</div>
+						<div class="generals">
+							<span>Offer Equivalent Part #:</span>
+							<input style="margin: 3px 0px 0px 0px;" type="checkbox"  ng-model="form.offerEqPart"/>
+						</div>
+					</div>
+				</div>
+				<div class="customer_rows">
+				    <h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+				<div class="customer_rows">
+					<div class="four columns">
+						<div class="generals">
+							<span>Offering View Style:</span>
+							<select ng-model="form.offerViewStyle" ng-options="item.styleID as item.styleName for item in styleList"></select>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Default Page Size:</span>
+							<input type="text" maxlength="3" ng-model="form.defaultPageSize"></input>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Offering Sort Order:</span>
+							<select style="width:100px;" ng-model="form.offerSortColumn" ng-options="item.value as item.id for item in offerSortColumns"></select>
+							<select style="width:100px;margin-left: 5px;" ng-model="form.offerSortOrder" ng-options="item.value as item.id for item in offerSortOrders"></select>
+						</div>
+					</div>
+				</div>
+				<div class="customer_rows">
+				    <h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+			  	<div class="customer_rows">
+					<a class="btn btn-inline" ng-click="saveCatalogMaster()" >Save</a>
+					<a class="btn btn-inline btn-Primary btn-copy" ng-click="returnHome()" >Return to SOG Home</a>
+			  	</div>
+			</div>
+		</div>
+ 	    <div class="tab-pane row" id="catalog" style="margin: 0px; border-bottom: 1px solid rgb(221, 221, 221); border-left: 1px solid rgb(221, 221, 221); border-right: 1px solid rgb(221, 221, 221);   padding: 20px 30px 20px 30px;">
+	      	<div class="customer_rows" id="catalogDiv" ng-controller="sogCatalogCtrl">
+				<div class="customer_rows form-border">
+					<div class="four columns">
+						<div class="generals">
+							<span>SOG ID:</span>
+							<div class="div_input" ng-bind="form.sogId"></div>
+						</div>
+					</div>
+					<div class="four columns" >
+						<div class="generals">
+							<span>SOG Name:</span>
+							<div class="div_input" ng-bind="form.sogName"></div>
+						</div>
+						
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Catalog Format:</span>
+							<select  ng-model="form.selectedCatFormat" ng-options="item.cat_format_key as item.cat_format_name for item in catalogFormatList"></select>
+						</div>
+					</div>
+					
+					<div class="four columns">
+						<div class="generals">
+							<span>Status:</span>
+							<select  id="status" >
+								<option id="complete" value="COMPLETE" selected="selected">COMPLETE</option>
+								<option id="incomplete" value="INCOMPLETE">INCOMPLETE</option>
+							</select>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Category:</span>
+							<select ng-model="form.category" ng-options="item.id as item.displayLabel for item in categories"></select>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Catalog Expiry Date:</span>
+							<input type="text" class="catalogExpiryDate" ng-model="form.catalogExpiryDate"></input>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Language:</span>
+							<select ng-model="form.language" ng-options="item.HP_LANG_CODE as item.LANG_NAME for item in languages"></select>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span style="width:30%">Catalog Master Name:</span>
+							<span style="clear:none;width:35%"> SOG ID + ISO COUNTRY CODE +</span>
+							<input type="text" style="width: 120px;" ng-model = "form.catalogName"></input>
+						</div>
+					</div>
+					<div class="search">
+						<a class="btn btn-inline" ng-click="saveCatDefault()">Save</a>
+						<a class="btn btn-inline" ng-click="returnHome()">Return to SOG Home</a>
+					</div>
+				</div>	
+				<div class="customer_rows">
+					<h1 class="h1Underline">				
+						<span>Manage Catalog Filter Defaults</span>
+					</h1>
+				</div>
+				
+				<div class="customer_rows form-border">
+					<div class="four columns">
+						<div class="generals">
+							<span>Selected Format:</span>
+							<select ng-model="form.selectedFormat" ng-options="item.cat_format_key as item.cat_format_name for item in catalogFormatList" ng-change="reloadCatalogFilters()"></select>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<ul>
+								<li><input type="checkbox" id="chkAllFlag" ng-click="chkAll()" style="margin-right:5px;"/>Select All</li>
+						        <li ng-repeat="item in catalogFilters" style="padding:2px 0px"><input type="checkbox" ng-model="item.chkFlag" style="margin-right:5px;"/>  {{item.filterName}}</li>
+						    </ul>
+						</div>
+					</div>
+					<div class="search">
+						<a class="btn btn-inline" ng-click="saveCatFilter()">Save</a>
+						<a class="btn btn-inline" ng-click="returnHome()">Return to SOG Home</a>
+					</div>
+				</div>
+			</div>
+	      </div>
+	      <div class="tab-pane row" id="customerProfile" style="margin: 0px; border-bottom: 1px solid rgb(221, 221, 221); border-left: 1px solid rgb(221, 221, 221); border-right: 1px solid rgb(221, 221, 221);   padding: 20px 30px 20px 30px;">
+	      	<div class="customer_rows" ng-controller="sogCustomerProfileCtrl">
+				<div class="four columns">
+					<div class="generals">
+						<span>SOG ID:</span>
+						<div class="div_input" ng-bind="form.sogId"></div>
+					</div>
+					<div class="generals">
+						<span>SOG Name:</span>
+						<div class="div_input" ng-bind="form.sogName"></div>
+					</div>
+				</div>
+				<div class="five columns" >
+					<div class="generals">
+						<span style="width:15%;"">Output Format:</span>
+						<select size="10"  style="width:40%;height:60px;" multiple="multiple" ng-model="form.selectedFormat" ng-options="item.cat_format_name as item.cat_format_name for item in catalogFormats"></select>
+						<textarea  rows="" cols="" style="width:40%;margin-left:5px;" ng-model="form.selectedFormat" disabled> </textarea>
+					</div>
+				</div>
+				<div class="search">
+					<a class="btn btn-inline" ng-click="saveCustomerProfile()">Save</a>
+					<a class="btn btn-inline" ng-click="returnHome()">Return to SOG Home</a>
+				</div>
+			</div>	
+	     </div>
+	</div>
+</div>

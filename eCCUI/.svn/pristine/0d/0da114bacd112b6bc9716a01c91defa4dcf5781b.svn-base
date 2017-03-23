@@ -1,0 +1,77 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.beans;
+
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * @author reddvino
+ *
+ */
+public class LoadSubCategoriesForm {
+	private String categoryToLoad;
+	private String categoryToLocate;
+	private String categorization;
+	private String task;
+	private String parentSelectState = "";
+	private List subCategories = new LinkedList ();
+	
+	public LoadSubCategoriesForm () {
+		init ();
+	}
+	
+	private void init () {
+		categoryToLoad = null;
+		categoryToLocate = null;
+		categorization = null;
+		subCategories = new LinkedList ();
+		parentSelectState = "";
+		task = "";
+	}
+	
+	public void setTask ( String task ) {this.task = task;
+	}
+	
+	public String getTask () {return this.task;
+	}
+	
+	public void setCategoryToLoad ( String categoryToLoad ) {this.categoryToLoad =
+	    categoryToLoad;
+	}
+	
+	public String getCategoryToLoad () {return this.categoryToLoad;
+	}
+	
+	public void setCategoryToLocate ( String categoryToLocate ) {this.
+	    categoryToLocate = categoryToLocate;
+	}
+	
+	public String getCategoryToLocate () {return this.categoryToLocate;
+	}
+	
+	public void setCategorization ( String categorization ) {this.categorization =
+	    categorization;
+	}
+	
+	public String getCategorization () {return this.categorization;
+	}
+	
+	public void setParentSelectState ( String parentSelectState ) {this.
+	    parentSelectState = parentSelectState;
+	}
+	
+	public String getParentSelectState () {return this.parentSelectState;
+	}
+	
+	public void setSubCategories ( List subCategories ) {this.subCategories =
+	    subCategories;
+	}
+	
+	public List getSubCategories () {return this.subCategories;
+	}
+
+
+
+}

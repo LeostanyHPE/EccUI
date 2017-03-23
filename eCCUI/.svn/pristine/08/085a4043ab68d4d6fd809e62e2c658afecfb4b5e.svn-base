@@ -1,0 +1,33 @@
+package com.hp.ecc.ui.view.beans;
+
+public class AddToPropQueueBean {
+
+	  private String custKey = "";
+	  private String source = "";
+	  private String retCode = "";
+
+	  public String getCustKey () {
+	    return this.custKey;
+	  }
+
+	  public void setCustKey ( String customerKey ) {
+	    this.custKey = customerKey;
+	  }
+
+	  public String getSource () {
+	    return this.source;
+	  }
+
+	  public void setSource ( String pSource ) {
+	    this.source = pSource;
+	  }
+
+	  public String getRetCode () {
+	    return this.retCode;
+	  }
+
+	  public void setRetCode ( String pretCode ) {
+	    this.retCode = pretCode;
+	  }
+
+	}

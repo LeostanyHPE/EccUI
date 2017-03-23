@@ -1,0 +1,47 @@
+/*
+ * Class for holding the parameters for row validation.
+ * Ex: An Option column validator will take set of
+ * values agains which column value will be validated.
+ */
+package com.hp.ecc.ui.upload.validation;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class RowValidationParam {
+
+  /* Hash map for holding validation paramters */
+  HashMap paramMap = null;
+
+  /**
+   * Method for setting the the paramter list
+   * for validation.
+   */
+  public void setParam ( int validationId, ArrayList param ) {
+    getParamMap ().put ( new Integer ( validationId ), param );
+  }
+
+  /**
+   * Method for getting the the paramter list
+   * for a particular validation.
+   */
+  public ArrayList getParam ( int validationId ) {
+    ArrayList retList = null;
+    Integer key = new Integer ( validationId );
+    if ( getParamMap ().containsKey ( key ) ) {
+      retList = ( ArrayList ) getParamMap ().get ( key );
+    }
+    return retList;
+  }
+
+  /**
+   * Returns the validation param map.
+   */
+  private HashMap getParamMap () {
+    if ( this.paramMap == null ) {
+      this.paramMap = new HashMap ();
+    }
+    return this.paramMap;
+  }
+
+}

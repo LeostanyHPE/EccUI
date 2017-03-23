@@ -1,0 +1,1010 @@
+package com.hp.ecc.ui.biz.bundle;
+
+
+	
+	import java.util.ArrayList;
+	import java.util.Collections;
+	import java.util.HashMap;
+	import java.util.Iterator;
+	import java.util.List;
+
+	import com.hp.ecc.ui.biz.catalog.CatUtil;
+	import com.hp.ecc.ui.biz.pricetier.PriceTierUtil;
+	import com.hp.ecc.ui.db.vo.DaxDataBeanCount;
+	import com.hp.ecc.ui.util.StrUtil;
+
+	/**
+	 * This class models bundle instance (i.e. catalog bundle).
+	 * 
+	 * @author
+	 * @version 1.0
+	 */
+	public class TempCatalogBundle extends Bundle {
+		/* Bundle type. Could be CQ6, Eclipse Hard or comcat bundle */
+		private String fBundleType;
+		/* ID of the catalog in which this bundle is present */
+		private String fconfigSla;
+		private String fCatalogID;
+		private String fCatalogName;
+		private String fConfigID;
+		private String fConfigSource;
+		private String fFullfilmentSite;
+		private String fSLA;
+		private String fSRT;
+		private String fTxCurrCode;
+		private String fServiceProviderEmails;
+		private String fSupplierPartID;
+		private String fSupplierURL;
+		private String fManufacturer;
+		private String fProdFusionOrdStatus;
+		private String fCatFusionOrdStatus;
+		private String fL10NOptionCodeStr;
+		private String roleType;
+		// private String[] fL10NOptionCodes;
+		private String fL10NCountryCodeStr;
+		// private String[] fL10NCountryCodes;
+		private String fBundleState;
+		// Added in eCC CM & GC , this will be used to determine the catalog
+		private String isTiedToPriceTier = "N";
+		/*
+		 * In case of a standard catalog having multiple price descriptors, single
+		 * bundle has multiple price descriptors. This property stores current price
+		 * descriptor.
+		 */
+		private String fPriceDescriptor;
+		/* Price for the current price descriptor */
+		private double fPrice;
+
+		// for eZilla #57208 - Raghavendra
+		private String priceProfile;
+		private String profileDesc;
+
+		private String fZonePriceDescriptor;
+
+		private String fBundleTemplateId;
+
+		/* Bundle template name */
+		private String fBundleTemplateName;
+		// Deal Id to dsplay as Price Source Id in Bundle Export
+		private String fDealID;
+
+		// Added for Chianti : PLC project
+		private String fCatPlcOrdStatus;
+		private String fCatLclpOrdStatus;
+
+		private String priceMergeId;
+
+		/* All the Bundle components stored with parentcompid */
+		private HashMap fBundleCompMap = null;
+
+		public static final String CREATE_BDL = "CREATE_BDL";
+		public static final String GET_BDL = "GET_BDL";
+		public static final String GET_CONFIG_DETAIL = "GET_CONFIG_DETAIL";
+		public static final String GET_CONFIG_COMPONENTS = "GET_CONFIG_COMPONENTS";
+		public static final String GET_CONFIG_CMP_COUNT = "GET_CONFIG_CMP_COUNT";
+		public static final String GET_BDL_WITH_PROFILE = "GET_BDL_WITH_PROFILE";
+		public static final String GET_ALL_CHILD_PRODS = "GET_ALL_CHILD_PRODS";
+		public static final String GET_BDL_CONTENT = "GET_BDL_CONTENT";
+		public static final String DELETE_BDL = "DELETE_BDL";
+		public static final String SAVE_BDL = "SAVE_BDL";
+		public static final String SAVE_BDL_CONTENT = "SAVE_BDL_CONTENT";
+		public static final String GET_COMCAT_BDL_CONTENT = "GET_COMCAT_BDL_CONTENT";
+		public static final String GET_ALL_BUNDLE_CATALOGS = "GET_ALL_BUNDLE_CATALOGS";
+		public static final String GET_INSTANCE_OPTION_PACK = "GET_INSTANCE_OPTION_PACK";
+		public static final String GET_BUNDLE_ALLCHILD_PRODS = "GET_BUNDLE_ALLCHILD_PRODS";
+		public static final String GET_BUNDLE_ALLCHILD_GROUPS = "GET_BUNDLE_ALLCHILD_GROUPS";
+		public static final String GET_BDL_TEMPLATE_NAME = "GET_BDL_TEMPLATE_NAME";
+
+		public TempCatalogBundle() {
+			super();
+			fBundleType = BUNDLE_TYPE_COMCAT;
+			fBundleCompType = TYPE_BUNDLE;
+		}
+
+		/*
+		 * returns Y if bundle tied to price tier else returns N Author: Anand
+		 * Gangoor Release: eCC CM & GC Nov 2009
+		 */
+
+		public String getIsTiedToPriceTier() {
+			return isTiedToPriceTier;
+		}
+
+		/*
+		 * Set is associated to price tier value Author: Anand Gangoor Release: eCC
+		 * CM & GC Nov 2009
+		 */
+		public void setIsTiedToPriceTier(String isTiedToPriceTier) {
+			this.isTiedToPriceTier = isTiedToPriceTier;
+		}
+
+		public void setConfigSla(String val) {
+			this.fconfigSla = val;
+		}
+
+		public String getConfigSla() {
+			return this.fconfigSla;
+		}
+
+		public void setBundleType(String bundle_type) {
+			this.fBundleType = bundle_type;
+		}
+
+		public String getBundleType() {
+			return fBundleType;
+		}
+
+		public void setCatalogID(String catalog_id) {
+			this.fCatalogID = catalog_id;
+		}
+
+		public String getCatalogID() {
+			return fCatalogID;
+		}
+
+		public void setCatalogName(String catalog_name) {
+			this.fCatalogName = catalog_name;
+		}
+
+		public String getCatalogName() {
+			return fCatalogName;
+		}
+
+		public void setConfigSource(String config_source) {
+			this.fConfigSource = config_source;
+		}
+
+		public String getConfigSource() {
+			return fConfigSource;
+		}
+
+		public void setConfigID(String config_id) {
+			this.fConfigID = config_id;
+		}
+
+		public String getConfigID() {
+			return fConfigID;
+		}
+
+		public void setFullfilmentSite(String fullfilment_site) {
+			this.fFullfilmentSite = fullfilment_site;
+		}
+
+		public String getFullfilmentSite() {
+			return fFullfilmentSite;
+		}
+
+		public void setSLA(String sla) {
+			this.fSLA = sla;
+		}
+
+		public String getSLA() {
+			return fSLA;
+		}
+
+		public void setBundleTemplateName(String name) {
+			this.fBundleTemplateName = name;
+		}
+
+		public String getBundleTemplateName() {
+			return fBundleTemplateName;
+		}
+
+		public void setSRT(String srt) {
+			this.fSRT = srt;
+		}
+
+		public String getSRT() {
+			return fSRT;
+		}
+
+		public void setTxCurrCode(String tx_curr_code) {
+			this.fTxCurrCode = tx_curr_code;
+		}
+
+		public String getTxCurrCode() {
+			return fTxCurrCode;
+		}
+
+		public void setSupplierPartID(String supplier_part_id) {
+			this.fSupplierPartID = supplier_part_id;
+		}
+
+		public String getSupplierPartID() {
+			return fSupplierPartID;
+		}
+
+		public void setSupplierURL(String supplier_url) {
+			this.fSupplierURL = supplier_url;
+		}
+
+		public String getSupplierURL() {
+			return fSupplierURL;
+		}
+
+		public void setManufacturer(String manufacturer) {
+			this.fManufacturer = manufacturer;
+		}
+
+		public String getManufacturer() {
+			return fManufacturer;
+		}
+
+		public void setProdFusionOrdStatus(String fusionstatus) {
+			this.fProdFusionOrdStatus = fusionstatus;
+		}
+
+		public String getProdFusionOrdStatus() {
+			return fProdFusionOrdStatus;
+		}
+
+		public void setCatFusionOrdStatus(String fusionstatus) {
+			this.fCatFusionOrdStatus = fusionstatus;
+		}
+
+		public String getCatFusionOrdStatus() {
+			if (!StrUtil.isEmpty(fCatFusionOrdStatus)) {
+				return fCatFusionOrdStatus;
+			} else {
+				return "N";
+			}
+		}
+
+		public void setCatPlcOrdStatus(String plcstatus) {
+			this.fCatPlcOrdStatus = plcstatus;
+		}
+
+		public String getCatPlcOrdStatus() {
+			if (!StrUtil.isEmpty(fCatPlcOrdStatus)) {
+				return fCatPlcOrdStatus;
+			} else {
+				return "N";
+			}
+		}
+
+		public void setCatLclpOrdStatus(String lclpstatus) {
+			this.fCatLclpOrdStatus = lclpstatus;
+		}
+
+		public String getCatLclpOrdStatus() {
+			if (!StrUtil.isEmpty(fCatLclpOrdStatus)) {
+				return fCatLclpOrdStatus;
+			} else {
+				return "N";
+			}
+		}
+
+		public void setLocalizationStr(String loc_optcodes_str) {
+			this.fL10NOptionCodeStr = loc_optcodes_str;
+			// List locList = StrUtil.split(fL10NOptionCodeStr,",");
+			// fL10NOptionCodes = (String[])locList.toArray(new
+			// String[locList.size()]);
+		}
+
+		public String getLocalizationStr() {
+			return fL10NOptionCodeStr;
+		}
+
+		public String getDisplayLocalizationStr() {
+
+			if (fL10NOptionCodeStr != null) {
+				StringBuffer displayString = new StringBuffer();
+				char[] x = new char[fL10NOptionCodeStr.length()];
+				x = fL10NOptionCodeStr.toCharArray();
+				for (int i = 0; i < x.length; i++) {
+					if (i % 20 == 0) {
+						displayString.append(" ");
+					}
+					displayString.append(x[i]);
+				}
+				return displayString.toString();
+			} else {
+				return fL10NOptionCodeStr;
+			}
+
+		}
+
+		/*
+		 * public void setLocalizations(String[] loc_optcodes) {
+		 * this.fL10NOptionCodes = loc_optcodes; this.fL10NOptionCodeStr =
+		 * StrUtil.joinEndFree(loc_optcodes,","); }
+		 * 
+		 * public String[] getLocalizations() { return fL10NOptionCodes; }
+		 */
+
+		public void setLocCountryStr(String loc_countries_str) {
+			this.fL10NCountryCodeStr = loc_countries_str;
+			// List locList = StrUtil.split(fL10NCountryCodeStr,",");
+			// fL10NCountryCodes = (String[])locList.toArray(new
+			// String[locList.size()]);
+		}
+
+		public String getLocCountryStr() {
+			return fL10NCountryCodeStr;
+		}
+
+		/*
+		 * public void setLocCountries(String[] loc_countries) {
+		 * this.fL10NCountryCodes = loc_countries; this.fL10NOptionCodeStr =
+		 * StrUtil.joinEndFree(loc_countries,","); }
+		 * 
+		 * public String[] getLocCountries() { return fL10NCountryCodes; }
+		 */
+
+		public void setServiceProviderEmails(String service_provider_emails) {
+			this.fServiceProviderEmails = service_provider_emails;
+		}
+
+		public String getServiceProviderEmails() {
+			return fServiceProviderEmails;
+		}
+
+		public void setBundleState(String bundle_state) {
+			this.fBundleState = bundle_state;
+		}
+
+		public String getBundleState() {
+			return fBundleState;
+		}
+
+		public void setPriceDescriptor(String price_descriptor) {
+			this.fPriceDescriptor = price_descriptor;
+		}
+
+		public String getPriceDescriptor() {
+			return fPriceDescriptor;
+		}
+
+		public String getCurrency() {
+			return getCurrencyFromPriceDescp(fPriceDescriptor);
+		}
+
+		public void setPrice(double price) {
+			this.fPrice = price;
+		}
+
+		public double getPrice() {
+			return fPrice;
+		}
+
+		/*
+		 * to fix Ticket ASP000008226406 - Raghavendra
+		 */
+		public String getPriceAsStr() {
+			return StrUtil.priceToStr(fPrice);
+		}
+
+		public double getPriceForReport() {
+			return fPrice;
+		}
+
+		public void setZonePriceDescriptor(String price_descriptor) {
+			this.fZonePriceDescriptor = price_descriptor;
+		}
+
+		public String getZonePriceDescriptor() {
+			return fZonePriceDescriptor;
+		}
+
+		/**
+		 * Retrieves immediate (i.e. root level) option groups (option groups +
+		 * option packs) of this bundle.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of root level bundle groups.
+		 * @throws BundleException
+		 */
+		public List getChildGroups(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve root level bundle groups of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve root level bundle groups of a bundle");
+			BundleOptionGroup bdl_grp = new BundleOptionGroup();
+			bdl_grp.setCatalogID(fCatalogID);
+			bdl_grp.setBundleID(fBundleID);
+			bdl_grp.setBundleCompID(ROOT);
+			List results = executeQuery(GROUP_BDL_QUERY, GET_CHILD_GROUPS, bdl_grp,
+					BundleOptionGroup.class, dbRegionToConnect);
+			populatePriceDesc(results);
+			return results;
+		}
+
+		/**
+		 * Retrieves immediate (i.e. root level) option groups of this bundle.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of root level option groups.
+		 * @throws BundleException
+		 */
+		public List getChildOptionGroups(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve root level option groups of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve root level option groups of a bundle");
+			BundleOptionGroup bdl_grp = new BundleOptionGroup();
+			bdl_grp.setCatalogID(fCatalogID);
+			bdl_grp.setBundleID(fBundleID);
+			bdl_grp.setBundleCompID(ROOT);
+			bdl_grp.setBundleCompType(TYPE_COMP_OPTION_GROUP);
+			List results = executeQuery(GROUP_BDL_QUERY, GET_CHILD_GROUPS_BY_TYPE,
+					bdl_grp, BundleOptionGroup.class, dbRegionToConnect);
+			populatePriceDesc(results);
+			return results;
+		}
+
+		/**
+		 * Retrieves all the option packs for the given template, including the ones
+		 * created in the option group.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of immediate child option packs. throws BundleException
+		 */
+		public List getAllOptionPacks(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve root level option groups of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve root level option groups of a bundle");
+			BundleOptionGroup bdl_grp = new BundleOptionGroup();
+			bdl_grp.setCatalogID(fCatalogID);
+			bdl_grp.setBundleID(fBundleID);
+			bdl_grp.setBundleCompType(TYPE_OPTION_PACK);
+			List results = executeQuery(GROUP_BDL_QUERY, GET_INSTANCE_OPTION_PACK,
+					bdl_grp, BundleOptionGroup.class, dbRegionToConnect);
+			populatePriceDesc(results);
+			return results;
+		}
+
+		/**
+		 * Retrieves immediate (i.e. root level) option packs of this bundle.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of root level option packs.
+		 * @throws BundleException
+		 */
+		public List getChildOptionPacks(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve root level option packs of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve root level option packs of a bundle");
+			BundleOptionGroup bdl_grp = new BundleOptionGroup();
+			bdl_grp.setCatalogID(fCatalogID);
+			bdl_grp.setBundleID(fBundleID);
+			bdl_grp.setBundleCompID(ROOT);
+			bdl_grp.setBundleCompType(TYPE_OPTION_PACK);
+			List results = executeQuery(GROUP_BDL_QUERY, GET_CHILD_GROUPS_BY_TYPE,
+					bdl_grp, BundleOptionGroup.class, dbRegionToConnect);
+			populatePriceDesc(results);
+			return results;
+		}
+		
+		/**
+		   * Retrieves all immediate (i.e. root level) children (option groups, option packs and stand-alone products) of
+		   * this bundle.
+		   * @return 	List of root level bundle components.
+		   * @throws BundleException
+		   */
+		  public List getChildBundleComps (String dbRegionToConnect) throws BundleException {
+		    List children = getChildProds (dbRegionToConnect );
+		    children.addAll ( getChildGroups (dbRegionToConnect) );
+		    return children;
+		  }
+		
+		  /**
+		   * Retrieves all immediate (i.e. root level) children (option groups, option packs and stand-alone products) of
+		   * this bundle by rank order.
+		   * @return 	List of root level bundle components ordered by their rank.
+		   * @throws BundleException
+		   */
+		  public List getChildBundleCompsByRank (String dbRegionToConnect) throws BundleException {
+		    List children = getChildBundleComps (dbRegionToConnect);
+		    Collections.sort ( children );
+		    return children;
+		  }
+
+		/**
+		 * Retrieves immediate (i.e. root level) stand alone products of this
+		 * bundle.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of root level stand alone products.
+		 * @throws BundleException
+		 */
+		public List getChildProds(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve root level bundle products of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve root level bundle products of a bundle");
+			assertNotNull(fPriceDescriptor, "Price Descriptor",
+					"retrieve root level bundle products of a bundle");
+			BundleProd bdl_prod = new BundleProd();
+			bdl_prod.setCatalogID(fCatalogID);
+			bdl_prod.setBundleID(fBundleID);
+			bdl_prod.setBundleCompID(ROOT);
+			bdl_prod.setPriceDescriptor(getPriceDescriptor());
+			bdl_prod.setPriceProfile(priceProfile);
+			// System.out.println("@@@CatalogBundle.getChildProds() --- priceProfile : "
+			// + priceProfile );
+			// for eZilla #57208 - Raghavendra
+			if (!StrUtil.isEmpty(priceProfile)) {
+				List result = executeQuery(GROUP_BDL_QUERY,
+						GET_CHILD_PRODS_WITH_PROFILE, bdl_prod, BundleProd.class, dbRegionToConnect);
+				return result;
+			}
+			return executeQuery(GROUP_BDL_QUERY, GET_CHILD_PRODS, bdl_prod,
+					BundleProd.class, dbRegionToConnect);
+		}
+
+		/**
+		 * Retrieves stand alone and starting point components of a config from
+		 * corona.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of components.
+		 * @throws BundleException
+		 */
+		public List getConfigComponents(String adbRegionToConnect) throws BundleException {
+			assertNotNull(fConfigID, "Bundle ID", "retrieve components of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve components of a bundle");
+			assertNotNull(fPriceDescriptor, "Price Descriptor",
+					"retrieve components of a bundle");
+			ConfigComponent component = new ConfigComponent();
+			component.setCatalogID(fCatalogID);
+			component.setBundleID(fConfigID);
+			component.setPriceDescriptor(getPriceDescriptor());
+			if (getShowStartingPointBOMs() == true)
+				component.setSearchClause("AND cpi.cci_starting_point_flag = 'Y' ");
+			// code added for DAX optimization
+			String priceMergeId = null;
+			priceMergeId = PriceTierUtil.getPriceMergeId(component.getCatalogID(), adbRegionToConnect);
+			component.setPriceMergeId(priceMergeId);
+			// end of optimization code
+			return executeQuery(GROUP_BDL_QUERY, GET_CONFIG_COMPONENTS, component,
+					ConfigComponent.class, adbRegionToConnect);
+		}
+
+		/**
+		 * Retrieves count of stand alone and starting point components of a config
+		 * from corona.
+		 * 
+		 * @return component count.
+		 * @throws BundleException
+		 */
+		public long getConfigComponentCount(String adbRegionToConnect, String dbRegionToConnect) throws BundleException {
+			assertNotNull(fConfigID, "Bundle ID", "retrieve components of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve components of a bundle");
+			assertNotNull(fPriceDescriptor, "Price Descriptor",
+					"retrieve components of a bundle");
+			ConfigComponent component = new ConfigComponent();
+			component.setCatalogID(fCatalogID);
+			component.setBundleID(fConfigID);
+			component.setPriceDescriptor(getPriceDescriptor());
+			if (getShowStartingPointBOMs() == true)
+				component.setSearchClause("AND cpi.cci_starting_point_flag = 'Y' ");
+			// code added for DAX optimization
+			String priceMergeId = null;
+			priceMergeId = PriceTierUtil.getPriceMergeId(component.getCatalogID(), adbRegionToConnect);
+			component.setPriceMergeId(priceMergeId);
+			// end of optimization code
+			List list = executeQuery(GROUP_BDL_QUERY, GET_CONFIG_CMP_COUNT,
+					component, DaxDataBeanCount.class, dbRegionToConnect);
+			if (list != null && list.size() > 0) {
+				DaxDataBeanCount countBean = (DaxDataBeanCount) list.get(0);
+				return countBean.getCount();
+			}
+			return 0L;
+		}
+
+		/**
+		 * Retrieves all (i.e. irrespective of level) stand alone products of this
+		 * bundle.
+		 * 
+		 * @param si
+		 *            Sort info
+		 * @param pg
+		 *            Pagination info
+		 * @return List of all stand alone products.
+		 * @throws BundleException
+		 */
+		public List getAllChildProds(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve all bundle products of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve all bundle products of a bundle");
+			return executeQuery(GROUP_BDL_QUERY, GET_ALL_CHILD_PRODS, this,
+					BundleProd.class, dbRegionToConnect);
+		}
+
+		/* Added for Bundle Reports - START */
+
+		/**
+		 * Retrieves all (i.e. irrespective of level) stand alone products of this
+		 * bundle for Reports.
+		 * 
+		 * @return List of all stand alone products.
+		 * @throws BundleException
+		 */
+		public List getAllChildProdsForReport(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve all bundle products of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve all bundle products of a bundle");
+			assertNotNull(fPriceDescriptor, "Price Descriptor",
+					"retrieve all bundle products of a bundle");
+			BundleProd bdl_prod = new BundleProd();
+			bdl_prod.setCatalogID(fCatalogID);
+			bdl_prod.setBundleID(fBundleID);
+			bdl_prod.setPriceDescriptor(getPriceDescriptor());
+			System.out.println("@CatalogBundle.getAllChildProdsForReport");
+			return executeQuery(GROUP_BDL_QUERY, GET_BUNDLE_ALLCHILD_PRODS,
+					bdl_prod, BundleProd.class, dbRegionToConnect);
+
+		}
+
+		/**
+		 * Retrieves all (i.e. irrespective of level) Groups(Option group and option
+		 * pack) of this bundle for Reports.
+		 * 
+		 * @return List of Groups
+		 * @throws BundleException
+		 */
+		public List getAllChildGroupsForReport(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID",
+					"retrieve all bundle groups of a bundle");
+			assertNotNull(fCatalogID, "Catalog ID",
+					"retrieve all bundle groups of a bundle");
+			BundleOptionGroup bdl_grp = new BundleOptionGroup();
+			bdl_grp.setCatalogID(fCatalogID);
+			bdl_grp.setBundleID(fBundleID);
+			List results = executeQuery(GROUP_BDL_QUERY,
+					GET_BUNDLE_ALLCHILD_GROUPS, bdl_grp, BundleOptionGroup.class, dbRegionToConnect);
+			// populatePriceDesc(results);
+			return results;
+		}
+
+		/**
+		 * Retrieves all the children (option groups, option packs and stand-alone
+		 * products) of this bundle.
+		 * 
+		 * @return List of root level bundle components.
+		 * @throws BundleException
+		 */
+		public List getAllBundleCompsForReport(String dbRegionToConnect) throws BundleException {
+			List children = getAllChildProdsForReport(dbRegionToConnect);
+			children.addAll(getAllChildGroupsForReport(dbRegionToConnect));
+			return children;
+		}
+
+		/**
+		 * Saves all the children (option groups, option packs and stand-alone
+		 * products) of this bundle to Hashmap for report use.
+		 * 
+		 * @param List
+		 *            of all components
+		 * @return none
+		 * @throws BundleException
+		 */
+		public void SaveListToMap(List comps) throws BundleException {
+			fBundleCompMap = new HashMap();
+			Iterator itr = comps.iterator();
+			while (itr.hasNext()) {
+
+				BundleComponent cmp = (BundleComponent) itr.next();
+				String parentCompID = cmp.getParentBundleCompID();
+
+				// for option group/pack the price descp is required, set the
+				// instance price descp
+				if (cmp instanceof BundleOptionGroup) {
+					((BundleOptionGroup) cmp).setPriceDescriptor(fPriceDescriptor);
+				}
+
+				// set the parent compid as "ROOT" for root level
+				if (StrUtil.isEmpty(parentCompID)) {
+					parentCompID = IBundleConstants.ROOT;
+
+					// check whether the key exists in map, add the new comp in the
+					// existing list
+				}
+				if (fBundleCompMap.containsKey(parentCompID)) {
+					List elem = (List) fBundleCompMap.get(parentCompID);
+					elem.add(cmp);
+				} else { // create new key and store the value as list
+					ArrayList cList = new ArrayList();
+					cList.add(cmp);
+					fBundleCompMap.put(parentCompID, cList);
+				}
+
+			} // end of while
+
+		}
+
+		/**
+		 * Retrieves all the children (option groups, option packs and stand-alone
+		 * products) of this bundle.
+		 * 
+		 * @return List of root level bundle components.
+		 * @throws BundleException
+		 */
+		public List getChildBundleCompsForReport(String parentCompID, String dbRegionToConnect)
+				throws BundleException {
+
+			List child = null;
+			if (fBundleCompMap == null) {
+				List children = getAllBundleCompsForReport(dbRegionToConnect);
+				SaveListToMap(children);
+			}
+			if (fBundleCompMap != null) {
+				String parent = parentCompID;
+				if (StrUtil.isEmpty(parent)) {
+					parent = IBundleConstants.ROOT;
+
+				}
+				child = (List) fBundleCompMap.get(parent);
+				if (child == null) {
+					child = new ArrayList();
+				}
+			}
+
+			return child;
+		}
+
+		/**
+		 * Retrieves all children (option groups, option packs and stand-alone
+		 * products) under the parentcompid of this bundle by rank order.
+		 * 
+		 * @param parent
+		 *            Comp ID
+		 * @return List of bundle components ordered by their rank.
+		 * @throws BundleException
+		 */
+		public List getChildBundleCompsByRankForReport(String parentCompID, String dbRegionToConnect)
+				throws BundleException {
+			List children = getChildBundleCompsForReport(parentCompID, dbRegionToConnect);
+			Collections.sort(children);
+			return children;
+		}
+
+		/* Added for Bundle Reports - End */
+
+		/**
+		 * Loads corresponding bundle record's data from the DB.
+		 * 
+		 * @returns true if matching row is found in the database
+		 * @throws BundleException
+		 */
+		public boolean load(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID", "retrieve bundle");
+			assertNotNull(fCatalogID, "Catalog ID", "retrieve bundle");
+			assertNotNull(fPriceDescriptor, "Price Descriptor", "retrieve bundle");
+
+			boolean returnVal;
+
+			// for eZilla #57208 - Raghavendra
+			// when price profile is not null, price details shud be fetched from
+			// PROFILE_ITEM_PRICE
+			// System.out.println( " @@@ CatalogBundle.load() price profile : " +
+			// priceProfile );
+			if (!StrUtil.isEmpty(priceProfile)) {
+				// System.out.println(
+				// "@@@ fetching bundle details from profile_item_price table");
+				returnVal = executeFetch(GROUP_BDL_QUERY, GET_BDL_WITH_PROFILE,
+						this, dbRegionToConnect);
+				if (fBundleTemplateId != null) {
+					executeFetch(GROUP_BDL_QUERY, GET_BDL_TEMPLATE_NAME, this, dbRegionToConnect);
+				}
+				return returnVal;
+			}
+			// System.out.println(
+			// "@@@ fetching bundle details from CAT_ITEM_PRICE table");
+
+			/*
+			 * If read from corona is Y and is the request is not from a standard
+			 * catalog read from corona Else continue as is
+			 */
+
+			System.out.println("readCorona-->" + this.isPriceTier());
+
+			if (CatUtil.getGuiCoronaReadFlag("default")
+					&& ("CUSTOM".equals(this.getRoleType()) || this.isPriceTier())
+					&& !this.fBundleID.startsWith("ECC_BUNDLE")) {
+
+				// code added for DAX optimization
+				String priceMergeId = null;
+				priceMergeId = PriceTierUtil.getPriceMergeId(this.getCatalogID(), "default");
+				this.setPriceMergeId(priceMergeId);
+				// end of optimization code
+				returnVal = executeFetch(GROUP_BDL_QUERY, GET_CONFIG_DETAIL, this, dbRegionToConnect);
+			} else {
+				System.out.println("Reading eCC");
+				returnVal = executeFetch(GROUP_BDL_QUERY, GET_BDL, this, dbRegionToConnect);
+			}
+
+			if (fBundleTemplateId != null) {
+				executeFetch(GROUP_BDL_QUERY, GET_BDL_TEMPLATE_NAME, this, dbRegionToConnect);
+			}
+
+			return returnVal;
+		}
+
+		/**
+		 * Loads corresponding bundle component's content from the DB.
+		 * 
+		 * @returns true if matching row is found in the database
+		 * @throws BundleException
+		 */
+		public boolean loadContent(String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID", "retrieve bundle content");
+			assertNotNull(fCatalogID, "Catalog ID", "retrieve bundle content");
+			assertNotNull(fHPLangCode, "HP lang code ", "retrieve bundle content");
+			return executeFetch(GROUP_BDL_QUERY, GET_BDL_CONTENT, this, dbRegionToConnect);
+		}
+
+		/**
+		 * Always throws exception as bundle instance should never be created
+		 * directly. Only way to create bundle instance inside a catalog is to
+		 * import a bundle template in that catalog. This method is implemented only
+		 * because the parent abstract class BundlePart defines it as an abstract
+		 * method.
+		 * 
+		 * @param user_id
+		 *            application user which is performing this operation. Used for
+		 *            logging purposes.
+		 * @return Bundle Template ID generated by the system.
+		 * @throws BundleException
+		 */
+		public String create(String user_id, String dbRegionToConnect) throws BundleException {
+			throw new BundleException(
+					"Bundle instance may not be created directly. Please use bundle template to create bundle instance.");
+		}
+
+		/**
+		 * Saves changes made to the DB.
+		 * 
+		 * @param user_id
+		 *            application user which is performing this operation. Used for
+		 *            logging purposes.
+		 * @throws BundleException
+		 */
+		public void save(String user_id, String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID", "save bundle");
+			assertNotNull(fCatalogID, "Catalog ID", "save bundle");
+			fModificationFlag = UPDATED;
+			doCall(GROUP_BDL_UPDATE, SAVE_BDL, this, this, user_id, dbRegionToConnect);
+		}
+
+		/**
+		 * Saves content changes to the DB.
+		 * 
+		 * @param user_id
+		 *            application user which is performing this operation. Used for
+		 *            logging purposes.
+		 * @return Number of records affected.
+		 * @throws BundleException
+		 */
+		public void saveContent(String user_id, String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID", "save bundle content");
+			assertNotNull(fCatalogID, "Catalog ID", "save bundle content");
+			assertNotNull(fHPLangCode, "HP lang code ", "save bundle content");
+			assertNotNull(fShortDesc, "Name", "save bundle content");
+			fModificationFlag = UPDATED;
+			doCall(GROUP_BDL_UPDATE, SAVE_BDL_CONTENT, this, this, user_id, dbRegionToConnect);
+		}
+
+		/**
+		 * Deletes corresponding bundle template record from the DB.
+		 * 
+		 * @param user_id
+		 *            application user which is performing this operation. Used for
+		 *            logging purposes.
+		 * @return Number of records affected.
+		 * @throws BundleException
+		 */
+		public int remove(String user_id, String dbRegionToConnect) throws BundleException {
+			assertNotNull(fBundleID, "Bundle ID", "delete bundle");
+			assertNotNull(fCatalogID, "Catalog ID", "delete bundle");
+			doCall(GROUP_BDL_UPDATE, DELETE_BDL, this, this, user_id, dbRegionToConnect);
+			return 1;
+		}
+
+		private void populatePriceDesc(List results) {
+			for (int i = 0; i < results.size(); i++) {
+				BundleOptionGroup bdl_grp = (BundleOptionGroup) results.get(i);
+				bdl_grp.setPriceDescriptor(fPriceDescriptor);
+			}
+		}
+
+		private boolean showStartingPointBOMs;
+
+		public boolean getShowStartingPointBOMs() {
+			return showStartingPointBOMs;
+		}
+
+		public void setShowStartingPointBOMs(boolean showStartingPointBOMs) {
+			this.showStartingPointBOMs = showStartingPointBOMs;
+		}
+
+		/**
+		 * @return Returns the fBundleTemplateId.
+		 */
+		public String getBundleTemplateId() {
+			return fBundleTemplateId;
+		}
+
+		/**
+		 * @param bundleTemplateId
+		 *            The fBundleTemplateId to set.
+		 */
+		public void setBundleTemplateId(String bundleTemplateId) {
+			fBundleTemplateId = bundleTemplateId;
+		}
+
+		/**
+		 * @return Returns the fDealId.
+		 */
+		public String getDealID() {
+			return fDealID;
+		}
+
+		/**
+		 * @param dealId
+		 */
+		public void setDealID(String dealID) {
+			fDealID = dealID;
+		}
+
+		// for eZilla #57208 - Raghavendra
+		public String getPriceProfile() {
+			return priceProfile;
+		}
+
+		// for eZilla #57208 - Raghavendra
+		public void setPriceProfile(String priceProfile) {
+			this.priceProfile = priceProfile;
+		}
+
+		public String getProfileDesc() {
+			return profileDesc;
+		}
+
+		public void setProfileDesc(String sProfileDesc) {
+			this.profileDesc = sProfileDesc;
+		}
+
+		public String getRoleType() {
+			return roleType;
+		}
+
+		public void setRoleType(String roleType) {
+			this.roleType = roleType;
+		}
+
+		public String getPriceMergeId() {
+			return priceMergeId;
+		}
+
+		public void setPriceMergeId(String priceMergeId) {
+			this.priceMergeId = priceMergeId;
+		}
+
+
+	}
+

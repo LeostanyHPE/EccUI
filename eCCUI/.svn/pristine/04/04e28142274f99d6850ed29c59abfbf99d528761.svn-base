@@ -1,0 +1,144 @@
+package com.hp.ecc.ui.upload.process;
+
+import java.util.*;
+
+import com.hp.ecc.ui.upload.DaxUploadUtil;
+import com.hp.ecc.ui.upload.common.UploadObject;
+import com.hp.ecc.ui.upload.validation.IIterativeRowValidator;
+import com.hp.ecc.ui.upload.validation.IValidatedRow;
+import com.hp.ecc.ui.upload.validation.IValidatedRowsInfo;
+
+public class DescriptionUploadProcess extends ProcessUpload{
+	
+	private static String DET_INFO_MSG = "Please click on the Upload Description/Upload ID link for details of skipped records if any.";
+	private static String SUCCESS_MSG = "Upload Successful. " + DET_INFO_MSG;
+	private static String FAIL_MSG = "Upload failed.";
+    private static String LOAD_TMP_TABLE = "load_temp_table";
+	private static String DESC_UPLD_SP = "desc_upload_sp";
+	private static String STMT_GRP = "master-uploads";
+	
+	public void validateUploadData(UploadObject upldObj)
+	{
+		processUpload(this.getFileToProcess(upldObj));
+	}
+	public boolean processUpload(UploadObject upldObj)
+	{
+		boolean success = true;
+		long uploadHandle;
+	  	Iterator itr = upldObj.getUploadHandleMap().keySet().iterator();
+	    String key = null;
+	  	while(itr.hasNext())
+	  	  key= itr.next().toString();		
+	  	uploadHandle=Long.parseLong(upldObj.getUploadHandleMap().get(key).toString());
+		IValidatedRowsInfo valRowsInfo =validateUploadFile(upldObj);
+	    ArrayList validRowList = valRowsInfo.convertRowToSingleBizObject (
+	            valRowsInfo.getAllValidRows (), DescUploadData.class );
+
+	        //Assign row no & upload id value for all the valid row beans.
+	        IValidatedRow[] validRows = valRowsInfo.getAllValidRows ();
+	        for ( int i = 0; i < validRows.length; i++ ) {
+	          //Row number
+	          ( ( DescUploadData ) validRowList.get ( i ) ).setRowNo ( String.valueOf (
+	              validRows[i].getRowNo () ) );
+	          //Upload Id
+	          ( ( DescUploadData ) validRowList.get ( i ) ).setUploadId ( uploadHandle );
+	        }
+
+	        // Process the validated excel data -5
+	        ArrayList<Object> paramList = new ArrayList<Object> ();
+	        paramList.add ( upldObj.getCustomerID() );
+	        paramList.add ( validRowList );
+	        try
+	        {
+	            success = processUpload ( uploadHandle, paramList, upldObj.getDbRegionToConnect() );
+
+	            if ( getProcessErrorMsg () == null ) {
+	              setProcessErrorMsg ( ( success ) ? SUCCESS_MSG : FAIL_MSG );
+	            }
+	        	
+	        }catch(Exception e)
+            {
+            	e.printStackTrace();
+            	success = false;
+                setProcessErrorMsg ( e.getMessage () );                
+            }
+            finally {
+              	System.out.println("Inside Finally of process Upload");
+                  if ( success ) {
+                    updateUploadStatus ( uploadHandle, "COMPLETED"
+                        , "Upload successful. "
+                                         + DET_INFO_MSG, upldObj.getDbRegionToConnect() );
+                  }
+                  else {
+                    updateUploadStatus ( uploadHandle, "FAILED"
+                                         , getProcessErrorMsg () + ".", upldObj.getDbRegionToConnect() );
+                  }
+                  this.deleteTempFile(upldObj);
+              }
+	        
+	        return true;		
+	}
+	
+	public IValidatedRowsInfo validateUploadFile ( UploadObject upldObj ) {
+  	  Iterator itr = upldObj.getUploadHandleMap().keySet().iterator();
+      String key = null;
+      IValidatedRow valRow = null;
+  	  while(itr.hasNext())
+  		  key= itr.next().toString();	
+		
+		    /* get iterative row validator & validate all rows -> Row By Row Validation*/
+
+		// Validate the excelsheet -3
+			IIterativeRowValidator rowVal = getIterativeRowValidator (
+					upldObj,Long.parseLong(upldObj.getUploadHandleMap().get(key).toString()), 1, null );
+			
+			while ( rowVal.hasMoreRow () ) {
+				 valRow = rowVal.validateNextRow ();
+			
+			  //Log error message for the invalid rows. Header rows will be skipped.
+			  if ( !valRow.isHeaderRow () ) {
+			    storeValidationMsg ( Long.parseLong(upldObj.getUploadHandleMap().get(key).toString()), valRow, upldObj.getDbRegionToConnect() );
+			  }
+			}
+
+		    return rowVal.getValidatedRowsInfo ();
+	}
+	  /**
+	   * Process the uploaded file. This method will  not be invoked by the action class directly.
+	   * Insted Description upload action class will invoke the processUpload method
+	   * implemented in Asynch upload class.
+	   *
+	   * Status of the upload will be set to "FAILED" if this method
+	   * returns a boolean value "false" or throws an exception.
+	   *
+	   */
+	  public boolean processUpload ( long uploadHandle, ArrayList param, String dbRegionToConnect ) {
+
+	    try {
+
+	      /* Insert the data into temporary table */
+	      ArrayList validRows = ( ArrayList ) param.get ( 1 );
+	      DaxUploadUtil.executeBatch ( STMT_GRP, LOAD_TMP_TABLE, validRows, dbRegionToConnect );
+
+	      /* Process the data in temporary table using upload desc stored proc */
+	      DescUploadData upldData = new DescUploadData ();
+	      upldData.setCustKey ( ( String ) param.get ( 0 ) );
+	      upldData.setUploadId ( uploadHandle );
+
+	      DaxUploadUtil.invokeUploadSP ( STMT_GRP, DESC_UPLD_SP, upldData, upldData, dbRegionToConnect );
+
+	      /* Check if the stored proc return status is successful */
+	      if ( upldData.getRetStatus () != 0 ) {
+	        /* If the return status is not 0 then there is some error in Sp */
+	        this.setProcessErrorMsg ( upldData.getRetMsg () );
+	        return false;
+	      }
+	    }
+	    catch ( Exception e ) {
+	      e.printStackTrace ();
+	    }
+
+	    return true;
+	  }	
+}
+

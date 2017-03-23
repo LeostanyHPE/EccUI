@@ -1,0 +1,558 @@
+package com.hp.ecc.ui.biz.pricetier;
+
+import java.util.Date;
+
+import com.hp.ecc.ui.util.web.FormatUtil;
+
+
+public class PriceDetailBeanProdInfo {
+  private String fCatalogItemKey;
+  private String fCatalogItemKeyForPrice;
+  private String fCatalogItemPriceKey;
+  private String fBaseModel;
+  private String fSourceProdID;
+  private String fShortDesc;
+  private String fSourceID;
+  private String fSourceType;
+  private String fPriceDescriptor;
+  private String fZonePriceDescriptor;
+  private Double fNetPrice;
+  private Double fNetPriceNoFFS;
+  private Double fLocalPrice;
+  private String fBundleFlag;
+  private String fProdSource;
+  private String fConfigID;
+  private String fPricingRule;
+  private Date fStartDate;
+  private Date fEndDate;
+  private String fCatalogId;
+  private String fAltPriceDescriptor;
+  private String fBdlId;
+  private String fBdlTmplId;
+  private String dealType;
+  private String priceProfile;
+  private String cntryCd;
+  private String saleCntry;
+  private String bdlCompId;
+  private String catType;
+  private String priceErr;
+  private Double fGlListPrice;
+  private Double fPaNetPrice;
+  private Double fGlLandedNetPrice;
+  private Double fExchangeRate;
+  private Double fTba;
+  
+
+
+  public String getAltPriceDescriptor() {
+	  return fAltPriceDescriptor;
+	}
+
+	public void setAltPriceDescriptor ( String altPriceDescriptor ) {
+		fAltPriceDescriptor = altPriceDescriptor;
+	}
+
+  public String getCatalogItemKey () {
+    return fCatalogItemKey;
+  }
+
+  public void setCatalogItemKey ( String catalogItemKey ) {
+    fCatalogItemKey = catalogItemKey;
+  }
+  
+  public String getCatalogId() {
+	 return fCatalogId;
+   }
+
+   public void setCatalogId ( String catalogId ) {
+	 fCatalogId = catalogId;
+   }
+
+  public String getCatalogItemKeyForPrice () {
+    return fCatalogItemKeyForPrice;
+  }
+
+  public void setCatalogItemKeyForPrice ( String catalogItemKeyForPrice ) {
+    fCatalogItemKeyForPrice = catalogItemKeyForPrice;
+  }
+
+  public String getCatalogItemPriceKey () {
+    return fCatalogItemPriceKey;
+  }
+
+  public void setCatalogItemPriceKey ( String catalogItemPriceKey ) {
+    fCatalogItemPriceKey = catalogItemPriceKey;
+  }
+
+  public Double getNetPriceNoFFS () {
+    return fNetPriceNoFFS;
+  }
+
+  public String getNetPriceNoFFSStr () {
+    return fNetPriceNoFFS == null ? ""
+        : FormatUtil.currencyValueToStr ( fNetPriceNoFFS.doubleValue () );
+  }
+
+  public void setNetPriceNoFFS ( Double netPriceNoFFS ) {
+    fNetPriceNoFFS = netPriceNoFFS;
+  }
+
+  public Double getNetPrice () {
+    return fNetPrice;
+  }
+
+  public void setNetPrice ( Double price ) {
+    fNetPrice = price;
+  }
+
+  /**
+   * @return
+   */
+  public String getPriceStr () {
+    return fNetPrice == null ? ""
+        : FormatUtil.currencyValueToStr ( fNetPrice.doubleValue () );
+  }
+
+  /**
+   * @param string
+   */
+  public void setPriceStr ( String string ) {
+    if ( string == null ) {
+      fNetPrice = null;
+    }
+    else {
+      Double d = FormatUtil.objToDouble ( string );
+      fNetPrice = d;
+    }
+  }
+
+  public Double getLocalPrice () {
+    return fLocalPrice;
+  }
+
+  public String getLocalPriceStr () {
+    if ( this.fLocalPrice == null ) {
+      return "";
+    }
+    return FormatUtil.currencyValueToStr ( fLocalPrice.doubleValue () );
+  }
+
+
+  public String getNetPriceStr () {
+	  if ( this.fNetPrice == null ) {
+		return "";
+	  }
+	  return FormatUtil.currencyValueToStr ( fNetPrice.doubleValue () );
+	}
+	
+  public void setLocalPrice ( Double localPrice ) {
+    fLocalPrice = localPrice;
+  }
+
+  public String getPriceDescriptor () {
+    return fPriceDescriptor;
+  }
+
+  public void setPriceDescriptor ( String priceDescriptor ) {
+    fPriceDescriptor = priceDescriptor;
+  }
+
+  public String getSourceID () {
+    return fSourceID;
+  }
+
+  public void setSourceID ( String sourceID ) {
+    fSourceID = sourceID;
+  }
+
+  public String getSourceType () {
+    return fSourceType;
+  }
+
+  public void setSourceType ( String sourceType ) {
+    fSourceType = sourceType;
+  }
+
+  public String getZonePriceDescriptor () {
+    return fZonePriceDescriptor;
+  }
+
+  public void setZonePriceDescriptor ( String zonePriceDescriptor ) {
+    fZonePriceDescriptor = zonePriceDescriptor;
+  }
+
+  /**
+   * @return
+   */
+  public String getBaseModel () {
+    return fBaseModel;
+  }
+
+
+  /**
+   * @param string
+   */
+  public void setBaseModel ( String string ) {
+    fBaseModel = string;
+  }
+
+
+  /**
+   * @return
+   */
+  public String getShortDesc () {
+    return fShortDesc;
+  }
+
+
+  /**
+   * @param string
+   */
+  public void setShortDesc ( String string ) {
+    fShortDesc = string;
+  }
+
+  /**
+   * @return
+   */
+  public String getSourceProdID () {
+    return fSourceProdID;
+  }
+
+  /**
+   * @param string
+   */
+  public void setSourceProdID ( String string ) {
+    fSourceProdID = string;
+  }
+
+  /**
+   * @return
+   */
+  public String getBundleFlag () {
+    return fBundleFlag;
+  }
+
+  /**
+   * @param bundleFlag
+   */
+  public void setBundleFlag ( String bundleFlag ) {
+    fBundleFlag = bundleFlag;
+  }
+
+  /**
+   * @return
+   */
+  public String getConfigID () {
+    return fConfigID;
+  }
+
+  /**
+   * @param configID
+   */
+  public void setConfigID ( String configID ) {
+    fConfigID = configID;
+  }
+
+  /**
+   * @return
+   */
+  public String getProdSource () {
+    return fProdSource;
+  }
+
+  /**
+   * @param prodSource
+   */
+  public void setProdSource ( String prodSource ) {
+    fProdSource = prodSource;
+  }
+
+
+  /**
+   * @return
+   */
+  public String getPricingRule () {
+    return fPricingRule;
+  }
+
+  /**
+   * @param pricingRule
+   */
+  public void setPricingRule ( String pricingRule ) {
+    fPricingRule = pricingRule;
+  }
+
+  /**
+   * @return
+   */
+  public Date getEndDate () {
+    return fEndDate;
+  }
+
+  /**
+   * @param date
+   */
+  public void setEndDate ( Date date ) {
+    fEndDate = date;
+  }
+
+  /**
+   * @return
+   */
+  public Date getStartDate () {
+    return fStartDate;
+  }
+
+
+  /**
+   * @param date
+   */
+  public void setStartDate ( Date date ) {
+    fStartDate = date;
+  }
+
+
+
+
+/**
+ * @return
+ */
+public String getBdlId() {
+	return fBdlId;
+}
+
+/**
+ * @return
+ */
+public String getBdlTmplId() {
+	return fBdlTmplId;
+}
+
+
+/**
+ * @param string
+ */
+public void setBdlId(String string) {
+	fBdlId = string;
+}
+
+/**
+ * @param string
+ */
+public void setBdlTmplId(String string) {
+	fBdlTmplId = string;
+}
+
+
+/**
+ * @return
+ */
+public String getDealType() {
+	return dealType;
+}
+
+/**
+ * @param string
+ */
+public void setDealType(String string) {
+	dealType = string;
+}
+
+/**
+ * @return
+ */
+public String getPriceProfile() {
+	return priceProfile;
+}
+
+/**
+ * @param string
+ */
+public void setPriceProfile(String string) {
+	priceProfile = string;
+}
+
+/**
+ * @return
+ */
+public String getCntryCd() {
+	return cntryCd;
+}
+
+/**
+ * @param string
+ */
+public void setCntryCd(String string) {
+	cntryCd = string;
+}
+
+/**
+ * @return
+ */
+public String getSaleCntry() {
+	return saleCntry;
+}
+
+/**
+ * @param string
+ */
+public void setSaleCntry(String string) {
+	saleCntry = string;
+}
+
+/**
+ * @return
+ */
+public String getBdlCompId() {
+	return bdlCompId;
+}
+
+/**
+ * @param string
+ */
+public void setBdlCompId(String string) {
+	bdlCompId = string;
+}
+
+/**
+ * @return
+ */
+public String getCatType() {
+	return catType;
+}
+
+/**
+ * @param string
+ */
+public void setCatType(String string) {
+	catType = string;
+}
+
+/**
+ * @return
+ */
+public String getPriceErr() {
+	return priceErr;
+}
+
+/**
+ * @param string
+ */
+public void setPriceErr(String string) {
+	priceErr = string;
+}
+
+	public Double getGlListPrice() {
+		return fGlListPrice;
+	}
+
+	public void setGlListPrice(Double glListPrice) {
+		fGlListPrice = glListPrice;
+	}
+
+	public String getGlListPriceStr() {
+		if (this.fGlListPrice == null) {
+			return "";
+		}
+		return FormatUtil.currencyValueToStr(fGlListPrice.doubleValue());
+	}
+
+	public void setGlListPriceStr(String string) {
+		if (string == null) {
+			fGlListPrice = null;
+		} else {
+			Double d = FormatUtil.objToDouble(string);
+			fGlListPrice = d;
+		}
+	}
+
+	public Double getPaNetPrice() {
+		return fPaNetPrice;
+	}
+
+	public void setPaNetPrice(Double paNetPrice) {
+		fPaNetPrice = paNetPrice;
+	}
+
+	public String getPaNetPriceStr() {
+		return fPaNetPrice == null ? "" : FormatUtil
+				.currencyValueToStr(fPaNetPrice.doubleValue());
+	}
+
+	public void setPaNetPriceStr(String string) {
+		if (string == null) {
+			fPaNetPrice = null;
+		} else {
+			Double d = FormatUtil.objToDouble(string);
+			fPaNetPrice = d;
+		}
+	}
+
+	public Double getGlLandedNetPrice() {
+		return fGlLandedNetPrice;
+	}
+
+	public void setGlLandedNetPrice(Double glLandedNetPrice) {
+		fGlLandedNetPrice = glLandedNetPrice;
+	}
+
+	public String getGlLandedNetPriceStr() {
+		return fGlLandedNetPrice == null ? "" : FormatUtil
+				.currencyValueToStr(fGlLandedNetPrice.doubleValue());
+	}
+
+	public void setGlLandedNetPriceStr(String string) {
+		if (string == null) {
+			fGlLandedNetPrice = null;
+		} else {
+			Double d = FormatUtil.objToDouble(string);
+			fGlLandedNetPrice = d;
+		}
+	}
+	
+	public Double getExchangeRate() {
+		return fExchangeRate;
+	}
+
+	public void setExchangeRate(Double exchangeRate) {
+		fExchangeRate = exchangeRate;
+	}
+
+	public String getExchangeRateStr() {
+		return fExchangeRate == null ? "" : FormatUtil
+				.currencyValueToStr(fExchangeRate.doubleValue());
+	}
+
+	public void setExchangeRateStr(String string) {
+		if (string == null) {
+			fExchangeRate = null;
+		} else {
+			Double d = FormatUtil.objToDouble(string);
+			fExchangeRate = d;
+		}
+	}
+	
+	public Double getTba() {
+		return fTba;
+	}
+
+	public void setTba(Double tba) {
+		fTba = tba;
+	}
+
+	public String getTbaStr() {
+		return fTba == null ? "" : FormatUtil
+				.currencyValueToStr(fTba.doubleValue());
+	}
+
+	public void setTbaStr(String string) {
+		if (string == null) {
+			fTba = null;
+		} else {
+			Double d = FormatUtil.objToDouble(string);
+			fTba = d;
+		}
+	}
+
+}

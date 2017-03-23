@@ -1,0 +1,220 @@
+eccApp.controller('viewQuoteCtrl',['$scope', '$location', '$http', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $location, $http, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.dateParser=dateParser;
+	$scope.viewQuoteQuoteID = '';
+	$scope.viewQuoteProductID = '';
+	$scope.viewQuoteListData = [];
+	$scope.addDataToTable = [];
+	$scope.dataLoad = false;
+	
+	$scope.init = function() {
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"View Quotes Task\"");
+
+
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		$scope.selectCustomer = webStorage.local.get('selCustData');
+		if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+			$location.path("/SelectCustomer").search({redirect: "page"});
+		}
+		else{
+			$scope.catalogId = $routeParams.catalogId;
+			$scope.catalogName = $routeParams.catalogName;
+						
+		 	$http({
+					url: 'quote/viewQuote.htm?catalogId='+$scope.catalogId,
+					method:"GET",
+					headers: {
+	                    "Accept": "application/json; charset=utf-8",
+	                    "Cache-Control" : "no-cache",
+						"Pragma" : "no-cache",
+						"If-Modified-Since" : "0"
+	                },
+					data : {
+						"menu": "process"
+					}
+		 		})
+		 	.success(function(data, status, headers, config) {
+				$scope.viewQuoteListData = data.viewQuoteList;
+				for (var index = 1; index <= $scope.viewQuoteListData.length; index++){
+		        	var item = "";
+		        	item = $scope.viewQuoteListData[index-1];
+		        	
+		        	$scope.addDataToTable.push([
+		        	    0,
+		        	    item.quote_id,								
+						item.prod,
+						item.short_desc,
+						item.line_type,
+						item.local_price,
+						item.net_price,
+						item.bundle_id
+					]);
+		        }
+				
+				if ($scope.addDataToTable.length > 0) {
+					$scope.dataLoad = true;
+					$scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+				} else {
+					$scope.dataLoad = false;
+					$("#viewQuoteList").empty();
+					 $scope.hideMsg();
+					 $scope.showMsg('','No Quotes Found!');
+				}
+				
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+				
+			})
+			.error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Manage Quotes Service');
+			});
+		 
+		}
+	};
+		
+    $scope.isUndefinedOrNull = function(value){
+		 return !(angular.isUndefined(value) || value === null);
+	 };
+   
+	 $scope.showMsg=function(success, error){
+	    $scope.successMessage=success;
+	    $scope.errorMessage=error;
+	 };
+	 $scope.hideMsg=function(){
+	    $scope.successMessage='';
+	    $scope.errorMessage='';
+	 };
+		
+	$scope.returnToManageQuote=function(){
+		document.location.href=webStorage.session.get('QuotePrevPage');			
+	};	
+	
+	
+	
+	$scope.viewQuoteSearch = function() {
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.catalogId = $routeParams.catalogId;
+		$scope.quoteId = $scope.viewQuoteQuoteID;
+		$scope.productId = $scope.viewQuoteProductID;
+					
+	 	$http({
+				url: 'quote/searchQuote.htm?catalogId='+$scope.catalogId+'&quoteId='+$scope.quoteId+'&productId='+$scope.productId,
+				method:"GET",
+				headers: {
+                    "Accept": "application/json; charset=utf-8",
+                    "Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+                },
+				data : {
+				}
+	 		})
+	 	.success(function(data, status, headers, config) {
+	 		$scope.addDataToTable = [];
+	 		$scope.addDataToTable.length = 0;
+	 		$scope.viewQuoteListData = [];
+	 		$scope.viewQuoteListData.length = 0;
+			$scope.viewQuoteListData = data.searchQuoteList;
+			for (var index = 1; index <= $scope.viewQuoteListData.length; index++){
+	        	var item = "";
+	        	item = $scope.viewQuoteListData[index-1];
+	        	
+	        	$scope.addDataToTable.push([
+	        	    		        	    0,
+	        	    		        	    item.quote_id,								
+	        	    						item.prod,
+	        	    						item.short_desc,
+	        	    						item.line_type,
+	        	    						item.local_price,
+	        	    						item.net_price,
+	        	    						item.bundle_id
+	        	    					]);
+
+	        }
+			
+			if ($scope.addDataToTable.length > 0) {
+				$("#viewQuoteList").empty();
+				$("#viewQuoteList").append('<table id="search_result" class="TableBackground search_result" style="width: 100%"><thead><tr class="TableHeaderRow"><th>Hidden</th><th class="center">Quote ID</th><th class="center">Product ID</th><th class="center">Short Description</th><th class="center">Line Type</th><th class="center">Local Price</th><th class="center">Net Price</th><th class="center">Bundle ID</th></tr></thead><tbody></tbody></table>');
+				$scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+			} else {
+				$("#viewQuoteList").empty();
+				$scope.hideMsg();
+				$scope.showMsg('','No Quotes Found!');
+			}
+			
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			
+		})
+		.error(function(data, status, headers, config) {
+			$scope.hideMsg();
+			$scope.showMsg('','Error in Manage Quotes Service');
+		});
+		 	
+	};
+	
+	$scope.globalCodeToGenertaeDataGrid = function(tableId,aaData){
+		$.fn.dataTableExt.oJUIClasses.sSortJUI ="css_right icon-sort";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIAsc ="css_right icon-sort-up";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIDesc ="css_right icon-sort-down";
+		oTable = $("table#"+tableId+"").dataTable({
+			"sEcho": 4,
+				"aaData": aaData,
+				"sPaginationType" : "commonStandard",
+				"bPaginate" :true,
+				"bJQueryUI": true,
+				"bRetrieve": true,
+				"bDestroy": true,
+				"bSortable":false,
+				"processing": false,
+		        "serverSide": true,
+				"sDom": '<"t_header"RrClf><"t_body"t><"t_footer"pi>',
+				"bSort": true,
+				//"aaSorting":[ [2,'asc']] ,
+				"aaSortingFixed":[ [0,'desc']] ,
+				"aoColumnDefs": [
+				{ "sClass": "center unsortable", "aTargets": [ 1 ] },
+				{ "sClass": "center", "aTargets": [ 2] },
+				{ "sClass": "editable", "aTargets": [ ] },
+				{ "sClass": "editable", "aTargets": [  ] },
+				{ "bVisible": false, "aTargets": [ 0 ] },
+				{ "bSortable": false, "aTargets": [  ] }
+				],
+				"oColReorder": {
+				"iFixedColumns": 2 // Define fixed column and checkbox column can not be dragged.
+				},
+				"oLanguage": {
+				"sLengthMenu": "<div class='sLengthText'>View Results of</div> _MENU_ ",
+				"sInfo": "<span class='number_highlight'>_TOTAL_</span> items, <span class='number_highlight'>_TOTALPAGE_</span> pages",
+				"sSearch": "Filter:",
+				"sInfoFiltered": "",
+				"sInfoEmpty":"<span class='number_highlight'>0</span> items, <span class='number_highlight'>0</span> pages",
+				"oPaginate": {
+				"sFirst": "<i class='icon-double-angle-left'></i>",
+				"sLast": "<i class='icon-double-angle-right'></i>",
+				"sNext": "<i class='icon-angle-right'></i>",
+				"sPrevious": "<i class='icon-angle-left'></i>"}
+				},
+				"oColVis": {
+				"buttonText": 'View By <i class="icon-chevron-down"></i>',
+				"aiExclude": [ 0,1 ],
+				"bShowAll": true,
+				"sShowAll": "Show All",
+				"sAlign":"left"
+		        }
+		});
+		if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+		$("#"+tableId+"_length select").selecter();
+		}
+	};
+	
+}]);
+
+
+

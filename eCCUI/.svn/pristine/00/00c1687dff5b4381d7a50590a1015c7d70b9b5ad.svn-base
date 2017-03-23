@@ -1,0 +1,299 @@
+package com.hp.ecc.ui.view.controller;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.bundle.BundleException;
+import com.hp.ecc.ui.biz.bundle.BundlePart;
+import com.hp.ecc.ui.biz.bundle.BundleQueryMgr;
+import com.hp.ecc.ui.biz.bundle.CatalogBundleForm;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.processor.bundle.BundleListInstanceProcessor;
+import com.hp.ecc.ui.biz.processor.bundle.CatalogBundleProcessor;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.BundleContentForm;
+import com.hp.ecc.ui.view.beans.BundleInstanceListForm;
+import com.hp.ecc.ui.view.beans.CatalogBundleListForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Controller
+public class BundleController {
+	
+	@Autowired
+	BundleListInstanceProcessor bundleListInstanceProcessor;
+	
+	@Autowired
+	CatalogBundleProcessor catalogBundleProcessor;
+	
+	private static final Logger logger = LoggerFactory.getLogger(BundleController.class);
+	
+	@RequestMapping(value="/bundleListInstance/processRetrieval.htm", method = RequestMethod.POST)
+	public @ResponseBody String processRetrieve (Model mode, HttpServletRequest request,  @RequestBody String bundleForm) {
+		JSONObject returnObject = new JSONObject();
+		Gson gson = new Gson();
+		
+		BundleInstanceListForm form = new Gson().fromJson(bundleForm.toString(), BundleInstanceListForm.class);		
+		String regionCode = PagesUtil.getRegionCode(request);
+		String aDbRegionToConnect = PagesUtil.getDbRegionToConnect(request);
+		
+		//String priceTierID = request.getParameter("priceTierID");
+		
+		bundleListInstanceProcessor.serachBundleListInstance(form, returnObject, regionCode, aDbRegionToConnect, PagesUtil.getTenantCode(request));
+	
+		returnObject.put ( "BundleInstanceList_form", gson.toJson(form));
+		return returnObject.toString();
+	}
+	
+	@RequestMapping(value="/bundleListInstance/processDelete.htm", method = RequestMethod.POST)
+	public @ResponseBody String processDelete (Model mode, HttpServletRequest request, @RequestBody String bundleForm ) {
+		JSONObject returnObject = new JSONObject();
+		Gson gson = new Gson();
+		BundleInstanceListForm form;
+		form = new Gson().fromJson(bundleForm, BundleInstanceListForm.class);	
+		String regionCode = PagesUtil.getRegionCode(request);
+		String userId = PagesUtil.getLoginUserID(request);
+		String aDbRegionToConnect = PagesUtil.getDbRegionToConnect(request);
+		
+		//String priceTierID = request.getParameter("priceTierID");
+		
+		bundleListInstanceProcessor.deleteBundleListInstance(form, returnObject, regionCode, aDbRegionToConnect, userId);
+		
+		bundleListInstanceProcessor.serachBundleListInstance(form, returnObject, regionCode, aDbRegionToConnect, PagesUtil.getTenantCode(request));
+	
+		returnObject.put ( "BundleInstanceList_form", gson.toJson(form));
+		return returnObject.toString();
+	}
+	
+	@RequestMapping(value="/catalogBundle/processRetrieve.htm", method = RequestMethod.POST)
+	public @ResponseBody String processCatalogBundle (Model mode, HttpServletRequest request, @RequestBody String bundleForm) {
+		JSONObject returnObject = new JSONObject();
+		Gson gson = new Gson();
+		CatalogBundleListForm form;
+		form = gson.fromJson(bundleForm, CatalogBundleListForm.class);		
+		String regionCode = PagesUtil.getRegionCode(request);
+		String aDbRegionToConnect = PagesUtil.getDbRegionToConnect(request);
+		String userType = PagesUtil.getLoginUserType(request);
+		
+		SessionMgr sessMgr = SessionMgr.getSessionMgr ();
+	    Session ses = sessMgr.getSession ( request, false );
+	    
+	    String session_cust_key = ses.getCurrentCustomerKey ( true );
+	    String user_region_code = ses.getUserRegionCode();
+		
+		//String priceTierID = request.getParameter("priceTierID");
+	    String cat_master_id = request.getParameter ( "masterID" );
+	    String bundle_template_id = request.getParameter ( "bundleTemplateID" );
+	    Customer cust = PagesUtil.getCustomer ( request );
+		
+		catalogBundleProcessor.searchBundles(form, returnObject, regionCode, aDbRegionToConnect, userType, false, session_cust_key, user_region_code, bundle_template_id, cat_master_id, cust, ses,PagesUtil.getTenantCode(request));
+		
+		String addToSession = (String) returnObject.get("addToSession");
+		if(addToSession == null){
+		
+			ses.setAttribute("selectedBundleTemplateSession", returnObject.get("selectedBundleTemplateSession"));
+			
+		}
+		
+		returnObject.put ( "CreateBundle_form", gson.toJson(form));
+		return returnObject.toString();
+	}
+	
+	@RequestMapping(value="/catalogBundle/processPopulate.htm", method = RequestMethod.POST)
+	public @ResponseBody String processPopulateBundle (Model mode, HttpServletRequest request,  @RequestBody String form0) {
+		JSONObject returnObject = new JSONObject();
+		Gson gson = new Gson();
+		CatalogBundleListForm form = new Gson().fromJson(form0.toString(), CatalogBundleListForm.class);
+		String regionCode = PagesUtil.getRegionCode(request);
+		String aDbRegionToConnect = PagesUtil.getDbRegionToConnect(request);
+		String userType = PagesUtil.getLoginUserType(request);
+		
+		SessionMgr sessMgr = SessionMgr.getSessionMgr ();
+	    Session ses = sessMgr.getSession ( request, false );
+	    
+		String selectedBundleTemplateSession = (String) ses.getAttribute("selectedBundleTemplateSession");
+		//String priceTierID = request.getParameter("priceTierID");
+		
+		catalogBundleProcessor.createCatalogBundle(form, returnObject, regionCode, aDbRegionToConnect, userType, selectedBundleTemplateSession);
+	
+		returnObject.put ( "CreateBundle_form", gson.toJson(form));
+		return returnObject.toString();
+	}
+	
+	@RequestMapping(value="/catalogBundle/processCreate.htm", method = RequestMethod.POST)
+	public @ResponseBody String processCreateBundle (Model mode, HttpServletRequest request, @RequestBody String  bundleForm) {
+		JSONObject returnObject = new JSONObject();
+		Gson gson = new Gson();
+		CatalogBundleListForm form;
+		
+		form = gson.fromJson(bundleForm, CatalogBundleListForm.class);
+		
+		String regionCode = PagesUtil.getRegionCode(request);
+		String userId = PagesUtil.getLoginUserID(request);
+		String aDbRegionToConnect = PagesUtil.getDbRegionToConnect(request);
+		String userType = PagesUtil.getLoginUserType(request);
+		
+		//String priceTierID = request.getParameter("priceTierID");
+		
+		catalogBundleProcessor.processCreateCatalogBundle(form, returnObject, regionCode, aDbRegionToConnect, userType, userId);
+	
+		returnObject.put ( "CreateBundle_form", gson.toJson(form));
+		return returnObject.toString();
+	}
+	
+	@RequestMapping(value="/bundleInstanceHeader/saveCustomizeContent.htm", headers="Accept=*/*",method = RequestMethod.POST)
+	public @ResponseBody
+	String SaveCustomizeContentr(@RequestBody String Objform,HttpServletRequest request){
+		BundleContentForm bdl_ctnt_form = new Gson().fromJson(Objform, BundleContentForm.class);
+	    Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+	    User user = ses.getUser ();
+	    Category log = CTX.getCTX ().getLog ();
+	    String lTemplateBundleId = request.getParameter ( "bundleTemplateID" );
+	    JSONObject customContent=null;
+	    customContent=new JSONObject();
+	    BundlePart bdl_part = null;
+	    String dbRegionToConnect=PagesUtil.getDbRegionToConnect(request);
+		String hp_lang_code = bdl_ctnt_form.getHPLangCode ();
+		try {
+			if (! StrUtil.isEmpty ( bdl_ctnt_form.getBundleID () ) )	{
+					bdl_part = catalogBundleProcessor.getCatalogBundlePart(bdl_ctnt_form);
+			}
+		
+		String id = bdl_ctnt_form.getID ();
+		/*if ( StrUtil.isEmpty ( bdl_ctnt_form.getImageURL () ) ) {
+			String imageURL = BundleWebUtil.uploadBundleImage ( log,id, hp_lang_code, bdl_ctnt_form.getImageFile (), user );
+			bdl_ctnt_form.setImageURL ( imageURL );
+		}*/
+		boolean baseModelImgFlag = bdl_ctnt_form.getBaseModelImageFlag();
+		boolean prevBaseModelImgFlag = 	bdl_ctnt_form.getPrevBaseModelImageFlag();
+		if(baseModelImgFlag )
+		{
+		    BundleQueryMgr mgr = BundleQueryMgr.newBundleQueryMgrType ();
+		    String imageURL=  mgr.getBundleBaseModelImage(bdl_ctnt_form.getBundleTemplateID(),hp_lang_code, dbRegionToConnect);
+		    bdl_ctnt_form.setImageURL ( imageURL );
+		}
+		bdl_ctnt_form.setPrevBaseModelImageFlag(baseModelImgFlag);
+		bdl_ctnt_form.fillCustomizedBundleContent ( bdl_part );
+		bdl_part.saveContent ( user.getId (),dbRegionToConnect );
+		bdl_ctnt_form.setTask ( null );
+		ses.setAttribute("bundlePart", bdl_part);
+		customContent.put("success", "Changes have been saved successfully.");
+		
+		logger.info(ses.getLoginAccId() +"-"+ ses.getAttribute("Region")+"--> SaveCustomizeContentr() : Changes have been saved successfully by "+ ses.getLoginAccId());
+		}
+		catch ( BundleException bundleEx ) {
+			customContent.put("error", "Error saving bundle content: "+bundleEx.getMessage () );
+			logger.info(ses.getLoginAccId() +"-"+ ses.getAttribute("Region")+"--> SaveCustomizeContentr() : Error saving bundle content: "+bundleEx.getMessage ());
+		}
+		
+	    return customContent.toJSONString();
+	}//SaveCustomizeContentr
+
+	
+	
+	@RequestMapping(value = "/bundle/loadEditBundle.htm",  headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String loadEditBundle(Locale locale, Model model,	HttpServletRequest request, CatalogBundleForm form0) {
+
+		Date date = new Date();
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG,	DateFormat.LONG, locale);
+		String formattedDate = dateFormat.format(date);
+		model.addAttribute("serverTime", formattedDate);
+		String dbRegionToConnect= PagesUtil.getDbRegionToConnect(request);
+		Customer customer = PagesUtil.getCustomer(request);
+		String catalogId = request.getParameter("catalogId");
+		String bundleId = request.getParameter("bundleId");
+		String priceDescriptor = request.getParameter("priceDescriptor");
+		JSONObject returnObject  = null;
+		
+		CatalogBundleForm bdl_form = ( CatalogBundleForm ) form0;
+		bdl_form.setCatalogID(catalogId);
+		bdl_form.setBundleID(bundleId);
+		bdl_form.setPriceDescriptor(priceDescriptor);
+		
+		/*if ( SAVE_BUNDLE.equals ( task ) ) {vw = saveBundle ( bdl_form, user, request
+		    , mapping );
+		}*/
+		returnObject = catalogBundleProcessor.retrieveBundle(bdl_form, dbRegionToConnect, customer);
+		
+	/*	String fileName = file.getOriginalFilename();
+		if (StrUtil.isEmpty(fileName) || (!fileName.endsWith(".jpg") && !fileName.endsWith(".gif"))) {
+			jObj.put("invalidFile", "Please Upload JPEG or GIF file");
+			return jObj.toJSONString();
+		}
+			return bundleHeaderProcessor.bundleContentUploadImage(bdlTemplateId, regionCode, loginUserId, file, user, dbRegionToConnect, bdlPart);*/
+		return returnObject.toString();	
+	}
+	
+	@RequestMapping(value = "/bundle/saveEditBundle.htm",  headers = "Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody String saveEditBundle(Locale locale, Model model,	HttpServletRequest request, CatalogBundleForm form0, 
+			@RequestBody String jsonform) {
+
+		Date date = new Date();
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG,	DateFormat.LONG, locale);
+		String formattedDate = dateFormat.format(date);
+		model.addAttribute("serverTime", formattedDate);
+		String dbRegionToConnect= PagesUtil.getDbRegionToConnect(request);
+		Customer customer = PagesUtil.getCustomer(request);
+		String catalogId = request.getParameter("catalogId");
+		String bundleId = request.getParameter("bundleId");
+		String priceDescriptor = request.getParameter("priceDescriptor");
+		JSONObject returnObject  = new JSONObject();
+		User user = PagesUtil.getLoginUser(request);
+		dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+		CatalogBundleForm bdl_form = new Gson().fromJson(jsonform, CatalogBundleForm.class);
+		Date startDate = null;
+		Date endDate = null;
+		String message = "";
+		try {
+			message = "Start Date : ";
+			startDate = dateFormat.parse(bdl_form.getStartDate());
+			message = "End Date : ";
+			endDate = dateFormat.parse(bdl_form.getEndDate());
+			message = "";
+		} catch (ParseException e) {
+			returnObject.put("errorMsg", message+"invalid date");
+			return returnObject.toString();
+		}
+		if(endDate.before(startDate) ) {
+			returnObject.put("errorMsg", "End date can not be earlier than the start date");
+			return returnObject.toString();
+		}
+		bdl_form.setCatalogID(catalogId);
+		bdl_form.setBundleID(bundleId);
+		bdl_form.setPriceDescriptor(priceDescriptor);
+		
+		returnObject = catalogBundleProcessor.saveBundle(bdl_form, dbRegionToConnect, customer, user);
+		
+		return returnObject.toString();	
+	}
+	
+	@RequestMapping(value = "/bundle/searchBundleConfig.htm", headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody
+	String searchBundleConfig(HttpServletRequest request) {		
+		String configId = request.getParameter("configId");
+		JSONArray searchBundleList = catalogBundleProcessor.searchBundleConfig(configId, PagesUtil.getDbRegionToConnect(request));
+		return searchBundleList.toJSONString();
+	}// searchBundleConfig
+}

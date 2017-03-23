@@ -1,0 +1,383 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.controller;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.JedisServerLayer;
+import com.hp.ecc.ui.biz.ResponseStatus;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.processor.catalog.ViewChildCatalogProcessor;
+import com.hp.ecc.ui.biz.product.CatalogProductMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.ZeroPriceOption;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.biz.admin.Auth;
+import com.hp.ecc.ui.common.biz.admin.AuthMgr;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.web.catalog.master.MasterWebUtil;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.StatusMsgUtil;
+import com.hp.ecc.ui.view.beans.EditCatalogForm;
+import com.hp.ecc.ui.view.beans.MasterProductOptionBean;
+import com.hp.ecc.ui.view.beans.ProductOptionListForm;
+import com.hp.ecc.ui.web.util.EditCatalogConverter;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+
+/**
+ * @author reddvino
+ *
+ */
+@Controller
+public class ChildCatalogProductController {
+		private ViewChildCatalogProcessor viewChildCatalogProcessor = new ViewChildCatalogProcessor();
+	private static final Logger logger = LoggerFactory.getLogger(ChildCatalogProductController.class);
+	
+	 @SuppressWarnings("unused")
+	 @RequestMapping(value = "/childCatalog/productList.htm", headers="Accept=*/*",method = RequestMethod.POST)
+		public @ResponseBody String productListForChildCatalog(EditCatalogForm form0, HttpServletRequest request,@RequestParam(value = "childID", required = false) String catalog_id,@RequestParam(value = "filter", required = false) String filterStr){
+			JSONObject viewChildCatalogData = new JSONObject();
+			Gson gson = new Gson();
+		
+			Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+			Customer cust = ses.getCurrentCustomer(true);
+			boolean isMasterPage = false;
+
+			EditCatalogForm form = new Gson().fromJson(filterStr, EditCatalogForm.class);
+			// Added for SalesRep
+			form.setRoleId(PagesUtil.getLoginUserRole(request));
+			//String catalog_id = (String) request.getParameter("childID");
+			if( ses.getAttribute("CCATALOG_ID_"+catalog_id) != null){
+		    	String cId = (String) ses.getAttribute("CCATALOG_ID_"+catalog_id);
+		    	if( !catalog_id.equals(cId)){
+		    		ses.removeAttribute("CHILDCATALOGINFO_"+catalog_id);
+		    		ses.removeAttribute("CHILD_CATALOG_PRODUCT_COUNT_"+catalog_id);
+		    		ses.removeAttribute("CATEGORIZATION_INFO_"+catalog_id);
+		    		
+		    		JedisServerLayer jServerLayer = new JedisServerLayer();
+		    		jServerLayer.clearProductListData(catalog_id);
+		    		
+		    		ses.setAttribute("CCATALOG_ID_"+catalog_id,catalog_id);
+		    	}
+		    }
+		    else{			    	
+		    	ses.setAttribute("CCATALOG_ID_"+catalog_id,catalog_id);			    	
+		    }
+		
+			Catalog catalog = (Catalog) ses.getAttribute("CHILDCATALOGINFO_"+catalog_id);
+			if(catalog == null) {
+				catalog = EditCatalogConverter.retrieveCatalogInfo(catalog_id, PagesUtil.getDbRegionToConnect(request));
+				ses.setAttribute("CHILDCATALOGINFO", catalog);
+			}
+			
+			Catalog cat = new Catalog();
+			cat.setId(catalog_id);
+			
+			form.setIsUSPSCustomer(ses.getCurrentCustomer(true).isFedCust());
+			if ("Y".equalsIgnoreCase(catalog.getIsTiedToPriceTier())) {
+				///MasterWebUtil.checkMasterCatWarnings(catalog, vw);
+			}
+
+			// determine if user has permission to delete product or not
+			Auth auth = (Auth) ses.getAttribute("AUTH");
+			if( auth == null){
+				User user = (User) ses.getUser();
+				AuthMgr authMgr = AuthMgr.getAuthMgr();
+				auth = authMgr.getAuth(user);
+			}
+			if (auth.isPermit(PermissionCode.DELETE_PRODUCTS_IN_SUBCATALOG)) {
+				form.setIsDeleteProductEnabled("true");
+			} else {
+				form.setIsDeleteProductEnabled("false");
+			}
+
+			if (auth.isPermit(PermissionCode.SET_PRODUCT_OPTIONS_IN_SUBCATALOG)) {
+				form.setIsSetProductOptionInSubCatEnabled("true");
+			} else {
+				form.setIsSetProductOptionInSubCatEnabled("false");
+			}
+
+			if (auth.isPermit(PermissionCode.CREATE_SUBCATALOG)) {
+				form.setCanEditCatalog(true);
+			} else {
+				form.setCanEditCatalog(false);
+			}
+
+			form.setCanArchieve(auth.isPermit(PermissionCode.EDIT_SUBCATALOG_ARCHIVE));
+			
+			form.setTermsAndCondition(catalog.getTermsAndCondition());
+			form.setRegionCode(catalog.getRegionCode());
+			form.setCatalogName ( catalog.getCatalogName());
+			form.setLocale(catalog.getLocale());
+			form.setPriceDescriptor ( catalog.getPriceDescriptor () );
+			form.setMasterID(catalog.getId());
+						
+			// setCanUploadReslr o=in form
+			viewChildCatalogProcessor.setCanUploadReslr(cust, form);
+			
+			// Dispatches based on task
+			String task = request.getParameter("task");///form.getTask();
+
+			if (task == null || task.length() == 0) {	// no form submission, retrieval only
+				//String showFFSflag = (String) ses.getAttribute(IApplicationConstants.MASTER_CAT_SHOW_FFS_FOR_OPTIONS_FLAG);
+				boolean showFFSflag = (boolean) form.isFfsPartNumber();
+				if (showFFSflag) {
+					form.setShowFFSForOptions(showFFSflag);
+				}	
+				return viewChildCatalogProcessor.processRetrievalList(catalog ,form, request).toJSONString();
+			} else if (task.equals("delete")) {
+				return null;
+				///return viewChildCatalogProcessor.processDelete(catalog, form, request);
+			} else if (task.equals("toggleFFSDisplay")) {
+
+				if (form.getShowFFSForOptions()) {
+					ses.setAttribute(IApplicationConstants.MASTER_CAT_SHOW_FFS_FOR_OPTIONS_FLAG, "true");
+				} else {
+					ses.setAttribute(IApplicationConstants.MASTER_CAT_SHOW_FFS_FOR_OPTIONS_FLAG, "false");
+				}
+
+				return viewChildCatalogProcessor.processRetrievalList(catalog ,form, request).toJSONString();
+
+			}// Added for Chianti - Bundle Management- Fwd user to View Promotions page.
+			else if (task.equals("promoView")) {
+				return null;
+				///return forwardToViewPromotions(catalog.getId(),	catalog.getCatalogName(), catalog.getCatMasterKey());
+			} else {
+				// should never happen
+				throw new RuntimeException("invalid task: " + task);
+			}
+		}//productListForMasterCatalog
+	 
+	 @SuppressWarnings("unused")
+	 @RequestMapping(value = "childCatalog/productList/deleteProcess.htm", headers="Accept=*/*",method = RequestMethod.POST)
+		public @ResponseBody String deleteChildProduct(EditCatalogForm form0, HttpServletRequest request, @RequestParam(value = "childID", required = false) String childID, @RequestParam(value="prodPropsDescriptors",required = false) String prodPropsDescriptors,
+				@RequestParam(value="productListSelected",required = false) String productListSelected){
+		 JSONObject deleteChildProductsJsonObject = null;
+		 deleteChildProductsJsonObject = new JSONObject();
+		 Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+		 //String childID =  request.getParameter("childID");
+		 	//String prodPropsDescriptors = request.getParameter("prodPropsDescriptors");
+		 	//String productListSelected = request.getParameter("productListSelected");
+		 	String[] prodPropDescriptors = null;
+		 	String[] selectedProducts = null;
+		 	if(prodPropsDescriptors != "" || prodPropsDescriptors != null){
+		 		prodPropDescriptors = prodPropsDescriptors.split(",");///form.getProductListSelected ();
+		 	}
+		 	if(productListSelected != "" || productListSelected != null){
+		 		selectedProducts = productListSelected.split(",");///form.getProdPropsDescriptors ();
+		 	}
+		 	/*if (selectedProducts == null || prodPropDescriptors == null) { 
+				deleteChildProductsJsonObject.put("errorMsg", "Please check the product(s) to Delete/Undelete!");
+				return 	deleteChildProductsJsonObject.toJSONString();
+			}*/
+			CatalogProductMgr productMgr = new CatalogProductMgr();
+			productMgr.setCatalogID(childID);
+
+			String successDelProdIDs = "";
+			String failDelProdIDs = "";
+			String successUndelProdIDs = "";
+			String failUndelProdIDs = "";
+
+			String productDeleteChecked[] = new String[prodPropDescriptors.length];
+			for (int i = 0; i < productDeleteChecked.length; i++) {
+				productDeleteChecked[i] = "N";
+			}
+			for (int i = 0; i < selectedProducts.length; i++) {
+				if(selectedProducts[i].length() > 0){
+					int selectPosition = Integer.parseInt(selectedProducts[i]);
+					productDeleteChecked[selectPosition] = "Y";
+				}
+			}
+			String returnMessage = "";
+			for (int i = 0; i < prodPropDescriptors.length; i++) {
+				ArrayList currProdDescriptor = StrUtil.splitWithEmptyInList(prodPropDescriptors[i], ";");
+				String id = (String) currProdDescriptor.get(0);
+				ArrayList prodList = StrUtil.split(id, "^");
+				String prodId = (String) prodList.get(1);
+
+				String deleteFlag = (String) currProdDescriptor.get(1);
+				String loginUserID = PagesUtil.getLoginUserID(request);
+				/*log.debug("Delete product id: " + id);
+				log.debug("Delete catalog ID: " + childID);
+				log.debug("Delete deleteFlag: " + deleteFlag);
+				log.debug("Delete lastmodifyBy: " + loginUserID);
+				log.debug("Delete is selected status: " + productDeleteChecked[i]);*/
+				if (deleteFlag.equalsIgnoreCase(productDeleteChecked[i])) {
+					////* User did not change product delete flag in the browser Hence no action is required for the current product.*/
+				} else {
+					Product currProduct = new Product();
+					currProduct.setId(id);
+					currProduct.setProdId(prodId);
+					// currProduct.setCatMasterKey(masterID);
+					currProduct.setLastModifiedBy(loginUserID);
+					currProduct.setDeleteFlag(productDeleteChecked[i]);
+					Product returnProduct = null;
+					productMgr.updateProductDeleteFlag(currProduct, PagesUtil.getDbRegionToConnect(request));
+					if(productDeleteChecked[i] == "Y"){
+						returnMessage = returnMessage + prodId+" was successfully deleted from catalog.\n";
+						///deleteChildProductsJsonObject.put("successMsg", prodId+" was successfully deleted from catalog.");///productMgr.updateProductDeleteFlag(currProduct));
+					}else{
+						returnMessage = returnMessage + prodId+" was successfully undeleted from catalog.\n";
+						///deleteChildProductsJsonObject.put("successMsg", prodId+" was successfully undeleted from catalog.");///productMgr.updateProductDeleteFlag(currProduct));
+					}
+				}
+			}
+			deleteChildProductsJsonObject.put("successMsg",returnMessage);
+			
+			logger.info(ses.getLoginAccId()+"-"+ses.getAttribute("Region")+"--> deleteChildProduct() :" +  returnMessage+ " " + childID + " by "+ses.getLoginAccId());
+			
+			return deleteChildProductsJsonObject.toJSONString();
+
+	 }
+		@RequestMapping(value = "/product/getChildProductOptionList.htm", headers="Accept=*/*",method = RequestMethod.GET)
+		public @ResponseBody String getChildProductOptionList(HttpServletRequest request){		
+			JSONObject childProductOptionData = new JSONObject();
+			 ProductOptionListForm form = new  ProductOptionListForm() ;
+			 Gson gson=new Gson();
+			 form.setRoleId(PagesUtil.getLoginUserRole(request));
+			 String catalogID = request.getParameter("childId");
+			 String pID = request.getParameter("pID");
+			 form.setCatalog_id(catalogID);
+			 String dbRegionToConnect=(PagesUtil.getDbRegionToConnect(request));
+			 CatalogProductMgr mgr = new CatalogProductMgr ();
+			 mgr.setCatalogID ( catalogID );
+			 Product product = mgr.getItem ( pID,dbRegionToConnect );
+			 product.setRegionCode(PagesUtil.getRegionCode(request)); 
+			 form.setProductId ( product.getProdId () );
+			 form.setProductDesription ( product.getShortDesc () );
+			 form.setBomElement ( product.getBomFlag () );
+
+			    // get all the options
+			    List optionList = viewChildCatalogProcessor.getOptionList ( form.getProductId (), product , catalogID, form ,dbRegionToConnect);
+			    if ( StrUtil.isListEmpty ( optionList ) ) {
+			    	childProductOptionData.put("Message", "No options for this product found.");
+			    }
+			    Collection options = optionList;
+			    String option = product.getOptions ();
+			    String hiddenOpts = "";
+			    if ( option != null ) {
+			      List eList = StrUtil.split ( option, "," );
+			      Iterator iterator = eList.iterator ();
+			      while ( iterator.hasNext () ) {
+			        String eOption = ( String ) iterator.next ();
+			        if ( eOption.startsWith ( "." ) ) {
+			          hiddenOpts += eOption + ",";
+			          iterator.remove ();
+			        }
+			      }
+			      if ( hiddenOpts.endsWith ( "," ) ) {
+			        hiddenOpts = hiddenOpts.substring ( 0, hiddenOpts.length () - 1 );
+
+			      }
+			      String[] optionPresent = new String[eList.size ()];
+			      int size = eList.size ();
+			      for ( int i = 0; i < size; i++ ) {
+			        String eOption = ( ( String ) ( eList.get ( i ) ) ).trim ();
+			        optionPresent[i] = eOption;
+			      }
+			      form.setHiddenOptions ( hiddenOpts );
+			    }
+			    JSONArray jsonArray = new JSONArray();
+			    JSONObject jsonObj = null; 
+			    for(int v = 0; v < optionList.size(); v++){ 
+			    	jsonObj = new JSONObject(); 
+			    	ZeroPriceOption zeroPriceOption = (ZeroPriceOption)optionList.get(v);
+			    	jsonObj.put("ProdId",zeroPriceOption.getProdId()); 
+			    	jsonObj.put("CountryCode",zeroPriceOption.getCountryCode());
+			    	jsonObj.put("OptionDesc",zeroPriceOption.getOptionDesc());
+			    	jsonObj.put("Type",zeroPriceOption.getType());
+			    	jsonObj.put("fsPartNum",zeroPriceOption.getFSPartNum());
+			    	jsonObj.put("fOrderabilityFlag",zeroPriceOption.getOrderabilityFlag());
+			    	jsonObj.put("fPublishFlag",zeroPriceOption.getPublishFlag());
+			        jsonArray.add(jsonObj); 
+			    }
+			    childProductOptionData.put("productList",jsonArray);
+			    childProductOptionData.put("form",gson.toJson(form));
+			return childProductOptionData.toJSONString();
+		}//getChildProductOptionList
+	   
+		@RequestMapping(value = "/product/saveChildProductOption.htm", headers = "Accept=*/*", method = RequestMethod.POST)
+		public @ResponseBody String saveProductOption(HttpServletRequest request, @RequestBody String editInfo) {
+		JSONObject childProductOptionData = new JSONObject();
+		ProductOptionListForm form =  new Gson().fromJson(editInfo,  ProductOptionListForm.class) ;
+		form.setId( request.getParameter("pID"));
+		String productId = form.getProductId ();
+		String[] listSelected = form.getListSelected ();
+	    String catalogId = form.getCatalog_id ();
+	    String dbRegionToConnect=PagesUtil.getDbRegionToConnect(request);
+	    String opt = ",";
+	    if ( listSelected != null && listSelected.length > 0 ) {
+	      for ( int i = 0; i < listSelected.length; i++ ) {
+	        if ( opt.indexOf ( "," + listSelected[i] + "," ) < 0 ) {
+	          opt += listSelected[i] + ",";
+	        }
+	      }
+	    }
+	    if ( opt.length () == 1 ) {
+	      opt = "";
+	    }
+	    if ( opt.length () > 1 ) {
+	      opt = opt.substring ( 1, opt.length () - 1 );
+	    }
+	    String hiddenOpts = form.getHiddenOptions ();
+	    if ( StrUtil.isEmpty ( opt ) ) {
+	      opt = hiddenOpts;
+	    }
+	    else if ( !StrUtil.isEmpty ( hiddenOpts ) ) {
+	      opt += "," + hiddenOpts;
+
+	    }
+	    CatalogProductMgr mgr = new CatalogProductMgr ();
+	    mgr.setCatalogID ( form.getCatalog_id () );
+	    Product product = mgr.getItem ( form.getId (),dbRegionToConnect );
+	   if(product!=null)
+	    product.setOptions ( opt );
+	    product.setLastModifiedBy ( PagesUtil.getLoginUserID ( request ) );
+	    viewChildCatalogProcessor.addOption ( product, mgr ,dbRegionToConnect, childProductOptionData);
+	    
+
+	    return childProductOptionData.toJSONString();
+		}//saveProductOption
+		
+		
+		@RequestMapping(value = "/childcatalog/retrieveQuoteId.htm", headers="Accept=*/*",method = RequestMethod.POST)
+		public @ResponseBody String retrieveQuoteId(Model model, HttpServletRequest request){
+			String catalogId = request.getParameter("catalogId");
+			String productId = request.getParameter("productId");
+			JSONObject quoteObject = new JSONObject();
+			
+			String quoteId = null;
+			if(catalogId != null){
+				quoteId = viewChildCatalogProcessor.retrieveQuoteId(catalogId, productId, PagesUtil.getDbRegionToConnect(request));		  
+			}
+			quoteObject.put("quoteId", quoteId);
+				
+			return	quoteObject.toJSONString();
+		}//retrieveQuoteId
+
+}//class

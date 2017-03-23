@@ -1,0 +1,301 @@
+<div class="row" data-ng-controller="stdComponentCrtl" id="stdComponent"  style="width:100%;">
+<div id="messageDiv"></div>	
+   
+    <div class="customer_rows form-border">
+                     <div class="customer_rows">
+                      <div class="four columns">
+                         <div class="generals" ng-show="form.fTemplateFlag==false">
+				            <span>Bundle Name:</span>
+				         <div class="div_input"  ng-bind="fBundle.fShortDesc"></div>
+	                </div>
+	                <div class="generals">
+                              <span>Bundle Template Name:</span>
+                              <div class="div_input"  ng-bind="fBundle.fBundleTemplateName" ng-if="form.fTemplateFlag==false"></div>
+	               			  <div class="div_input"  ng-bind="fBundle.fShortDesc" ng-if="form.fTemplateFlag==true"></div>                     
+                         </div>                        
+                         <div class="generals">
+                              <span>Customer Part#:</span>                                                                                                                     
+                                   <div class="div_input"  id="customerPartId" ng-bind="fBundle.fCustomerPartID"></div>                             
+                            </div>                                                         
+                            <div class="generals"  ng-show="form.fTemplateFlag==false || form.genericTemplateFlag==false">
+                              <span>Price:</span>
+                              <div class="div_input"  id="price"  ng-bind="fBundle.fPriceAsStr"></div>                    
+                         </div>
+                         <div class="generals" ng-show="form.fTemplateFlag==false">
+			            <span>Catalog ID:</span>
+			               <div class="div_input"  ng-bind="fBundle.fCatalogID"></div>
+			                </div>                                                                                                                                          
+                      </div>       
+                      <div class="four columns">               
+                          <div class="generals" ng-show="form.fTemplateFlag==false">
+				            <span>Bundle ID:</span>
+				               <div class="div_input"  ng-bind="fBundle.fBundleID"></div>
+				                </div>
+	                <div class="generals">
+                              <span>Bundle Template ID:</span>
+                              <div class="div_input" id="bundleTemplateId" ng-bind="fBundle.fBundleTemplateID"></div>
+                         </div>    
+                            
+                         <div class="generals"  ng-hide="form.genericTemplateFlag">
+                              <span>Customer ID:</span>
+                              <div class="div_input" id="customerId" ng-bind="fBundle.fCustID"></div>                
+                         </div>    
+                         <div class="generals" ng-hide="form.genericTemplateFlag">
+                              <span>Price Descriptor:</span>
+                              <div class="div_input" id="priceDesc" ng-bind="fBundle.fPriceDescriptor"></div>                
+                         </div> 
+                         <div class="generals" ng-show="form.fTemplateFlag==false">
+	            <span>Catalog Name:</span>
+	               <div class="div_input"  ng-bind="fBundle.fCatalogName"></div>
+	                </div>                                                             
+                           </div> 
+                           <div class="four columns">
+                         <div class="generals" ng-show="form.fTemplateFlag==false">
+				            <span>Bundle Status:</span>
+				               <div class="div_input" id="bundleTemplateStatus" ng-bind="fBundle.fValidity"></div>
+				         </div>
+				         <div class="generals" ng-show="form.fTemplateFlag==true">
+				            <span>Bundle Template Status:</span>
+				               <div class="div_input" id="bundleTemplateStatus" ng-bind="fBundle.fValidity"></div>
+				                </div>
+                         <div class="generals"  ng-hide="form.genericTemplateFlag">
+                              <span>Customer Name:</span>                                                
+                                         <div class="div_input" id="customerName"  ng-bind="fBundle.fCustName"></div>                        
+                            </div>                                                                                                                                                      
+                      </div>                                                
+                     <div class="customer_rows">
+                           <h1 class="h1Underline row" style="margin:0; height: 0px;"></h1>
+                     </div>                       
+                     <div class="customer_rows">
+                           <div class="four columns" ng-show="(!(roleId==2 || roleId==6)) && form.fTemplateFlag==true">                      
+                                         <a class="btn btn-inline" ng-click="propagateTemplate()"><span id="Save">Propagate Template Changes</span></a>                                                                                                              
+                           </div>
+                           <div class="four columns"> 
+                                         <div class="generals">     
+                              <span>Last Catalog Bundle Update:</span>
+                              <div class="div_input" ng-bind="dateParserForBundleUpdatedTime.changeDateFormat(fBundle.fLastModifiedDate)"></div>
+                              </div>                
+                      </div>
+                     </div> 
+              </div>
+              </div>
+
+ 				<div class="customer_rows" >
+                        <div class="twelve columns" ng-if="!form.fReadOnlyRoleFlag">
+                               <div class="customer_rows">
+                                      <h1 class="h1Underline row" style="margin:0; height: 0px;"></h1>
+                               </div>                                                 
+                               <div class="customer_rows">
+                                      <div class="six columns">                       
+                                                    <a class="btn btn-inline" ng-click="updateStandaloneComponent()"><span id="update">Update</span></a>                            
+                                                    <a class="btn btn-inline" ng-show="!form.genericTemplateFlag" href="{{stdComponent_AddEclipseBundle}}" ng-init="addEclipseBdlComponentOWNT()" ng-click="addEclipseBdlComponent()"><span id="AddEclipseBdlComponent">Add Eclipse Bdl Component</span></a>
+                                                    <a class="btn btn-inline" href="{{stdComponent_addOptionPack}}" ng-init="addOptionPackOWNT(fBundle.fCustID)" ng-click="addOptionPack(fBundle.fCustID)"><span id="AddOptionPack">Add Option Pack</span></a>                                                                 
+                                      </div>               
+                               </div>
+                        </div> 
+                  </div>
+
+      
+				<div class="table-scroll">
+		    		<table id="stdList" class="dataGrid" width="100%">
+						<thead>
+							<tr class="GridHeaderRow">
+								<th style="padding: 1px 05px 5px; text-align:center; ">Delete</th> 
+								<th style="padding: 1px 05px 5px; text-align:center;">Reqd.</th>
+								<th style="padding: 1px 05px 5px; text-align:center;">Pre-Select</th>
+								<th style="padding: 1px 05px 5px; text-align:center;">Hide Product</th>
+								<th style="padding: 1px 05px 5px; text-align:center;">Hide Price</th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center;" >Base</th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center;">Base Model</th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center;">Part #</th>
+								<th style="padding: 1px 05px 5px; text-align:center;">Do Not Localize</th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center;">Quantity</th>
+								<th style="padding: 1px 05px 5px; text-align:center;">Variable Qty</th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center;">Short Description</th>
+								<th class="center" ng-show="form.fTemplateFlag==true && !form.genericTemplateFlag">Deal</th>
+								<th class="center" ng-show="!form.genericTemplateFlag">Eclipse Bundle ID</th>
+								<th class="center" ng-show="!form.genericTemplateFlag">Price</th>
+								<th class="center" ng-show="form.fTemplateFlag==true && !form.genericTemplateFlag">Price Descriptor</th>
+								<th class="center" ng-show="form.fTemplateFlag==true && !form.genericTemplateFlag">Product Details</th>
+								<th class="center" ng-show="form.fTemplateFlag==false">Validity</th>
+								<th ng-show="(regionCode == 'US' || regionCode == 'GL' ) && form.fTemplateFlag==true" class="center" >ContextID</th>
+								<th style="padding: 1px 05px 5px; text-align:center;">In the box</th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center;">Charge Shipping</th>
+								<th style="padding: 1px 05px 5px; text-align:center;" ng-show="(regionCode == 'US' || regionCode == 'GL' )" class="center">Ship Together</th>
+							</tr>
+							<tr class="GridHeaderRow" style="border:solid 1px white">
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="delChkAll" ng-change="checkDelAll()"/></th> 
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="reqChkAll" ng-change="chkReqAll()" /></th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"  ng-show="form.fTemplateFlag==true" ><input type="checkbox" ng-model="preSelectChkAll" ng-change="chkPreSelectAll()" ng-disabled="preSelectDisable"/></th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;" ng-show="form.fTemplateFlag==false"><input type="checkbox" ng-model="preSelectChkAll" ng-change="chkPreSelectAll()"/></th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="hideProdChkAll" ng-change="chkHideProdAll()"/></th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="hidePriceChkAll" ng-change="chkHidePriceAll()"/></th>
+								<th class="center" >&nbsp;</th>
+								<th class="center">&nbsp;</th>
+								<th class="center">&nbsp;</th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="localizeChkAll" ng-change="chkLocalizeAll()"/></th>
+								<th class="center">&nbsp;</th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="varQtyChkAll" ng-change="chkVarQtyAll()" /></th>
+								<th class="center">&nbsp</th>
+								<th class="center" ng-show="form.fTemplateFlag==true && !form.genericTemplateFlag">&nbsp;</th>
+								<th class="center" ng-show="!form.genericTemplateFlag">&nbsp;</th>
+								<th class="center" ng-show="!form.genericTemplateFlag">&nbsp;</th>
+								<th class="center" ng-show="form.fTemplateFlag==true && !form.genericTemplateFlag">&nbsp;</th>
+								<th class="center" ng-show="form.fTemplateFlag==true && !form.genericTemplateFlag">&nbsp;</th>
+								<th class="center" ng-show="form.fTemplateFlag==false"></th>
+								<th ng-show="(regionCode == 'US' || regionCode == 'GL' ) && form.fTemplateFlag==true" class="center">&nbsp;</th>
+								<th style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;"><input type="checkbox" ng-model="inBoxChkAll" ng-change="chkInBoxAll()"/></th>
+								<th class="center" style="padding: 1px 05px 5px; text-align:center; vertical-align: middle;">&nbsp;<input ng-show="form.fTemplateFlag==true && (regionCode == 'EU' || regionCode == 'GL')" type="checkbox" ng-model="chargeShipChkAll" ng-change="chkChargeShipAll()"/></th>
+								<th style="padding: 1px 05px 5px" ng-show="(regionCode == 'US' || regionCode == 'GL' )" class="center">
+								<input type="checkbox" ng-model="shipTogetherChkAll" ng-change="chkShipTogetherChkAll()" /></th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'" ng-show="form.fTemplateFlag==true" ng-repeat="component in fComponents">
+								<td class="center"><input type="checkbox" ng-if="!component.readOnlyFlag" ng-model="component.fSoftDeleteFlag"/></td>
+								<td class="center" ng-if="!component.readOnlyFlag" ><input type="checkbox" ng-model="component.fRequiredFlag"  ng-change="changePreselect(component)" /></td>
+								<td class="center" ng-if="component.readOnlyFlag" >{{component.fRequiredFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fPreselectedFlag"  ng-disabled="component.disableFlg" /></td>
+								<td class="center" ng-if="component.readOnlyFlag" >{{component.fPreselectFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fHideFlag" ng-change="changeHidePreselect(component)"/></td>
+								<td class="center" ng-if="component.readOnlyFlag" >{{component.fHideFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fPriceHideFlag" /></td>
+								<td class="center" ng-if="component.readOnlyFlag && component.fPriceHideFlag=='S'"><input type="checkbox" ng-model="component.fPriceHideFlag" /></td>
+								<td class="center" ng-if="component.readOnlyFlag && component.fPriceHideFlag=='H'">{{component.fPriceHideFlag}}</td>
+								<td class="center">
+									<input ng-show="component.bundleStandalone" type="radio"  ng-value="component.fBundleCompID" ng-model="radioChecked" name="baseProd" ng-if="component.fBaseProdFlag==true" ng-checked="true" ng-change=radioSelect(component) />
+									<input ng-show="component.bundleStandalone" type="radio"  ng-value="component.fBundleCompID" ng-model="radioChecked" name="baseProd" ng-if="component.fBaseProdFlag!=true" ng-change=radioSelect(component) />
+								</td>
+								<td ng-show="component.bundleStandalone" class="center">{{component.fBaseModel}}</td>
+								<td ng-hide="component.bundleStandalone" class="center">
+									<a href="{{addOptionPackBundleNewTab(component.fBundleCompID, fBundle.fCustID)}}"  ng-click="addOptionPackBundle(component.fBundleCompID, fBundle.fCustID)">{{component.fBundleCompID}}</a>
+								</td>
+								<td class="center" ng-if="!component.viewOnlyFlag"><a href="{{showComponentOptionNewTab(component.fBundleCompID)}}"  ng-click="showComponentOption(component.fBundleCompID)">{{component.fSrcProd}}</a></td>
+								<td class="center" ng-if="component.viewOnlyFlag">{{component.fSrcProd}}</td>
+								
+								<td class="center" ng-if="!component.bundleStandalone"><input type="checkbox" ng-model="component.fLocalizeFlag" ng-disabled ="component.isLocalizeDisabled" /></td>
+								<td class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag"><input type="checkbox" ng-model="component.fLocalizeFlag" /></td>
+								<td class="center" ng-if="component.bundleStandalone && component.readOnlyFlag">{{component.fLocalizeFlag}}</td>
+								<td ng-if="component.bundleStandalone && !component.readOnlyFlag"  class="center"><input type="text" style="text-align:center" ng-model="component.fQuantity"/></td>
+								<td ng-if="component.bundleStandalone && component.readOnlyFlag"  class="center">{{component.fQuantity}}</td>
+								<td ng-if="(!component.bundleStandalone && !component.readOnlyFlag) || component.readOnlyFlag" class="center">{{component.fQuantity}}</td>
+								<td  class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag"><input type="checkbox" ng-model="component.fVariableQtyFlag" /></td>
+								<td  class="center" ng-if="component.bundleStandalone && component.readOnlyFlag">{{component.fVariableQtyFlag}}</td>
+								<td  class="center" ng-if="!component.bundleStandalone"></td>
+								<td  class="center">{{component.fShortDesc}}</td>
+								<!-- <td colspan="4" ng-show="component.bundleStandalone" > <select ng-model="component.dealValue">
+        								<option ng-repeat="item in component.dealEclipseId" ng-model="component.dealValue" value="{{item}}">{{item}}</option>
+      								</select>
+								</td> -->
+								<td colspan="4" ng-show="component.bundleStandalone && !form.genericTemplateFlag" > <select ng-model="component.dealValue"  
+        								ng-options="item as item for item in component.dealEclipseId">
+        								<option>Select...</option>
+      								</select>
+								</td>
+								<td ng-hide="component.bundleStandalone || form.genericTemplateFlag" colspan="5">{{component.fPriceAsStr}}</td>
+								<td ng-show="component.bundleStandalone && !form.genericTemplateFlag && form.fTemplateFlag==true">
+									<div align=left style='width: 200px;height: 100px;overflow: scroll;'>
+										 Deal:&nbsp;{{component.dealId}}<br>
+							             Eclipse&nbsp;Bundle&nbsp;ID:&nbsp;{{component.fConfigID}}<br>
+							             Price:&nbsp;{{component.fPriceAsStr}}<br>
+							             Price&nbsp;Desc:&nbsp;{{component.priceDescriptor}}<br>
+						            </div>
+						        </td>
+						        <td  class="center" ng-if="(regionCode == 'US' || regionCode == 'GL' ) && component.bundleStandalone" >{{component.fContextID}}</td>
+						         <td  class="center" ng-if="(regionCode == 'US' || regionCode == 'GL' ) && !component.bundleStandalone" ></td>
+								<td  class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag"><input type="checkbox" ng-model="component.fInTheBoxFlag" /></td>
+								<td  class="center" ng-if="component.bundleStandalone && component.readOnlyFlag">{{component.fInTheBoxFlag}}</td>
+								<td  class="center" ng-if="!component.bundleStandalone"></td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType == 'SALES' && fBundle.fCustFlag == 'Y' && !component.readOnlyFlag && form.editChargeShipFlag == 'Y'" ><input type="checkbox" ng-model="component.fChargeShippingFlag"/></td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType == 'SALES' && fBundle.fCustFlag == 'Y' && !component.readOnlyFlag && form.editChargeShipFlag == 'N'" >{{component.fChargeShippingFlag}}</td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType == 'SALES' && fBundle.fCustFlag == 'N'" >{{component.fChargeShippingFlag}}</td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType == 'SALES' && fBundle.fCustFlag == 'Y' && component.readOnlyFlag" >{{component.fChargeShippingFlag}}</td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType != 'SALES' && !component.readOnlyFlag && form.editChargeShipFlag == 'Y'" ><input type="checkbox" ng-model="component.fChargeShippingFlag"/></td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType != 'SALES' && !component.readOnlyFlag && form.editChargeShipFlag == 'N'" >{{component.fChargeShippingFlag}}</td>
+								<td  class="center" ng-if="component.bundleStandalone && component.bundleType != 'SALES' && component.readOnlyFlag" >{{component.fChargeShippingFlag}}</td>
+								<!-- <td  class="center" ng-hide="component.bundleStandalone" ></td> -->
+								<td  class="center" ng-if="!component.bundleStandalone" ></td>
+			<!-- 					<td  class="center" ng-show="component.bundleStandalone && form.editChargeShipFlag == 'N'">{{component.fChargeShippingFlag}}</td> -->
+								<td class="center" ng-if="(component.bundleStandalone && (regionCode == 'US' || regionCode == 'GL' ) && !component.readOnlyFlag)"  ><input type="checkbox" ng-model="component.fShipTogetherFlag" /></td>
+								<td class="center" ng-if="(component.bundleStandalone && (regionCode == 'US' || regionCode == 'GL' ) && component.readOnlyFlag)"  >{{component.fShipTogetherFlag}}</td>
+								<td class="center" ng-if="(!(component.bundleStandalone) && (regionCode == 'US' || regionCode == 'GL' ))" ></td>
+							</tr>
+							<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'" ng-show="form.fTemplateFlag==false" ng-repeat="component in fComponents">
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fSoftDeleteFlag"/></td>
+								<td class="center" ng-if="component.readOnlyFlag && component.bundleStandalone"><input type="checkbox" ng-model="component.fSoftDeleteFlag"/></td>
+								<td class="center" ng-if="component.readOnlyFlag && !component.bundleStandalone"></td>
+								<!-- <td ng-if="component.fSoftDeleteFlag!=''">
+									<input type="checkbox" ng-model="component.fSoftDeleteFlag" ng-if="component.fSoftDeleteFlag=='Y'" ng-checked="true"></input>
+									<input type="checkbox" ng-model="component.fSoftDeleteFlag" ng-if="component.fSoftDeleteFlag!='Y'"></input>
+								</td> -->
+								<!-- <td ng-if="component.fSoftDeleteFlag==''"></td> -->
+								<td class="center" ng-if="component.readOnlyFlag">{{component.fRequiredFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fRequiredFlag"  ng-change="changePreselect(component)" /></td>
+								<td class="center" ng-if="component.readOnlyFlag">{{component.fPreselectFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fPreselectedFlag" ng-disabled="component.disableFlg" /></td>
+								<td class="center" ng-if="component.readOnlyFlag">{{component.fHideFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fHideFlag"  ng-change="changeHidePreselect(component)" /></td>
+								<td class="center" ng-if="component.readOnlyFlag">{{component.fPriceHideFlag}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag"><input type="checkbox" ng-model="component.fPriceHideFlag" /></td>
+								<td class="center" ng-if="component.bundleStandalone && component.fBaseProdFlag=='Y'">{{component.fBaseProdFlag}}</td>
+								<td class="center" ng-if="component.bundleStandalone && component.fBaseProdFlag=='N'"></td>
+								<td class="center" ng-if="!component.bundleStandalone"></td>
+								<td class="center" ng-if="component.bundleStandalone">{{component.fBaseModel}}</td>
+								<td class="center" ng-if="!component.bundleStandalone">
+									<a href="{{addOptionPackBundleNewTab(component.fBundleCompID, fBundle.fCustID)}}"  ng-click="addOptionPackBundle(component.fBundleCompID, fBundle.fCustID)">{{component.fBundleCompID}}</a>
+								</td>
+								<td class="center" ng-if="component.bundleStandalone && !component.viewOnlyFlag"><a href="{{showComponentOptionNewTab(component.fBundleCompID)}}"  ng-click="showComponentOption(component.fBundleCompID)">{{component.fLocalizedProd}}</a></td>
+								<td class="center" ng-if="component.bundleStandalone && component.viewOnlyFlag">{{component.fLocalizedProd}}</td>
+								<td class="center" ng-if="!component.bundleStandalone"></td>
+								<td class="center" ng-if="component.bundleStandalone && component.readOnlyFlag">{{component.fLocalizeFlag}}</td>
+								<td class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag"><input type = "checkbox" name = "checkBoxLocalFlag"  ng-model="component.fLocalizeFlag" ></td>
+								<td class="center" ng-if="!component.bundleStandalone"><input type = "checkbox" name = "checkBoxLocalFlag" DISABLED value ="true" ng-model="component.fLocalizeFlag"></td>
+								<td class="center" ng-if="component.readOnlyFlag ">{{component.fQuantity}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag && !component.bundleStandalone">{{component.fQuantity}}</td>
+								<td class="center" ng-if="!component.readOnlyFlag && component.bundleStandalone"><input type="text" style="text-align:center" ng-model="component.fQuantity"/></td>
+								<td class="center" ng-if="component.bundleStandalone && component.readOnlyFlag">{{component.fVariableQtyFlag}}</td>
+								<td class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag"><input type="checkbox" ng-model="component.fVariableQtyFlag" /></td>
+								<td class="center" ng-if="!component.bundleStandalone"></td>
+								<td class="center">{{component.fShortDesc}}</td>
+								<td class="center" ng-if="!form.genericTemplateFlag">{{component.fConfigID}}</td>
+							<!-- 	<td ng-if="!form.genericTemplateFlag">{{component.fPriceAsStr}}</td> -->
+								<td class="center" ng-if="component.bundleStandalone && form.isShowPriceFlag && form.fReadOnlyRoleFlag">{{component.fPriceAsStr}}</td>
+								<td class="center" ng-if="component.bundleStandalone && form.isShowPriceFlag && !form.fReadOnlyRoleFlag"><a ng-click="getPriceDetailsForBdl(component.fBundleCompID)">{{component.fPriceAsStr}}</a></td><!-- add link for price -->
+								<td class="center" ng-if="!component.bundleStandalone && form.isShowPriceFlag">{{component.fPriceAsStr}}</td>
+								<td class="center" ng-if="!form.isShowPriceFlag">{{component.fPriceAsStr}}</td>
+								<td class="center" ng-if="component.bundleStandalone">{{component.fValidity}}</td>
+								<td class="center" ng-if="!component.bundleStandalone"></td>
+								<td class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag"><input type="checkbox" ng-model="component.fInTheBoxFlag" /></td>
+								<td class="center" ng-if="component.bundleStandalone && component.readOnlyFlag">{{component.fInTheBoxFlag}}</td>
+								<td class="center" ng-if="!component.bundleStandalone"></td>
+								<!-- <td ng-if="component.bundleStandalone && !component.readOnlyFlag" class="center"><input type="checkbox" ng-model="component.fVariableQtyFlag" /></td> -->
+								<td class="center" ng-if="component.bundleStandalone && !component.readOnlyFlag && form.editChargeShipFlag == 'Y'" ><input type="checkbox" ng-model="component.fChargeShippingFlag" /></td>
+								<td class="center" ng-if="(component.bundleStandalone && !component.readOnlyFlag && form.editChargeShipFlag == 'N') || (component.bundleStandalone && component.readOnlyFlag)">{{component.fChargeShippingFlag}}</td>
+								<td class="center" ng-if="!component.bundleStandalone"></td>
+								<td class="center" ng-if="((regionCode == 'US' || regionCode == 'GL') && component.bundleStandalone && component.readOnlyFlag )">{{component.fShipTogetherFlag}}</td>
+								<td class="center" ng-if="((regionCode == 'US' || regionCode == 'GL') && component.bundleStandalone && !component.readOnlyFlag )"><input type="checkbox" ng-model="component.fShipTogetherFlag" /></td>
+								<td class="center" ng-if="(!(component.bundleStandalone) && (regionCode == 'US' || regionCode == 'GL' ))"  ></td>
+								<!-- <td ng-show="(component.bundleStandalone && (regionCode == 'US' || regionCode == 'GL' ))" class="center"><input type="checkbox" ng-model="component.fShipTogetherFlag"  /></td>-->
+							</tr>
+						</tbody>
+					</table> 
+				</div>
+				
+				<div class="customer_rows" ng-if="!form.fReadOnlyRoleFlag">
+			        <div class="four columns">
+			           <div class="generals">
+			                <span>Add Other Components:</span>	                
+			                <textarea  rows="10" cols="10" ng-model="form.fAddSkuText"> </textarea>
+			           </div>	 
+			         </div> 
+			         <div class="six columns">
+			           <div class="generals">
+			                <a class="btn btn-inline btn-Primary btn-cog" ng-click="add_OtherComp()" >Add</a>                
+			                <div><span>To add deal components, use the "Add Eclipse Bdl Component" button to ensure correct BD Net price</span>	</div>
+			           </div>	 
+			         </div>  
+								
+			</div>
+				</div>
+	
+<!-- <script type="text/javascript" src="/ecomcatUI/ecc/js/app/catalogs/catalogMasterList.js" ></script>	 -->

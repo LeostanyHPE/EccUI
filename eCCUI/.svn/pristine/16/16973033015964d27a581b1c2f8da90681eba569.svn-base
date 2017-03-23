@@ -1,0 +1,92 @@
+/**
+ * Validator for numeric column.
+ *
+ */
+package com.hp.ecc.ui.upload.validation;
+
+import java.util.ArrayList;
+import com.hp.ecc.ui.util.StrUtil;
+
+public class NumericColumnValidator implements ICellValidator {
+
+  private final static String NUMERIC_COL = "NUMERIC_COLUMN";
+  private final static String NUMERIC_COL_REMOVE_COMMA =
+      "NUMERIC_COLUMN_REMOVE_COMMA";
+
+
+  /** Private for holding **/
+  private String valType = null;
+
+  /**
+   * Stes validation type.
+   */
+  public void setValidationType ( String valTyp ) {
+    this.valType = valTyp;
+  }
+
+  /**
+   * Returns the id of the validation
+   */
+  public String getValidationType () {
+    return valType;
+  }
+
+  /**
+   * This method validates the cell.
+   * The return value will be true if the cell is valid.
+   */
+  public boolean isValidCell ( String[] rowData, int columnNo, ArrayList param
+                               , String valData, String dbRegionToConnect ) {
+    boolean retVal = false;
+    String colValue = null;
+    if ( rowData.length >= columnNo && rowData[columnNo - 1] != null ) {
+      colValue = rowData[columnNo - 1].trim ();
+    }
+
+    //Please remove comma if REMOVE COMMA validation is used.
+    if ( colValue != null
+         && getValidationType ().equalsIgnoreCase ( NUMERIC_COL_REMOVE_COMMA ) ) {
+      rowData[columnNo - 1] = convertToNo ( colValue );
+    }
+
+    if ( StrUtil.strToDouble ( rowData[columnNo - 1] ) != null ) {
+      retVal = true;
+    }
+
+    return retVal;
+  }
+
+  /**
+   * Converts the string to number by removing the spl characters.
+   */
+  private static String convertToNo ( String inOutStr ) {
+
+    int i = inOutStr.length ();
+
+    StringBuffer buf = new StringBuffer ();
+
+    for ( int k = 0; k < i; k++ ) {
+      char ch = inOutStr.charAt ( k );
+      if ( ch == '.' || Character.isDigit ( ch ) ) {
+        buf.append ( ch );
+      }
+    }
+
+    return buf.toString ();
+  }
+
+  /*
+   public static void main(String arg[]){
+    String []rowData = new String[1];
+    rowData[0]="1234,56.01234";		
+    NumericColumnValidator nVal=new NumericColumnValidator();
+
+    nVal.setValidationType(NUMERIC_COL_REMOVE_COMMA);
+
+    nVal.isValidCell(rowData,1,null,null);
+
+    System.out.println(" THE DATA VALUE "+rowData[0]);
+
+   }
+   */
+}

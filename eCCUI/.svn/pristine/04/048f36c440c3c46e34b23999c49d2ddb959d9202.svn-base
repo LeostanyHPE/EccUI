@@ -1,0 +1,241 @@
+package com.hp.ecc.ui.view.beans;
+
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
+import com.hp.ecc.ui.biz.bundle.Bundle;
+import com.hp.ecc.ui.biz.bundle.BundleComponent;
+import com.hp.ecc.ui.biz.bundle.BundleException;
+import com.hp.ecc.ui.biz.bundle.BundleProd;
+import com.hp.ecc.ui.biz.bundle.BundleProdTemplate;
+import com.hp.ecc.ui.biz.bundle.IBundleConstants;
+import com.hp.ecc.ui.biz.bundle.OptionGroupTemplate;
+import com.hp.ecc.ui.biz.catalog.ProgramMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.web.tree.beans.TreeDataSource;
+import com.hp.ecc.ui.web.util.PagesUtil;
+import org.springframework.web.multipart.MultipartFile;
+
+
+
+public class BundleWebUtil {
+  public static List getCustomerPrograms ( Customer cust,String dbRegionToConnect ) {String cust_key = null;
+  if ( cust != null ) {cust_key = cust.getCustKey ();
+  }
+  return getCustomerPrograms ( cust_key, dbRegionToConnect );
+  }
+
+  public static List getCustomerPrograms ( String cust_key, String dbRegionToConnect ) {if ( !StrUtil.
+      isEmpty ( cust_key ) ) {ProgramMgr pgm_mgr = new ProgramMgr ();
+  List pgm_list = pgm_mgr.getProgramsForCustomer ( cust_key , dbRegionToConnect);
+  return pgm_list;
+  }
+  else {return Collections.EMPTY_LIST;
+  }
+  }
+
+  public static String uploadBundleDataSheet ( String prod_id
+                                               , String hp_lang_code
+                                               , MultipartFile data_sheet, User user
+                                               , org.apache.log4j.Category log ) throws
+      BundleException {if ( !PagesUtil.isFormFileEmpty ( data_sheet ) ) {
+      Product p = new Product ();
+  p.setProdId ( prod_id );
+  //p.setDataSheetName ( data_sheet.getFileName () );
+  p.setHpLangCode ( hp_lang_code );
+
+  //int uploadStatus = PagesUtil.uploadDataSheetToServer ( log, data_sheet, user
+  //    , p );
+ /* if ( uploadStatus != 0 ) {throw new BundleException ( PagesUtil.
+      setUploadDataSheetToServerErrMsg ( uploadStatus ) );
+  }*/
+  return p.getDataSheetName ();
+  }
+  return null;
+  }
+
+  public static String uploadBundleImage ( String prod_id, String hp_lang_code
+                                           , MultipartFile image, User user
+                                           , org.apache.log4j.Category log ) throws
+      BundleException {if ( !PagesUtil.isFormFileEmpty ( image ) ) {Product p = new
+      Product ();
+  p.setProdId ( prod_id );
+  p.setImageName ( image.getName() );
+  p.setHpLangCode ( hp_lang_code );
+
+  int uploadStatus = PagesUtil.uploadImageToServer ( log, image, user, p
+      , p.getProdId () );
+  if ( uploadStatus != 0 ) {throw new BundleException ( PagesUtil.
+      setUploadImageToServerErrMsg ( uploadStatus ) );
+  }
+  return p.getImageName ();
+  }
+  return null;
+  }
+
+  /* GCCM release - BEGIN: Hemachandra. */
+	private static String escapeNewlineChars ( String str ) {
+		if ( !StrUtil.isEmpty ( str ) ) {
+			str = str.replace ( '\n', ' ' );
+			str = str.replace ( '\r', ' ' );
+			str = str.replace ( '\f', ' ' );
+			str = str.replace ( '\"', ' ' );
+			str = str.replace ( '\'', ' ' );
+			return str;
+		}
+		return "";
+	}
+	private static String getStatus ( String status ) {
+		if ( "V".equalsIgnoreCase( status ) ) return "Valid";
+		else if ( "I".equalsIgnoreCase( status ) ) return "Invalid";
+		else if ( "P".equalsIgnoreCase( status ) ) return "Preserved";
+		else if ( "U".equalsIgnoreCase( status ) ) return "Un-Decided";
+		else if ( "F".equalsIgnoreCase( status ) ) return "Forced-Valid";
+		return "";
+	}
+	private static void loadSubNodes ( TreeDataSource parent, BundleComponent component, boolean templ_flag,String adbRegionToConnect ) throws BundleException {
+		if ( component == null ) return;
+
+		TreeDataSource node = new TreeDataSource ();
+		if ( component.getBundleCompType ().equals ( IBundleConstants.TYPE_OPTION_PACK ) || 
+				component.getBundleCompType ().equals ( IBundleConstants.TYPE_COMP_OPTION_GROUP ) ) {
+			String title = null;
+
+			if ( component.getBundleCompType ().equals ( IBundleConstants.TYPE_OPTION_PACK ) )
+				title = "&nbsp;Option Pack ";
+			else
+				title = "&nbsp;Option Group ";
+			OptionGroupTemplate templ = ( OptionGroupTemplate ) component;
+			node.setId ( templ.getBundleCompID () + "^" + templ.getBundleCompType () );
+			node.setTipText ( escapeNewlineChars ( templ.getShortDesc () ) );
+
+			String desc = templ.getShortDesc ();
+			if ( ( desc != null ) && ( desc.length () > 40 ) )
+				desc = desc.substring ( 0, 37 ) + "...";
+			node.setText ( title + templ.getBundleCompID () + "&nbsp;:&nbsp;&nbsp;\"" + desc + "\"" );
+
+			node.setEmbeddedObjValue ( String.valueOf ( templ.getRank () ) );
+
+			List children = templ.getChildBundleCompsByRank ( adbRegionToConnect);
+			if ( ( children == null ) || ( children.size () == 0 ) )
+				node.setAllowsChildren ( false );
+			else
+				node.setAllowsChildren ( true );
+			Iterator nodes = children.iterator ();
+			while ( nodes.hasNext () ) {
+				loadSubNodes ( node, ( BundleComponent ) nodes.next (), templ_flag, adbRegionToConnect );
+			}
+			parent.add ( node );
+		} else if ( component.getBundleCompType ().equals ( IBundleConstants.TYPE_STAND_ALONE ) ) {
+			if ( templ_flag ) {// is template
+				BundleProdTemplate templ = ( BundleProdTemplate ) component;
+				node.setId ( templ.getBundleCompID () + "^" + templ.getBundleCompType () );
+				node.setTipText ( escapeNewlineChars ( templ.getShortDesc () ) );
+
+				String desc = templ.getShortDesc ();
+				if ( ( desc != null ) && ( desc.length () > 40 ) )
+					desc = desc.substring ( 0, 37 ) + "...";
+				StringBuffer sb = new StringBuffer();
+				sb.append( "&nbsp;Product " ).append( templ.getBaseModel() ).append( "&nbsp;:&nbsp;" );
+				sb.append( templ.getSourceProd () ).append( "&nbsp;:&nbsp;\"" ).append( desc );
+				sb.append( "\"&nbsp;|&nbsp;Price=" ).append( templ.getPrice() );
+				sb.append( "&nbsp;|&nbsp;Special Price=" ).append( templ.getSpecialPriceFlag () );
+				sb.append( "&nbsp;|&nbsp;Status=" ).append( getStatus( templ.getValidity() ) ).append( "&nbsp;" );
+				node.setText ( sb.toString() );
+				/*node.setText ( "&nbsp;Product " + templ.getSourceProd () + "&nbsp;:&nbsp;&nbsp;\"" + desc + 
+						"\"&nbsp;&nbsp;:&nbsp;special price = " + templ.getSpecialPriceFlag () + "&nbsp;" );*/
+
+				//check if the product is pure standalone one, only if yes then check for the flags and display the status
+				if ( ( templ.getRequiredFlag () != null && templ.getRequiredFlag ().equals ( IBundleConstants.TRUE ) ) )
+					node.setRequiredIco ( "/comcat/images/icon/required.gif" );
+				// set base prod icon only once. the same product maybe added more than once also
+				if ( ( templ.getPreselectFlag () != null && templ.getPreselectFlag ().equals ( IBundleConstants.TRUE ) ) )
+					node.setPreselectIco ( "/comcat/images/icon/preselect.gif" );
+				if ( !baseFlagTemp && templ.getBaseProdFlag () != null && templ.getBaseProdFlag ().equals ( IBundleConstants.TRUE ) ) {
+					node.setBaseProdIco ( "/comcat/images/icon/baseprod.gif" );
+					baseFlagTemp = true;
+				}
+
+				if ( templ.getInTheBoxFlag () != null && templ.getInTheBoxFlag ().equals ( IBundleConstants.TRUE ) )
+					node.setInTheBoxIco ( "/comcat/images/icon/inthebox.gif" );
+				node.setEmbeddedObjValue ( String.valueOf ( templ.getRank () ) );
+				node.setAllowsChildren ( false );
+			} else {
+				BundleProd prod = ( BundleProd ) component;
+				node.setId ( prod.getBundleCompID () + "^" + prod.getBundleCompType () );
+				node.setTipText ( escapeNewlineChars ( prod.getShortDesc () ) );
+
+				String desc = prod.getShortDesc ();
+				if ( ( desc != null ) && ( desc.length () > 40 ) )
+					desc = desc.substring ( 0, 37 ) + "...";
+
+				StringBuffer sb = new StringBuffer();
+				sb.append( "&nbsp;Product " ).append( prod.getBaseModel() ).append( "&nbsp;:&nbsp;" );
+				sb.append( prod.getLocalizedProd () ).append( "&nbsp;:&nbsp;\"" ).append( desc );
+				sb.append( "\"&nbsp;|&nbsp;Price=" ).append( prod.getPrice() );
+				sb.append( "&nbsp;|&nbsp;Special Price=" ).append( prod.getSpecialPriceFlag () );
+				sb.append( "&nbsp;|&nbsp;Status=" ).append( getStatus( prod.getValidity() ) ).append( "&nbsp;" );
+				node.setText ( sb.toString() );
+				/*node.setText ( "&nbsp;Product " + prod.getLocalizedProd () + "&nbsp;:&nbsp;&nbsp;\"" + desc + 
+						"\"&nbsp;&nbsp;:&nbsp;special price = " + prod.getSpecialPriceFlag () + "&nbsp;" );*/
+
+				if ( ( prod.getRequiredFlag () != null && prod.getRequiredFlag ().equals ( IBundleConstants.TRUE ) ) )
+					node.setRequiredIco ( "/comcat/images/icon/required.gif" );
+
+				// set base prod icon only once. the same product maybe added more than once also
+				if ( ( prod.getPreselectFlag () != null && prod.getPreselectFlag ().equals ( IBundleConstants.TRUE ) ) )
+					node.setPreselectIco ( "/comcat/images/icon/preselect.gif" );
+
+				if ( !baseFlagInst && prod.getBaseProdFlag () != null && prod.getBaseProdFlag ().equals ( IBundleConstants.TRUE ) ) {
+					node.setBaseProdIco ( "/comcat/images/icon/baseprod.gif" );
+					baseFlagInst = true;
+				}
+
+				if ( prod.getInTheBoxFlag () != null && prod.getInTheBoxFlag ().equals ( IBundleConstants.TRUE ) )
+					node.setInTheBoxIco ( "/comcat/images/icon/inthebox.gif" );
+				node.setEmbeddedObjValue ( String.valueOf ( prod.getRank () ) );
+				node.setAllowsChildren ( false );
+			}
+
+			parent.add ( node );
+		}
+	}
+
+	public static TreeDataSource loadAllNodes ( Bundle bundle, boolean templ_flag,String  adbRegionToConnect ) throws BundleException {
+		TreeDataSource root = new TreeDataSource ();
+		root.setId ( "root_1" );
+
+		baseFlagTemp = false;
+		baseFlagInst = false;
+		
+		String desc = bundle.getShortDesc ();
+		if ( StrUtil.isEmpty ( desc ) ) desc = "Root";
+		else if ( ( desc != null ) && ( desc.length () > 40 ) )
+			desc = desc.substring ( 0, 37 ) + "...";
+
+		root.setText ( "Bundle: " + desc );
+		root.setTipText ( escapeNewlineChars ( bundle.getShortDesc () ) );
+		root.setHideEmbeddedObj ( true );
+
+		List children = bundle.getChildBundleCompsByRank ( adbRegionToConnect);
+
+		if ( ( children == null ) || ( children.size () == 0 ) ) {
+			root.setAllowsChildren ( false );
+			return root;
+		} else {
+			Iterator nodes = children.iterator ();
+			while ( nodes.hasNext () ) {
+				loadSubNodes ( root, ( BundleComponent ) nodes.next (), templ_flag , adbRegionToConnect);
+			}
+		}
+		return root;
+	}
+
+	private static boolean baseFlagTemp = false;
+	private static boolean baseFlagInst = false;
+/* GCCM release - END. */
+}

@@ -1,0 +1,123 @@
+<div class="row" ng-controller="createCustOfferCtrl" data-ng-init="loadCreateDetails()">
+	<div id="messageDiv"></div>
+	<div id="successMess" class="alert success" ng-show="successMessage!=''">{{successMessage}}</div>
+	<div id="errorMess" class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Create Offer</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals" ng-show="form.viewType=='create'">
+					<span>Select Offer Type:</span> 
+					<select ng-model="form.offerType" ng-change="changeOfferType()" ng-options="ot.offerTypeName for ot in form.offerTypeList track by ot.offerTypeId">
+					</select>
+				</div>
+				<div class="generals" ng-show="form.viewType=='edit'">
+					<span>Offer Type:</span> 
+					<div class="div_input" ng-bind="form.offerType"></div>
+				</div>				
+				<div class="generals">
+					<span>Offer Name:</span> 
+					<input type="text" size="50" ng-model="form.offerName"></input>
+				</div>
+				<div class="generals" ng-show="form.priceProfileList">
+					<span>Pricing Profile:<br>(Profile Name (Profile ID))</span> 
+					<select ng-model="form.priceProfile" ng-options="pp.priceProfileDesc for pp in form.priceProfileList track by pp.priceProfileId">
+					</select>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Purchasing Terms:</span> 
+					<select ng-model="form.purchaseTerm" ng-change="changePurchaseTerm()" ng-options="pt.purchaseTermDesc for pt in form.purchaseTermList track by pt.purchaseId">
+					</select>
+				</div>
+				<div class="generals" ng-show="form.viewType=='create'">
+					<span>Country List:</span> 
+					<select ng-model="form.selectedCountry" ng-change="changeCountry()" 	ng-options="country.countryName for country in form.countryList track by country.countryCode">
+					</select>
+				</div>
+				<div class="generals" ng-show="form.viewType=='edit'">
+					<span>Offer Type:</span> 
+					<div class="div_input" ng-bind="form.selectedCountry"></div>
+				</div>
+				
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Pricing Rule: (RuleDesc:RuleID<br>(PricingGeo-PT id-RuleType))</span> 
+					<select ng-model="form.ruleIDPlusExcludeFlag" ng-change="changePriceRule()"	ng-options="pt.priceRuleDesc for pt in form.priceRuleList track by pt.ruleIDPlusExcludeFlag">
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="customer_rows" style="margin-top:5px;" ng-init="loadDeals()">
+		<div class="twelve columns">
+			<div class="table-scroll">
+				<table id="dealList" class="dataGrid" width="100%">
+					<thead>
+						<tr class="GridHeaderRow">
+							<th class="center"><input type=checkbox class="ckbCheckAll"
+								title="Select or deselect all" ng-click="toggleAll()"></th>
+							<th class="center">Deal&nbsp;ID</th>
+							<th class="center">
+								<div ng-show="form.regionCode!='AP'">L4&nbsp;AMID</div>
+							</th>
+							<th class="center">
+								<div ng-show="form.regionCode!='AP'">L2&nbsp;AMID</div>
+							</th>
+							<th class="center">Eclipse<br>&nbsp;Customer&nbsp;<br>ID
+							</th>
+							<th class="center">Deal&nbsp;Category&nbsp;</th>
+							<th class="center">
+								<div ng-show="form.regionCode!='AP'">Deal&nbsp;Type&nbsp;</div>
+							</th>
+							<th class="center">Deal&nbsp;Start&nbsp;Date</th>
+							<th class="center">Deal&nbsp;End&nbsp;Date</th>
+							<th class="center">Default&nbsp;Price&nbsp;<br>Descriptor
+							</th>
+							<!--  default sales country added-->
+							<th class="center">Default&nbsp;Sales&nbsp;<br>Country
+							</th>
+							<!--  Deal type heading added-->
+							<th class="center">Requestor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+							<th class="center">Approver&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+							<th class="center">Last&nbsp;Update&nbsp;Date</th>
+							<th class="center">Replacement&nbsp;for Deal&nbsp;ID</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="odd" ng-class-odd="'odd'" ng-class-even="'even'"
+							ng-repeat="item in form.dealList">
+							<td><input type="checkbox" class="checkBoxClass"
+								checkbox-group value="{{item.id}}" /></td>
+							<td>{{item.id}}</td>
+							<td><div ng-show="form.regionCode!='AP'">{{item.l4AmidID}}</div></td>
+							<td><div ng-show="form.regionCode!='AP'">{{item.l2AmidID}}</div></td>
+							<td>{{item.custID}}</td>
+							<td>{{item.dealCategory}}</td>
+							<td><div ng-show="form.regionCode!='AP'">{{item.dealType}}</div></td>
+							<td>{{item.startDateStr}}</td>
+							<td>{{item.endDateStr}}</td>
+							<td>{{item.priceDescriptor}}</td>
+							<td>{{item.defaultSalesCountry}}</td>
+							<td>{{item.requestor}}</td>
+							<td>{{item.approver}}</td>
+							<td>{{item.lastModifiedDateStr}}</td>
+							<td>{{item.original_Deal_Id}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div class="search">
+		<a class="btn btn-inline" ng-click="doSave()" >Save</a>
+		<a class="btn btn-inline" ng-click="forwardMangeOffers()" >Cancel</a> 
+		<a class="btn btn-inline" ng-click="reset()" >Reset</a>
+	</div>
+</div>

@@ -1,0 +1,161 @@
+package com.hp.ecc.ui.view.beans;
+
+import java.util.Map;
+
+import com.hp.ecc.ui.biz.bundle.IBundleConstants;
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) 2002</p>
+ * <p>Company: HP</p>
+ * @author Andrey Svirsky
+ * @version 1.0
+ */
+
+public class OptionPacksForm extends ComponentsFormBase {
+
+  public OptionPacksForm () {
+    fGroupId = "0"; //parent group if any
+    fPackId = "";
+    fCreateFlag = false;
+  }
+
+  public String getSelectedOptionPack () {return fSelectedOptionPack;
+  }
+
+  public void setSelectedOptionPack ( String value ) {fSelectedOptionPack =
+      value;
+  }
+
+  public String getOptionPackName () {return fOptionPackName;
+  }
+
+  public void setOptionPackName ( String value ) {fOptionPackName = value;
+  }
+
+  public String getDescription () {return fDescription;
+  }
+
+  public void setDescription ( String value ) {fDescription = value;
+  }
+
+  public String getGroupId () {return fGroupId;
+  }
+
+  public void setGroupId ( String value ) {fGroupId = value;
+  }
+
+  public String getPackId () {return fPackId;
+  }
+
+  public void setPackId ( String value ) {fPackId = value;
+  }
+
+  public boolean getDefaultDescriptionFlag () {return fDefaultDescription;
+  }
+
+  public void setDefaultDescriptionFlag ( boolean value ) {fDefaultDescription =
+      value;
+  }
+
+  public boolean getInheritedFlag () {return fInheritedFlag;
+  }
+
+  public void setInheritedFlag ( boolean value ) {fInheritedFlag = value;
+  }
+
+  public boolean getCreateFlag () {return fCreateFlag;
+  }
+
+  public void setCreateFlag ( boolean value ) {fCreateFlag = value;
+  }
+
+  public boolean isReadOnly () {return ( getViewOnlyFlag () || getInheritedFlag () );
+  }
+
+  public Map getBundlePageLink () {
+    Map results = super.getBundlePageLink ();
+    if ( results != null && fGroupId != null && !fGroupId.equals ( "0" ) ) {
+      results.put ( "selectedOptionGroup", fGroupId );
+    }
+    return results;
+  }
+
+  public boolean getHideFlag ( int i ) {
+    boolean result = false;
+    ComponentTableRow b = findComponent ( i, true );
+    if ( b != null ) {
+      result = ( b.getHideFlag ().equals ( IBundleConstants.HIDE ) );
+    }
+    return result;
+  }
+
+  public void setHideFlag ( int i, boolean value ) {
+    ComponentTableRow b = findComponent ( i, true );
+    if ( value ) {
+      b.setHideFlag ( IBundleConstants.HIDE );
+    }
+    else {
+      b.setHideFlag ( IBundleConstants.SHOW );
+    }
+  }
+
+  /* Add HidePrice flag setter and getter methods at item level in Option Pack March CPE - Sheena */
+  public boolean getHidePriceFlag ( int i ) {
+    boolean result = false;
+    ComponentTableRow b = findComponent ( i, true );
+    if ( b != null ) {
+      result = ( b.getPriceHideFlag ().equals ( IBundleConstants.HIDE ) );
+    }
+    return result;
+  }
+
+  public void setHidePriceFlag ( int i, boolean value ) {
+    ComponentTableRow b = findComponent ( i, true );
+    if ( value ) {
+      b.setPriceHideFlag ( IBundleConstants.HIDE );
+    }
+    else {
+      b.setPriceHideFlag ( IBundleConstants.SHOW );
+    }
+  }
+
+  public void setBundleTemplateID ( String bundle_template_id ) {
+    this.fBundleTemplateID = bundle_template_id;
+  }
+
+  public String getBundleTemplateID () {
+    return fBundleTemplateID;
+  }
+
+  public void setBundleID ( String bundle_id ) {
+    this.fBundleID = bundle_id;
+  }
+
+  public String getBundleID () {
+    return fBundleID;
+  }
+
+  private String fOptionPackName;
+  private String fDescription;
+  private boolean fDefaultDescription;
+  private String fGroupId;
+  private String fPackId;
+  private boolean fInheritedFlag;
+  private boolean fCreateFlag;
+  private String fSelectedOptionPack;
+  private String fBundleTemplateID;
+  private String fBundleID;
+  private String fRoleId=null;
+
+  public String getRoleId()
+    {
+    	  return this.fRoleId;
+    }
+    public void setRoleId(String id)
+    {
+    	  this.fRoleId = id;
+    }
+
+}

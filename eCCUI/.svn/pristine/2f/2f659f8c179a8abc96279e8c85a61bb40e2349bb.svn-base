@@ -1,0 +1,57 @@
+package com.hp.ecc.ui.biz.product;
+
+import com.hp.ecc.ui.biz.product.ProductItemStatusInfo;
+import com.hp.ecc.ui.biz.product.ProductItemStatusInfoErrorConstants;
+
+public class ProductItemStatusInfoException extends Exception{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private ProductItemStatusInfo p;
+	private String message;
+
+	public ProductItemStatusInfoException(int err, ProductItemStatusInfo p) {
+
+		switch (err) {
+
+		case ProductItemStatusInfoErrorConstants.SKU_NOT_FOUND:
+			this.message = "The SKU: " + p.getSku() + " was not found!";
+			this.p = null;
+			break;
+
+		case ProductItemStatusInfoErrorConstants.SKU_NOT_IN_CATALOG:
+			this.message = "The SKU: " + p.getSku()
+					+ " is not in the catalog master(s) for Account ID: "
+					+ p.getAccountId();
+			this.p = p;
+			break;
+
+		case ProductItemStatusInfoErrorConstants.SKU_PATTERN_NOT_FOUND:
+			this.message = "The SKU Pattern " + p.getSku() + " was not found";
+			this.p = null;
+			break;
+
+		case ProductItemStatusInfoErrorConstants.ACCOUNT_NOT_FOUND:
+			this.message = "The Account Id " + p.getAccountId()
+					+ " was not found";
+			this.p = null;
+			break;
+
+		case ProductItemStatusInfoErrorConstants.ACCOUNT_PATTERN_NOT_FOUND:
+			this.message = "The Account Id Pattern " + p.getAccountId()
+					+ " was not found";
+			this.p = null;
+			break;
+		}
+	}
+
+	public ProductItemStatusInfo getProductItemStatusInfoWithError() {
+		return p;
+	}
+
+	public String getMessage() {
+		return this.message;
+	}
+}

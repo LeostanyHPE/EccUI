@@ -1,0 +1,46 @@
+<div class="row"  ng-controller="categoryEdit" data-ng-init="loadCategoryDetails()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">
+			<span>Categorization Details</span>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+	        <div class="four columns">
+	           <div class="generals">
+	           		<span>Categorization Name:</span>
+                    <input type="text" class="div_input" value="" maxlength = "255" ng-model="form.ctgName"></input>
+	           </div>
+	           <div class="generals">
+	           		<span>Categorization Type:</span>
+                    <input type="text" class="div_input" id="ctgType" maxlength = "25" value="" ng-model="form.ctgType"></input>
+	           </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	           		<span>Originated From:</span>
+	              	<select   ng-model="form.parentCtgId" ng-options="item.ctg_id as finalCategory(item,index) for item in masterCategoryList" ng-change="parentChanged()">
+		          	</select> 
+	           	</div>
+	          	<div id="copyDiv" class="generals">
+	           		<span>Create Copy:</span>
+	           		<input style="margin-top:5px;" type="checkbox" id="copyCheckbox" ng-model="form.isCopy"/>
+	           	</div>
+	      	</div>
+	      	<div class="four columns">
+	      		<div class="generals">
+	              	<span>Assign To:</span>
+	              	<select multiple size="10" ng-model="form.custKey" style="height:60px;width:55%;" ng-options="item.cust_key as item.cust_name +' ---- '+ item.cust_key for item in customersList | orderBy:['cust_name']">
+					</select>
+			   </div>
+	      	</div>
+	    </div>
+	  	<div class="customer_rows">
+	        <a class="btn btn-inline" ng-click="editCheck()" ng-hide="roleID=='2'"><span id="Create">{{buttonName}}</span></a> 
+	        <a id="importButton" class="btn btn-inline" ng-hide="(roleID=='2' || roleID=='6') || task == 'create'"  title="Import Categorization" ng-click="importCategorization()"><span id="Import">Import...</span></a>
+	        <a class="btn btn-inline" ng-click="cancelCategoryEdit()"><span id="Cancel">Cancel</span></a>
+	  	</div>
+	 </div>
+</div>

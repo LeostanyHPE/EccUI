@@ -1,0 +1,15 @@
+<div class="row" ng-controller="ProductLineRefCrtl" ng-init="init()">		
+	    <div class="customer_rows id-body" ng-show="dataLoad">
+	      		<div class="twelve columns">
+		      		<div id="ecc_hpegrid1" hpe-grid
+				         grd-data="grid.data"
+				         grd-header="grid.header"
+				         grd-col-defs="grid.colDefs"
+				         grd-sort="grid.sort"
+				         grd-col-view-by="grid.colViewBy">
+				     </div>
+	      		</div>
+	     </div>
+</div>
+
+

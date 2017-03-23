@@ -1,0 +1,245 @@
+/*
+ * Created on Aug 10, 2005
+ *
+ * To change the template for this generated file go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ */
+package com.hp.ecc.ui.view.beans;
+
+
+
+
+
+/**
+ * @author mathewvi
+ *
+ * To change the template for this generated type comment go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ */
+public class SogLocOptionCatAssignForm
+{
+	public SogLocOptionCatAssignForm()
+	{
+		this.init();	 
+	}
+	public void init()
+	{
+		this.fTask = null;
+		this.fRegionCode = null;
+		this.sogId = null;
+		this.sogName = null;
+		this.countries = null;
+		this.availableOptionCategories = null;
+		this.selectedOptionCodes = null;
+		this.selectedCountryCodes = null;
+		this.defLocalSel = null;
+		this.defLocal = null;
+		this.localeSelHidden = null;
+		this.fAction = null;
+		this.options = null;
+		this.catID = null;
+		this.catName = null;
+		this.countryCode = null;
+		this.editFlag = false;
+		this.isPropagationEnabled = null;
+	}
+	
+	public String getRegionCode()
+	{
+		return fRegionCode;
+	}
+	
+	public void setRegionCode(String code)
+	{
+		fRegionCode = code;
+	}
+	// task
+	public String getTask()
+	{
+		return this.fTask;
+	}
+	
+	public void setTask(String task)
+	{
+		this.fTask = task;
+	}
+		
+		
+		
+	// action
+	public String getAction()
+	{
+		return this.fAction;
+	}
+		
+		
+	public void setAction(String action)
+	{
+		this.fAction = action;
+	}
+
+	public String getSogID()
+	{
+		return this.sogId;
+	}
+	public void setSogID(String sogID)
+	{
+		sogId = sogID; 
+	}
+	public String getSogName()
+	{
+		return this.sogName;
+	}
+	public void setSogName(String sogName)
+	{
+		this.sogName = sogName;
+	}
+	public String getCatID()
+	{
+		return this.catID;
+	}
+	public void setCatID(String catID)
+	{
+		sogId = catID; 
+	}
+	public String getCatName()
+	{
+		return this.catName;
+	}
+	public void setCatName(String catName)
+	{
+		this.catName = catName;
+	}
+	
+	public String getCountries()
+	{
+		return this.countries;
+	}
+	public void setCountries(String countries)
+	{
+		this.countries = countries;
+	}
+
+	public String getCountryCode()
+	{
+		return this.countryCode;
+	}
+	public void setCountryCode(String countryCode)
+	{
+		this.countryCode = countryCode;
+	}
+	
+	public String[] getAvailableOptionCategories()
+	{
+		return this.availableOptionCategories;
+	}
+	public void setAvailableOptionCategories(String[] availableOptionCategories)
+	{
+		this.availableOptionCategories = availableOptionCategories;
+	}
+	public String[] getSelectedOptionCategories()
+	{
+		return this.selectedCategories;
+	}
+	public void setSelectedOptionCategories(String[] selectedCategories)
+	{
+		this.selectedCategories = selectedCategories;
+	}
+	public String getSelectedOptionCodes()
+	{
+		return this.selectedOptionCodes;
+	}
+	public void setSelectedOptionCodes(String selectedOptionCodes)
+	{
+		this.selectedOptionCodes = selectedOptionCodes;
+	}
+	public String getSelectedCountryCodes()
+	{
+		return this.selectedCountryCodes;
+	}
+	public void setSelectedCountryCodes(String selectedCountryCodes)
+	{
+		this.selectedCountryCodes = selectedCountryCodes;
+	}
+	
+	public void setDefLocalSel(String defLocalSel)
+	{
+		this.defLocalSel = defLocalSel;
+	}
+
+	public String getDefLocalSel()
+	{
+		return this.defLocalSel;
+	}
+	// defLocal
+	public void setDefLocal(String defLocal)
+	{
+					this.defLocal = defLocal;
+	}
+
+	public String getDefLocal()
+	{
+			return this.defLocal;
+	}
+	// localeSelHidden
+	public String getLocaleSelHidden()
+	{
+		return this.localeSelHidden;
+	}
+		
+		
+		
+	public void setLocaleSelHidden(String localeSelHidden)
+	{
+		this.localeSelHidden = localeSelHidden;
+	}
+
+	// options
+	public void setOptions(String options)
+	{
+			this.options = options;
+	}
+
+	public String getOptions()
+	{
+			return this.options;
+	}	
+	public void setEditFlag(boolean editFlag)
+	{
+		this.editFlag = editFlag;
+	}
+	public boolean getEditFlag()
+	{
+		return editFlag;
+	}
+	
+	public void setIsPropagationEnabled(String isPropagationEnabled)
+	{
+			this.isPropagationEnabled = isPropagationEnabled;
+	}
+	public String getIsPropagationEnabled()
+	{
+		return this.isPropagationEnabled;
+	}
+	
+	private String fTask;
+	private String fRegionCode;
+	private String sogId;
+	private String sogName; 
+	private String countries;
+	private String[] availableOptionCategories;
+	private String[] selectedCategories;
+	private String selectedOptionCodes;
+	private String selectedCountryCodes;
+	private String defLocalSel; 
+	private String defLocal;
+	private String localeSelHidden;
+	private String fAction;
+	private String options;
+	private String catID;
+	private String catName;
+	private String countryCode;
+	private boolean editFlag;
+	private String isPropagationEnabled;
+}
+

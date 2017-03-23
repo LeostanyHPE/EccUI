@@ -1,0 +1,547 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.product;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.category.CategoryTreeBuilder;
+import com.hp.ecc.ui.biz.category.CategoryTreeNode;
+import com.hp.ecc.ui.biz.category.FilterCategoryTreeNode;
+import com.hp.ecc.ui.biz.category.QuickManageTreeBuilder;
+import com.hp.ecc.ui.biz.product.CatalogProductMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.ProductContent;
+import com.hp.ecc.ui.biz.product.ProductSearchException;
+import com.hp.ecc.ui.biz.quickManage.QuickMgInfo;
+import com.hp.ecc.ui.biz.quickManage.QuickMgr;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.view.beans.LoadSubCategoriesForm;
+import com.hp.ecc.ui.view.beans.QuickManageForm;
+
+/**
+ * @author reddvino
+ *
+ */
+@Service
+public class QuickManageProcessor {
+	private org.apache.log4j.Category log;
+	private final String QUICK_MANAGE_GUI_STYLE = "QuickManageList";
+	
+	public JSONObject loadCategories ( QuickManageForm qkmanageForm, Session ses, String adbRegionValue ) {
+		
+		 ///CatForward vw = new CatForwardView ( "/filter/FilteredCategories.jsp", "" );
+		JSONObject returnObject = null;
+		returnObject = new JSONObject();
+		User user = ses.getUser ();
+		Gson gson = new Gson();
+		if ( !ses.isAuthorized ( PermissionCode.FILTER_PROD_USING_PRODUCT_TREE ) ) {
+		    CatRuntimeException ex = new CatRuntimeException ( "This user is not authorised to filter products using categorization tree" );
+		    ex.setTag ( CatRuntimeException.TAG_GUI_MSG, null );
+		    returnObject.put("errorMsg", "This user is not authorised to filter products using categorization tree"+ex.getTag());
+		    throw ex;
+		}
+		try {
+			Integer ctgID = Integer.valueOf ( qkmanageForm.getCategorization () );
+			CategoryTreeBuilder ctgTreeBuilder = new QuickManageTreeBuilder ( user, ctgID, adbRegionValue );
+			List userModifiedNodeList = null;
+			ctgTreeBuilder.setRoot(ctgTreeBuilder.createCategoryTreeNode ());
+			CategoryTreeNode ctgTreeNode1 = new CategoryTreeNode();
+			JSONObject jsonObject = new JSONObject();
+			JSONArray finalArray = new JSONArray();
+			int nodeLevel = 0;
+			jsonObject.put("treeId",ctgID);
+			jsonObject.put("hasChildren",true);
+			jsonObject.put("text","Root");
+			jsonObject.put("id", "0" );
+			jsonObject.put("root", "root");
+			jsonObject.put("collapsed", false);
+			jsonObject.put("nodeType", "Parent" );
+			jsonObject.put("nodeLevel", nodeLevel );
+			JSONArray childrenData = ctgTreeBuilder.populateChildCategories ( ctgTreeNode1 ,adbRegionValue, (nodeLevel+1), userModifiedNodeList,null);
+			jsonObject.put("children",childrenData);
+			finalArray.add(jsonObject);
+			ctgTreeBuilder.setSubNodes(childrenData);
+			ctgTreeNode1.setChildrenCount ( childrenData.size() );
+			returnObject.put("treeData", finalArray);
+		}
+		catch ( NumberFormatException numEx ) {
+			///log.error ("Error while parsing Categorization ID or Node ID", numEx );
+			qkmanageForm.setUserCategoryTreeView ( new FilterCategoryTreeNode () );
+			returnObject.put ("errorMsg", "Invalid categorization ID and/or node ID: "+ numEx.getMessage () );
+		}
+		return returnObject;
+//		log = FeCTX.getCTX ().getLog ();
+//	    User user = ses.getUser ();
+//	    JSONObject vw = new JSONObject(); 
+//		///CatForward vw = new CatForwardView ( "/quickmanage/QuickManageCategories.jsp", "" );
+//		if ( !ses.isAuthorized ( PermissionCode.QM_BROWSE_USING_PROD_TREE ) ) {
+//		    CatRuntimeException ex = new CatRuntimeException ("This user is not authorised to browse products using categorization tree" );
+//		    ex.setTag ( CatRuntimeException.TAG_GUI_MSG, vw );
+//		    throw ex;
+//		}
+//		
+//		try {
+//			Integer ctgID = Integer.valueOf ( qkmanageForm.getCategorization () );
+//			CategoryTreeBuilder ctgTreeBuilder = new QuickManageTreeBuilder ( user, ctgID, adbRegionValue );
+//			CategoryTreeNode ctgTreeNode = ctgTreeBuilder.getCategorizationRoot ();
+//			qkmanageForm.setUserCategoryTreeView ( ctgTreeNode );
+//		}
+//		catch ( NumberFormatException numEx ) {
+//			log.error ("Error while parsing Categorization ID or Node ID", numEx );
+//			qkmanageForm.setUserCategoryTreeView ( new QuickManageTreeNode() );
+//			vw.put("errorMsg", "Invalid categorization ID and/or node ID: "+ numEx.getMessage ());///getErrs ().add ( "Invalid categorization ID and/or node ID: "+ numEx.getMessage () );
+//		}
+//		return vw;
+	}///loadCategories
+
+	public String[] getAllProdIDsForCurrentSelection ( QuickManageForm qkmanageForm, Session ses, String adbRegionValue ) 
+			throws ProductSearchException {
+		User user = ses.getUser ();
+		String catIDs[] = qkmanageForm.getCatalogIDs ();
+		String cntrys[] = qkmanageForm.getCountries ();
+		String prcDescs[] = qkmanageForm.getPriceDescriptors ();
+		ProductSearchHelper searchHelper = new ProductSearchHelper ( user, catIDs, cntrys, prcDescs, adbRegionValue );
+		
+		List results = searchHelper.getCategoryProductContents ( qkmanageForm, 0,adbRegionValue);
+		for ( int i = 0; i < results.size (); i++ ) {
+			ProductContent prodCtnt = (ProductContent ) results.get ( i );
+			results.set ( i, prodCtnt.getProdId () );
+		}
+		return ( String[] ) results.toArray ( new String[0] );
+	}
+
+	public JSONObject addAllProducts ( QuickManageForm qkmanageForm, Session ses, String adbRegionValue ) {
+		JSONObject vw = null;
+		try {
+			String prodsToAdd[] = getAllProdIDsForCurrentSelection ( qkmanageForm, ses, adbRegionValue );
+			qkmanageForm.setProductsToAdd ( prodsToAdd );
+			qkmanageForm.setProductsToDelete ( null );
+			vw = saveProducts ( qkmanageForm, ses ,adbRegionValue);
+		}
+		catch ( ProductSearchException prodSearchEx ) {
+			vw = new JSONObject();
+			///vw = new CatForwardView ("/quickmanage/QuickManageProducts.jsp", "" );
+			vw.put("errorMsg","Error ocurred while deleting all products from catalog(s): "+ prodSearchEx.getMessage () );
+			///getErrs ().add ("Error ocurred while deleting all products from catalog(s): " + prodSearchEx.getMessage () );
+		}
+		return vw;
+	}
+
+	public JSONObject deleteAllProducts ( QuickManageForm qkmanageForm, Session ses, String adbRegionValue ) {
+		JSONObject vw = null;
+		try {
+			String prodsToDelete[] = getAllProdIDsForCurrentSelection ( qkmanageForm, ses, adbRegionValue );
+			qkmanageForm.setProductsToDelete ( prodsToDelete );
+			qkmanageForm.setProductsToAdd ( null );
+			vw = saveProducts ( qkmanageForm, ses, adbRegionValue );
+		}
+		catch ( ProductSearchException prodSearchEx ) {
+			vw = new JSONObject();
+			///vw = new CatForwardView ("/quickmanage/QuickManageProducts.jsp", "" );
+			vw.put("errorMsg","Error ocurred while adding all products to catalog(s): "+ prodSearchEx.getMessage ());
+			///getErrs ().add ( "Error ocurred while adding all products to catalog(s): "+ prodSearchEx.getMessage () );
+		}
+		return vw;
+	}
+
+	public JSONObject saveProducts ( QuickManageForm qkmanageForm, Session ses, String adbRegionValue ) {
+	    User user = ses.getUser ();
+	    String userId = ses.getUserID();
+	    JSONObject vw = new JSONObject();
+	    String successMsg = "";
+		///CatForward vw = new CatForwardView ( "/quickmanage/QuickManageProducts.jsp", "" );
+		try {
+			CategorizationMgr catMgr = new CategorizationMgr ( user.getId (), user.getRegion () );
+			int ctgID = Integer.parseInt ( qkmanageForm.getCategorization () );
+			Categorization ctg = catMgr.getCategorization ( ctgID,adbRegionValue );
+			
+			QuickMgr qkMgr = QuickMgr.getQuickMgr ();
+			QuickMgInfo qkInfo = new QuickMgInfo ();
+			
+			String prodsToAdd[] = qkmanageForm.getProductsToAdd ();
+			if ( ( prodsToAdd != null ) && ( prodsToAdd.length > 0 ) ) {if ( ses.
+			    isAuthorized ( PermissionCode.ADD_MULTIPLE_PROD_TO_STD_CATALOGS ) ) {
+				qkInfo.setAddProds ( prodsToAdd );
+			}
+			else {CatRuntimeException ex = new CatRuntimeException (
+			    "This user is not authorised to add products to standard catalogs" );
+			ex.setTag ( CatRuntimeException.TAG_GUI_MSG, vw );
+			throw ex;
+			}
+			}
+			
+			String prodsToDelete[] = qkmanageForm.getProductsToDelete ();
+			if ( ( prodsToDelete != null ) && ( prodsToDelete.length > 0 ) ) {if ( ses.
+			    isAuthorized ( PermissionCode.DEL_MULTIPLE_PROD_FROM_STD_CATALOGS ) ) {
+			    qkInfo.setDelProds ( prodsToDelete );
+			}
+			else {CatRuntimeException ex = new CatRuntimeException (
+			    "This user is not authorised to delete products from standard catalogs" );
+			ex.setTag ( CatRuntimeException.TAG_GUI_MSG, vw );
+			throw ex;
+			}
+			}
+			
+			qkInfo.setLastModifiedBy ( userId );
+			qkInfo.setSource ( ctg.getSource () );
+			
+			String catalogIDs[] = qkmanageForm.getCatalogIDs ();
+			String catalogNames[] = qkmanageForm.getCatalogNames ();
+			for ( int i = 0; i < catalogIDs.length; i++ ) {qkInfo.setCatalogID ( catalogIDs[
+			    i] );
+			qkInfo.setCatalogName ( catalogNames[i] );
+			qkInfo = qkMgr.Update ( qkInfo ,adbRegionValue);
+			successMsg = successMsg + qkInfo.getAddMsg ()+ "   "+qkInfo.getDelMsg ();
+			///vw.put("successMsg", qkInfo.getAddMsg ()+ "   "+qkInfo.getDelMsg ());///getMsgs ().add ( qkInfo.getAddMsg () );
+			///vw.put("successMsg", qkInfo.getDelMsg ());///getMsgs ().add ( qkInfo.getDelMsg () );
+			}
+			if(successMsg != ""){
+				vw.put("successMsg", successMsg);
+			}
+		}
+		catch ( NumberFormatException numEx ) {
+			log.error ("Error while parsing Categorization ID", numEx );
+			vw.put("errorMsg","Invalid categorization ID and/or node ID: "+ numEx.getMessage ());///getErrs ().add ( "Invalid categorization ID and/or node ID: "+ numEx.getMessage () );
+		}
+		return vw;
+	}
+
+	public JSONObject getProductsInCategory ( QuickManageForm qkmanageForm
+	                                           , Session ses, String adbRegionValue ) {
+		User user = ses.getUser ();
+		JSONObject vw = new JSONObject();
+		///CatForward vw = new CatForwardView ( "/quickmanage/QuickManageProducts.jsp", "" );
+		if ( !ses.isAuthorized ( PermissionCode.QM_BROWSE_USING_PROD_TREE ) ) {
+		    CatRuntimeException ex = new CatRuntimeException (
+		    "This user is not authorised to browse products using categorization tree" );
+		    ex.setTag ( CatRuntimeException.TAG_GUI_MSG, vw );
+		    throw ex;
+		}
+	
+		try {
+			String catIDs[] = qkmanageForm.getCatalogIDs ();
+			String cntrys[] = qkmanageForm.getCountries ();
+			String prcDescs[] = qkmanageForm.getPriceDescriptors ();
+			ProductSearchHelper searchHelper = new ProductSearchHelper ( user, catIDs, cntrys, prcDescs,adbRegionValue );
+			searchHelper.decideProdContentAttributeVisibility ( QUICK_MANAGE_GUI_STYLE,adbRegionValue );
+			List products = searchHelper.getCategoryProductContents ( qkmanageForm, 0,adbRegionValue );
+			JSONArray jsonArray = convertProductsToJsonArray(products, qkmanageForm, catIDs, cntrys);
+			vw.put("products", jsonArray );
+			vw.put("catIDs", Arrays.toString(catIDs) );
+			vw.put("cntrys", Arrays.toString(cntrys) );
+			vw.put("prcDescs", Arrays.toString(prcDescs) );
+			qkmanageForm.setProducts ( products );
+		}
+		catch ( ProductSearchException searchEx ) {
+			log.error ("Error getting products in a category", searchEx );
+			vw.put("errorMsg",searchEx.getMessage ());///getErrs ().add ( searchEx.getMessage () );
+		}
+		return vw;
+	}
+
+	public JSONObject showSearchProductsBlock ( QuickManageForm qkmanageForm , Session ses, String adbRegionValue ) {
+		JSONObject returnObject = new JSONObject();
+		User user = ses.getUser ();
+			if ( !ses.isAuthorized ( PermissionCode.QM_USE_SEARCH_MODULE ) ) {
+			    CatRuntimeException ex = new CatRuntimeException ("This user is not authorised to use complex product search module" );
+			    returnObject.put("errorMsg","This user is not authorised to use complex product search module");
+			    ex.setTag ( CatRuntimeException.TAG_GUI_MSG, null );
+			    throw ex;
+			}
+		
+			try {
+				CategorizationMgr catMgr = new CategorizationMgr ( user.getId (), user.getRegion () );
+				int ctgID = Integer.parseInt ( qkmanageForm.getCategorization () );
+				Categorization ctg = catMgr.getCategorization ( ctgID , adbRegionValue);
+				qkmanageForm.setCategorizationName ( ctg.getName () );
+				JSONArray jsonArray = ProductSearchHelper.populateProductLinesListingJson ( qkmanageForm, adbRegionValue );
+				returnObject.put("plList", jsonArray);
+			}
+			catch ( NumberFormatException numEx ) {
+				returnObject.put("errorMsg","Invalid categorization ID: " + qkmanageForm.getCategorization () );
+			}
+			return returnObject;
+	
+//		JSONObject vw = new JSONObject();
+//		User user = ses.getUser ();
+//		///CatForward vw = new CatForwardView ( "/quickmanage/SearchProducts.jsp", "Complex Product Search" );
+//		if ( !ses.isAuthorized ( PermissionCode.QM_USE_SEARCH_MODULE ) ) {
+//		    CatRuntimeException ex = new CatRuntimeException ("This user is not authorised to use complex product search module" );
+//		    ex.setTag ( CatRuntimeException.TAG_GUI_MSG, vw );
+//		    throw ex;
+//		}
+//		
+//		try {
+//			CategorizationMgr catMgr = new CategorizationMgr ( user.getId (), user.getRegion () );
+//			int ctgID = Integer.parseInt ( qkmanageForm.getCategorization () );
+//			Categorization ctg = catMgr.getCategorization ( ctgID,adbRegionValue );
+//			qkmanageForm.setCategorizationName ( ctg.getName () );
+//			ProductSearchHelper.populateProductLinesListing ( qkmanageForm,adbRegionValue );
+//		}
+//		catch ( NumberFormatException numEx ) {
+//			vw.put("errorMsg","Invalid categorization ID: " + qkmanageForm.getCategorization ());///getErrs ().add ("Invalid categorization ID: " + qkmanageForm.getCategorization () );
+//		}
+//		return vw;
+	}
+
+	public JSONObject searchProducts ( QuickManageForm qkmanageForm, Session ses, String adbRegionValue ) {
+		///CatForward vw = new CatForwardView ( "/filter/FilteredProducts.jsp", "" );
+		JSONObject returnObject = new JSONObject();
+		if ( !ses.isAuthorized ( PermissionCode.QM_USE_SEARCH_MODULE ) ) {
+		    CatRuntimeException ex = new CatRuntimeException (
+		    		"This user is not authorised to use complex product search module" );
+		ex.setTag ( CatRuntimeException.TAG_GUI_MSG, null );
+		throw ex;
+		}
+		 User user = ses.getUser ();
+	
+		try {
+			String catIDs[] = qkmanageForm.getCatalogIDs ();
+			String cntrys[] = qkmanageForm.getCountries ();
+			String prcDescs[] = qkmanageForm.getPriceDescriptors ();
+			ProductSearchHelper searchHelper = new ProductSearchHelper ( user, catIDs, cntrys, prcDescs,adbRegionValue );
+			searchHelper.decideProdContentAttributeVisibility ( QUICK_MANAGE_GUI_STYLE, adbRegionValue );
+			List products = searchHelper.retrieveProductContents ( qkmanageForm,adbRegionValue);
+			JSONArray jsonArray = convertProductsToJsonArray(products, qkmanageForm, catIDs, cntrys);
+			returnObject.put("products", jsonArray );
+			returnObject.put("catIDs", Arrays.toString(catIDs) );
+			returnObject.put("cntrys", Arrays.toString(cntrys) );
+			returnObject.put("prcDescs", Arrays.toString(prcDescs) );
+			qkmanageForm.setProducts ( products );
+		}
+		catch ( ProductSearchException searchEx ) {
+			///log.error ("Error occured while doing complex product search", searchEx );
+			returnObject.put("errorMsg", "Error occured while doing complex product search");
+		}
+	return returnObject;
+		
+//		    User user = ses.getUser ();
+//		    JSONObject vw = new JSONObject();
+//			///CatForward vw = new CatForwardView ( "/quickmanage/QuickManageProducts.jsp", "" );
+//			if ( !ses.isAuthorized ( PermissionCode.QM_USE_SEARCH_MODULE ) ) {
+//			    CatRuntimeException ex = new CatRuntimeException (
+//			    "This user is not authorised to use complex product search module" );
+//			ex.setTag ( CatRuntimeException.TAG_GUI_MSG, vw );
+//			throw ex;
+//			}
+//			
+//			try {
+//				String catIDs[] = qkmanageForm.getCatalogIDs ();
+//				String cntrys[] = qkmanageForm.getCountries ();
+//				String prcDescs[] = qkmanageForm.getPriceDescriptors ();
+//				ProductSearchHelper searchHelper = new ProductSearchHelper ( user, catIDs, cntrys, prcDescs,adbRegionValue );
+//				searchHelper.decideProdContentAttributeVisibility ( QUICK_MANAGE_GUI_STYLE, adbRegionValue );
+//				List products = searchHelper.retrieveProductContents ( qkmanageForm,adbRegionValue);
+//				qkmanageForm.setProducts ( products );
+//			}
+//			catch ( ProductSearchException searchEx ) {
+//				log.error ("Error occured while doing complex product search", searchEx );
+//				vw.put("errorMsg",searchEx.getMessage ());///getErrs ().add ( searchEx.getMessage () );
+//			}
+//			return vw;
+	}
+	
+	private JSONArray convertProductsToJsonArray(List products,QuickManageForm filterForm,String[] catIDs,String[] cntrys){
+		JSONArray jsonArray = new JSONArray();
+		ProductContent productContent = null;
+		JSONObject jsonObject = null;
+		for(int hk3 = 0; hk3 < products.size(); hk3++){
+			productContent = null;
+			jsonObject = null;
+			productContent = (ProductContent)products.get(hk3);
+			jsonObject = new JSONObject();
+			jsonObject.put("prod", productContent.getProdId());
+			jsonObject.put("description", productContent.getShortDesc());
+			jsonObject.put("isProductIncluded", productContent.isProductIncluded());
+			jsonObject.put("isParentCategoryIncluded", productContent.isParentCategoryIncluded());
+			jsonObject.put("isProductExcluded", productContent.isProductExcluded());
+			jsonObject.put("isParentCategoryExcluded", productContent.isParentCategoryExcluded());
+			jsonObject.put("catalogAvailability", getCatalogAvailability(catIDs,productContent, filterForm));
+			jsonObject.put("orderability", getOrdarabilityAsString(cntrys,productContent, filterForm));
+			jsonObject.put("discontinueDate", getDiscontinueDateAsString(cntrys,productContent, filterForm));
+			jsonObject.put("discontinueFlag", getDiscontinueFlagAsString(cntrys,productContent, filterForm));
+			jsonObject.put("endOfLife", productContent.getProdExpireDate());
+			jsonObject.put("nodePaths", productContent.getNodePaths());
+			jsonArray.add(jsonObject);
+		}
+		return jsonArray;
+	}///convertProductsToJsonArray
+	
+	private void copyCategoryToTreeNodeJson ( com.hp.ecc.ui.biz.category.Category category, JSONObject ctgTreeNode, int index, int nodeLevel , String categorizationID) {
+		ctgTreeNode.put("ctgId", categorizationID );
+		ctgTreeNode.put("id",  category.getNodeId () );
+		ctgTreeNode.put("text", category.getNodeName () );
+		ctgTreeNode.put("nodePath", category.getNodePath () );
+		ctgTreeNode.put("parentNodeId", category.getParentNodeId () );
+		ctgTreeNode.put("childrenCount", category.getChildrenCount () );
+		ctgTreeNode.put("treeId",categorizationID);
+		ctgTreeNode.put("collapsed", true);
+		ctgTreeNode.put("nodeLevel", (nodeLevel+1) );
+		ctgTreeNode.put("servFlag", false);
+		ctgTreeNode.put("saveFlag", false);
+		ctgTreeNode.put("nodeType", "Child");
+		ctgTreeNode.put("index", index);
+		ctgTreeNode.put("hasChildren", category.getChildrenCount () > 0 );
+		ctgTreeNode.put("dirtyFlag",false);
+		ctgTreeNode.put("chkFlag",  category.getCheckOptions());
+	}
+		
+	private class CategoryComparator implements Comparator {
+		public int compare (Object obj1, Object obj2 ) {
+			com.hp.ecc.ui.biz.category.Category cat1 = ( com.hp.ecc.ui.biz.category.Category ) obj1;
+			com.hp.ecc.ui.biz.category.Category cat2 = ( com.hp.ecc.ui.biz.category.Category ) obj2;
+			
+			String catName1 = cat1.getNodeName ();
+			String catName2 = cat2.getNodeName ();
+			
+			return catName1.compareTo ( catName2 );
+		}
+	}
+	
+	private String getCatalogAvailability(String[] catIDs, ProductContent productContent, QuickManageForm filterForm){
+		String returnString = "";
+		for(int hk4 = 0; hk4 < catIDs.length; hk4++){
+			returnString = returnString+ filterForm.getCatalogNameByID(catIDs[hk4]) +" : " + productContent.getCatalogAvailability(catIDs[hk4]) + "  </br>";
+		}
+		return returnString;
+	}///getCatalogAvailability
+	private String getOrdarabilityAsString(String[] catIDs, ProductContent productContent, QuickManageForm filterForm){
+		String returnString = "";
+		for(int hk5 = 0; hk5 < catIDs.length; hk5++){
+			returnString = returnString+ catIDs[hk5] +" : " + productContent.getOrderability(catIDs[hk5]) + "  </br>";
+		}
+		return returnString;
+	}///getOrdarabilityAsString
+	
+	private String getDiscontinueDateAsString(String[] catIDs, ProductContent productContent, QuickManageForm filterForm){
+		String returnString = "";
+		for(int hk6 = 0; hk6 < catIDs.length; hk6++){
+			returnString = returnString+ catIDs[hk6] +" : " + productContent.getDiscontinueDate(catIDs[hk6]) + "  </br>";
+		}
+		return returnString;
+	}///getDiscontinueDateAsString
+	
+	private String getDiscontinueFlagAsString(String[] catIDs, ProductContent productContent, QuickManageForm filterForm){
+		String returnString = "";
+		for(int hk7 = 0; hk7 < catIDs.length; hk7++){
+			returnString = returnString+ catIDs[hk7] +" : " + productContent.getDiscontinueFlag(catIDs[hk7]) + "  </br>";
+		}
+		return returnString;
+	}///getDiscontinueFlagAsString
+	
+	
+	// Load SUb Categories Data
+	
+	public JSONArray loadSubCategoriesTree ( LoadSubCategoriesForm loadSubCatForm, User user, int filterCriteria, String adbRegionValue, String nodeLevel , String[] nodes) {
+			try {
+				List childCategories = null;
+					String ctgID = loadSubCatForm.getCategorization ();
+					if ( ( ctgID != null ) && ( ctgID.trim ().length () > 0 ) ) {
+						int ctg = Integer.parseInt ( loadSubCatForm.getCategorization () );
+						String categoryPath = loadSubCatForm.getCategoryToLoad ();
+						String categoryNodeID = null;
+						if ( categoryPath != null ) {
+							int len = categoryPath.length ();
+							int pos = categoryPath.lastIndexOf ( "^", len - 2 );
+							if ( pos > 0 ) {
+								categoryNodeID = categoryPath.substring ( pos + 1, len - 1 );
+							}
+							else {
+								categoryNodeID = categoryPath.substring ( 0, len - 1 );
+							}
+						}
+						if ( ( categoryNodeID != null ) && ( categoryNodeID.trim ().length () > 0 ) ) {
+							int nodeID = Integer.parseInt ( categoryNodeID );
+							CategorizationMgr catMgr = new CategorizationMgr ( user.getId ()
+							, user.getRegion () );
+							Categorization categorization = catMgr.getCategorization ( ctg, adbRegionValue );
+							childCategories = catMgr.getChildCategories ( categorization, nodeID, false , filterCriteria, adbRegionValue );
+							///Collections.sort ( childCategories, new CategoryComparator () );
+							///loadSubCatForm.setSubCategories ( childCategories );
+						}
+					}
+					
+					JSONObject thisNode = null;
+					JSONArray jsonArray = new JSONArray();
+					int i = 0;
+					if(childCategories != null){
+					for ( int j = 0; j < childCategories.size (); j++ ) {
+						com.hp.ecc.ui.biz.category.Category subcategory = (com.hp.ecc.ui.biz.category.Category ) childCategories.get ( j );
+						///CategoryTreeNode subcategoryTreeNode = createCategoryTreeNode ();
+						JSONObject jsonObject1 = new JSONObject();
+						copyCategoryToTreeNodeJsonTree ( subcategory, jsonObject1,j, nodeLevel, ctgID, nodes,user,adbRegionValue, loadSubCatForm );
+						///ctgTreeNode.addChildCategory ( subcategoryTreeNode );
+						jsonArray.add(jsonObject1);
+					}
+					}
+					return jsonArray;
+			
+			}
+			catch ( NumberFormatException numEx ) {
+				///log.error ("Error parsing categorization/category node ID", numEx );
+				 return null;
+			}
+	}
+	
+	private void copyCategoryToTreeNodeJsonTree ( com.hp.ecc.ui.biz.category.Category category, JSONObject ctgTreeNode, int index, 
+				String nodeLevel , String categorizationID,  String[] nodes, User user, String adbRegionValue, LoadSubCategoriesForm loadSubCatForm) {
+		ctgTreeNode.put("ctgId", categorizationID );
+		ctgTreeNode.put("id",  category.getNodeId () );
+		ctgTreeNode.put("text", category.getNodeName () );
+		ctgTreeNode.put("nodePath", category.getNodePath () );
+		ctgTreeNode.put("parentNodeId", category.getParentNodeId () );
+		ctgTreeNode.put("childrenCount", category.getChildrenCount () );
+		ctgTreeNode.put("treeId",categorizationID);
+		ctgTreeNode.put("collapsed", false);
+		ctgTreeNode.put("nodeLevel", (nodeLevel) );
+		ctgTreeNode.put("servFlag", false);
+		ctgTreeNode.put("nodeType", "Child");
+		ctgTreeNode.put("index", nodeLevel+","+index);
+		ctgTreeNode.put("dirtyFlag",false);
+		ctgTreeNode.put("saveFlag", false);
+		ctgTreeNode.put("chkFlag",  category.getCheckOptions());
+		ctgTreeNode.put("hasChildren", category.getChildrenCount () > 0 );
+		if(category.getChildrenCount () > 0){
+			for(int hk11 = 0; hk11 < nodes.length; hk11++){
+				if(nodes[hk11].equalsIgnoreCase(category.getNodeId().toString())){
+						loadSubCatForm.setCategoryToLoad(nodes[hk11]+"^");
+						JSONArray vw = null;
+						vw = loadSubCategoriesTree ( loadSubCatForm, user, 0, adbRegionValue, (nodeLevel+","+index), nodes );
+						ctgTreeNode.put("children", vw );
+				}
+			}
+		}
+	}
+	
+	
+	
+	public static Product getProductDetailQckMng ( String productID, String prcDesp, String ctgID
+            , String cntryCode, String adbRegionValue ) {
+		CatalogProductMgr cm = new CatalogProductMgr ();
+		Product productRet = cm.getStandardItemQckMng ( productID, prcDesp, ctgID, cntryCode, adbRegionValue );
+		return productRet;
+	
+	}
+	
+	 public static Product getProductDetail ( String ctgID, String pID
+             , String prcDesp, String cntryCD, String adbRegionValue) {
+		CatalogProductMgr cm = new CatalogProductMgr ();
+		Product productRet = cm.getStandardItem ( pID, prcDesp, ctgID, cntryCD, adbRegionValue );
+		return productRet;
+	}
+
+
+}

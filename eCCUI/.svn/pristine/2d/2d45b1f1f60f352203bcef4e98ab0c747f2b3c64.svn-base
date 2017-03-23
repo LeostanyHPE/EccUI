@@ -1,0 +1,308 @@
+package com.hp.ecc.ui.view.beans;
+
+
+import hp.comcat.dax.fwk.common.web.util.pagination.Pagination;
+import hp.comcat.dax.fwk.common.web.util.sort.SortInfo;
+
+import java.util.List;
+
+
+/**
+ * Action form class for Bundle Template List Screen .
+ * @author     Mayur Purandar
+ * @version    5.0
+ */
+
+
+public class BundleTemplateListForm  {
+  private String fTemplateID;
+  private String fTemplateName;
+  private String fCustPartID;
+  private String fPart;
+  private String fStatus;
+  private String fStartDateFrom;
+  private String fStartDateTo;
+  private String fEndDateFrom;
+  private String fEndDateTo;
+  private String fCustId;
+  private String fCustKey;
+  private String fCustRegionCode;
+  private String fCustName;
+  private List fBundle;
+  private String fTask;
+  private String[] fSelectedBundle;
+  private boolean fIsGeneric;
+  private String showCustomerSearchFields="no";
+  private String fRoleId;
+  
+  private int recordOnHand;
+  private int recordOnDemand;
+  
+  private String sortBy;
+  private String sortOrder;
+  private int recordCount;
+  
+  private String filterTemplateId;
+  
+  private String message;
+
+  public BundleTemplateListForm () {
+    //this.init ();
+  }
+
+  public void reset () {
+    this.init ();
+  }
+
+
+  private void init () {
+    this.fTask = null;
+    this.fBundle = null;
+    this.fCustId = null;
+    this.fEndDateFrom = null;
+    this.fEndDateTo = null;
+    this.fPart = null;
+    this.fStartDateFrom = null;
+    this.fStartDateTo = null;
+    this.fStatus = null;
+    this.fTemplateName = null;
+    this.fCustName = null;
+    this.fCustKey = null;
+    this.fCustRegionCode = null;
+    this.fTemplateID = null;
+    this.fCustPartID = null;
+    this.fRoleId = null;
+  }
+
+  /** Start of setter/getter section **/
+
+  public void setCustKey ( String custKey ) {
+    this.fCustKey = custKey;
+  }
+
+  public String getCustKey () {
+    return this.fCustKey;
+  }
+
+  public void setCustRegionCode ( String custRegionCode ) {
+    this.fCustRegionCode = custRegionCode;
+  }
+
+  public String getCustRegionCode () {
+    return this.fCustRegionCode;
+  }
+
+  public void setTemplateName ( String TemplateName ) {
+    this.fTemplateName = TemplateName;
+  }
+
+  public String getTemplateName () {
+    return this.fTemplateName;
+  }
+
+  public void setTemplateID ( String template_id ) {this.fTemplateID =
+      template_id;
+  }
+
+  public String getTemplateID () {return fTemplateID;
+  }
+
+  public void setCustPartID ( String cust_part_id ) {this.fCustPartID =
+      fCustPartID;
+  }
+
+  public String getCustPartID () {return fCustPartID;
+  }
+
+
+  public void setPart ( String Part ) {
+    this.fPart = Part;
+  }
+
+  public String getPart () {
+    return this.fPart;
+  }
+
+
+  public void setStartDateFrom ( String StartDateFrom ) {
+    this.fStartDateFrom = StartDateFrom;
+  }
+
+  public String getStartDateFrom () {
+    return this.fStartDateFrom;
+  }
+
+
+  public void setStartDateTo ( String StartDateTo ) {
+    this.fStartDateTo = StartDateTo;
+  }
+
+  public String getStartDateTo () {
+    return this.fStartDateTo;
+  }
+
+
+  public void setEndDateFrom ( String EndDateFrom ) {
+    this.fEndDateFrom = EndDateFrom;
+  }
+
+  public String getEndDateFrom () {
+    return this.fEndDateFrom;
+  }
+
+
+  public void setEndDateTo ( String EndDateTo ) {
+    this.fEndDateTo = EndDateTo;
+  }
+
+  public String getEndDateTo () {
+    return this.fEndDateTo;
+  }
+
+
+  public void setCustId ( String custId ) {
+    this.fCustId = custId;
+  }
+
+  public String getCustId () {
+    return this.fCustId;
+  }
+
+
+  public void setCustomerName ( String CustName ) {
+    this.fCustName = CustName;
+  }
+
+  public String getCustomerName () {
+    return this.fCustName;
+  }
+
+
+  public void setTask ( String Task ) {
+    this.fTask = Task;
+  }
+
+  public String getTask () {
+    return this.fTask;
+  }
+
+
+  public void setBundleList ( List BundleList ) {
+    this.fBundle = BundleList;
+  }
+
+  public List getBundleList () {
+    return this.fBundle;
+  }
+
+
+  public void setStatus ( String status ) {
+    this.fStatus = status;
+  }
+
+  public String getStatus () {
+    return this.fStatus;
+  }
+
+  public boolean getIsGeneric () {
+    return this.fIsGeneric;
+  }
+
+  public void setIsGeneric ( boolean isGeneric ) {
+    this.fIsGeneric = isGeneric;
+  }
+
+  public String[] getSelectedBundle () {
+    return this.fSelectedBundle;
+  }
+
+  public void setSelectedBundle ( String[] selectedBundle ) {
+    this.fSelectedBundle = selectedBundle;
+  }
+
+  public String getShowCustomerSearchFields() {
+	return showCustomerSearchFields;
+  }
+
+  public void setShowCustomerSearchFields(String customerSearch) {
+	showCustomerSearchFields = customerSearch;
+  }
+  
+  //Added for Sales Rep
+  /**
+   * @return fRoleId 
+   * This is a getter method for User Role Id.
+   */
+  public String getRoleId()
+  {
+	  return this.fRoleId;
+  }
+  
+  /**
+   * This is a setter method for User Role ID.
+   */
+  public void setRoleId(String id)
+  {
+	  this.fRoleId = id;
+  }
+  //End
+
+
+public int getRecordOnHand() {
+	return recordOnHand;
+}
+
+public void setRecordOnHand(int recordOnHand) {
+	this.recordOnHand = recordOnHand;
+}
+
+public int getRecordOnDemand() {
+	return recordOnDemand;
+}
+
+public void setRecordOnDemand(int recordOnDemand) {
+	this.recordOnDemand = recordOnDemand;
+}
+
+public String getSortBy() {
+	return sortBy;
+}
+
+public void setSortBy(String sortBy) {
+	this.sortBy = sortBy;
+}
+
+public String getSortOrder() {
+	return sortOrder;
+}
+
+public void setSortOrder(String sortOrder) {
+	this.sortOrder = sortOrder;
+}
+
+public int getRecordCount() {
+	return recordCount;
+}
+
+public void setRecordCount(int recordCount) {
+	this.recordCount = recordCount;
+}
+
+public String getFilterTemplateId() {
+	return filterTemplateId;
+}
+
+public void setFilterTemplateId(String filterTemplateId) {
+	this.filterTemplateId = filterTemplateId;
+}
+
+public String getMessage() {
+	return message;
+}
+
+public void setMessage(String message) {
+	this.message = message;
+}
+
+
+}

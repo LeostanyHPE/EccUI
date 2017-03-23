@@ -1,0 +1,55 @@
+<div class="row" id="prodSearchId" ng-controller="ProductSearchCrtl" ng-init=initLoad();>
+    <div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+    <div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+                
+    <div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Manage Product Content</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+                <div class="customer_rows">
+                         <div class="four columns">
+                                <div class="generals">
+                                      <span>Locales:</span>
+                                      <select id="select-dropdown" ng-model="fSelectedLangCode" ng-options="item as item.locale for item in localeJsonList">
+                                      <option value="">--Select--</option>
+                                      </select>
+                                </div>
+                         </div>
+                         <div class="four columns">
+                         <div class="generals">
+                                     <span>SKU:</span>
+                                     <input type="text" ng-model="form.fProductSku"></input>
+                                </div>
+                         </div>
+                         
+                         <div class="four columns">
+                         
+                         <div class="generals">
+                                     <span>Short Description:</span>
+                                     <textarea  rows="6" cols="1" ng-model="form.fShortDesc"> </textarea>
+                                </div>
+                         
+                         </div>
+               </div>
+         <div class="search">
+               <div class="generals">
+                   <a class="btn btn-inline" style="margin: 10px 0px 0px 0px;" ng-click="productSearchResults();">Search</a>
+               </div>
+		</div>
+
+</div>
+
+	      <div class="customer_rows id-body" ng-show="dataLoad">
+	  		<div class="twelve columns">
+			   	<div id="ecc_hpegrid1" hpe-grid
+			        grd-data="grid.data"
+			        grd-header="grid.header"
+			        grd-col-defs="grid.colDefs"
+			        grd-sort="grid.sort"
+			        grd-col-view-by="grid.colViewBy" >
+			    </div>
+	  		</div>
+	     </div>
+ </div>

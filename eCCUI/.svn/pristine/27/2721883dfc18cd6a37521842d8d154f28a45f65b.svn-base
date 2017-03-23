@@ -1,0 +1,962 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.bundle;
+
+import hp.comcat.dax.fwk.common.util.StrUtil;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.bundle.Bundle;
+import com.hp.ecc.ui.biz.bundle.BundleException;
+import com.hp.ecc.ui.biz.bundle.BundleHeaderForm;
+import com.hp.ecc.ui.biz.bundle.BundlePart;
+import com.hp.ecc.ui.biz.bundle.BundleProdTemplate;
+import com.hp.ecc.ui.biz.bundle.BundleQueryMgr;
+import com.hp.ecc.ui.biz.bundle.BundleSearchCriteria;
+import com.hp.ecc.ui.biz.bundle.BundleTemplate;
+import com.hp.ecc.ui.biz.bundle.BundleWebUtil;
+import com.hp.ecc.ui.biz.bundle.CatalogBundle;
+import com.hp.ecc.ui.biz.bundle.ComponentsFormBase;
+import com.hp.ecc.ui.biz.bundle.ConfigComponent;
+import com.hp.ecc.ui.biz.bundle.QuickManageTemplateForm;
+import com.hp.ecc.ui.biz.bundle.QuickManager;
+import com.hp.ecc.ui.biz.catalog.ProgramMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.CustomerMgr;
+import com.hp.ecc.ui.biz.pricetier.PriceTierUtil;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.db.dao.BundleTemplateQuickManageDao;
+
+
+import com.hp.ecc.ui.view.beans.BundleTemplateForm;
+import com.hp.ecc.ui.view.beans.BundleTemplateListForm;
+import com.hp.ecc.ui.view.beans.ProgramsListForm;
+import com.hp.ecc.ui.view.beans.QuickManageBean;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author duvvurso
+ *
+ */
+
+@Service
+public class BundleTemplateProcessor {
+	
+	private static final Logger logger = LoggerFactory.getLogger(BundleTemplateProcessor.class);
+	private BundleTemplateQuickManageDao quickManageDao = new BundleTemplateQuickManageDao();
+	
+	
+	public List processRetrieve(BundleTemplateListForm form, String regionCode, String loginUserId, String dbRegionToConnect,String sortBy, String sortOrder, String templateId, String roleId, String tenantCode) {
+
+		String forSorting = null;
+		/*if (form == null)
+			return null;*/
+		
+		BundleTemplateListForm bform = (BundleTemplateListForm) form;
+
+		BundleSearchCriteria criteria = new BundleSearchCriteria();
+		
+		JSONObject jObj = new JSONObject();
+		
+		if(bform.getCustomerName() == null) {
+			bform.setIsGeneric(true);
+		}
+
+		int start = form.getRecordOnHand() + 1;
+	    int end = form.getRecordOnHand() +  form.getRecordOnDemand();
+	    if(templateId !=null && templateId.length() > 0){
+	    	forSorting = "BDT_ID LIKE '"  +templateId+ "%'";
+	    }else{
+	    	forSorting = "(b.ttt BETWEEN " + start + " AND " + end +")";
+		    if((sortBy !=null && sortBy.length()>0) && (sortOrder != null && sortOrder.length()>0)){
+				forSorting += " order by " + sortBy + ' ' +sortOrder;
+			}
+	    }
+	  
+	    criteria.setCount(false);
+		criteria.setUserRole(roleId);
+		criteria.setRegionCode(regionCode);
+		criteria.setEndDateFrom(bform.getEndDateFrom());
+		criteria.setEndDateTo(bform.getEndDateTo());
+		criteria.setStartDateFrom(bform.getStartDateFrom());
+		criteria.setStartDateTo(bform.getStartDateTo());
+		// criteria.setCustName(bform.getCustomerName());
+		criteria.setCustKey(bform.getCustKey());
+		criteria.setIncludedProd(bform.getPart());
+		criteria.setName(bform.getTemplateName());
+		criteria.setIncludeGeneric(bform.getIsGeneric());
+		criteria.setID(bform.getTemplateID());
+		criteria.setStatus(bform.getStatus());
+		criteria.setEnd(end);
+		criteria.setStart(start);
+		criteria.setSortBy(form.getSortBy());
+		criteria.setSortOrder(form.getSortOrder());
+		criteria.setSortByAndSortOrder(forSorting);
+		
+//	    Split Work
+	    if (bform.getCustKey () != null && !bform.getCustKey ().isEmpty())
+	    	criteria.setTenantCode(TenantConstants.getNoSharedTenant(PagesUtil.getTenantCodeFromCustKey(bform.getCustKey())));
+	    else
+	    	criteria.setTenantCode(TenantConstants.getNoSharedTenant(tenantCode));
+
+		BundleQueryMgr mgr = BundleQueryMgr.newBundleQueryMgrType();
+		List list = mgr.findBundleTemplates(criteria, dbRegionToConnect,sortBy,sortOrder);
+		Iterator listIterator = list.iterator();
+		BundleTemplate template = null;
+		while (listIterator.hasNext()) {
+			template = (BundleTemplate) listIterator.next();
+			//template.setDataSheetNameLink(template.getDatasheet());
+			template.setImageNameLink(template.getImage());
+		}
+
+		bform.setBundleList(list);
+		
+		//jObj.put("form", new Gson().toJson(bform));
+
+		return list;
+	}
+	
+	
+	public String processDelete(BundleTemplateListForm form, String regionCode, String loginUserId, String dbRegionToConnect, String roleId, String tenantCode) {
+		
+		JSONObject jObj = new JSONObject();
+		String[] del = form.getSelectedBundle();
+		StringBuffer DeletedBundleList = new StringBuffer();
+		StringBuffer ErrorBundleList = new StringBuffer();
+		if (del != null) {
+			if (del.length > 0) {
+				BundleTemplate bdl_template = new BundleTemplate();
+
+				boolean Status = true;
+				for (int i = 0; i < del.length; i++) {
+					bdl_template.setBundleTemplateID(del[i]);
+					try {
+						bdl_template.remove(loginUserId, dbRegionToConnect);
+						DeletedBundleList.append(del[i]).append(" , ");
+					} catch (BundleException e) {
+						ErrorBundleList.append(del[i]).append(" , ");
+						Status = false;
+						// todo: Logic to handle the exception
+						logger.error(loginUserId +"-"+ regionCode+"--> processDelete() : Bundle exception while deleting "+ e.getMessage());
+					}
+				}
+			}
+		}
+		if (DeletedBundleList.length() > 0) {
+			//vw.getMsgs().add("Bundle templates deleted : "+ DeletedBundleList.substring(0,DeletedBundleList.length() - 2));
+			logger.info(loginUserId +"-"+ regionCode+"--> processDelete() : Bundle templates "+ DeletedBundleList.toString() + " deleted successfully by" + loginUserId);
+			
+			return "Bundle Templates deleted";
+		}
+		if (ErrorBundleList.length() > 0) {
+			//vw.getMsgs().add("\nBundle templates not able to delete : "+ ErrorBundleList);
+			logger.info(loginUserId +"-"+ regionCode+"--> processDelete() : Bundle templates not able to delete : "+ ErrorBundleList.toString() + " by" + loginUserId);
+			
+			return "Bundle templates not able to delete";
+		}
+		List list = this.processRetrieve( form, regionCode, loginUserId, dbRegionToConnect,null,null,null,roleId,tenantCode);
+		form.setBundleList(list);
+		jObj.put("form", new Gson().toJson(form));
+		
+		return jObj.toJSONString();
+	}
+	
+	
+	/**
+	 * Creates bundle template
+	 * @param	bdl_form	Bundle template form.
+	 * @param	User	application user which is performing this operation. Used for logging purposes.
+	 */
+	public String createBundleTemplate(BundleTemplateForm bdl_form, User user, String dbRegionToConnect, String tenantCode) {
+		JSONObject jObj = new JSONObject();
+
+		try {
+			BundleTemplate bdl_template = bdl_form.getBundleTemplate();
+			bdl_template.setBundleTemplateID(null);
+			
+			// Split work
+			if (bdl_form.getCustID()!=null && !bdl_form.getCustID().isEmpty())
+				bdl_template.setTenantCode(PagesUtil.getTenantCodeFromCustKey(bdl_form.getCustID()));
+			else
+				bdl_template.setTenantCode(tenantCode);
+			
+			bdl_template.create(user.getId(), dbRegionToConnect);
+			bdl_form.setBundleTemplate(bdl_template);
+			/*
+			if (StrUtil.isEmpty(bdl_form.getImageURL())) {
+				String imageURL = BundleWebUtil.uploadBundleImage(bdl_id, hp_lang_code, bdl_form.getImageFile(), user, logger);
+				bdl_form.setImageURL(imageURL);
+			}*/
+			/*if (StrUtil.isEmpty(bdl_form.getImageURL())) {
+				bdl_form = bundleTemplateUploadImage(bdl_form, file, user, dbRegionToConnect );
+			}*/
+			bdl_template = bdl_form.getBundleTemplate();
+			bdl_template.saveContent(user.getId(), dbRegionToConnect);
+			
+			//vw = new CatForwardAction("/bundle/header?bundleTemplateID="+ bdl_template.getBundleTemplateID()+ "&templateFlag=true", true);
+			logger.info(user.getId()+ "-" + user.getRegion_code() + "---> createBundleTemplate(): Bundle Template" + bdl_template.getBundleTemplateID() +" successfully created by "+user.getId());
+		} catch (BundleException bundleEx) {
+			logger.error("Error creating bundle template", bundleEx);
+			jObj.put("message","Error in creating template" );
+			return jObj.toJSONString();
+			//vw.getErrs().add(bundleEx.getMessage());
+		}
+		jObj.put("form", new Gson().toJson(bdl_form));
+		jObj.put("message","Bundle Template successfully created" );		
+		return jObj.toJSONString();
+		
+	}
+	
+	
+	
+	/**
+	 * Saves bundle template changes.
+	 * 
+	 * @param bdl_form
+	 *            Bundle template form.
+	 * @param User
+	 *            application user which is performing this operation. Used for
+	 *            logging purposes.
+	 */
+	public String saveBundleTemplate(BundleTemplateForm bdl_form,
+			User user,  String dbRegionToConnect) {
+		JSONObject jObj = new JSONObject();
+		/*CatForward vw = new CatForwardView("/bundle/CreateBundleTemplate.jsp","Edit Bundle Template");
+		this.validate(vw, mapping, bdl_form, request);
+		bdl_form.validateForm(vw);
+		if (vw.hasErr()) {
+			bdl_form.setTask(EDIT_BUNDLE_TEMPLATE);
+			return vw;
+		}
+*/
+		try {
+			BundleTemplate bdl_template = bdl_form.getBundleTemplate();
+			String bdl_id = bdl_form.getBundleTemplateID();
+			String hp_lang_code = bdl_form.getHPLangCode();
+			/*
+			if (StrUtil.isEmpty(bdl_form.getImageURL())) {
+				String imageURL = BundleWebUtil.uploadBundleImage(bdl_id,
+						hp_lang_code, bdl_form.getImageFile(), user, log);
+				bdl_form.setImageURL(imageURL);
+			}
+			if (bdl_form.getBaseModelImageFlag()) {
+				BundleQueryMgr mgr = BundleQueryMgr.newBundleQueryMgrType();
+				String imageURL = mgr.getBundleBaseModelImage(
+						bdl_form.getBundleTemplateID(), hp_lang_code);
+				bdl_form.setImageURL(imageURL);
+				log.debug("^^^^^^^^^^^^^^^^^^^BASE MODEL IMAGE URL for "
+						+ bdl_form.getBundleTemplateID() + " IS " + imageURL);
+			}*/
+			/*if (StrUtil.isEmpty(bdl_form.getImageURL())) {
+				bdl_form = bundleTemplateUploadImage(bdl_form, file, user, dbRegionToConnect);
+			}*/
+			
+			if (bdl_form.getBaseModelImageFlag()) {
+				BundleQueryMgr mgr = BundleQueryMgr.newBundleQueryMgrType();
+				String imageURL = mgr.getBundleBaseModelImage(bdl_form.getBundleTemplateID(), hp_lang_code, dbRegionToConnect);
+				bdl_form.setImageURL(imageURL);
+			}
+
+			bdl_template = bdl_form.getBundleTemplate();
+			// Chianti - eZilla 60588 - Do not set cust flag to Y for
+			// auto created promo bundle templates which has not been customized
+			// yet.
+			// The bundle template should remain auto even if user edits the
+			// template.
+			if (!"Y".equalsIgnoreCase(bdl_template.getCustFlag())) {
+				bdl_template.setCustFlag("N");
+			}
+
+			bdl_template.save(user.getId(), dbRegionToConnect);
+			bdl_template.saveContent(user.getId(), dbRegionToConnect);
+			
+			logger.info(user.getId()+ "-" + user.getRegion_code() + "---> saveBundleTemplate(): Bundle Template" + bdl_template.getBundleTemplateID() +" successfully modified by "+user.getId());
+	
+		} catch (BundleException bundleEx) {
+			logger.error("Error saving bundle template changes", bundleEx);
+			//vw.getErrs().add(bundleEx.getMessage());
+			return "Error saving bundle template changes";
+		}
+		jObj.put("form", new Gson().toJson(bdl_form));
+		jObj.put("message", "bundle template successfully saved");
+		return jObj.toJSONString();
+		//return vw;
+	}
+	
+	/**
+	 * Shows bundle template for edit.
+	 * @param	bdl_form	Bundle template form.
+	 */
+	public String editBundleTemplate(BundleTemplateForm bdl_form, String dbRegionToConnect) {
+		JSONObject jObj = new JSONObject();
+		Gson gson = new Gson();
+		try {
+			BundleTemplate bdl_template = bdl_form.getBundleTemplate();
+			bdl_template.load(dbRegionToConnect);
+			bdl_form.setBundleTemplate(bdl_template);
+			List pgm_list = BundleWebUtil.getCustomerPrograms(bdl_template
+					.getCustID(), dbRegionToConnect);
+			jObj.put("EditBndleTemplate_ProgramList",gson.toJson(pgm_list));
+		} catch (BundleException bundleEx) {
+			logger.error("Error saving bundle template changes", bundleEx);
+			//vw.getErrs().add(bundleEx.getMessage());
+		}
+		jObj.put("form", gson.toJson(bdl_form));
+		return jObj.toJSONString();
+	}
+	
+	public String getGenericPrograms(ProgramsListForm form , String regionCode, String dbRegionToConnect, String tenantCode){
+        String customer = PriceTierUtil.getGenericProgramCustomer( regionCode , dbRegionToConnect,  tenantCode);
+        ProgramMgr mgr = new ProgramMgr();
+        List programs = mgr.getProgramArray ( form.getProgramName() , customer, dbRegionToConnect );
+        form.setProgramsList(programs);
+        return new Gson().toJson(form);
+        //return null;
+}
+
+
+	public String bundleTemplateUploadImage(String bdlTemplateId, String regionCode, String loginUserId, MultipartFile file, User user, String dbRegionToConnect, BundleTemplate bform) {
+		// TODO Auto-generated method stub
+		Category log = CTX.getCTX ().getLog ();
+		JSONObject jObj  = new JSONObject();
+		
+		String imageURL = null;
+			try {
+				bform.setBundleTemplateID(bdlTemplateId);
+				imageURL = BundleWebUtil.uploadBundleImage(log, bdlTemplateId, bform.getHpLangCode(), file, user);
+				bform.setImage(imageURL); bform.setImageNameLink(imageURL);
+				bform.saveContent(user.getId(), dbRegionToConnect);
+			} catch (BundleException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		jObj.put("form", new Gson().toJson(bform));
+		
+		return jObj.toJSONString();
+	}
+	
+	public String displayCopyBundleTemplate(BundleTemplateForm bdl_form, User user, String dbRegionToConnect) {
+		JSONObject jObj = new JSONObject();
+		try {
+			BundleTemplate bdl_template = bdl_form.getBundleTemplate();
+			bdl_template.load(dbRegionToConnect);
+			bdl_form.setBundleTemplate(bdl_template);
+		} catch (BundleException bundleEx) {
+			logger.error("Error saving bundle template changes", bundleEx);
+			return "Error saving bundle template changes";
+		}
+		jObj.put("form", new Gson().toJson(bdl_form));
+		return jObj.toJSONString();
+	}
+	
+	public String copyBundleTemplate(BundleTemplateForm bdl_form, User user, String dbRegionToConnect, String tenantCode) {
+		//CatForward vw = new CatForwardView("/bundle/CreateBundleTemplate.jsp","Copy Bundle Template");
+		//this.validate(vw, mapping, bdl_form, request);
+		//bdl_form.validateForm(vw);
+		/*if (vw.hasErr()) {
+			bdl_form.setTask(COPY_BUNDLE_TEMPLATE);
+			if (StrUtil.isEmpty(bdl_form.getBundleTemplateID())) {
+				bdl_form.setBundleTemplateID(null);
+			}
+			return vw;
+		}*/
+		
+		JSONObject jObj = new JSONObject();
+
+		try {
+			BundleTemplate orig_bdl_template = bdl_form.getBundleTemplate();
+			if (bdl_form.getGenericTemplateFlag()) {
+				orig_bdl_template.setCustName(null);
+				orig_bdl_template.setCustID(null);
+			}
+			
+			//Split work
+			if (tenantCode!=null && !tenantCode.isEmpty())
+				orig_bdl_template.setTenantCode(tenantCode);
+
+			String new_template_id = orig_bdl_template.copyBundleTemplate(user
+					.getId(), dbRegionToConnect);
+
+			/*
+			if (StrUtil.isEmpty(bdl_form.getImageURL())) {
+				String imageURL = BundleWebUtil.uploadBundleImage(
+						new_template_id, hp_lang_code, bdl_form.getImageFile(),
+						user, log);
+				bdl_form.setImageURL(imageURL);
+			}*/
+			/*if (StrUtil.isEmpty(bdl_form.getImageURL())) {
+				bdl_form = bundleTemplateUploadImage(bdl_form, file, user, dbRegionToConnect);
+			}*/
+			bdl_form.setBundleTemplateID(new_template_id);
+			BundleTemplate copied_bdl_template = bdl_form.getBundleTemplate();
+			copied_bdl_template.saveContent(user.getId(), dbRegionToConnect);
+
+			/*vw = new CatForwardAction("/bundle/header?bundleTemplateID="
+					+ new_template_id + "&templateFlag=true", true);
+			vw.getMsgs().add("Copied bundle template successfully.");*/
+			logger.info(user.getId()+ "-" + user.getRegion_code() + "---> copyBundleTemplate(): Bundle Template successfully created from " + orig_bdl_template.getBundleTemplateID() +" to " +  new_template_id + " by " + user.getId());
+			
+		} catch (BundleException bundleEx) {
+			logger.error("Error copying bundle template", bundleEx);
+			return "Error copying bundle template";
+		}
+		jObj.put("message", "Bundle Template successfully created");
+		jObj.put("form", new Gson().toJson(bdl_form));
+		return jObj.toJSONString();
+	}
+
+	
+	public String quickManageBundleTemplate(QuickManageTemplateForm form, User user, String custKey, String dbRegionToConnect,String tenantCode){
+		JSONObject returnObj = new JSONObject();
+		JSONArray results = null;
+		try{
+		String bdl_template_ids[] = form.getSelectedBundle ();
+		 if ( ( bdl_template_ids != null ) && ( bdl_template_ids.length > 0 ) ) {
+		      if ( !StrUtil.isEmpty ( form.getDeleteProdStr () ) ) {
+		        quickManageDao.doUpdate ( "GROUP_BDL_UPDATE", "QUICK_MANAGE_DEL_TEMPLATE_PRODS", form , dbRegionToConnect);
+		            if ( !StrUtil.isEmpty ( form.getDeleteProdStr () ) ){
+		            	returnObj.put("successMsg", "Following Products are deleted successfully " + form.getDeleteProdStr ());
+		            	logger.info(user.getId()+ "-" + user.getRegion_code() + "---> quickManageBundleTemplate(): Following Products are deleted successfully " + form.getDeleteProdStr ()+ " by " + user.getId());
+			          }
+		          }
+		     
+		    if ( !StrUtil.isEmpty ( form.getOriginalProd () ) ) {
+		       
+		          BundleProdTemplate bdlProd = null;
+		          QuickManageBean bean = null;
+		           boolean isPresent = checkProductAvailability (form.getReplaceByProd () , dbRegionToConnect, tenantCode);
+		           if ( isPresent ) {
+		        	   if ( custKey != null ) {
+				              List product = getProdDetails ( form.getReplaceByProd () , custKey , dbRegionToConnect);
+				             
+				              if (product != null && product.size () > 1 ) {
+					                List quickManageBeanList = getQuickManageDetails (
+					                    bdl_template_ids, form.getReplaceByProd () , dbRegionToConnect );
+					                setDealString ( product, quickManageBeanList
+					                                , form.getRegionCode () );
+					                quickManageDao.setConfigString ( form.getOriginalProd (), quickManageBeanList ,dbRegionToConnect);
+					                form.setQuickManageBean ( quickManageBeanList );
+					                return new Gson().toJson(form);
+					              }
+				              
+				              else if ( product.size () == 1 ) {
+				                  bdlProd = ( BundleProdTemplate ) product.get ( 0 );
+				                  bean = new QuickManageBean ();
+				                  bean.setDealId ( bdlProd.getDealId () );
+				                  bean.setEclipseId ( bdlProd.getConfigID () );
+				                  bean.setContextId ( bdlProd.getContextID () );
+				                  bean.setConfigSource ( bdlProd.getConfigSource () );
+				                  bean.setOriginalProd ( form.getOriginalProd () );
+				                  bean.setReplaceProd ( form.getReplaceByProd () );
+				                  bean.setLastModifiedBy ( user.getId () );
+
+				                  for ( int i = 0; i < bdl_template_ids.length; i++ ) {
+				                    bean.setTemplateId ( bdl_template_ids[i] );
+				                    quickManageDao.doQuickManageProds ( "GROUP_BDL_UPDATE"
+				                                         , "QUICK_MANAGE_REPLACE_PROD", bean, dbRegionToConnect );
+				                  }
+
+				                  BundleTemplate bdl_template = new BundleTemplate ();
+				     		     results = new JSONArray();
+				     		   
+				     		    for ( int i = 0; i < bdl_template_ids.length; i++ ) {
+				     		    	bdl_template.setBundleTemplateID ( bdl_template_ids[i].toString () );
+				     		    String bdl_ids[] = bdl_template.propagateChanges ( user.getId () , dbRegionToConnect );
+				     		    JSONObject template = new JSONObject();
+				     		    template.put("id", bdl_template_ids[i ].toString ());
+				     		    JSONArray bundles = new JSONArray();
+				     		    for(int j=0; j < bdl_ids.length; j++){
+				     		    	JSONObject bundle = new JSONObject();
+				     		    	bundle.put("bundleName", bdl_ids[j]);
+				     		    	bundles.add(bundle);
+				     		    }
+				     		    template.put("values", bundles);
+				     		    results.add(template);
+
+				                }
+				     			returnObj.put("message", "deal updated successfully");
+				     			logger.info(user.getId()+ "-" + user.getRegion_code() + "---> quickManageBundleTemplate(): deal updated successfully by " + user.getId());
+				     			returnObj.put("form", new Gson().toJson(form));
+				    		  	returnObj.put("result", results);
+				              }
+		        	   }else {
+		                   List quickManageBeanList = getQuickManageDetails (
+		                           bdl_template_ids, form.getReplaceByProd () , dbRegionToConnect);
+		                       setProdDetails ( form.getReplaceByProd (), quickManageBeanList ,form.getRegionCode () , dbRegionToConnect);
+		                       quickManageDao.setConfigString ( form.getOriginalProd (), quickManageBeanList ,dbRegionToConnect);
+		                       form.setQuickManageBean ( quickManageBeanList );
+		                       if ( form.getEndDate () != null ) {
+		   				        quickManageDao.doUpdate ( "GROUP_BDL_UPDATE", "QUICK_MANAGE_UPDATE_END_DATE", form , dbRegionToConnect);
+		   				      }
+		                       return new Gson().toJson(form);
+		                     }
+		           }else{
+		        	   returnObj.put("errorMsg","Product " + form.getReplaceByProd () + " does not exist");
+		        	   logger.error(user.getId()+ "-" + user.getRegion_code() + "---> quickManageBundleTemplate(): Product " + form.getReplaceByProd () + " does not exist");
+		           }
+		        	  
+		            } 
+		    
+  		   if ( form.getEndDate () != null ) {
+			        quickManageDao.doUpdate ( "GROUP_BDL_UPDATE", "QUICK_MANAGE_UPDATE_END_DATE", form , dbRegionToConnect);
+			      }
+		    		
+				  
+		    }
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		      
+
+		     
+		    
+		return returnObj.toJSONString();
+	}
+	
+	public String updateDealInfo ( QuickManageTemplateForm form, User user, String dbRegionToConnect ) {
+		 		  
+			JSONObject returnObj = new JSONObject();
+			JSONArray results = null;
+			
+		  try {
+		    List bdl_template_ids = form.getDealTemplateId ();
+		    List dealValues = form.getSelDeals ();
+		    QuickManageBean bean = null;
+
+		    for ( int i = 0; i < bdl_template_ids.size (); i++ ) {
+		     
+		      String dealString = dealValues.get ( i ).toString ();
+		      //String dealString = dealValues[i];
+		      bean = new QuickManageBean ();
+		      if ( dealString.startsWith ( "Select" ) ) {
+		        bean.setDealId ( null );
+		        bean.setEclipseId ( null );
+		        bean.setContextId ( null );
+		        bean.setConfigSource ( null );
+		        bean.setOriginalProd ( form.getOriginalProd () );
+		        bean.setReplaceProd ( form.getReplaceByProd () );
+		        bean.setTemplateId ( bdl_template_ids.get ( i ).toString () );
+		        bean.setLastModifiedBy ( user.getId () );
+		      }
+		      else {
+		        ArrayList values = StrUtil.split ( dealString, "^" );
+
+		        bean.setDealId ( values.get ( 0 ).toString () );
+		        bean.setEclipseId ( values.get ( 1 ).toString ().equals ( "N/A" ) ? null
+		                            : values.get ( 1 ).toString () );
+		        // had to compare with "null" because StrUtil.split returns a "null" string instead of null value.
+		        bean.setContextId ( values.get ( 4 ).toString ().equals ( "null" ) ? null
+		                            : ( String ) values.get ( 4 ) );
+		        bean.setConfigSource ( values.get ( 5 ).toString ().equals ( "null" ) ? null
+		                               : ( String ) values.get ( 5 ) );
+		        bean.setOriginalProd ( form.getOriginalProd () );
+		        bean.setReplaceProd ( form.getReplaceByProd () );
+		        bean.setTemplateId ( bdl_template_ids.get ( i ).toString () );
+		        bean.setLastModifiedBy ( user.getId () );
+		      }
+		      quickManageDao.doQuickManageProds ( "GROUP_BDL_UPDATE", "QUICK_MANAGE_REPLACE_PROD" , bean , dbRegionToConnect );
+
+		    }
+
+		    BundleTemplate bdl_template = new BundleTemplate ();
+		     results = new JSONArray();
+		   
+		    for ( int i = 0; i < bdl_template_ids.size (); i++ ) {
+		    	bdl_template.setBundleTemplateID ( bdl_template_ids.get ( i ).toString () );
+		    String bdl_ids[] = bdl_template.propagateChanges ( user.getId () , dbRegionToConnect );
+		    JSONObject template = new JSONObject();
+		    template.put("id", bdl_template_ids.get ( i ).toString ());
+		    JSONArray bundles = new JSONArray();
+		    for(int j=0; j < bdl_ids.length; j++){
+		    	JSONObject bundle = new JSONObject();
+		    	bundle.put("bundleName", bdl_ids[j]);
+		    	bundles.add(bundle);
+		    }
+		    template.put("values", bundles);
+		    results.add(template);
+		  
+		    }
+		  
+		  }
+		  catch ( BundleException bundleEx ) {
+			  returnObj.put("message","Error in updating deal info.");
+		  }
+		  	returnObj.put("message", "deal updated successfully");
+		  	returnObj.put("form", new Gson().toJson(form));
+		  	returnObj.put("result", results);
+		  return returnObj.toJSONString();
+
+		}
+		
+	private void setProdDetails(String prod, List quickManageList,
+			String regionCode , String dbRegionToConnect) {
+		BundleProdTemplate temp_bpt = null;
+		QuickManageBean bean = null;
+		Iterator iterator = quickManageList.iterator();
+		QuickManager mgr = QuickManager.getManager();
+
+		while (iterator.hasNext()) {
+			bean = (QuickManageBean) iterator.next();
+			temp_bpt = new BundleProdTemplate();
+			temp_bpt.setSourceProd(prod);
+			temp_bpt.setBundleTemplateID(bean.getTemplateId());
+
+			List results = mgr.executeQuery("QUICK_MANAGE", "GET_PROD_DETAILS",	temp_bpt, BundleProdTemplate.class , dbRegionToConnect);
+
+			setDealString(results, bean, regionCode);
+		}
+
+	}
+	
+	
+	
+	private boolean checkProductAvailability ( String prod , String dbRegionToConnect,String tenantCode) {
+		  QuickManager mgr = QuickManager.getManager ();
+		  return mgr.checkProductAvailability ( prod , dbRegionToConnect, tenantCode);
+	}
+	
+	private List getQuickManageDetails ( String[] ids, String prodId , String dbRegionToConnect) {
+
+		  StringBuffer templateBuf = new StringBuffer ();
+		  boolean first = true;
+		  for ( int i = 0; i < ids.length; i++ ) {
+		    if ( !first ) {
+		      templateBuf.append ( ',' );
+		    }
+		    else {
+		      first = false;
+		    }
+		    templateBuf.append ( "'" + ids[i] + "'" );
+		  }
+		  StringBuffer sqlBuf = new StringBuffer ( "SELECT {templateId}:=A.BDT_ID," +
+		                                           "{templateName}:=B.BDC_SHORT_DESC," +
+		                                           "{custPart}:=A.BDT_CUST_PART_ID," +
+		                                           "{baseModel}:=C.BASE_PROD," +
+		                                           "{partNo}:=C.PROD FROM BDL_TEMPLATE_INFO A, " +
+		                                           " BDL_TEMPLATE_CONTENT B,PRODUCTS C WHERE " +
+		                                           " A.BDT_ID=B.BDC_COMP_ID " +
+		                                           " AND C.PROD = '" + prodId + "'" +
+		                                           " AND A.BDT_ID IN ("
+		                                           + templateBuf.toString () + ")" );
+		  QuickManager mgr = QuickManager.getManager ();
+		  QuickManageBean bean = new QuickManageBean ();
+		  List results = mgr.executeQuery ( sqlBuf.toString (), bean, QuickManageBean.class , dbRegionToConnect);
+
+		  return results;
+
+		}
+	
+	private void setDealString ( List results, QuickManageBean bean, String region ) {
+		  Iterator resultIterator = results.iterator ();
+		  List idList = new ArrayList ();
+		  List details = new ArrayList ();
+		  StringBuffer sb = null;
+		  StringBuffer val = null;
+		  String id = null;
+		  BundleProdTemplate temp = null;
+
+		  while ( resultIterator.hasNext () ) {
+		    temp = ( BundleProdTemplate ) resultIterator.next ();
+		    sb = new StringBuffer ();
+		    val = new StringBuffer ();
+		    id = new String ();
+		    sb.append ( temp.getDealId () );
+		    sb.append ( "-" );
+		    if ( (region.equals ( "AP" )||region.equals ( "GL" )) && temp.getContextID () != null ) {
+		      sb.append ( temp.getConfigID () == null ? "null" : temp.getConfigID () );
+		    }
+		    else {
+		      sb.append ( temp.getConfigID () == null ? "N/A" : temp.getConfigID () );
+		    }
+		    sb.append ( "-" );
+		    sb.append ( temp.getPrice () );
+		    sb.append ( "-" );
+		    sb.append ( temp.getPriceDescriptor () );
+		    id = sb.toString ();
+		    idList.add ( id );
+
+		    val.append ( temp.getDealId () );
+		    val.append ( "^" );
+		    if ( (region.equals ( "AP" )||region.equals ( "GL" )) && temp.getContextID () != null ) {
+		      val.append ( temp.getConfigID () == null ? "null" : temp.getConfigID () );
+		    }
+		    else {
+		      val.append ( temp.getConfigID () == null ? "N/A" : temp.getConfigID () );
+		    }
+		    val.append ( "^" );
+		    val.append ( temp.getPrice () );
+		    val.append ( "^" );
+		    val.append ( temp.getPriceDescriptor () );
+		    val.append ( "^" );
+		    val.append ( temp.getContextID () );
+		    val.append ( "^" );
+		    val.append ( temp.getConfigSource () );
+		    details.add ( val.toString () );
+		  }
+
+		  bean.setDealList ( idList );
+		  bean.setDealValues ( details );
+
+		}
+	
+	private List getProdDetails ( String prod, String custKey , String dbRegionToConnect ) {
+
+		  StringBuffer sqlBuf = new StringBuffer ( "SELECT "
+		                                           + "{dealId}:=x.deal_id, "
+		                                           + "{price}:=nvl(x.big_deal_price, 0), "
+		                                           +
+		      "{priceDescriptor}:=x.price_descriptor, "
+		                                           + "{configID}:=x.config_id, "
+		                                           + "{contextID}:=x.context_id,"
+		                                           + "{configSource}:=x.config_src"
+		                                           + " FROM "
+		                                           + " (SELECT "
+		                                           + "a.deal_id,b.big_deal_price,a.price_descriptor,'' config_id,'' context_id,'' config_src "
+		                                           + " FROM all_deal_info a, "
+		                                           +
+		      " all_deal_content_detail b, customer c WHERE a.bd_id = b.bd_id AND prod = "
+		                                           + "'" + prod
+		                                           + "' AND NVL(context_id, 'X') = 'X' "
+		                                           + " AND NVL(sos_bdl_filter_flag, 'N') <> 'Y' AND NVL(c.orig_cust_key,c.cust_key)=a.cust_key AND b.bundle_flag='S' AND c.cust_key='"
+		                                           + custKey + "' UNION"
+		                                           + " SELECT "
+		                                           + "a.deal_id, "
+		                                           + "b.big_deal_price, "
+		                                           + "a.price_descriptor, "
+		                                           + "c.config_id,  "
+		                                           + "b.context_id,"
+		                                           + "c.config_src"
+		                                           + " FROM all_deal_info a, "
+		                                           +
+		      " all_deal_content_detail b, all_deal_bundle_info c, customer d "
+		                                           +
+		      " WHERE a.bd_id = b.bd_id AND a.bd_id = c.bd_id "
+		                                           + " AND b.line_nr = c.line_nr AND NVL(d.orig_cust_key,d.cust_key)=a.cust_key AND d.cust_key='"
+		                                           + custKey + "' AND prod = '" + prod
+		                                           + "' AND "
+		                                           +
+		      " NVL(sos_bdl_filter_flag, 'N') <> 'Y')x" );
+
+		 
+		  QuickManager mgr = QuickManager.getManager ();
+		  BundleProdTemplate temp_bpt = new BundleProdTemplate ();
+		  List results = mgr.executeQuery ( sqlBuf.toString (), temp_bpt
+		                                    , BundleProdTemplate.class , dbRegionToConnect);
+
+		  if ( results.size () == 0 ) {
+		    results = new ArrayList ();
+		    results.add ( new BundleProdTemplate () );
+		  }
+		  return results;
+		}
+	
+	private void setDealString ( List results, List beanList, String region ) {
+		  Iterator resultIterator = results.iterator ();
+		  List idList = new ArrayList ();
+		  List details = new ArrayList ();
+		  StringBuffer sb = null;
+		  StringBuffer val = null;
+		  String id = null;
+		  BundleProdTemplate temp = null;
+
+		  while ( resultIterator.hasNext () ) {
+		    temp = ( BundleProdTemplate ) resultIterator.next ();
+		    sb = new StringBuffer ();
+		    val = new StringBuffer ();
+		    id = new String ();
+		    sb.append ( temp.getDealId () );
+		    sb.append ( "-" );
+		    if ( (region.equals ( "AP" )||region.equals ( "GL" )) && temp.getContextID () != null ) {
+		      sb.append ( temp.getConfigID () == null ? "null" : temp.getConfigID () );
+		    }
+		    else {
+		      sb.append ( temp.getConfigID () == null ? "N/A" : temp.getConfigID () );
+		    }
+		    sb.append ( "-" );
+		    sb.append ( temp.getPrice () );
+		    sb.append ( "-" );
+		    sb.append ( temp.getPriceDescriptor () );
+		    id = sb.toString ();
+		    idList.add ( id );
+
+		    val.append ( temp.getDealId () );
+		    val.append ( "^" );
+		    if ( (region.equals ( "AP" ) ||region.equals ( "GL" )) && temp.getContextID () != null ) {
+		      val.append ( temp.getConfigID () == null ? "null" : temp.getConfigID () );
+		    }
+		    else {
+		      val.append ( temp.getConfigID () == null ? "N/A" : temp.getConfigID () );
+		    }
+		    val.append ( "^" );
+		    val.append ( temp.getPrice () );
+		    val.append ( "^" );
+		    val.append ( temp.getPriceDescriptor () );
+		    val.append ( "^" );
+		    val.append ( temp.getContextID () );
+		    val.append ( "^" );
+		    val.append ( temp.getConfigSource () );
+		    details.add ( val.toString () );
+		  }
+
+		  Iterator beanIterator = beanList.iterator ();
+		  QuickManageBean bean = null;
+
+		  while ( beanIterator.hasNext () ) {
+		    bean = ( QuickManageBean ) beanIterator.next ();
+		    bean.setDealList ( idList );
+		    bean.setDealValues ( details );
+		  }
+		}
+	
+	public String getNonComcatBundle(BundleHeaderForm form , String roleType, String bundleId , String catalogId , String priceDescriptor  ,String dbRegionToConnect){
+		JSONObject returnObj = new JSONObject();
+		Gson gson = new Gson();
+		Bundle lBundleHeader = null;
+		List lBundleComponents = null;
+		
+		 try {
+		      lBundleHeader = readBundle (form,roleType, bundleId , catalogId , priceDescriptor ,dbRegionToConnect);
+		      form.setBundle(lBundleHeader);
+		      CatalogBundle bundle = (CatalogBundle) lBundleHeader;
+		      bundle.setShowStartingPointBOMs(form.getShowStartingPointBOMs());
+		      lBundleComponents = bundle.getConfigComponents(dbRegionToConnect );
+		    }
+		    catch ( BundleException bError ) {
+		    	bError.printStackTrace();
+		    }
+		 returnObj.put("form", gson.toJson(form));
+		 returnObj.put("components", gson.toJson(lBundleComponents));
+		return returnObj.toJSONString();
+	}
+	
+	public Bundle readBundle(ComponentsFormBase form , String roleType,String lBunldeId, String lCatalogId, String lPriceDescriptor, String dbRegionToConect) throws BundleException {
+		
+		String lTemplateBundleId = null;
+		String lZonePriceDescriptor = null;
+				
+		String priceProfile = form.getPriceProfile(); // for eZilla #57208 -
+														// Raghavendra
+			
+
+		if (lCatalogId == null || lPriceDescriptor == null) {
+			if (form.getBundle() instanceof CatalogBundle) {
+				lCatalogId = ((CatalogBundle) form.getBundle()).getCatalogID();
+				lPriceDescriptor = ((CatalogBundle) form.getBundle())
+						.getPriceDescriptor();
+			}
+		}
+
+		Bundle lBundleHeader = null;
+		if (form.getTemplateFlag()) {
+			lBundleHeader = new BundleTemplate();
+			//request.getSession().setAttribute(ComponentsFormBase.BUNDLE_TEMPLATE_FLAG, new Boolean(true));
+		} else {
+			lBundleHeader = new CatalogBundle();
+			//request.getSession().setAttribute(ComponentsFormBase.BUNDLE_TEMPLATE_FLAG,new Boolean(false));
+			((CatalogBundle) lBundleHeader).setCatalogID(lCatalogId);
+			((CatalogBundle) lBundleHeader)
+					.setPriceDescriptor(lPriceDescriptor);
+			((CatalogBundle) lBundleHeader)
+					.setZonePriceDescriptor(lZonePriceDescriptor);
+			((CatalogBundle) lBundleHeader)
+					.setBundleTemplateId(lTemplateBundleId);
+			((CatalogBundle) lBundleHeader).setPriceProfile(priceProfile);
+			((CatalogBundle) lBundleHeader).setRoleType(roleType);
+			((CatalogBundle) lBundleHeader).setPriceTier(form.getIsPriceTier());
+
+			form.setCatalogId(lCatalogId);
+			form.setPriceDescriptor(lPriceDescriptor);
+			// form.setPriceProfile( priceProfile );
+		}
+		lBundleHeader.setBundleID(lBunldeId);
+		lBundleHeader.setBundleTemplateID(lTemplateBundleId);
+		lBundleHeader.load(dbRegionToConect);
+		
+		lBundleHeader.setDataSheetNameLink(lBundleHeader.getDatasheet());
+		lBundleHeader.setImageNameLink(lBundleHeader.getImage());
+
+		// seems like I have to set price descriptor after load method
+		// (it is actually not used during load...???) check with susheel
+		if (lBundleHeader instanceof CatalogBundle) {
+			((CatalogBundle) lBundleHeader)
+					.setPriceDescriptor(lPriceDescriptor);
+			if (lBundleHeader.getCustID() != null) {
+				// Added for Chianti release for the bundle instance page.
+				// read the customer associated to this bundle instance
+				CustomerMgr custMgr = new CustomerMgr();
+				Customer cust = custMgr.getCustomer(lBundleHeader.getCustID(),dbRegionToConect);
+				if (cust != null && cust.getRegionCode().equals("US")) {
+					// if region is US, cust_type = GD customer is GSA
+					// if region is US, cust_segment = 'MAD' or cust_segment =
+					// 'CMM' customer is Vista
+					if ((cust.getCustType().equals("GD"))
+							|| (cust.getCustSegment().equals("MAD"))
+							|| (cust.getCustSegment().equals("CMM")))
+						form.setCustTypeFlag(false);
+				}
+			}
+		}
+		return lBundleHeader;
+	}
+
+public int getRecordCount(BundleTemplateListForm form, String regionCode, String loginUserId, String dbRegionToConnect, String roleId, String tenantCode) {
+		
+		BundleTemplateListForm bform = new BundleTemplateListForm();
+
+		BundleSearchCriteria criteria = new BundleSearchCriteria();		
+		if (form!=null)
+			bform = form;
+		String forSorting = "";
+		 if(bform.getFilterTemplateId() !=null && bform.getFilterTemplateId().length() > 0){
+		    	forSorting = "BDT_ID LIKE '"  +bform.getFilterTemplateId()+ "%'";
+		    }else{
+		    	forSorting = "1 = 1";
+		    }
+
+		/*if(bform.getCustomerName()==null)
+			bform.setIsGeneric(true);*/
+
+		criteria.setCount(true);
+		criteria.setUserRole(roleId);
+		criteria.setRegionCode(regionCode);
+		criteria.setEndDateFrom(bform.getEndDateFrom());
+		criteria.setEndDateTo(bform.getEndDateTo());
+		criteria.setStartDateFrom(bform.getStartDateFrom());
+		criteria.setStartDateTo(bform.getStartDateTo());
+		// criteria.setCustName(bform.getCustomerName());
+		criteria.setCustKey(bform.getCustKey());
+		criteria.setIncludedProd(bform.getPart());
+		criteria.setName(bform.getTemplateName());
+		criteria.setIncludeGeneric(bform.getIsGeneric());
+		criteria.setID(bform.getTemplateID());
+		criteria.setStatus(bform.getStatus());
+		criteria.setSortByAndSortOrder(forSorting);
+		
+//	    Split Work
+	    if (bform.getCustKey () != null && !bform.getCustKey ().isEmpty())
+	    	criteria.setTenantCode(TenantConstants.getNoSharedTenant(PagesUtil.getTenantCodeFromCustKey(bform.getCustKey())));
+	    else
+	    	criteria.setTenantCode(TenantConstants.getNoSharedTenant(tenantCode));
+	    
+		BundleQueryMgr mgr = BundleQueryMgr.newBundleQueryMgrType();
+		int recordCount = mgr.getRecordCount(criteria, dbRegionToConnect);
+		return recordCount;
+	}
+			
+}

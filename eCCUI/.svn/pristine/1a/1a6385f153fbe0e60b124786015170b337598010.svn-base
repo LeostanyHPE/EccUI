@@ -1,0 +1,27 @@
+package com.hp.ecc.ui.view.controller;
+
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+
+@Controller
+public class SelectLanguageController {	
+	@RequestMapping(value = "/selectLanguage/setEncoding.htm",headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody void setEncoding(HttpServletRequest request){
+		System.out.println("I am inside at set encoding");
+		String enc = request.getParameter("encoding");	
+		Session ses = SessionMgr.getSessionMgr ().getSession (request, false);
+		ses.setCurrentLanguageEncoding (enc);
+	  }
+	
+	@RequestMapping(value = "/selectLanguage/getSelectedEncoding.htm",headers="Accept=*/*",method = RequestMethod.GET)
+	public @ResponseBody String getSelectedEncoding(HttpServletRequest request){
+		Session ses = SessionMgr.getSessionMgr ().getSession (request, false);
+	    String encoding = ses.getCurrentLanguageEncoding();
+	    return encoding;
+	}
+}

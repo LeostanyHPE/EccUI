@@ -1,0 +1,273 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.controller;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.filter.ProdFilter;
+import com.hp.ecc.ui.biz.filter.ProdFilterMgr;
+import com.hp.ecc.ui.biz.processor.product.ProductFilterProcessor;
+import com.hp.ecc.ui.biz.processor.product.QuickManageProcessor;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.FeCTX;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.LoadSubCategoriesForm;
+import com.hp.ecc.ui.view.beans.ProdFilterForm;
+import com.hp.ecc.ui.view.beans.QuickManageForm;
+import com.hp.ecc.ui.view.beans.SearchProductsForm;
+import com.hp.ecc.ui.view.beans.ThirdPartyPricingForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author reddvino
+ *
+ */
+@Controller
+public class QuickManageController {
+	
+	private org.apache.log4j.Category log;
+private final String QUICK_MANAGE_GUI_STYLE = "QuickManageList";
+
+private QuickManageProcessor quickManageProcessor = new QuickManageProcessor();
+@RequestMapping(value = "/quickManage/quickManageLogicStarts.htm", headers="Accept=*/*",method = RequestMethod.POST)
+public @ResponseBody String actionStarts(HttpServletRequest request){
+	log = FeCTX.getCTX ().getLog ();
+	String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+	Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+	Gson gson = new Gson();
+	HttpSession session = request.getSession ();
+	request.setAttribute ( "popupPage", "true" );
+	String formData = request.getParameter("form");
+	QuickManageForm qkmanageForm = new QuickManageForm();
+	String task = request.getParameter("task");///filterForm.getTask ();
+	String ctgID = request.getParameter("ctgID");
+	String catalogID = request.getParameter("catalogIDs");
+	String includeStr = request.getParameter("include");
+	String excludeStr = request.getParameter("exclude");
+	String[] includeArray, excludeArray = null;
+	if(!StrUtil.isEmpty(includeStr)){
+		includeArray = includeStr.split(",");
+		qkmanageForm.setProductsToAdd(includeArray);
+	}
+	
+	if(!StrUtil.isEmpty(excludeStr)){
+		excludeArray = excludeStr.split(",");
+		qkmanageForm.setProductsToDelete(excludeArray);
+	}
+	
+	String tenantCode = TenantConstants.getMixedSharedTenant(PagesUtil.getTenantCode(request));	
+	qkmanageForm.setTenantCode(tenantCode);
+	
+	qkmanageForm.setTask(task);///.fromJson(formData, ProdFilterForm.class);
+	if(ctgID != null){
+		qkmanageForm.setCategorization(ctgID);
+	}
+	if(catalogID != null){
+		qkmanageForm.setCatalogIDs(catalogID.split(","));
+	}
+	
+	retrieveFilterAttrsFromSession ( qkmanageForm, session );
+	
+	JSONObject vw = null;
+	if ( QuickManageForm.LOAD_CATEGORIZATION.equals ( task ) ) {
+		vw = quickManageProcessor.loadCategories (qkmanageForm, ses,adbRegionValue );
+	}
+//	else if ( QuickManageForm.SHOW_PRODUCT_PAGE.equals ( task ) ) {
+//		///vw = new  CatForwardView ( "/quickmanage/QuickManageProducts.jsp", "" );
+//	}
+	else if ( QuickManageForm.LOAD_CATEGORY_PRODUCTS.equals ( task ) ) {
+		if(formData != null){
+			SearchProductsForm searchProductsForm = gson.fromJson(formData, SearchProductsForm.class);
+			qkmanageForm.setSearchScope(searchProductsForm.getSearchScope());
+			qkmanageForm.setCategoryID(searchProductsForm.getCategoryID());
+			String productListingSource = request.getParameter("productListingSource");
+			if(productListingSource != null){
+				qkmanageForm.setProductListingSource(productListingSource);
+			}
+		}
+	    retrieveFilterAttrsFromSession ( qkmanageForm, session );
+		vw = quickManageProcessor.getProductsInCategory ( qkmanageForm, ses,adbRegionValue );
+	}
+	else if ( QuickManageForm.SAVE_QUICK_MANAGE_PRODUCTS.equals ( task ) ) { //removeFilterAttrsFromSession(session);
+	  vw = quickManageProcessor.saveProducts ( qkmanageForm, ses ,adbRegionValue);
+	}
+	else if ( QuickManageForm.ADD_ALL_PRODUCTS.equals ( task ) ) {
+		vw = quickManageProcessor.addAllProducts ( qkmanageForm, ses,adbRegionValue );
+	}
+	else if ( QuickManageForm.DELETE_ALL_PRODUCTS.equals ( task ) ) {
+		vw = quickManageProcessor.deleteAllProducts ( qkmanageForm, ses ,adbRegionValue);
+	}
+	else if ( QuickManageForm.SHOW_SEARCH_BLOCK.equals ( task ) ) {
+		vw = quickManageProcessor.showSearchProductsBlock ( qkmanageForm, ses,adbRegionValue );
+	}
+	else if ( QuickManageForm.SEARCH_PRODUCTS.equals ( task ) ) {
+		if(formData != null){
+			SearchProductsForm searchProductsForm = gson.fromJson(formData, SearchProductsForm.class);
+			qkmanageForm.setSearchByAttribute(searchProductsForm.getSearchByAttribute());
+			qkmanageForm.setKeyword(searchProductsForm.getKeyword());
+			qkmanageForm.setAfterDiscontinueDate(searchProductsForm.getAfterDiscontinueDate());
+			qkmanageForm.setBeforeDiscontinueDate(searchProductsForm.getBeforeDiscontinueDate());
+			qkmanageForm.setAfterEndOfLifeDate(searchProductsForm.getAfterEndOfLifeDate());
+			qkmanageForm.setAfterLastModifiedDate(searchProductsForm.getAfterLastModifiedDate());
+			qkmanageForm.setBeforeLastModifiedDate(searchProductsForm.getBeforeLastModifiedDate());
+			qkmanageForm.setSearchScope(searchProductsForm.getSearchScope());
+			qkmanageForm.setProductLine(searchProductsForm.getProductLine());
+		}
+		request.setAttribute ( "popupPage", "true" );
+		 retrieveFilterAttrsFromSession ( qkmanageForm, session );
+		vw = quickManageProcessor.searchProducts ( qkmanageForm, ses,adbRegionValue );
+	}
+//	else if ( ( QuickManageForm.SORT.equals ( task ) ) || ( QuickManageForm.PAGINATE.equals ( task ) ) )
+//	{
+//		String listingSource = qkmanageForm.getProductListingSource ();
+//		if ( QuickManageForm.PROD_SRC_CATEGORY_TREE.equals ( listingSource ) ) {
+//			vw = quickManageProcessor.getProductsInCategory ( qkmanageForm, ses,adbRegionValue );
+//		}
+//		else if ( QuickManageForm.PROD_SRC_SEARCH.equals ( listingSource ) ) {vw =
+//				quickManageProcessor.searchProducts ( qkmanageForm, ses,adbRegionValue );
+//		}
+//	}
+//	else {
+//		///vw = new CatForwardView ( "/quickmanage/QuickManage.jsp", "Quick Manage" );
+//		//storeFilterAttrsInSession(ses,qkmanageForm,session);
+//	}
+	return vw.toJSONString();
+}
+
+@RequestMapping(value = "/quickManage/loadTreeSubNodes.htm", headers="Accept=*/*",method = RequestMethod.POST)
+public @ResponseBody String loadTreeWithTableColumnClick(HttpServletRequest request){
+		Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+		User user = ses.getUser ();
+		String nodePaths = request.getParameter("nodePath");
+		System.out.println("nodePath---"+nodePaths);
+		String nodes[] = nodePaths.split("\\^");
+		String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		String formData = request.getParameter("form");
+		String ctgID = request.getParameter("ctgID");
+		String catalogID = request.getParameter("catalogID");
+		String nodeLevel = request.getParameter("nodeLevel");
+		String[] catalogIDs = new String[] {catalogID};
+		
+		LoadSubCategoriesForm loadSubCatForm = null;
+		JSONArray vw = null;
+			loadSubCatForm = null;
+			loadSubCatForm = new LoadSubCategoriesForm();
+			loadSubCatForm.setTask("loadFilteredCategories");///.fromJson(formData, ProdFilterForm.class);
+			if(nodes.length > 0){
+				loadSubCatForm.setCategoryToLoad(nodes[0]+"^");
+			}
+			if(ctgID != null){
+				loadSubCatForm.setCategorization(ctgID);
+			}
+			vw = quickManageProcessor.loadSubCategoriesTree ( loadSubCatForm, user, 0, adbRegionValue, nodeLevel, nodes );
+		
+		return vw.toJSONString();
+}
+ProductFilterProcessor productFilterProcessor = new ProductFilterProcessor();
+@RequestMapping(value = "/quickManage/treeSubNodes.htm", headers="Accept=*/*",method = RequestMethod.POST)
+public @ResponseBody String retrieveSubNodes(HttpServletRequest request, LoadSubCategoriesForm form0){
+		Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+		User user = ses.getUser ();
+		Gson gson = new Gson();
+		HttpSession session = request.getSession ();
+		String adbRegionValue = PagesUtil.getDbRegionToConnect(request);
+		String formData = request.getParameter("form");
+		LoadSubCategoriesForm loadSubCatForm = null;
+		loadSubCatForm = new LoadSubCategoriesForm();
+		String task = request.getParameter("task");///filterForm.getTask ();
+		String nodePath = request.getParameter("nodePath");
+		String ctgID = request.getParameter("ctgID");
+		String catalogID = request.getParameter("catalogID");
+		int nodeLevel = Integer.parseInt(request.getParameter("nodeLevel"));
+		String[] catalogIDs = new String[] {catalogID};
+		///&categoryToLocate=
+		///&parentSelectState=&
+		
+		loadSubCatForm.setTask(task);///.fromJson(formData, ProdFilterForm.class);
+		if(nodePath != null){
+			loadSubCatForm.setCategoryToLoad(nodePath);
+		}
+		if(ctgID != null){
+			loadSubCatForm.setCategorization(ctgID);
+		}
+		
+		JSONArray vw = null;
+		
+		if ( ThirdPartyPricingForm.LOAD_3PO_CATEGORIES.equals ( task ) ) {
+			vw = productFilterProcessor.loadSubCategories ( loadSubCatForm, user, 1, adbRegionValue, nodeLevel,null );
+		   /// vw = new CatForwardPath ( "/jsp/pricing/markup/loadSubCategories.jsp", false );
+		}
+		else if ( ProdFilterForm.LOAD_FILTERED_CATEGORIES.equals ( task ) ) {
+			vw = productFilterProcessor.loadSubCategories ( loadSubCatForm, user, 0, adbRegionValue, nodeLevel,null );
+		  ///  vw = new CatForwardPath ( "/jsp/filter/loadSubCategories.jsp", false );
+		}
+		else if ( QuickManageForm.LOAD_CATEGORIZATION.equals ( task ) ) {
+			vw = productFilterProcessor.loadSubCategories ( loadSubCatForm, user, 0, adbRegionValue, nodeLevel,null );
+		    ///vw = new CatForwardPath ( "/jsp/quickmanage/loadSubCategories.jsp", false );
+		}
+		return vw.toJSONString();
+
+}///retrieveSubNodes
+
+
+
+	/* These methods which use HttpSession instead of normal request parameters are necessory
+	   because use of HTML frames in the GUI associated with this struts action. Only way to pass
+	   parameters to frames in a frame-set is to use encoded URL in frame's 'src' attribute which
+	   is awkward and limited to 255 bytes.
+	 */
+	
+	private void retrieveFilterAttrsFromSession ( QuickManageForm qkmanageForm
+	                                              , HttpSession session ) {
+		if (qkmanageForm.getCategorization () == null ) {
+				qkmanageForm.setCategorization ( (String ) session.getAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.categorization" ) );
+		}
+		if ( qkmanageForm.getCatalogIDs () == null ) {qkmanageForm.setCatalogIDs ( (
+		    String[] ) session.getAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.catalogIDs" ) );
+		}
+		if ( qkmanageForm.getCountries () == null ) {qkmanageForm.setCountries ( (
+		    String[] ) session.getAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.countries" ) );
+		}
+		if ( qkmanageForm.getCatalogNames () == null ) {qkmanageForm.setCatalogNames ( (
+		    String[] ) session.getAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.catalogNames" ) );
+		}
+		if ( qkmanageForm.getPriceDescriptors () == null ) {qkmanageForm.
+		    setPriceDescriptors ( ( String[] ) session.getAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.priceDescriptors" ) );
+		}
+	}
+	
+	private void removeFilterAttrsFromSession ( HttpSession session ) {
+			session.removeAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.categorization" );
+		session.removeAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.catalogIDs" );
+		session.removeAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.countries" );
+		session.removeAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.catalogNames" );
+		session.removeAttribute (
+		    "hp.comcat.web.quickmanage.QuickManageAction.priceDescriptors" );
+	}
+
+}

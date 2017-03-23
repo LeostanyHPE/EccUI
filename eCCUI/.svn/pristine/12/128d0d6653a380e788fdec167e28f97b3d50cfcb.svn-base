@@ -1,0 +1,159 @@
+package com.hp.ecc.ui.biz.bundle;
+
+
+public class EclipseBundle {
+  private String prod;
+  private String bdId;
+  private String contextId;
+  private String bigDealPrice;
+  private String shortDesc;
+  private String bundleDesc;
+  private String sosBdlFilterFlag;
+  private String configId;
+  private String configSource;
+  private String validateFlag;
+  private String bigDealCurrency;
+  private String checkboxValue;
+  private String baseProdflag;
+  private String bundleId;
+  private String dealId;
+  private String chargeShippingFlag;
+  private String component;
+  
+  public String getComponent () {
+	    return component;
+	  }
+
+	  public void setComponent ( String component ) {
+	    this.component = component;
+	  }
+  
+  public String getProd () {
+    return prod;
+  }
+
+  public void setProd ( String prod ) {
+    this.prod = prod;
+  }
+
+  public String getBdId () {
+    return bdId;
+  }
+
+  public void setBdId ( String bdId ) {
+    this.bdId = bdId;
+  }
+
+  public String getContextId () {
+    return contextId;
+  }
+
+  public void setContextId ( String contextId ) {
+    this.contextId = contextId;
+  }
+
+  public String getBigDealPrice () {
+    return bigDealPrice;
+  }
+
+  public void setBigDealPrice ( String bigDealPrice ) {
+    this.bigDealPrice = bigDealPrice;
+  }
+
+  public String getShortDesc () {
+    return shortDesc;
+  }
+
+  public void setShortDesc ( String shortDesc ) {
+    this.shortDesc = shortDesc;
+  }
+
+  public String getBundleDesc () {
+    return bundleDesc;
+  }
+
+  public void setBundleDesc ( String bundleDesc ) {
+    this.bundleDesc = bundleDesc;
+  }
+
+  public String getValidateFlag () {
+    return validateFlag;
+  }
+
+  public void setValidateFlag ( String validateFlag ) {
+    this.validateFlag = validateFlag;
+  }
+
+  public String getSosBdlFilterFlag () {
+    return sosBdlFilterFlag;
+  }
+
+  public void setSosBdlFilterFlag ( String sosBdlFilterFlag ) {
+    this.sosBdlFilterFlag = sosBdlFilterFlag;
+  }
+
+  public String getConfigId () {
+    return configId;
+  }
+
+  public void setConfigId ( String configId ) {
+    this.configId = configId;
+  }
+
+  public String getConfigSource () {
+    return configSource;
+  }
+
+  public void setConfigSource ( String configSource ) {
+    this.configSource = configSource;
+  }
+
+  public String getBigDealCurrency () {
+    return bigDealCurrency;
+  }
+
+  public void setBigDealCurrency ( String bigDealCurrency ) {
+    this.bigDealCurrency = bigDealCurrency;
+  }
+
+  public String getCheckboxValue () {
+    return checkboxValue;
+  }
+
+  public void setCheckboxValue ( String checkboxValue ) {
+    this.checkboxValue = checkboxValue;
+  }
+
+  public String getBaseProdflag () {
+    return baseProdflag;
+  }
+
+  public void setBaseProdflag ( String baseProdflag ) {
+    this.baseProdflag = baseProdflag;
+  }
+
+  public String getBundleId () {
+    return bundleId;
+  }
+
+  public void setBundleId ( String bundleId ) {
+    this.bundleId = bundleId;
+  }
+
+  public String getDealId () {
+    return dealId;
+  }
+
+  public void setDealId ( String id ) {
+    this.dealId = id;
+  }
+
+  public String getChargeShippingFlag () {
+    return chargeShippingFlag;
+  }
+
+  public void setChargeShippingFlag ( String flag ) {
+    this.chargeShippingFlag = flag;
+  }
+
+}

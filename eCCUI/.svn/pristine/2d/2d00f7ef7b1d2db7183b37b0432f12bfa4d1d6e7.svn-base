@@ -1,0 +1,185 @@
+package com.hp.ecc.ui.view.beans;
+
+import com.hp.ecc.ui.biz.validator.CatItemValidationBean;
+
+
+public class CatItemValidationForm {
+
+  private CatItemValidationBean fValidationBean = null;
+  private String fTask = null;
+  private String fCatalogId = null;
+  private String fConfigId = null;
+  private String fItemStatus = null;
+  private String fReplacedByConfig = null;
+  private String fReplacementForConfig = null;
+  private String fProdNo = null;
+  private String fWindowTitle = null;
+  private String fOverAllStatusMsg = null;
+  private String fEndStatusMsg = null;
+  private String fShowAlertLogList = null;
+
+  //Public constants
+  public static final String VALID = "V";
+  public static final String PENDING = "P";
+  public static final String INVALID = "I";
+  public static final String UNKNOWN = "U";
+  public static final String PRICE_PENDING = "W";
+
+  //Image URLS
+  private static String VALID_IMG_URL = "/comcat/images/misc/valid_symbol.gif";
+  private static String INVALID_IMG_URL = "/comcat/images/misc/invalid_symbol.gif";
+  private static String UNKNOWN_IMG_URL = "/comcat/images/misc/unknown_symbol.gif";
+  private static String PENDING_IMG_URL = "/comcat/images/misc/pending_symbol.gif";
+  private static String PRICE_PENDING_IMG_URL =
+      "/comcat/images/misc/pricepending_symbol.gif";
+
+  //Table Title
+  private static String BTO_TABLE_TITLE = "BTO Status Detail";
+  private static String CTO_TABLE_TITLE = "CTO Status Detail";
+
+  //Misc
+  private static String YES = "Y";
+  private static String NO = "N";
+
+  // Task
+  public String getTask () {
+    return this.fTask;
+  }
+
+  public void setBundleInfo ( String task ) {
+    this.fTask = task;
+  }
+
+  // Validation Bean
+  public CatItemValidationBean getCatItemValBean () {
+    return this.fValidationBean;
+  }
+
+  public void setCatItemValBean ( CatItemValidationBean valBean ) {
+    this.fValidationBean = valBean;
+  }
+
+  //Catalog Id
+  public void setCatalogId ( String catalogId ) {
+    this.fCatalogId = catalogId;
+  }
+
+  public String getCatalogId () {
+    return this.fCatalogId;
+  }
+
+  //Configuration Id
+  public void setConfigId ( String configId ) {
+    this.fConfigId = configId;
+  }
+
+  public String getConfigId () {
+    return this.fConfigId;
+  }
+
+  //Prod number
+  public void setProdNo ( String prodNo ) {
+    this.fProdNo = prodNo;
+  }
+
+  public String getProdNo () {
+    return this.fProdNo;
+  }
+
+  //Configuration Status
+  public void setItemStatus ( String status ) {
+    this.fItemStatus = status;
+  }
+
+  public String getItemStatus () {
+    return this.fItemStatus;
+  }
+  
+  public void setShowAlertLogList (String showAlertLogList) {
+	  fShowAlertLogList = showAlertLogList;
+  }
+
+  /**
+   * Method to check if alert log need to be presented .
+   */
+  public String getDoShowAlertLogList () {
+    //Alert Log contains the status so always display the alert Log for configs
+    if ( getConfigId () != null ) {
+      return YES;
+    }
+    else {
+      return ( getItemStatus ().equalsIgnoreCase ( INVALID ) &&
+               getCatItemValBean ().getAlertLogList ().size () > 0 ) ? YES : NO;
+    }
+  }
+
+  /**
+   * Method to check if config status details can be presented on the gui.
+   */
+  public String getDoShowConfigStatus () {
+    return ( getConfigId () != null
+             && !( getItemStatus ().equalsIgnoreCase ( VALID ) ) ) ? YES : NO;
+  }
+
+  /**
+   * Get validation table title
+   */
+  public String getTableTitle () {
+    return ( getCatItemValBean ().getBundleStatusBean ().getConfigId()  != null )
+        ? CTO_TABLE_TITLE : BTO_TABLE_TITLE;
+  }
+
+  /**
+   * Get image url.
+   */
+  public String getImageURL () {
+
+    String retVal = null;
+
+    setItemStatus ( getItemStatus ().trim () );
+
+    if ( getItemStatus ().equalsIgnoreCase ( VALID ) ) {
+      retVal = VALID_IMG_URL;
+    }
+    else if ( getItemStatus ().equalsIgnoreCase ( PENDING ) ) {
+      retVal = PENDING_IMG_URL;
+    }
+    else if ( getItemStatus ().equalsIgnoreCase ( INVALID ) ) {
+      retVal = INVALID_IMG_URL;
+    }
+    else if ( getItemStatus ().equalsIgnoreCase ( PRICE_PENDING ) ) {
+      retVal = PRICE_PENDING_IMG_URL;
+    }
+
+    else {
+      retVal = UNKNOWN_IMG_URL;
+    }
+
+    return retVal;
+  }
+
+  public void setWindowTitle ( String title ) {
+    this.fWindowTitle = title;
+  }
+
+  public void setOverAllStatus ( String msg ) {
+    this.fOverAllStatusMsg = msg;
+  }
+
+  public void setEndStatusMsg ( String msg ) {
+    this.fEndStatusMsg = msg;
+  }
+
+  public String getWindowTitle () {
+    return this.fWindowTitle;
+  }
+
+  public String getOverAllStatus () {
+    return this.fOverAllStatusMsg;
+  }
+
+  public String getEndStatusMsg () {
+    return this.fEndStatusMsg;
+  }
+
+}

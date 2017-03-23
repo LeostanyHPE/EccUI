@@ -1,0 +1,143 @@
+package com.hp.ecc.ui.view.beans;
+
+import java.util.List;
+
+public class ViewCombinedOfferingBean {
+
+	private String masterCatalogId;
+	private String masterCatalogName;
+	private List priceTierID;
+	private String[] priceTierName;
+	private List priceDescriptor;
+	private List saleCountry;
+	private String custType;
+	private String customerName;
+	private String customerID;
+	private String custSegment;
+	private boolean genisisCustomerFlag;
+	private String searchKeywords;
+	private String[] deletedProds;
+	private String[] showHideProds;
+	
+	public String getCurrencyCode () {
+		if ( priceDescriptor != null ) {
+			return ((String)priceDescriptor.get(priceDescriptor.size()-1)).substring ( 2, 5 );
+		}
+		else {
+			return "";
+		}
+	}
+	
+	public String getSearchKeywords() {
+		return searchKeywords;
+	}
+
+	public void setSearchKeywords(String searchKeywords) {
+		this.searchKeywords = searchKeywords;
+	}
+
+	public String[] getDeletedProds() {
+		return deletedProds;
+	}
+
+	public void setDeletedProds(String[] deletedProds) {
+		this.deletedProds = deletedProds;
+	}
+
+	public String[] getShowHideProds() {
+		return showHideProds;
+	}
+
+	public void setShowHideProds(String[] showHideProds) {
+		this.showHideProds = showHideProds;
+	}
+
+	public String getMasterCatalogId() {
+		return masterCatalogId;
+	}
+
+	public void setMasterCatalogId(String masterCatalogId) {
+		this.masterCatalogId = masterCatalogId;
+	}
+
+	public String getMasterCatalogName() {
+		return masterCatalogName;
+	}
+
+	public void setMasterCatalogName(String masterCatalogName) {
+		this.masterCatalogName = masterCatalogName;
+	}
+
+	public List getPriceTierID() {
+		return priceTierID;
+	}
+
+	public void setPriceTierID(List priceTierID) {
+		this.priceTierID = priceTierID;
+	}
+
+	public String[] getPriceTierName() {
+		return priceTierName;
+	}
+
+	public void setPriceTierName(String[] priceTierName) {
+		this.priceTierName = priceTierName;
+	}
+
+	public List getPriceDescriptor() {
+		return priceDescriptor;
+	}
+
+	public void setPriceDescriptor(List priceDescriptor) {
+		this.priceDescriptor = priceDescriptor;
+	}
+
+	public List getSaleCountry() {
+		return saleCountry;
+	}
+
+	public void setSaleCountry(List saleCountry) {
+		this.saleCountry = saleCountry;
+	}
+
+	public String getCustType() {
+		return custType;
+	}
+
+	public void setCustType(String custType) {
+		this.custType = custType;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getCustomerID() {
+		return customerID;
+	}
+
+	public void setCustomerID(String customerID) {
+		this.customerID = customerID;
+	}
+
+	public String getCustSegment() {
+		return custSegment;
+	}
+
+	public void setCustSegment(String custSegment) {
+		this.custSegment = custSegment;
+	}
+
+	public boolean isGenisisCustomerFlag() {
+		return genisisCustomerFlag;
+	}
+
+	public void setGenisisCustomerFlag(boolean genisisCustomerFlag) {
+		this.genisisCustomerFlag = genisisCustomerFlag;
+	}
+
+}//class

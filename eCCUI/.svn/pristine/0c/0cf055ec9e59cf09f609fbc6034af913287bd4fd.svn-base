@@ -1,0 +1,10 @@
+package com.hp.ecc.ui.common.util;
+
+/**
+ * @author 
+ * @version 1.0
+ */
+
+public interface CTXListener {
+  public void updateForCTX ();
+}

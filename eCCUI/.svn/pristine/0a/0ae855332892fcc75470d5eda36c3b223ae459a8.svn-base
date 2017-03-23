@@ -1,0 +1,680 @@
+<div class="row" ng-controller="customerProfileCtrl" data-ng-init="loadCustProfile()">		
+	<ul class="nav nav-tabs" id="myTab" style="margin-top: 20px">
+	  <li class="active"><a ng-href="#firstTab">Customer Details</a></li> 
+	  <li><a href="#secondTab">PA Accounts</a></li>
+	  <li><a href="#thirdTab">MDCP Details</a></li>
+ 	  <li ng-show="showPricingMgmt || showPricingMgmt=='true'"><a href="#fourthTab">Pricing Management</a></li>
+	</ul>
+    <div id='content' class="tab-content">
+      <div class="tab-pane row active" id="firstTab" style="margin: 0px; border-bottom: 1px solid #DDDDDD; border-left: 1px solid #DDDDDD; border-right: 1px solid #DDDDDD; padding: 10px 30px 10px 30px;"  >
+		<div class="row"  ng-controller="customerProfileDetailsCtrl" data-ng-init="loadCustomerDetails()">
+		    <div id="messageDiv"></div>
+		   	<div id="successMess" class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+			<div id="errorMess" class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div><br/>
+		  	<div class="customer_rows form-border">
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			           <div class="generals">
+			                <span>Customer Name:</span>			                
+			                <div id="CustomerName" class="div_input" ng-bind="form.customerName"></div>	                
+			           </div>
+			        	<div class="generals">
+			              <span>Customer ID:</span>
+							<div id="CustomerID" class="div_input" ng-bind="form.customerID"></div>	     	                
+			           </div>
+			        	<div class="generals">
+			              <span>EPrime Customer ID:</span>
+							<div id="EprimeCustID" class="div_input" ng-bind="form.eprimeCustID"></div>	     	                
+			           </div>			           
+			           <div class="generals"> 
+			               <span>Location:</span>
+							<div id="Location" class="div_input" ng-bind="form.location"></div>	 	               
+			           </div>
+			        </div>
+			        <div class="four columns">
+			           <div class="generals">
+			               <span>DUN:</span>
+							<div id="DUN" class="div_input" ng-bind="form.dun"></div>	 	 	               
+			           </div>
+		               <div class="generals">
+			              <span>Tenant:</span>
+							<div id="tenant" class="div_input" ng-bind="form.tenant"></div>	              
+		               </div>			           
+			        	<div class="generals" ng-show="form.regionCode=='US'">
+			        		<span>Genesis Customer:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.genesisCustomer" ng-disabled="true"/>
+			            </div>
+			        	<div class="generals">
+			              <span>EPrime Customer Type:</span>
+							<div id="EprimeCustType" class="div_input" ng-bind="form.eprimeCustType"></div>	     	                
+			           </div>			            
+			           <div class="generals">
+			                 <span>Supplier ID/DUNs:</span>
+							<div id="Supplier" class="div_input" ng-bind="form.supplier"></div>
+			            </div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			              	<span>Catalog Manager:</span>
+							<div id="CatalogManager" class="div_input" ng-bind="form.catalogManager"></div>	              
+		               	</div>
+		               	<div class="generals">
+			                 <span>Backup Catalog Manager:</span>
+							 <div id="BackupCatalogManager" class="div_input" ng-bind="form.backupCatalogManager"></div>
+			            </div>
+			        	<div class="generals">
+			        		<span>Auto-Create Sales Bundle Templates & Instances:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.autoCreateSalesBdlFlag" ng-disabled="true" style="margin: 3px 0px 0px 5px;"/>
+			           	</div>
+			           	<div class="generals">
+			           	<span></span>
+			           	</div>
+			           	<div class="generals">
+			        		<span>GLP Account Flag:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.glpAccountFlag" ng-disabled="true" style="margin: 3px 0px 0px 5px;"/>
+			           	</div>
+			        </div>
+		  		</div>
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			           <div class="generals">
+			                <span>Customer Type:</span>
+			                <div id="CustomerType" class="div_input" ng-bind="form.customerTypeDesc"></div>
+			           </div>
+			           <div class="generals">
+			                <span>Category:</span>
+			                <div id="Category" class="div_input" ng-bind="form.defaultCategorySource"></div>
+			           </div>
+			           <div class="generals">
+			               <span>Buyer TP Name:</span>
+			                <div id="BuyerTPName" class="div_input" ng-bind="form.buyerTPName"></div>
+			           </div>
+		               <div class="generals">
+				           <span>Supplier TP Short Name:</span>
+						   <div id="SupplierTPShortName" class="div_input" ng-bind="form.supplierTPShortName"></div>
+					   </div>
+					   <div ng-show="form.customerType=='GL'"class="generals">
+			                 <span>Available Price Descriptors:</span>
+			                 <textarea cols="10" rows="4" ng-model="form.availPriceDescps" ng-disabled="true" style="width: 25%; height:40px;" scroll="true"></textarea>
+			            </div>					   
+			        </div>
+			        <div class="four columns">
+			            <div class="generals">
+			                 <span>Locale:</span>
+			                 <div id="Locale" class="div_input" ng-bind="form.locale"></div>
+			            </div>
+			          	<div class="generals">
+			               <span>Buyer TP Short Name:</span>
+			               <div id="BuyerTPShortName" class="div_input" ng-bind="form.buyerTPShortName"></div>
+			           	</div>
+			           	<div class="generals">
+			               <span>Output Format:</span>
+			               <input type="text" ng-model="form.outputFormat"></input>
+			           </div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			                <span>Catalog Source:</span>
+			                <div id="CatalogSource" class="div_input" ng-bind="form.primaryCatalogSource"></div>
+			           	</div>	
+			           	<div class="generals">
+			                <span>Price Source:</span>
+			                <div id="PriceSource" class="div_input" ng-bind="form.priceSource"></div>
+			           	</div>			            
+			        	<div class="generals">
+			        		<span>Approval Enable:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.approvalEnableFlag" ng-disabled="true"/>
+			            </div>
+			        </div>
+		  		</div>
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			            <div class="generals">
+			                 <span>Include Standard Catalog Products:</span>
+			                 <div id="IncludeFlagText" class="div_input" ng-bind="form.includeFlagText"></div>
+			            </div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			        		<span>Include Cross Sell Products:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.csincludeFlag" ng-disabled="true"/>
+			            </div>
+			        </div>
+		  		</div> 
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="customer_rows" ng-show="form.regionCode=='US'">
+		  			<div class="four columns">
+			            <div class="generals">
+			                 <span>Vision Flag (Exclude Filter):</span>
+			                 <select multiple="true" style="height: 50px;" ng-model="form.customer.visionFlagArray" ng-options="vf.label for vf in form.visionFlagListDL track by vf.value"></select>
+			            </div>
+			            <div class="generals">
+			                <span>Markup Price Model:</span>
+			                <div id="markupPrice" class="div_input" ng-bind="form.customer.priceModel"></div>
+			            </div>
+		                <div class="generals">
+			                <span>Price Switch 1:</span>
+			                <div id="priceSwitch1" class="div_input" ng-bind="form.customer.priceSwitch1"></div>
+					    </div>
+					    <div class="generals">
+			                <span>Price Switch 4:</span>
+			                <div id="priceSwitch4" class="div_input" ng-bind="form.customer.priceSwitch4"></div>
+					    </div>
+			        </div>
+			        <div class="four columns">
+			            <div class="generals">
+			                 <span>Activity Code (Exclude Filter):</span>
+			                 <select multiple="true" size="3" style="height: 50px;" ng-model="form.customer.activityCodeArray" ng-options="ac.label for ac in form.activityCodeListDL track by ac.value"></select>
+			            </div>
+			            <div class="generals">
+			                <span>Authorization Codes (Include Filter):</span>
+			                <input type="text" ng-model="form.customer.authCodesStr"></input>
+			            </div>
+			           	<div class="generals">
+			                <span>Price Switch 2:</span>
+			                <div id="priceSwitch2" class="div_input" ng-bind="form.customer.priceSwitch2"></div>
+					    </div>            
+			            <div class="generals">
+			                <span>Level Price Code:</span>
+			                <div id="levelPriceCode" class="div_input" ng-bind="form.customer.levelPriceCode"></div>
+			            </div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			                 <span>Stock Code (Exclude Filter):</span>
+			                 <select multiple="true" style="height: 50px;" ng-model="form.customer.stockCodeArray"  ng-options="sc.label for sc in form.stockCodeListDL track by sc.value"></select>
+			            </div>
+			            <div class="generals">
+			                <span>Authorization Check Flag:</span>
+			                <div id="authCodesStr" class="div_input" ng-bind="form.customer.authCheckFlag"></div>
+			            </div>
+			            <div class="generals">
+			                <span>Price Switch 3:</span>
+			                <div id="priceSwitch3" class="div_input" ng-bind="form.customer.priceSwitch3"></div>
+					    </div>
+					    <div class="generals">
+					    	 <span><a ng-click="accountAttributes()" tabindex="0">Account Attributes</a></span>
+					    </div>
+			        </div>
+		  		</div>  
+		  		<div class="customer_rows" ng-show="form.regionCode=='US'">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>	
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			            <div class="generals">
+			                 <span>Pricing Logic:</span>
+			                 <div id="pricingLogic" class="div_input" ng-bind="form.priceLogicText"></div>
+			            </div>
+			        	<div class="generals">
+			        		<span>GPSY Orderability Check:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.orderCheckFlag" ng-disabled="true"/>
+			            </div>
+			        	<div class="generals">
+			        		<span>Apply TBA:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.applyTba" ng-disabled="true"/>
+			            </div>	            	            		   
+			        </div>
+			        <div class="four columns">
+			            <div class="generals">
+			                 <span>Customer Segment:</span>
+			                 <div id="custSegmentOptionDesc" class="div_input" ng-bind="form.custSegment"></div>
+			            </div>
+			        	<div class="generals">
+			        		<span>Apply ELC:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.applyElc" ng-disabled="true"/>
+			            </div>	
+			        	<div ng-show="form.regionCode=='AP' || form.regionCode=='GL'" class="generals">
+			        		<span>Fusion Orderability Check:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.fusionOrderabilityCheck" ng-disabled="true"/>
+			            </div>		            			            
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			        		<span>Offer Equivalent Part #:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.offerEquivFlag" ng-disabled="true"/>
+			            </div>
+			            <div class="generals">
+			        		<span>Offer All GPSY Orderable Part#s:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.offerAllOrdFlag" ng-disabled="true"/>
+			            </div>
+			        </div>
+		  		</div>  
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			            <div class="generals">
+			                 <span>Pre Sales Cust ID:</span>
+			                 <div id="presalesCustId" class="div_input" ng-bind="form.presalesCustId"></div>
+			            </div>
+			        	<div class="generals">
+			                 <span>EUC Industry Name:</span>
+			                 <div id="eucIndustryNm" class="div_input" ng-bind="form.eucIndustryNm"></div>
+			            </div>
+					</div>
+			        <div class="four columns">
+			            <div class="generals">
+			                 <span>Pre Sales Source:</span>
+			                 <div id="presalesSource" class="div_input" ng-bind="form.presalesSource"></div>
+			            </div>
+			            <div class="generals">
+			                 <span>Industry Segment:</span>
+			                 <div id="industrySegment" class="div_input" ng-bind="form.industrySegment"></div>
+			        	</div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			                 <span>Sap ID:</span>
+			                 <div id="sapId" class="div_input" ng-bind="form.sapId"></div>
+			            </div>	
+			        </div>
+		  		</div>
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			            <div class="generals">
+			                 <span>SLA ID:</span>
+			                 <div id="slaId" class="div_input" ng-bind="form.slaId"></div>
+			            </div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			        		<span>Exclude Products from Hierarchy:</span>
+			        		<input type="checkbox" style="margin-top:3px;" ng-model="form.excludeProds" ng-disabled="true" />
+			            </div>
+			        </div>
+		  		</div> 
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="customer_rows">
+		  			<div class="four columns">
+			            <div class="generals">
+			                 <span>Character Encoding:</span>
+			                 <div id="characterEncoding" class="div_input" ng-bind="form.characterEncoding"></div>
+			            </div>
+			        </div>
+			        <div class="four columns">
+			        	<div class="generals">
+			        		<span>Region:</span>
+			        		<div id="region" class="div_input" ng-bind="form.region"></div>
+			            </div>
+			        </div>
+		  		</div>  
+				
+				<div class="customer_rows" ng-if="form.custType=='GD'">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+  		
+  				<div class="customer_rows" ng-if="form.custType=='GD'">
+					<div class="four columns">
+						<div class="generals">
+							<span>Order Phone:</span>
+							<div id="orderPhoneNo" class="div_input"
+								ng-bind="form.orderPhoneNo"></div>
+						</div>
+						<div class="generals">
+							<span>Support URL:</span>
+							<div id="supportURL" class="div_input" ng-bind="form.supportURL"></div>
+						</div>
+						<div class="generals">
+							<span>CR Manager Fax:</span>
+							<div id="crManagerFAXNo" class="div_input"
+								ng-bind="form.crManagerFAXNo"></div>
+						</div>
+						<div class="generals">
+							<span>SIN Number 2:</span>
+							<div id="sinNo2" class="div_input" ng-bind="form.sinNo2"></div>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Order Fax:</span>
+							<div id="orderFAXNo" class="div_input" ng-bind="form.orderFAXNo"></div>
+						</div>
+						<div class="generals">
+							<span>CR Manager Name:</span>
+							<div id="crManagerName" class="div_input"
+								ng-bind="form.crManagerName"></div>
+						</div>
+						<div class="generals">
+							<span>CR Manager Email:</span>
+							<div id="crManagerEmail" class="div_input"
+								ng-bind="form.crManagerEmail"></div>
+						</div>
+					</div>
+					<div class="four columns">
+						<div class="generals">
+							<span>Order Email:</span>
+							<div id="orderEmail" class="div_input" ng-bind="form.orderEmail"></div>
+						</div>
+						<div class="generals">
+							<span>CR Manager Phone:</span>
+							<div id="crManagerPhoneNo" class="div_input"
+								ng-bind="form.crManagerPhoneNo"></div>
+						</div>
+						<div class="generals">
+							<span>SIN Number 1:</span>
+							<div id="sinNo1" class="div_input" ng-bind="form.sinNo1"></div>
+						</div>
+					</div>
+				</div>
+					
+		  		<div class="customer_rows">
+				   	<h1 class="h1Underline row" style="height:0px;"></h1>
+				</div>
+		  		<div class="search">
+	            	<a ng-show="form.isEditCustProfileEnabled=='true'" ng-href="#/CustomerProfileEdit?customer_key={{selCustKey}}" class="btn btn-inline" ng-click="customerProfileEdit(selCustKey)" >Edit</a>
+					<a class="btn btn-inline" ng-href="#/CPSearchCustomer" ng-click="customerProfileCancel()" >Cancel</a>
+					<a ng-show="form.roleId!='2' && form.roleId!='6'" class="btn btn-inline" ng-href="#/EditRules?cust_key={{selCustKey}}" ng-click="editRules()" >Edit Rules</a>	            	
+					<a ng-show="form.isCopyCustProfileEnabled=='true'" class="btn btn-inline" ng-href="#/CustomerProfileCopy?customer_key={{selCustKey}}" ng-click="customerProfileCopy(selCustKey)" >Copy</a>
+					<a ng-show="form.isCopyCustProfileEnabled=='true'" class="btn btn-inline" ng-href="#/CategoryRanking?custKey={{selCustKey}}" ng-click="modifyCategoryRanking()" >Modify Category Ranking</a>
+					<a ng-show="form.isCopyCustProfileEnabled=='true'" class="btn btn-inline" ng-href="{{customerSLAOWNT}}" ng-click="customerSLA()" >Customer SLA</a>
+					<a ng-show="form.isCopyCustProfileEnabled=='true' && form.isCustSpecRate=='true'" class="btn btn-inline" ng-href="#CustomerExchangeRate" ng-click="customerExchangeRate()" >View Customer Exchange Rates</a>
+		        </div>	 		  		    		 			 		
+		  	</div>
+		  	<div class="customer_rows">
+		    	<h1 class="h1Underline">				
+					<span>Upload Settings</span>
+				</h1>
+		  	</div>
+		  	<div class="customer_rows form-border">
+				<div ng-show="form.upload_settings_list">  	
+		 			<table class="dataGrid" style="width: 40%;">
+						<thead>
+							<tr>
+								<th class="table_details" ng-hide="roleID=='2'">Edit</th>
+								<th class="table_details">Upload Target</th>
+								<th class="table_details">Network ID</th>
+								<th class="table_details">Account ID</th>
+								<th class="table_details">Share Secret</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="rowContent in form.upload_settings_list">
+								<td ng-hide="roleID=='2'">
+									<div ng-show="isEditUploadSettingsEnabled='true'">
+										<a ng-href="#/CPUploadSettings?targetId={{rowContent.targetId}}&customer_key={{selCustKey}}" ng-click="editUploadSettings(rowContent.targetId)">Edit</a>
+									</div>
+								</td>
+								<td><div id="targetName" class="div_input" ng-bind="rowContent.targetName"></div></td>
+								<td><div id="networkId" class="div_input" ng-bind="rowContent.networkId"></div></td>
+								<td><div id="accountId" class="div_input" ng-bind="rowContent.accountId"></div></td>
+								<td><div id="shareSecret" class="div_input" ng-bind="rowContent.shareSecret"></div></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			    <div ng-hide="form.upload_settings_list">  	
+		 			<table class="dataGrid" style="width: 40%;">
+						<thead>
+							<tr>
+								<th class="table_details" ng-hide="roleID=='2'">Edit</th>
+								<th class="table_details">Upload Target</th>
+								<th class="table_details">Network ID</th>
+								<th class="table_details">Account ID</th>
+								<th class="table_details">Share Secret</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td ng-hide="roleID=='2'"><div ng-show="isEditUploadSettingsEnabled='true'"> 
+									<a ng-click="createUploadSettings()">Create</a></div></td>
+						        <td>No upload target settings have been made.</td>
+						
+						        <td>&nbsp;</td>
+						
+						        <td>&nbsp;</td>
+						
+						        <td>&nbsp;</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>			
+			</div>
+			<div ng-show="form.regionDef=='Y' && form.roleId=='3'">
+			  	<div class="customer_rows">
+			    	<h1 class="h1Underline">				
+						<span>PLC Report Selection</span>
+					</h1>
+			  	</div>
+			  	<div class="customer_rows form-border">
+					<table class="dataGrid" style="width: 20%;">
+						<thead>
+							<tr>
+								<th class="table_details">Report Name</th>
+								<th class="table_details">Selection</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Report based on Customer Name</td>
+						        <td><input type="checkbox" ng-model="form.custRep" ng-disabled="true" /></td>
+							</tr>
+							<tr>
+								<td>EOL products within last 60 days</td>
+						        <td><input type="checkbox" ng-model="form.eolRep" ng-disabled="true" /></td>
+							</tr>
+							<tr>
+								<td>Standard catalog</td>
+						        <td><input type="checkbox" ng-model="form.stdcatRep" ng-disabled="true" /></td>
+							</tr>
+							<tr>
+								<td>Price Tier deal report</td>
+						        <td><input type="checkbox" ng-model="form.prtierRep" ng-disabled="true" /></td>
+							</tr>
+						</tbody>
+					</table>
+			  	</div>	
+		  	</div>
+		  	<li ng-show="form.allowCustomerFormat || form.allowCustomerFormat=='true'"><a ng-click="customerFormats()" tabindex="0">Customer Output Formats</a></li>
+		 </div>
+	</div>  
+	<div class="tab-pane row" id="secondTab" style="margin: 0px; border-bottom: 1px solid #DDDDDD; border-left: 1px solid #DDDDDD; border-right: 1px solid #DDDDDD; padding: 10px 30px 10px 30px;">
+	  	<div class="row" id="purAgree" ng-controller="PurchaseAgreementCtrl" ng-init="paInit()" style="padding-right : 15px">
+			<div class="alert success" ng-show="successMessage!=''"><span>{{successMessage}}</span></div>
+			<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div><br/>
+			<div class="customer_rows form-border">
+				<div class="four columns">
+					<div class="generals">
+						<span>Customer Name:</span>
+						<div class="div_input" ng-bind="custName"></div>
+					</div>
+					<div class="generals">
+						<span>Customer Id: </span>
+						<div class="div_input" ng-bind="custId"></div>
+					</div>
+				</div>
+				<div class="four columns">
+					<div class="generals">
+						<span>Purchase Agreement*: </span> 
+						<input type="text" id="paInfo" size="16" maxlength="10"	value="" name="paInfo" ng-model="paInfo" ng-enter="addPAAccount()"></input>
+					</div>
+					<div class="generals">
+						<span>CAC Code* </span> 
+						<select ng-model="myCacCode" ng-options="cac.code for cac in cacCodes"></select>
+					</div>
+				</div>
+				<div class="four columns">
+					<div class="generals">
+						<span>GEO Code* </span> 
+						<select ng-model="myGeoCode" ng-options="g.code for g in geoCodes"></select>
+					</div>
+					<div class="generals">
+						<span>Price Term</span> 
+						<select ng-model="myPriceTerm" ng-options="p.code for p in priceTerms"></select>
+					</div>
+				</div>
+				<div class="search" ng-hide="salesRep">
+					<div class="generals">
+						<a class="btn btn-inline" ng-click="addPAAccount()">Add</a>&nbsp;&nbsp;&nbsp;&nbsp;To save the Purchase Agreement permanently click Update
+					</div>
+					<span>Fields marked with * are mandatory.</span> 
+				</div>
+			</div>
+			<div class="search" ng-show="paDataLoad">
+				<a ng-hide="salesRep" class="btn btn-inline" ng-click="updatePAAccount()">Update</a>&nbsp; 
+				<a ng-hide="salesRep" class="btn btn-inline" ng-click="resetPAAccount()">Reset</a>&nbsp;
+			</div>
+			<div class="customer_rows id-body" ng-show="paDataLoad">
+				<div class="twelve columns">
+					<div id="ecc_hpegrid1" hpe-grid grd-data="grid.data"
+						grd-header="grid.header" grd-col-defs="grid.colDefs"
+						grd-sort="grid.sort" grd-col-view-by="grid.colViewBy">
+					</div>
+				</div>
+			</div>
+       	</div>
+	</div>
+	<div class="tab-pane row" id="thirdTab" style="margin: 0px; border-bottom: 1px solid #DDDDDD; border-left: 1px solid #DDDDDD; border-right: 1px solid #DDDDDD; padding: 10px 30px 10px 30px;">
+		<div class="row" id="mdcpId" ng-controller="MdcpCtrl" ng-init="mdcpInit()">
+			<div class="alert success" ng-show="successMessage!=''"><span>{{successMessage}}</span></div>
+			<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div><br/>
+			<div class="customer_rows form-border">
+				<div class="four columns">
+					<div class="generals">
+						<span>Customer Name:</span>
+						<div class="div_input" ng-bind="custName"> </div>
+					</div>
+					<div class="generals">
+						<span>Customer Id: </span>
+						<div class="div_input" ng-bind="custId">
+						</div>
+					</div>
+				</div>
+				<div class="four columns">
+					<div class="generals">
+						<span>MDCP Org ID: </span> 
+						<input type="text" id="mdcpOrgId" ng-model="mdcpOrgId" size="16" maxlength="15" style="width: 120" ng-enter="addRecord()"></input>
+					</div>
+				</div>
+				<div class="four columns">
+					<div class="generals">
+						<span> Global Duns No.</span> 
+						<input type="text" id="gDunsNo" ng-model="gDunsNo" size="16" maxlength="30" style="width: 120" ng-enter="addRecord()"></input>
+					</div>
+				</div>
+				<div class="search" ng-hide="salesRep">
+					<a class="btn btn-inline" ng-click="addRecord()">Add</a>&nbsp;&nbsp;&nbsp;&nbsp;To save MDCP changes permanently click Update
+				</div>			
+			</div>
+			<div class="search">
+				<a class="btn btn-inline" ng-hide="salesRep" ng-click="updateRecord()">Update</a>
+				<a class="btn btn-inline" ng-click="resetRecord()">Reset</a>
+			</div>
+			<div class="customer_rows id-body" ng-show="mdcpLoad">
+	      		<div class="twelve columns">
+		      		<div id="ecc_hpegrid2" hpe-grid
+				         grd-data="grid.data"
+				         grd-header="grid.header"
+				         grd-select-all="true"
+				         grd-select-unselect-all-boxes="unSelect()"
+				         grd-col-defs="grid.colDefs"
+				         grd-sort="grid.sort"
+				         grd-col-view-by="grid.colViewBy"
+				         grd-select-all-name="grid.colName">				         
+				     </div>
+	      		</div>
+	   		</div>
+	</div>
+  </div>	  	
+
+  <div class="tab-pane row" id="fourthTab" style="margin: 0px; border-bottom: 1px solid #DDDDDD; border-left: 1px solid #DDDDDD; border-right: 1px solid #DDDDDD; padding: 10px 15px 10px 30px;">
+	<div class="row" id="pricingMgmt" ng-controller="PricingMangementCtrl" ng-init="pricingMgmtInit()" style="padding-right: 15px;">
+		<div class="alert success" ng-show="successMessage!=''"><span>{{successMessage}}</span></div>
+		<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div><br/>
+		<div class="customer_rows form-border">
+			<div class="four columns">
+				<div class="generals">
+					<span>Customer Name:</span>
+					<div class="div_input" ng-bind="form.customer.custName"> </div>
+				</div>
+               <div class="generals">
+	              <span>Pricing Procedure:</span>
+	              <select ng-model="form.customerPricingRule" ng-options="rule.ruleDesc for rule in form.pricingProcedures track by rule.ruleID">
+		          </select>         		  
+               </div>				
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Customer Id: </span>
+					<div class="div_input" ng-bind="form.customer.custID">
+					</div>
+				</div>
+               <div class="generals">
+	        		<span>Shop List Price:</span>
+	        		<input type="checkbox" ng-model="form.customerShopListCheck"/>
+	            </div>
+			</div>
+			<div class="generals">
+				<a class="btn btn-inline" ng-click="updateDefault()">Update</a>
+			</div>			
+	        <div class="customer_rows">
+			   	<h1 class="h1Underline row" style="margin:0;"></h1>
+			</div>	
+			<div class="four columns">
+				<div class="generals">
+					<span>Sale Country:</span>
+	              <select ng-model="form.saleCountry" ng-options="sc.countryName for sc in form.saleCountries track by sc.hpCntryCd">
+		          </select>         		  
+               </div>
+               <div class="generals">
+	              <span>Pricing Procedure:</span>
+	              <select ng-model="form.pricingProc" ng-options="rule.ruleDesc for rule in form.pricingProcedures track by rule.ruleID">
+		          </select>         		  
+               </div>               
+			</div>
+			<div class="four columns">
+               <div class="generals">
+	        		<span>Shop List Price:</span>
+	        		<input type="checkbox" ng-model="form.countryShopListCheck"/>
+	            </div>
+			</div>
+			<div class="generals">
+				<a class="btn btn-inline" ng-click="addCountryPrcRule()">Add</a>
+			</div>				
+	        <div class="customer_rows">
+			   	<h1 class="h1Underline row" style="margin:0;"></h1>
+			</div>					
+		 </div>
+		 <div class="customer_rows">	
+			<div class="four columns">	 
+			 <div class="generals">
+				<a class="btn btn-inline" ng-click="updateCountryPrcRule()">Update</a>
+				<a class="btn btn-inline" ng-click="reset()">Reset</a>
+			 </div>
+		 	</div>
+  		    <div class="generals">
+			 	<span>Country Pricing Procedures:</span>
+			</div>
+		 </div>
+		 <div class="customer_rows id-body" ng-show="dataLoad">
+			<div class="six columns">
+				<div id="ecc_hpegrid3" hpe-grid 
+					grd-data="grid.data"
+			        grd-select-all="true"
+			        grd-select-all-name="grid.colName"
+			        grd-select-unselect-all-boxes="toggleAll()"				
+					grd-header="grid.header" 
+					grd-col-defs="grid.colDefs"
+					grd-sort="grid.sort" 
+					grd-col-view-by="grid.colViewBy">
+				</div>
+			</div>
+		 </div>	  
+   	   </div>
+	 </div>	
+   </div>
+</div>

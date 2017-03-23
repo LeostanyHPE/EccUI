@@ -1,0 +1,65 @@
+<div class="row" ng-controller="EclipseDealCrtl" ng-init="init()">
+	<div class="alert success" ng-show="successMessage!=''"> <span>{{successMessage}}</span></div>
+	<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Eclipse Deal Status</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="four columns">
+			<div class="generals">
+				<span>Deal:</span> 
+				<input type="text" id="dealId" maxlength="10" value="" name="dealId" ng-model="dealId" ng-enter="inquireEclipseDeals()" ng-leave="reset()"></input>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="search">
+				<a class="btn btn-inline" ng-click="inquireEclipseDeals()" >Search</a>
+				<a class="btn btn-inline" ng-click="reset()" >Reset</a>
+			</div>
+		</div>
+	</div>
+	<div class="customer_rows" ng-show="dataLoad">
+		<div class="twelve columns">
+			<div id="ecc_hpegrid1" hpe-grid grd-data="grid.data"
+				grd-header="grid.header" grd-col-defs="grid.colDefs"
+				grd-sort="grid.sort" grd-col-view-by="grid.colViewBy"></div>
+		</div>
+	</div>
+	<div ng-show="navRole" class="customer_rows id-body" ng-init="loadDeals()" style="margin-top:5px;">
+  		<div class="twelve columns">
+	   		<div class="table-scroll">
+	    		<table id="dealList" class="dataGrid" width="100%">
+					<thead>
+						<tr class="GridHeaderRow">
+							<th class="center">Deal Id</th>
+							<th class="center">ECC Version</th>
+							<th class="center">Eclipse Event Version</th>
+							<th class="center">Event Status</th>
+							<th class="center">Event Created Date</th>
+							<th class="center">Event Last Updated</th>
+							<th class="center">Pull</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr class="odd" ng-class-odd="'odd'" ng-class-even="'even'">
+							<td>{{custDealList.dealId}}</td>
+							<td>{{custDealList.version}}</td>
+							<td>{{custDealList.bdVersionNR}}</td>
+							<td>{{custDealList.status}}</td>
+							<td>{{custDealList.createDate}}</td>
+							<td>{{custDealList.lastModifiedDate}}</td>
+							<td><input type="radio" id="ck" name="pull" value="Y"></input></td>
+						</tr>
+					</tbody>
+				</table> 
+			</div>
+  		</div>
+ 	</div>
+ 	
+ 	<div class="search" ng-show="navRole">
+		<a class="btn btn-inline" ng-click="refresh()" 	>Refresh</a>
+	</div>
+	
+</div>

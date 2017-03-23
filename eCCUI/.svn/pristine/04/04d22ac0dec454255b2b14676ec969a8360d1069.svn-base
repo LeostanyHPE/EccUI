@@ -1,0 +1,416 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.db.dao;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxBeanUtil;
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxDataBeanDynamic;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.json.simple.JSONArray;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.csog.CsogDefaultsMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.CustomerFields;
+import com.hp.ecc.ui.biz.deal.Deal;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.db.util.DBUtil;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.FormatUtil;
+
+/**
+ * @author kn
+ *
+ */
+@Service
+public class CustomerDao {
+	 public final static String CONST_VISION_FLAG = "VISION_FLAG";
+	  public final static String CONST_ACTIVITY_CODE = "ACTIVITY_CODE";
+	  public final static String CONST_STOCK_CODE = "STOCK_CODE";
+	  public final String CONST_CUST_STMT_GRP_ID = "customer";
+	  public final static String FED_CUST_SEG= "PSEC";
+	  
+	  public final static String GSA_CUST_TYPE = "GD";
+
+	  public final List visionFlagGUIDisplayList = new ArrayList ();
+	  public final List stockCodeGUIDisplayList = new ArrayList ();
+	  public final List activityCodeGUIDisplayList = new ArrayList ();
+
+	  private Hashtable searchFields = null;
+	  private Hashtable andFields = new Hashtable ();
+	  protected static final String LIKE = "LIKE";
+	  protected static final String IS = "IS";
+	  protected static final String EQUAL = "=";
+	  protected static final String NOT_EQUAL = "<>";
+	  protected static final String GREAT_THAN = ">";
+	  protected static final String LESS_THAN = "<";
+	  protected static final String IN = "IN";
+	  protected static final String BETWEEN = "BETWEEN";
+	  protected static final String NOT_IN = "NOT IN";
+
+	  
+	  public JSONArray getCustomerList ( String name, String custID, String cust_type, String regionCode, String adbRegionToConnect, String tenantCode ) {
+
+		    String daxTenantCode = TenantConstants.getMixedSharedTenant(tenantCode);
+		    String searchStatement = " where " + buildCustomerSearchStatement ( name, custID, cust_type );
+
+		    DaxMgr mgr = DaxMgr.getInstance ();
+		    DaxParsedStmt stmt = null;
+		    DaxDataBeanGeneral bean = new DaxDataBeanGeneral ();
+			    String whereRL = " and cust_display_flag = 'Y'";    
+
+		    String add_where=   " and ( a.region_code='US' and " +
+		                        " ( a.cust_segment in ('SMMD','MAD','CMM') or ( price_source is null or price_source <> 'ECLIPSE')"
+					+" or a.genesis_flag='Y' or exists (select 1 from cat_info b where b.cust_key in (a.cust_key,a.orig_cust_key)))"
+					+" or a.region_code <>'US')";
+
+		    searchStatement = searchStatement + whereRL + add_where;    
+		    bean.setString1 ( searchStatement );
+		    bean.setString2 (daxTenantCode);
+		    stmt = mgr.makeParsedStmt ( this.CONST_CUST_STMT_GRP_ID,"getDealCustomerList", bean, null, null );
+		    
+		    System.out.println("Stmt:->"+ stmt.toString());
+		    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		    Customer customer = new Customer ();
+		    JSONArray lst = db.doSelectJson ( stmt, Customer.class, null );
+		    return lst;
+
+		  }
+	  
+	  /** create a customer where clause
+	   *
+
+	   */
+
+	  private String buildCustomerSearchStatement ( String name,String custID, String cust_type ) {
+		  	searchFields = null;
+		  	searchFields = new Hashtable();
+
+		    if ( !StrUtil.isEmpty ( name ) ) {
+	
+		      String newName = "%" + name + "%";
+	
+		      setSearchField ( CustomerFields.NAME, newName );
+	
+		    }
+	
+		    if ( !StrUtil.isEmpty ( custID ) ) {
+	
+		      String newId = "%" + custID + "%";
+	
+		      setSearchField ( CustomerFields.CUST_ID, newId );
+	
+		    }
+	
+		    if ( !StrUtil.isEmpty ( cust_type ) ) {
+	
+		      setSearchField ( CustomerFields.CUST_TYPE, cust_type );
+	
+		    }
+	
+		    String searchStmt = buildSearchStatment ();
+	
+		    return searchStmt;
+
+	  }
+	  
+	public JSONArray getCustomerList ( String name, String dun, String type, String priceSource, String regionCode, String adbRegionToConnect,String tenantCode ) {
+			
+	 		String strTenantCode=TenantConstants.getMixedSharedTenant(tenantCode);
+			String searchStatement = buildCustomerSearchStatement ( name, dun, type, priceSource );
+			searchStatement = " where " + searchStatement;
+			searchStatement =searchStatement+" and tenant_cd "+ strTenantCode;
+			
+			DaxMgr mgr = DaxMgr.getInstance ();
+			DaxParsedStmt stmt = null;
+			DaxDataBeanGeneral bean = new DaxDataBeanGeneral ();
+			bean.setString1 ( searchStatement );
+			stmt = mgr.makeParsedStmt ( this.CONST_CUST_STMT_GRP_ID, "getCustomerList", bean, null, null );
+			DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+			JSONArray returnList = db.doSelectJson ( stmt, Customer.class, null );
+			
+			return returnList;
+
+	 	}
+	 
+	 
+	 private String buildCustomerSearchStatement ( String name, String dun, String type, String priceSource ) {
+
+			setCustomerSearchField ( CustomerFields.NAME, name );
+			
+			setCustomerSearchField ( CustomerFields.CUST_DUN, dun );
+			
+			setCustomerSearchField ( CustomerFields.CUST_TYPE, type );
+			
+			setCustomerSearchField ( CustomerFields.PRICE_SOURCE, priceSource );
+			
+			String searchStmt = buildSearchStatment ();
+			
+			return searchStmt;
+			
+	}
+	 private void setCustomerSearchField ( String fieldName, String value ) {
+
+		    if ( !StrUtil.isEmpty ( value ) ) {
+
+		      StringBuffer searchValue = new StringBuffer ( "%" );
+
+		      searchValue.append ( value.trim () ).append ( "%" );
+
+		      setSearchField ( fieldName, searchValue.toString () );
+
+		    }
+
+		  }
+	 public void setSearchField ( String fieldName, String fieldValue ) {
+		    setSearchField ( fieldName, "'" + fieldValue + "'", LIKE );
+		  }
+	 /**
+	   * convert searchFields info to a whereClauseStatement
+	   */
+	  protected String buildSearchStatment () {
+	    String andStatement = buildAndStatement ();
+	    StringBuffer stBuf = new StringBuffer ();
+	    if ( andStatement != null ) {
+	      stBuf.append ( andStatement );
+
+	    }
+	    if ( andFields == null || andFields.size () == 0 ) {
+	      return stBuf.toString ();
+	    }
+	    if ( andStatement != null ) {
+	      stBuf.append ( " and " );
+	    }
+	    stBuf.append ( "(" );
+	    Set keySet = andFields.keySet ();
+	    Iterator iterator = keySet.iterator ();
+	    String key = null;
+	    String value = null;
+	    boolean firstTime = true;
+	    while ( iterator.hasNext () ) {
+	      if ( firstTime ) {
+	        firstTime = false;
+	      }
+	      else {
+	        stBuf.append ( " and " );
+	      }
+	      key = ( String ) iterator.next ();
+	      value = ( String ) andFields.get ( key );
+	      stBuf.append ( " " ).append ( key ).append ( "='" );
+	      stBuf.append ( value ).append ( "'" );
+	    }
+	    stBuf.append ( " )" );
+	    return stBuf.toString ();
+	  }
+	  private void setSearchField ( String fieldName, String fieldValue,
+             String operation ) {
+		if ( searchFields == null ) {
+		searchFields = new Hashtable ();
+		}
+		String newFieldValue = null;
+		//this is a temporary solution TODO
+		if ( operation.equalsIgnoreCase ( IN )
+		|| operation.equalsIgnoreCase ( NOT_IN ) ) {
+		searchFields.put ( fieldName, operation + "  " + fieldValue );
+		}
+		else {
+		newFieldValue = DBUtil.escapeSQLFieldForBiz ( fieldValue );
+		searchFields.put ( fieldName, operation + "  " + newFieldValue );
+		}
+		
+		//  searchFields.put(fieldName, operation+"  "+fieldValue);
+		}
+		
+		private void setSearchField ( String fieldName, Date fieldValue,
+		              String operation ) {
+		if ( searchFields == null ) {
+		searchFields = new Hashtable ();
+		}
+		String dateStr = FormatUtil.dateTimeToStrDB ( fieldValue );
+		String dateFormatStr = FormatUtil.getDBDateTimeFormat ();
+		
+		searchFields.put ( fieldName,
+		     operation + "  to_date('" + dateStr + "','" +
+		     dateFormatStr +
+		     "')" );
+		}
+		
+		private String buildAndStatement () {
+		if ( searchFields == null || searchFields.size () == 0 ) {
+		return null;
+		}
+		StringBuffer stBuf = new StringBuffer ();
+		
+		Enumeration keys = searchFields.keys ();
+		String key = null;
+		String value = null;
+		boolean firstTime = true;
+		while ( keys.hasMoreElements () ) {
+		if ( firstTime ) {
+		stBuf.append ( "( " );
+		firstTime = false;
+		}
+		else {
+		stBuf.append ( " and " );
+		}
+		key = ( String ) keys.nextElement ();
+		value = ( String ) searchFields.get ( key );
+		if ( value.trim ().toUpperCase ().startsWith ( LIKE ) ) {
+		key = "upper(" + key + ")";
+		value = value.toUpperCase ();
+		}
+		stBuf.append ( key ).append ( " " ).append ( value );
+		}
+		stBuf.append ( " )" );
+		return stBuf.toString ();
+		
+		}
+		
+		 /**
+		   *
+		   * If the csog default are not there in session fetch it from session
+		   * If the customer is not set to the csog id
+		   * then get the system default csog id
+		   */
+
+		  public void loadPrePopulatedDefaults ( Session session, Customer customer, String adbRegionToConnect ) {
+		  
+		    DaxMgr mgr = DaxMgr.getInstance ();
+		    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		   /* Object[][] properties = { {"inputParam", String.class}
+		                            , {"outputParam", String.class}
+		    };*/
+
+		    //Fetch the customer specific csog Id first
+		    //DaxDataBeanDynamic bean = DaxDataBeanDynamic.newBean ( "resultBean", properties );
+		   // bean.set ( "inputParam", customer.getCustKey () );
+		    
+		    DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+		    bean.setString1(customer.getCustKey ());
+
+		    /* 		 DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+		        bean.setString2(customer.getCustKey());
+		     */
+		    DaxParsedStmt stmt = mgr.makeParsedStmt ( "prePopulatedDefaults",
+		                                              "getCustCsogId",
+		                                              bean, null, null );
+
+		    boolean result = false;
+
+		     //if customer specific csog no found fetch regional csog id
+		        if((result = db.doFetch(stmt, bean)) == false)
+		        {
+		     // bean.remove("inputParam", "inputParam");
+		       //bean.remove("outputParam", "outputParam");
+		       bean.setString1(session.getUser().getRegion_code());
+		       //bean.setString2(session.getUserRegionCode());
+
+		       stmt = mgr.makeParsedStmt("prePopulatedDefaults",
+		                   "getRegionalCsogId",
+		                   bean, null, null);
+
+		        result = db.doFetch(stmt, bean);
+		        }
+		    
+
+		    //If the csog id is available load the defaults for this csog Id
+		    if ( result ) {
+		      CsogDefaultsMgr defaultMgr = new CsogDefaultsMgr ();
+		      defaultMgr.load ( ( String ) bean.getString2(),adbRegionToConnect);
+			  session.setAttribute("sogId", bean.getString2() );
+		      session.setAttribute ( "csog_prepopulated_defaults", defaultMgr );
+		    }else
+		    {
+				session.removeAttribute("csog_prepopulated_defaults");
+				session.removeAttribute("PriceMasterFormSTYLE_ID");
+		    }
+
+		  }
+		  
+		  public Customer getCustomer(String groupId, String queryId, Object parameter, Object bindBean, String adbRegionToConnect){
+			  
+				DaxMgr mgr = DaxMgr.getInstance ();
+				DaxParsedStmt stmt = mgr.makeParsedStmt(groupId,queryId, parameter, null, null);
+				DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+				List list = db.doSelect ( stmt, Customer.class, parameter );
+
+			    if ( list.size () > 0 ) {
+			    	Customer obj = ( Customer ) list.get ( 0 );
+			    	return obj;
+			    }	  
+			    return null;			  
+		  }//getCustomer
+		  
+		  
+		  protected void setDomainField ( String domainName, String value ) {
+              andFields.put ( domainName, value );
+            }
+
+            protected String getDomainField ( String domainName ) {
+              return ( String ) andFields.get ( domainName );
+            }
+            
+            /**
+             * This method is added as a part of General Config and Catalog Merge.
+             * This method is for setting the Price Tier Flag value for filtering of the customer.
+             * @param String - Price Tier Flag.
+             */
+            public void setPriceTier(String priceTierFlag) {
+                            setDomainField(CustomerFields.PRICE_TIER_FLAG, priceTierFlag);
+            }
+            
+            /**
+             * This method is for accessing the Price Tier flag value.
+             * @return String - Price Tier Flag.
+             */
+            protected String getPriceTierFlag () {
+                            return getDomainField (CustomerFields.PRICE_TIER_FLAG);
+            }
+            
+            public void setRegionCode ( String regionCode ) {
+            	setDomainField ( CustomerFields.REGION, regionCode );
+            }
+
+            public String getRegionCode () {
+            	return getDomainField ( CustomerFields.REGION );
+            }
+
+            public List getOfferDetails(String groupId, String queryId, Object parameter, Class bindBean, String adbRegionToConnect) {
+    			//	JSON viewDeal = null;				
+    			  DaxMgr mgr = DaxMgr.getInstance ();
+    				//DaxParsedStmt stmt = null;
+    				DaxParsedStmt stmt = mgr.makeParsedStmt ( groupId,queryId, parameter,null,null );
+    				DaxDB daxDB = mgr.getDaxDB(adbRegionToConnect);
+    				
+    				List offerList = daxDB.doSelect(stmt, bindBean, parameter); 
+    				
+    				return offerList;
+    			}//getOfferDetails
+            
+            public JSONArray getDealDetails(String groupId, String queryId, Object parameter, Class bindBean, String adbRegionToConnect) {
+    			//	JSON viewDeal = null;				
+    			  DaxMgr mgr = DaxMgr.getInstance ();
+    				//DaxParsedStmt stmt = null;
+    				DaxParsedStmt stmt = mgr.makeParsedStmt ( groupId,queryId, parameter,null,null );
+    				DaxDB daxDB = mgr.getDaxDB(adbRegionToConnect);
+    				
+    				JSONArray offerList = daxDB.doSelectJson(stmt, bindBean, parameter); 
+    				
+    				return offerList;
+    			}//getOfferDetails
+
+}//class

@@ -1,0 +1,698 @@
+package com.hp.ecc.ui.biz.category;
+
+import java.io.Serializable;
+import java.util.*;
+
+import com.hp.ecc.ui.util.StrUtil;
+
+public class Category implements Cloneable, Serializable {
+	private Integer nodeId;
+	private Integer nodeId_1;
+	private String nodeExtId;
+	private String nodeName;
+	private String nodeName_1;
+	private String localizedNodeName;
+	private Integer nodeLevel;
+	private String lastModifiedBy;
+	private Date lastModifiedDate;
+	private Integer ctgId;
+	private Integer parentNodeId;
+	private String nodePath;
+	private String nodeExtPath;
+	private int childrenCount;
+	private String locale;
+	private Integer parentCtgId;
+	private ArrayList namePath;
+	private String namePathSeparator;
+	private String parentNodeExtId;
+	private CategoryMgr owner;
+	private String accessMode;
+	private String[] transList;
+	private String[] namesList;
+
+	private Hashtable localNameTable = new Hashtable();
+	private List childNodes = null;
+	private Boolean checkOptions = new Boolean(false);
+
+	private Integer source = new Integer(2);
+
+	private Integer status;
+	private String location;
+	private String reason;
+	private String deleteStatus;
+	private String hasDeletedChild;
+	private String catalogId;
+	private String dataLoadEventType;
+	private String dataLoadId;
+	private String sourceSystem;
+	private String product;
+
+	private Integer required;
+	private Integer multi;
+	private Integer open;
+	private String type;
+	private String orderable;
+	private String imageURL;
+	private int recordCount;
+
+	
+	public int getRecordCount() {
+		return recordCount;
+	}
+
+	public void setRecordCount(int recordCount) {
+		this.recordCount = recordCount;
+	}
+
+	/**
+	 * Fetch the DataLoadEvent Type
+	 * 
+	 * @return the DataLoadEventType
+	 */
+	public String getDataLoadEventType() {
+		return this.dataLoadEventType;
+	}
+
+	/**
+	 * Sets the DataLoadEvent Type
+	 * 
+	 * @param sDataLoadEventType
+	 */
+	public void setDataLoadEventType(String sDataLoadEventType) {
+		this.dataLoadEventType = sDataLoadEventType;
+	}
+
+	/**
+	 * Fetch the DataLoadEventID
+	 * 
+	 * @return
+	 */
+	public String getDataLoadId() {
+		return this.dataLoadId;
+	}
+
+	/**
+	 * Sets the DataLoadID
+	 * 
+	 * @param sDataLoadId
+	 */
+	public void setDataLoadId(String sDataLoadId) {
+		this.dataLoadId = sDataLoadId;
+	}
+
+	/**
+	 * Fetch the Data Load Source System
+	 * 
+	 * @return sourceSystem
+	 */
+	public String getSourceSystem() {
+		return this.sourceSystem;
+	}
+
+	/**
+	 * Sets the Data Load Source System
+	 * 
+	 * @param sourceSystem
+	 */
+	public void setSourceSystem(String sourceSystem) {
+		this.sourceSystem = sourceSystem;
+	}
+
+	public String getHasDeletedChild() {
+		return hasDeletedChild;
+	}
+
+	public void setHasDeletedChild(String hasDeletedChild) {
+		this.hasDeletedChild = hasDeletedChild;
+	}
+
+	public String getDeleteStatus() {
+		return deleteStatus;
+	}
+
+	public void setDeleteStatus(String deleteStatus) {
+		this.deleteStatus = deleteStatus;
+	}
+
+	public void setStatus(Integer pSource) {
+
+		status = pSource;
+
+	}
+
+	public Integer getStatus() {
+
+		return status;
+
+	}
+
+	public void setLocation(String pSource) {
+
+		location = pSource;
+
+	}
+
+	public String getLocation() {
+
+		return location;
+
+	}
+
+	public void setReason(String pSource) {
+
+		reason = pSource;
+
+	}
+
+	public String getReason() {
+
+		return reason;
+
+	}
+
+	public void setSource(Integer pSource) {
+
+		source = pSource;
+
+	}
+
+	public Integer getSource() {
+
+		return source;
+
+	}
+
+	public void setCheckOptions(Boolean isLocalizationNeeded) {
+
+		checkOptions = isLocalizationNeeded;
+
+	}
+
+	public Boolean getCheckOptions() {
+
+		return checkOptions;
+
+	}
+
+	public Category() {
+		childrenCount = 0;
+		namePath = null;
+		owner = null;
+		namePathSeparator = "-";
+	}
+
+	public void setOwner(CategoryMgr mgr) {
+		this.owner = mgr;
+	}
+
+	public CategoryMgr getOwner() {
+		return this.owner;
+	}
+
+	public Integer getNodeId() {
+		return nodeId;
+	}
+
+	public String getNodeExtId() {
+		return nodeExtId;
+	}
+
+	public String getNodeName() {
+		return nodeName;
+	}
+
+	public Integer getNodeLevel() {
+		return nodeLevel;
+	}
+
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	public Date getLastModifiedDate() {
+		return lastModifiedDate;
+	}
+
+	public Integer getCtgId() {
+		return ctgId;
+	}
+
+	public Integer getParentNodeId() {
+		return parentNodeId;
+	}
+
+	public String getParentNodeExtPath() {
+		if (nodeExtPath == null) {
+			return null;
+		} else {
+			// the last char of node ext path is ^
+			int i = nodeExtPath.indexOf("^");
+			if (i < 0) {
+				return null;
+			} else if (nodeExtPath.indexOf("^") == nodeExtPath.length() - 1) {
+				return null;
+			} else {
+				i = nodeExtPath.substring(0, nodeExtPath.length() - 1)
+						.lastIndexOf("^");
+				return nodeExtPath.substring(0, i + 1);
+			}
+		}
+	}
+
+	public String getNodePath() {
+		return nodePath;
+	}
+
+	public String getNodeExtPath() {
+		return nodeExtPath;
+	}
+
+	public int getChildrenCount() {
+		return childrenCount;
+	}
+
+	public String getLocale() {
+		return locale;
+	}
+
+	public String getLocalizedNodeName() {
+		return localizedNodeName;
+	}
+
+	public void setNodeId(Integer value) {
+		nodeId = value;
+	}
+
+	public void setNodeExtId(String value) {
+		nodeExtId = value;
+	}
+
+	public void setNodeName(String value) {
+		nodeName = value;
+	}
+
+	public void setNodeLevel(Integer value) {
+		nodeLevel = value;
+	}
+
+	public void setLastModifiedBy(String value) {
+		lastModifiedBy = value;
+	}
+
+	public void setLastModifiedDate(Date value) {
+		lastModifiedDate = value;
+	}
+
+	public void setCtgId(Integer value) {
+		ctgId = value;
+	}
+
+	public void setParentNodeId(Integer value) {
+		parentNodeId = value;
+	}
+
+	public void setNodePath(String value) {
+		nodePath = value;
+	}
+
+	public void setNodeExtPath(String value) {
+		nodeExtPath = value;
+	}
+
+	public void setChildrenCount(int value) {
+		childrenCount = value;
+	}
+
+	public void setLocale(String value) {
+		locale = value;
+	}
+
+	public void setLocalizedNodeName(String value) {
+		localizedNodeName = value;
+	}
+
+	public String toString() {
+		String result = nodeName;
+		// if(nodeExtPath!=null) result += " ("+nodeExtPath+")";
+		return result;
+	}
+
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
+
+	public Integer getParentCtgId() {
+		return parentCtgId;
+	}
+
+	public void setParentCtgId(Integer parentCtgId) {
+		this.parentCtgId = parentCtgId;
+	}
+
+	public String getLevelName(int level, String adbRegionToConnect) {
+		if (level <= 0) {
+			return null;
+		}
+
+		// int totalLevel = 0;
+
+		if (namePath == null) {
+			retrieveNameList(adbRegionToConnect);
+		}
+
+		if (level > namePath.size()) {
+			return null;
+		}
+
+		return (String) namePath.get(level - 1);
+	}
+
+	public String getLevelExtId(int level) {
+		if (level <= 0) {
+			return null;
+		}
+
+		if (nodeExtPath == null) {
+			return null;
+		}
+
+		if (nodeExtPath.indexOf("^") < 0) {
+			if ((2 * level - 2 < 0) || (2 * level > nodeExtPath.length())) {
+				return null;
+			}
+			return nodeExtPath.substring(2 * level - 2, 2 * level);
+		}
+
+		java.util.StringTokenizer st = new java.util.StringTokenizer(
+				nodeExtPath, "^");
+		int count = 1;
+
+		while (st.hasMoreTokens()) {
+			if (count++ == level) {
+				return st.nextToken();
+			}
+		}
+
+		return null;
+	}
+
+	private void retrieveNameList(String adbRegionToConnect) {
+		if (namePath == null) {
+			namePath = new ArrayList();
+
+		}
+		namePath.clear();
+		namePath.add(0, getNodeName());
+
+		Integer currentParentId = getParentNodeId();
+		Categorization catInfo = new Categorization();
+		catInfo.setId(this.ctgId);
+		catInfo.setParentCtgId(this.parentCtgId);
+		if (owner == null) {
+			owner = new CategoryMgr(catInfo, "");
+		}
+		while (currentParentId != null && currentParentId.intValue() != 0) {
+			Category parentCategory = owner.getCategory(currentParentId
+					.intValue(), adbRegionToConnect);
+			namePath.add(parentCategory.getNodeName());
+			currentParentId = parentCategory.getParentNodeId();
+		}
+		Collections.reverse(namePath);
+	}
+
+	public String getNamePathSeparator() {
+		return namePathSeparator;
+	}
+
+	public void setNamePathSeparator(String value) {
+		namePathSeparator = value;
+	}
+
+	public String getNamePath(String adbRegionToConnect) {
+		if (namePath == null) {
+			retrieveNameList(adbRegionToConnect);
+		}
+
+		String ret = "";
+		for (int i = 0; i < namePath.size(); i++) {
+			if (i == 0) {
+				ret = (String) namePath.get(i);
+			} else {
+				ret = ret + namePathSeparator + (String) namePath.get(i);
+			}
+		}
+
+		return ret;
+	}
+
+	public boolean equals(Object o) {
+		boolean result = super.equals(o);
+		if (o != null && (o instanceof Category)) {
+			Integer n1 = ((Category) o).getNodeId();
+			if (n1 != null && this.nodeId != null
+					&& (this.nodeId.intValue() == n1.intValue())) {
+				result = true;
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Set access mode. This method is added in Merlot release.
+	 * 
+	 * @param accessMode
+	 *            String
+	 */
+	public void setAccessMode(String accessMode) {
+		if (accessMode != null) {
+			this.accessMode = accessMode.trim().toUpperCase();
+		}
+	}
+
+	/**
+	 * Get access mode. This method is added in Merlot release.
+	 * 
+	 * @return String
+	 */
+	public String getAccessMode() {
+		return this.accessMode;
+	}
+
+	/**
+	 * Set node name translations
+	 * 
+	 * @param fLocalNames
+	 *            Collection
+	 */
+	public void setLocalNames(Collection fLocalNames) {
+
+		localNameTable = new Hashtable();
+
+		if (!StrUtil.isListEmpty(fLocalNames)) {
+			LocalNodeName lName = null;
+			Iterator i = fLocalNames.iterator();
+			while (i.hasNext()) {
+				lName = (LocalNodeName) i.next();
+				localNameTable.put(lName.getLocale(), lName);
+			}
+		}
+
+	}
+
+	/**
+	 * get node name translations
+	 * 
+	 * @return Collection
+	 */
+	public Collection getLocalNames() {
+		if (localNameTable != null) {
+			return localNameTable.values();
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * add node name translation
+	 * 
+	 * @param localName
+	 *            LocalNodeName
+	 */
+	public void addLocalName(LocalNodeName localName) {
+		if (localNameTable == null) {
+			localNameTable = new Hashtable();
+		}
+		localNameTable.put(localName.getLocale(), localName);
+	}
+
+	/**
+	 * Get node's local name object by locale
+	 * 
+	 * @param locale
+	 *            String 2 letter lower case of language_ 2 letter Upper case of
+	 *            country
+	 * @return LocalNodeName
+	 */
+	public LocalNodeName getLocalNameByLocale(String locale) {
+		if (localNameTable != null) {
+			return (LocalNodeName) localNameTable.get(locale);
+		}
+		return null;
+	}
+
+	/**
+	 * get child nodes. This method is not recommended to use by GUI. This
+	 * method will be used by PM load process.
+	 * 
+	 * @return List
+	 */
+	public List getChildNodes() {
+		return this.childNodes;
+	}
+
+	/**
+	 * set child nodes.
+	 * 
+	 * @param childNodes
+	 *            List
+	 */
+	public void setChildNodes(List childNodes) {
+		this.childNodes = childNodes;
+	}
+
+	public void setTransList(String[] list) {
+		transList = list;
+	}
+
+	public String[] getTransList() {
+		return transList;
+
+	}
+
+	public void setNamesList(String[] list) {
+		namesList = list;
+	}
+
+	public String[] getNamesList() {
+		return namesList;
+	}
+
+	/**
+	 * @param string
+	 */
+	public void setCatalogId(String catalogId) {
+		this.catalogId = catalogId;
+
+		// TODO Auto-generated method stub
+
+	}
+
+	/**
+	 * @return
+	 */
+	public String getCatalogId() {
+		// TODO Auto-generated method stub
+		return this.catalogId;
+	}
+
+	/**
+	 * get Product name.This method will be used by Category upload load
+	 * process.
+	 * 
+	 * @return String
+	 */
+	public String getProduct() {
+		return this.product;
+	}
+
+	public void setProduct(String product) {
+		this.product = product;
+	}
+
+	public String getParentNodeExtId() {
+		return parentNodeExtId;
+	}
+
+	public void setParentNodeExtId(String parentNodeExtId) {
+		this.parentNodeExtId = parentNodeExtId;
+	}
+
+	public Integer getRequired() {
+		return required;
+	}
+
+	public void setRequired(Integer required) {
+		this.required = required;
+	}
+
+	public Integer getMulti() {
+		return multi;
+	}
+
+	public void setMulti(Integer multi) {
+		this.multi = multi;
+	}
+
+	public Integer getOpen() {
+		return open;
+	}
+
+	public void setOpen(Integer open) {
+		this.open = open;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getOrderable() {
+		return orderable;
+	}
+
+	public void setOrderable(String orderable) {
+		this.orderable = orderable;
+	}
+
+	public String getImageURL() {
+		return imageURL;
+	}
+
+	public void setImageURL(String imageURL) {
+		this.imageURL = imageURL;
+	}
+
+	/**
+	 * @return the nodeId_1
+	 */
+	public Integer getNodeId_1() {
+		return nodeId_1;
+	}
+
+	/**
+	 * @param nodeId_1 the nodeId_1 to set
+	 */
+	public void setNodeId_1(Integer nodeId_1) {
+		this.nodeId_1 = nodeId_1;
+	}
+
+	/**
+	 * @return the nodeName_1
+	 */
+	public String getNodeName_1() {
+		return nodeName_1;
+	}
+
+	/**
+	 * @param nodeName_1 the nodeName_1 to set
+	 */
+	public void setNodeName_1(String nodeName_1) {
+		this.nodeName_1 = nodeName_1;
+	}
+	
+	
+
+}// classs

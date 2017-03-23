@@ -1,0 +1,370 @@
+<div class="row" ng-controller="viewChildCatalogListCtrl" ng-init="loadViewChildCatalog()" id = "viewChildCatalogID">
+<div id="messageDiv"></div>	
+    <div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<div style="margin: 10px 5px 0px 5px;" ng-show="linkStatus"> <a ng-click="redirectToCatalogWarnings()">View Catalog Warnings </a></div>
+	</div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">				
+			<span>Catalog Information</span>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+	        <div class="four columns">
+	           <div class="generals">
+	                <span>Customer Name:</span>
+	                <div class="div_input"  ng-bind="cutomerDetails.cust_name"></div>
+	           </div>
+	           <div class="generals">
+	               <span>Customer DUN:</span>
+	               <div class="div_input" ng-bind="cutomerDetails.cust_dun" ></div>
+	           </div>
+	          
+	        </div>
+	        <div class="four columns">
+	            <div class="generals">
+	                <span>Customer ID:</span>
+	                <div class="div_input"  id="customerId"  ng-bind="cutomerDetails.cust_id"></div>
+	            </div>
+	            <div class="generals">
+	                <span>Supplier ID/DUN's:</span>
+	                <div class="div_input"  ng-bind="form.fSupplierID"></div>
+	            </div>
+	         
+	        </div>
+	        <div class="four columns">
+	         	<div class="generals">
+	              <span>EPrime Customer ID:</span>
+	              <div class="div_input"  id="eprimeCustomerId"  ng-bind="cutomerDetails.cust_key"></div>
+	           </div>
+	       		<div class="generals">
+	                  <span>Eprime Customer Type:</span>
+	                  <div class="div_input" id="eprimeCustomerType" ng-bind="cutomerDetails.eprime_cust_type"></div>
+	            </div>
+	        	
+	        </div>
+		</div>
+		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+	  	</div>
+	    <div class="customer_rows" >
+	    	<div class="four columns">
+	    		<div class="generals">
+		    		<span>Catalog Name:</span>
+		    		<div class="div_input"  ng-bind="form.fCatalogName"></div>
+	    		</div>
+	    		<div class="generals">
+		    		<span>Language:</span>
+		    		<div class="div_input"  ng-bind="form.fLanguage"></div>
+	    		</div>
+	    		<div class="generals" ng-if="fedCust==true || gsaCust==true ">
+		    		<span> Mod Number:</span>
+		    		<div class="div_input"  ng-bind="form.fModNumber"></div>
+	    		</div>
+	    	</div>
+    		<div class="four columns">
+	    		<div class="generals">
+		    		<span>Catalog Scope:</span>
+		    		<div class="div_input"  ng-bind="form.fCatalogScope"></div>
+	    		</div>
+	    		<div class="generals">
+		    		<span>Catalog Format:</span>
+		    		<div class="div_input"  ng-bind="form.fCatalogFormat"></div>
+	    		</div>
+	    		<div class="generals" ng-if="fedCust==true">
+		    		<span>Mod Date:</span>
+		    		<div class="div_input"  ng-bind="editDateDDMMMYYYY.changeDateFormat(form.fModDate)"></div>
+	    		</div>
+	    	</div>
+	    	<div class="four columns">
+	    		<div class="generals">
+		    		<span>Status:</span>
+		    		<div class="div_input"  ng-bind="form.fStatus"></div>
+	    		</div>
+	    		<div class="generals">
+		    		<span>Approval Enable:</span>
+		    		<div ng-if="form.fEnableApproval == true">
+                    	<div class="div_input"  ng-bind="valueY" ></div>
+                    </div>
+                    <div ng-if="form.fEnableApproval == false">
+		               	<div class="div_input"  ng-bind="valueN"></div>
+		            </div>
+		        </div>
+		        <div class="generals" ng-show="form.enabledview==true">
+	    			<span>Publish Batch #:</span>
+	    			<div class="div_input"  ng-bind="form.fPublishBatch"></div>
+	    		</div>
+	    	</div>
+	   	</div>
+	    <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+	  	</div>
+	    <div class="customer_rows" >
+	    	<div class="four columns">
+	    		<div class="generals">
+	    			<span>Email Warnings:</span>
+	    			<div ng-if="form.fEmailWarnings == true">
+                    	<div class="div_input"  ng-bind="valueY" ></div>
+                    </div>
+                    <div ng-if="form.fEmailWarnings == false">
+		               	<div class="div_input"  ng-bind="valueN"></div>
+		            </div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>B2Bi Customer:</span>
+	    			<div ng-if="form.fB2biCustFlag == true">
+                    	<div class="div_input"  ng-bind="valueY" ></div>
+                    </div>
+                    <div ng-if="form.fB2biCustFlag == false">
+		               	<div class="div_input"  ng-bind="valueN"></div>
+		            </div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>UNSPSC Version:</span>
+	    			<div class="div_input"  ng-bind="form.fUnspscType"></div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>Category:</span>
+	    			<div class="div_input"  ng-bind="form.fCategoryType"></div>
+	    		</div>
+	    		<div class="generals" ng-show="form.fRegionCode=='LA' || form.fRegionCode=='GL' ">
+	    			<span> Exchange Rate Type:</span>
+	    			<div class="div_input"  ng-bind="form.fExchangeRate"></div>
+	    		</div>
+	    	</div>
+	    	<div class="four columns">
+	    		<div class="generals">
+	    			<span>Price Merge ID:</span>
+	    			<div class="div_input"  ng-bind="form.priceMergeId"></div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>ePrime Price Descriptor:</span>
+	    			<div class="div_input"  ng-bind="form.eprimePriceDescriptor"></div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>Account Code:</span>
+	    			<div class="div_input"  ng-bind="form.fBorgID"></div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>Apply Freight Charge:</span>
+	    			<div ng-if="form.applyFreightCharge == true">
+                    	<div class="div_input"  ng-bind="valueY" ></div>
+                    </div>
+                    <div ng-if="form.applyFreightCharge == false">
+		               	<div class="div_input"  ng-bind="valueN"></div>
+		            </div>
+		        </div>
+		        <div class="generals" ng-show="form.applyFreightCharge==true">
+	    			<span>Freight Zone Descriptor:</span>
+	    			<div class="div_input"  ng-bind="form.zonePriceDescriptor"></div>
+	    		</div>
+	    	</div>
+    		<div class="four columns">
+	    		<div class="generals">
+	    			<span>Exclude Cross Sell Products:</span>
+	    			<div ng-if="form.crossSellExcluded == true">
+                    	<div class="div_input"  ng-bind="valueY" ></div>
+                    </div>
+                    <div ng-if="form.crossSellExcluded == false">
+		               	<div class="div_input"  ng-bind="valueN"></div>
+		            </div>
+		        </div>
+		        <div class="generals">
+	    			<span>Catalog Expiry Day:</span>
+	    			<div class="div_input"  ng-bind="editDateDDMMMYYYY.changeDateFormat(form.fExpiryDate)"></div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>MDCP ORG ID:</span>
+	    			<div class="div_input"  ng-bind="form.mdcpOrgId"></div>
+	    		</div>
+	    		<div class="generals">
+	    			<span>Terms and Conditions:</span>
+	    			<div class="div_input"  ng-bind="form.fTermsAndCondition"></div>
+	    		</div>
+	    		<div class="generals">
+				  	<span>Last Modified:</span>
+				  	<div class="div_input"  ng-bind="form.fLastModified"></div>
+			  	</div>
+	    	</div>
+	    </div>
+   		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<div class="four columns">
+	    		<div class="generals">
+	    			<span> Standard Filter Names:</span>
+	    		 	<textarea  rows="" cols="" ng-model="form.fStandardFilterNames" disabled> </textarea>	
+	    		 </div>
+	    	</div>	
+	    	<div class="four columns">
+	    		<div class="generals">
+	    			<span>Program  Names:</span>
+		    		<textarea  rows="" cols="" ng-model="form.fPgmKeyNames" disabled> </textarea>
+	    		</div>
+	    	</div>
+	    	<div class="four columns">
+			  	<div class="generals">
+				  	<span>Comments:</span>
+				  	<textarea  rows="" cols="" ng-model="form.fComments" disabled> </textarea>	
+			  	</div>
+		  	</div>
+	    </div>
+	  	<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+	  	</div>
+	  	<div class="twelve columns">
+		        <a class="btn btn-inline" ng-show="form.bCanEditCatalog" href="#/EditChildCatalog?catalog_id={{childCatId}}" ng-click="editCatalog()"><span id="edit">Edit</span></a> 
+		        <a class="btn btn-inline" ng-show="form.bCanEditCatalog" ng-click="redirectToValidate()"><span id="validate">Validate</span></a>
+		        <a class="btn btn-inline" ng-show="form.bCanEditCatalog"  href="#/CreateChildCatalog?task=copy&catalogId={{childCatId}}" ng-click="redirectToCopy()">Copy</span></a>
+		        <a class="btn btn-inline" ng-show="form.bCanArchieve && roleId != 2" href= "#/ArchiveList?catalog_id={{childCatId}}" ng-click="showArchives()" ><span id="archive">Archive</span></a>
+		        <a class="btn btn-inline" href="#/Hierarchies?catalogId={{childCatId}}" ng-click="catCategories()" ><span>Catalog Categories</span></a>
+		        <a class="btn btn-inline" href="#/ListChildCatalog" ng-click="redirectToCatalogList()"><span id="cancel">Cancel</span></a>
+	  	</div>
+	</div>
+	<!-- Child Catalog Product List Codes -->
+	<div class="customer_rows" style="margin-top: 5px;" ng-show="childProdDataLoad">
+		<div class="accordion"> 
+			<section>
+				<h2><span class="accordion-icon icon-minus"></span>Product List</h2>
+				<div class="customer_rows" style="margin-top: -5px;">
+					<div class="customer_rows" style="margin-top: 0px;">
+						<div id="showhideclmDiv" class="btn btn-refresh" ng-init="mouseDownHide('tinyDropz');">
+							<div ng-click="toggle('tinyDropz');">
+								<span data-dropdown="tinyDrop">Show/Hide Column</span>
+							</div>
+							
+							<ul id="tinyDropz" class="f-dropdown">
+								<li ng-repeat="column in tablecolumns">
+									<div ng-hide="column.key === 'ESDate' && !(finalObject.fRegionCode === 'AP' || finalObject.fRegionCode === 'GL')">
+										<input type="checkbox" ng-model="selectedColumns[column.id]" ng-true-value="true" ng-false-value="false">{{column.key | removeBR}}
+									</div>
+								</li>
+							</ul>
+						</div>
+						<div hpe-button btn-text="Search By" btn-type="Primary" btn-icon="icon-filter" onclick="toggleAutoFilter('.autoFilter')"></div>
+						<div style="display:inline; margin-left:5px; ">
+							<span style="color:#696969; font-size:12px; font-weight:bold; margin-right:5px">Show FullfillMent Site Part#:</span>
+							<input  type="checkbox" style="margin:-10px 0px 0px 0px" ng-model="form.ffsPartNumber" ng-change="loadFulfillmentSitePartProducts(form.ffsPartNumber)">
+						</div>
+						<div class="dataTables_filter" id="ecc_hpegrid1_filter"><label>Filter: <input type="text" ng-model="searchText"></label></div>
+					</div>
+					<div class="gridTable" style="width: 100%;overflow: auto;">
+						<table id="tableGrid" class="dataGrid" style="width: 100%;" ng-show="productTableShow2">
+							<thead>
+								<tr class="TableHeaderRow">
+									<th class="center">Delete <input type="checkbox" name="checkAllDelete" id="checkAllDelete" title="Check All Delete" /></th> 
+									<th ng-repeat="name in tablecolumns" class="table_details" perspective="{{name.perspective}}"
+									ng-show="selectedColumns[name.id]"
+									ng-class="{sortedASC: ($parent.reverse==true && sortedColumn == name.columnName),sortedDESC: ($parent.reverse==false && sortedColumn == name.columnName)};",
+									ng-click="sortColumn($parent, name.id, name.columnName, name.sortLocale, name.sort);">
+									<span class="tblHeaderTxt" ng-bind-html="name.key"></span>
+									<ng-switch on="name.sort"><span ng-switch-when="false"></span><span class="icn_srt" ng-switch-default>
+	           						<a href="javascript:void(0)">&nbsp;</a></span></ng-switch></th>
+		            			</tr>
+								<tr class="autoFilter font_black table_details ngomAutoFilterWithSelectAll"></tr>
+							</thead>
+							<tbody>
+								<tr ng-class="{ odd : $index%2==0, even : !($index%2==0)}" ng-repeat="item in aaData2 | filter:searchText | orderBy:predicate:reverse | startFrom:(currentPage-startIndex)*itemsPerPage | limitTo:itemsPerPage ">
+									<td ng-bind-html="to_trusted(item.checkbox)"></td>
+						            <td ng-class="sortedTD_{{columnNames[0].id}}" ng-show="selectedColumns.status" ng-bind-html="to_trusted(item.status)"></td>						                     
+						            <td ng-class="sortedTD_{{columnNames[1].id}}" ng-show="selectedColumns.baseModel" ng-bind-html="to_trusted(item.baseModel)"></td>
+						            <td ng-class="sortedTD_{{columnNames[2].id}}" ng-show="selectedColumns.partNumber" ng-bind-html="to_trusted(item.partNumber)"></td>
+						            <td ng-class="sortedTD_{{columnNames[3].id}}" ng-show="selectedColumns.dealID">{{item.dealID}}</td>
+						            <td ng-class="sortedTD_{{columnNames[4].id}}" ng-show="selectedColumns.description">{{item.description}}</td>
+						            <td ng-class="sortedTD_{{columnNames[5].id}}" ng-show="selectedColumns.netPrice">{{item.netPrice}}</td>
+						            <td ng-class="sortedTD_{{columnNames[6].id}}" ng-show="selectedColumns.priceSource">{{item.priceSource}}</td>
+						            <td ng-class="sortedTD_{{columnNames[7].id}}" ng-show="selectedColumns.configID">{{item.configID}}</td>						            
+						            <td ng-class="sortedTD_{{columnNames[8].id}}" ng-show="selectedColumns.source">{{item.source}}</td>					
+						           	<td ng-class="sortedTD_{{columnNames[9].id}}" ng-show="selectedColumns.productLine">{{item.productLine}}</td>
+						            <td ng-class="sortedTD_{{columnNames[10].id}}" ng-show="selectedColumns.contextID">{{item.contextID}}</td>
+						            <td ng-class="sortedTD_{{columnNames[11].id}}" ng-show="selectedColumns.esDate">{{item.esDate}}</td>
+						            <td ng-class="sortedTD_{{columnNames[12].id}}" ng-show="selectedColumns.crossSell"><span ng-bind-html="to_trusted(item.crossSell)"></span></td>
+						            <td ng-class="sortedTD_{{columnNames[13].id}}" ng-show="selectedColumns.categorization" ng-bind-html="to_trusted(item.categorization)"></td>
+						            <td ng-class="sortedTD_{{columnNames[14].id}}" ng-show="selectedColumns.fulfillmentSiteId">{{item.fulfillmentSiteId}}</td>
+						            <td ng-class="sortedTD_{{columnNames[15].id}}" ng-show="selectedColumns.program">{{item.program}}</td>
+						            <td ng-class="sortedTD_{{columnNames[16].id}}" ng-show="selectedColumns.lastModifiedDate">{{item.lastModifiedDate}}</td>
+						            <td ng-class="sortedTD_{{columnNames[17].id}}" ng-show="selectedColumns.offeringType">{{item.OfferingType}}</td>
+						           	<td ng-class="sortedTD_{{columnNames[18].id}}" ng-show="selectedColumns.epeatDesignation">{{item.ePEATDesignation}}</td>						           	
+						           	<td ng-class="sortedTD_{{columnNames[19].id}}" ng-show="selectedColumns.quoteId">						            	
+						            	<span ng-hide="item.quote_id"><img title="Refresh" style="width:15px;height:15px" src="resources/images/ecc/refresh.png" ng-click="refreshQuoteId(item)"></span>
+						            	<span ng-show="item.quote_id">{{item.quote_id}}</span>
+						            </td>
+						       </tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="gridTable" style="width: 100%;overflow: auto;">	
+						<table id="tableGrid" class="dataGrid" style="width: 100%;" ng-show="productTableShow1">
+							<thead>
+								<tr class="TableHeaderRow">
+								<th class="center">Delete <input type="checkbox" name="checkAllDelete_GL_AP" id="checkAllDelete_GL_AP" title="Check All Delete" /></th>
+								<th ng-repeat="name in tablecolumns" class="table_details" perspective="{{name.perspective}}"
+								ng-show="selectedColumns[name.id]"
+								ng-class="{sortedASC: ($parent.reverse==true && sortedColumn == name.columnName),sortedDESC: ($parent.reverse==false && sortedColumn == name.columnName)};",
+								ng-click="sortColumn($parent, name.id, name.columnName, name.sortLocale, name.sort);">
+								<span class="tblHeaderTxt" ng-bind-html="name.key"></span>
+								<ng-switch on="name.sort"><span ng-switch-when="false"></span><span class="icn_srt" ng-switch-default>
+	          						<a href="javascript:void(0)">&nbsp;</a></span></ng-switch></th>
+		            			</tr>
+		            			<tr class="autoFilter font_black table_details ngomAutoFilterWithSelectAll"></tr>
+							</thead>
+							<tbody>
+								<tr ng-class="{ odd : $index%2==0, even : !($index%2==0)}" ng-repeat="item in aaData1 | filter:searchText | orderBy:predicate:reverse | startFrom:(currentPage-startIndex)*itemsPerPage | limitTo:itemsPerPage ">
+									<td ng-bind-html="to_trusted(item.checkbox)"></td>
+						            <td ng-class="sortedTD_{{columnNames[0].id}}" ng-show="selectedColumns.status" ng-bind-html="to_trusted(item.status)"></td>						            
+						            <td ng-class="sortedTD_{{columnNames[1].id}}" ng-show="selectedColumns.baseModel" ng-bind-html="to_trusted(item.baseModel)"></td>
+						            <td ng-class="sortedTD_{{columnNames[2].id}}" ng-show="selectedColumns.partNumber" ng-bind-html="to_trusted(item.partNumber)"></td>
+						            <td ng-class="sortedTD_{{columnNames[3].id}}" ng-show="selectedColumns.dealID">{{item.dealID}}</td>
+						            <td ng-class="sortedTD_{{columnNames[4].id}}" ng-show="selectedColumns.description">{{item.description}}</td>
+						            <td ng-class="sortedTD_{{columnNames[5].id}}" ng-show="selectedColumns.netPrice">{{item.netPrice}}</td>
+						            <td ng-class="sortedTD_{{columnNames[6].id}}" ng-show="selectedColumns.priceSource">{{item.priceSource}}</td>
+						            <td ng-class="sortedTD_{{columnNames[7].id}}" ng-show="selectedColumns.configID">{{item.configID}}</td>
+						            <td ng-class="sortedTD_{{columnNames[8].id}}" ng-show="selectedColumns.source">{{item.source}}</td>
+						            <td ng-class="sortedTD_{{columnNames[9].id}}" ng-show="selectedColumns.productLine">{{item.productLine}}</td>
+						            <td ng-class="sortedTD_{{columnNames[10].id}}" ng-show="selectedColumns.contextID">{{item.contextID}}</td>
+						            <td>{{item.marketing_obsolete_date}}</td>
+						            <td ng-class="sortedTD_{{columnNames[12].id}}" ng-show="selectedColumns.crossSell"><span ng-bind-html="to_trusted(item.crossSell)"></span></td>
+						            <td ng-class="sortedTD_{{columnNames[13].id}}" ng-show="selectedColumns.categorization" ng-bind-html="to_trusted(item.categorization)"></td>
+						            <td ng-class="sortedTD_{{columnNames[14].id}}" ng-show="selectedColumns.fulfillmentSiteId">{{item.fulfillmentSiteId}}</td>
+						            <td ng-class="sortedTD_{{columnNames[15].id}}" ng-show="selectedColumns.program">{{item.program}}</td>						            						            
+						            <td ng-class="sortedTD_{{columnNames[16].id}}" ng-show="selectedColumns.lastModifiedDate">{{item.lastModifiedDate}}</td>						            
+						            <td ng-class="sortedTD_{{columnNames[17].id}}" ng-show="selectedColumns.offeringType">{{item.OfferingType}}</td>
+						            <td ng-class="sortedTD_{{columnNames[18].id}}" ng-show="selectedColumns.epeatDesignation">{{item.ePEATDesignation}}</td>
+						            <td ng-class="sortedTD_{{columnNames[19].id}}" ng-show="selectedColumns.quoteId">
+						            	<span ng-hide="item.quote_id"><img title="Refresh" style="width:15px;height:15px" src="resources/images/ecc/refresh.png" ng-click="refreshQuoteId(item)"></span>
+						            	<span ng-show="item.quote_id">{{item.quote_id}}</span>
+						            </td>
+						        </tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="customer_rows">
+						<div class="pagination ossPagination"></div>
+					</div>
+					<div class="customer_rows" style="margin-top: -10px;">
+						<a class="btn btn-inline btn-Primary btn-cog" id="updateProductDeletion" ng-show="formProd.fIsDeleteProductEnabled" ng-click="condtionalAlertDelete()" >Update Product Deletion</a>
+						<a class="btn btn-inline btn-Primary btn-viewdetails" ng-show="form.fRegionCode=='US' && roleId!=2" herf="#/ViewPromotions?catalogName=encodeURIComponent({{form.fCatalogName}})&isChildCatalog=true&catalogId={{catalogId}}" ng-click="viewPromotions()">View Promotions</a>
+					</div>
+					<div class="customer_rows" style="margin-top:5px;">
+				  		<div class="three columns">
+				  			<div class="generals">
+				  				<img border=0 src="resources/images/ecc/arrow_grey.gif" style="float: left;margin: -2px 5px 0px 0px;">
+				                <label style="width: 75%;">Indicates that no options available for product.</label>
+				            </div>
+				  		</div>
+				  		<div class="three columns">
+				  			<div class="generals">
+				  				<img border=0 src="resources/images/ecc/arrow_blue.gif"  style="float: left;margin: -2px 5px 0px 0px;">
+				                <label style="width: 75%;">Indicates that options available for product.</label>
+				            </div>
+				  		</div>
+				  	</div>	
+				</div>
+			</section>
+		</div>
+	</div>
+</div>
+<!-- Child Catalog Product List Codes -->	  	

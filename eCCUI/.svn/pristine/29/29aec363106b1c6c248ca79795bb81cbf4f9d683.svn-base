@@ -1,0 +1,251 @@
+<div class="row"  ng-controller="updateFedMultipleProductsCtrl" ng-init="loadFedMultipleProducts()">
+   	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">				
+			<span>Multiple Update Master Products</span>
+		</h1>
+  	</div>
+  	
+  	<div class="customer_rows form-border">
+  			<div class="customer_rows">
+				<div class="four columns">
+		        	<div class="generals">
+		              <span>Master ID:</span>
+						 <div class="div_input"   ng-bind="multipleMasterUpdate_masterId"></div>		          
+					 </div>
+		        </div>
+			</div>
+			<div class="customer_rows">
+	    		<h1 class="h1Underline row" style="margin:0;"></h1>
+	  		</div>
+			<div class="generals">    			
+   				<span>Select Update Fields:</span>
+  			</div>
+  		
+  			<div class="customer_rows">	
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_minValue" ng-model="enableDisableFlag_minValue"
+	        					type="checkbox" ng-click="changeEnableDisable('minValue')" ng-change="changeEnableDisable('minValue')"/>
+	    				<span style="float: none;">Min Value:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="minValue" maxlength="8" ng-blur="min_chk()" ng-disabled="!enableDisableFlag_minValue"></input>
+		           </div>
+		        </div>
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_maxValue" ng-model="enableDisableFlag_maxValue"
+	        					type="checkbox" ng-click="changeEnableDisable('maxValue')" ng-change="changeEnableDisable('maxValue')"/>
+	    				<span style="float: none;">Max Value:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="maxValue" maxlength="8" ng-blur="max_chk()" ng-disabled="!enableDisableFlag_maxValue"></input>
+		           </div>
+		        </div>
+		     </div>
+			 <div class="two columns">
+				<div class="generals" style="margin-top: 15px;">
+					<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_blueEarth" ng-model="enableDisableFlag_blueEarth"
+							type="checkbox" ng-click="changeEnableDisable('blueEarth')" ng-change="changeEnableDisable('blueEarth')"/>
+					<span style="float: none;">Blue Earth:</span>
+				</div>
+			 </div>
+			 <div class="two columns">
+				<div class="generals">
+					<select  name="blueEarth" ng-model="blueEarth" id="blueEarth" 
+							ng-disabled="!enableDisableFlag_blueEarth">
+							<option ng:repeat="item in selectBlueEarthList" value="{{item.id}}">{{item.name}}</option>
+					</select>
+			   </div>
+			</div>
+		     <div class="customer_rows">   
+		         <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_selectRoutingFlag" ng-model="enableDisableFlag_selectRoutingFlag"
+	        					type="checkbox" ng-click="changeEnableDisable('selectRoutingFlag')" ng-change="changeEnableDisable('selectRoutingFlag')"/>
+	    				<span style="float: none;">Routing Flag: </span>
+	                </div>
+	                </div>
+	             <div class="two columns">
+		            <div class="generals">
+						<select  name="selectRoutingFlag" ng-model="selectRoutingFlag" id="selectRoutingFlag" 
+								ng-disabled="!enableDisableFlag_selectRoutingFlag">
+								<!-- ng-options="item.id as item.name for item in selectContractList"   -->
+		            			<option ng:repeat="item in selectRoutingFlagList" value="{{item.id}}">{{item.value}}</option>
+            			</select>	
+		           </div>
+		        </div>
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_selectActive" ng-model="enableDisableFlag_selectActive"
+	        					type="checkbox" ng-click="changeEnableDisable('selectActive')" ng-change="changeEnableDisable('selectActive')"/>
+	    				<span style="float: none;">Active: </span>
+	                </div>
+	                </div>
+	             <div class="two columns">
+		            <div class="generals">
+						<select  name="selectActive" ng-model="selectActive" id="selectActive" 
+								ng-disabled="!enableDisableFlag_selectActive">
+								<!-- ng-options="item.id as item.name for item in selectContractList"   -->
+		            			<option ng:repeat="item in selectActiveList" value="{{item.id}}">{{item.name}}</option>
+            			</select>	
+		           </div>
+		        </div>
+	        </div>
+	        <div class="customer_rows">	
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_orderable" ng-model="enableDisableFlag_orderable"
+	        					type="checkbox" ng-click="changeEnableDisable('orderable')" ng-change="changeEnableDisable('orderable')"/>
+	    				<span style="float: none;">Orderable:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="orderable" maxlength="5" ng-blur="isNumber()" ng-disabled="!enableDisableFlag_orderable" ng-model="form.orderable"></input>
+		           </div>
+		        </div>
+		         <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_selectApprovalFlag" ng-model="enableDisableFlag_selectApprovalFlag"
+	        					type="checkbox" ng-click="changeEnableDisable('selectApprovalFlag')" ng-change="changeEnableDisable('selectApprovalFlag')"/>
+	    				<span style="float: none;">Approval Flag: </span>
+	                </div>
+	                </div>
+	             <div class="two columns">
+		            <div class="generals">
+						<select  name="selectApprovalFlag" ng-model="selectApprovalFlag" id="selectApprovalFlag" 
+								ng-disabled="!enableDisableFlag_selectApprovalFlag">
+								<!-- ng-options="item.id as item.name for item in selectContractList"   -->
+		            			<option ng:repeat="item in selectApprovalFlagList" value="{{item.id}}">{{item.name}}</option>
+            			</select>	
+		           </div>
+		        </div>
+		     </div>
+	        <div class="customer_rows">   
+		         <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_selectEpeatDesg" ng-model="enableDisableFlag_selectEpeatDesg"
+	        					type="checkbox" ng-click="changeEnableDisable('selectEpeatDesg')" ng-change="changeEnableDisable('selectEpeatDesg')"/>
+	    				<span style="float: none;">EPEAT Designation: </span>
+	                </div>
+	                </div>
+	             <div class="two columns">
+		            <div class="generals">
+						<select  name="selectEpeatDesg" ng-model="selectEpeatDesg" id="selectEpeatDesg" 
+								ng-disabled="!enableDisableFlag_selectEpeatDesg">
+								<!-- ng-options="item.id as item.name for item in selectContractList"   -->
+		            			<option ng:repeat="item in selectEpeatDesgList" value="{{item.id}}">{{item.name}}</option>
+            			</select>	
+		           </div>
+		        </div>
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_selectEnergyStar" ng-model="enableDisableFlag_selectEnergyStar"
+	        					type="checkbox" ng-click="changeEnableDisable('selectEnergyStar')" ng-change="changeEnableDisable('selectEnergyStar')"/>
+	    				<span style="float: none;">Energy Star: </span>
+	                </div>
+	                </div>
+	             <div class="two columns">
+		            <div class="generals">
+						<select  name="selectEnergyStar" ng-model="selectEnergyStar" id="selectEnergyStar" 
+								ng-disabled="!enableDisableFlag_selectEnergyStar">
+								<!-- ng-options="item.id as item.name for item in selectContractList"   -->
+		            			<option ng:repeat="item in selectEnergyStarList" value="{{item.id}}">{{item.name}}</option>
+            			</select>	
+		           </div>
+		        </div>
+	        </div>
+	        <div class="customer_rows">	
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_preCrc" ng-model="enableDisableFlag_preCrc"
+	        					type="checkbox" ng-click="changeEnableDisable('preCrc')" ng-change="changeEnableDisable('preCrc')"/>
+	    				<span style="float: none;">Pre-CRC:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="preCrc" maxlength="3" ng-blur="checkPreCRC('Pre-CRC')" ng-disabled="!enableDisableFlag_preCrc"></input>
+		           </div>
+		        </div>
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_postCrc" ng-model="enableDisableFlag_postCrc"
+	        					type="checkbox" ng-click="changeEnableDisable('postCrc')" ng-change="changeEnableDisable('postCrc')"/>
+	    				<span style="float: none;">Post-CRC:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="postCrc" maxlength="3" ng-blur="checkPostCRC('Post-CRC')" ng-disabled="!enableDisableFlag_postCrc"></input>
+		           </div>
+		        </div>
+		     </div>		    
+		     <div class="customer_rows">	
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_weight" ng-model="enableDisableFlag_weight"
+	        					type="checkbox" ng-click="changeEnableDisable('weight')" ng-change="changeEnableDisable('weight')"/>
+	    				<span style="float: none;">Weight:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="weight" maxlength="10" ng-blur="chkWeight()" ng-disabled="!enableDisableFlag_weight"></input>
+		           </div>
+		        </div>
+		        <div class="two columns">
+		        	<div class="generals" style="margin-top: 15px;">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="enableDisableFlag_mfgItemNo" ng-model="enableDisableFlag_mfgItemNo"
+	        					type="checkbox" ng-click="changeEnableDisable('mfgItemNo')" ng-change="changeEnableDisable('mfgItemNo')"/>
+	    				<span style="float: none;">Mfg Item NO:</span>
+	                </div>
+	             </div>
+	             <div class="two columns">
+		            <div class="generals">
+		            	<input type="text" id="mfgItemNo" maxlength="30	" ng-keyup="rdd_chk(this)" ng-disabled="!enableDisableFlag_mfgItemNo"></input>
+		           </div>
+		        </div>
+		     </div>
+		     <div class="customer_rows">
+    			<h1 class="h1Underline"></h1>
+  			</div>
+  			 <div class="customer_rows">   
+		         <div class="four columns">
+		        	<div class="generals">
+	        			<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" id="changesToAll" ng-model="changesToAll"
+	        					type="checkbox"/>
+	    				<span style="float: none;">Apply Changes to All Items </span>
+	                </div>
+	                </div>
+	             
+	        </div>
+  	</div>
+  	
+  	 <div class="customer_rows">
+  	 </div>
+  	 
+	<div class="customer_rows id-body" ng-show="dataLoad">
+			<div class="twelve columns">
+				<div id="ecc_hpegrid1" hpe-grid
+				         grd-data="grid.data"
+				         grd-header="grid.header"
+				         grd-col-defs="grid.colDefs"
+				         grd-sort="grid.sort"
+				         grd-col-view-by="grid.colViewBy" class="table-scroll">
+				</div>
+			</div>
+	</div>
+	<div class="generals">
+		<a class="btn btn-inline btn-Primary btn-cog" ng-show="dataLoad" ng-click="updateFedProducts()" >Update</a>
+		<a class="btn btn-inline btn-Primary btn-cog" ng-click="cancelFedProducts()" >Cancel</a>
+		<a class="btn btn-inline btn-Primary btn-cog" ng-show="dataLoad" ng-click="resetFedProducts()" >Reset</a>
+	</div>
+</div>

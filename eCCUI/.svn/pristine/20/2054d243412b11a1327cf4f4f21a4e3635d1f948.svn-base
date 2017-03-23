@@ -1,0 +1,356 @@
+eccApp.controller('bundleCatMasterProgramListCtrl',['$scope', '$http', '$timeout', 'webStorage','$routeParams', '$window','dialog',
+  function ($scope, $http, $timeout, webStorage, $routeParams, $window,dialog) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.dataLoad=false;
+	$scope.form = {};
+	$scope.addDataToTable = [];
+	$scope.programKey = '';
+	$scope.programName = $routeParams.programName;
+	$scope.calledFrom=$routeParams.calledFrom;
+	$scope.masterCatalogKey=$routeParams.masterCatalogKey;
+	$scope.task=$routeParams.task;
+	$scope.programList = [];
+	$scope.roleId = '';
+		
+	$scope.grid = {
+    		header: ["Product / Bundle", "Bundle Flag", "Customer Part ID", "Start Date", "End Date", "Validate", "Short Description"],
+    		data: $scope.addDataToTable,
+    		sort: [[1, "asc"]],
+    		colDefs: [
+    		          { "sClass": "left", "aTargets": [0,1,2,3,4,5,6,7] },
+    		          { "bSortable": false, "aTargets": [0] }
+    		         ],
+    	    colViewBy: { 
+    	        "buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    	        "bShowAll": true,
+    	        "sShowAll": "Show All",
+    	        "sAlign": "left"
+    	    },
+			colName:"DeleteAll"
+    };
+	
+	$scope.loadMcatProgramList = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Bundle Catalog Master Program List Task\"");
+		
+		if( $scope.isUndefinedOrNull($routeParams.programKey) )
+		{
+			$scope.programKey = $routeParams.programKey;
+		}
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.roleId = webStorage.local.get('userRoleId');
+		 $http({
+				url: 'bundle/bundleCatMasterProgramList.htm?calledFrom='+$scope.calledFrom+'&task='+$scope.task+'&programKey='+$scope.programKey+'&programName='+$scope.programName+"&masterCatalogKey="+$routeParams.masterCatalogKey,
+				method:"GET",
+				data : {
+					
+				},
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+         },
+			 }).
+		success(function(data,status,header,config) {
+			 $scope.masterList=data.MasterCatList;
+			 $scope.programList=data.ProgramsList;
+			 
+			 if($scope.isUndefinedOrNull($scope.masterCatalogKey)){
+				 $scope.selMCAT= $scope.masterCatalogKey;
+			 }
+			 else{
+				 $scope.selMCAT=$scope.masterList[0].cat_catalog_id;
+			 }
+			 
+			 if($scope.isUndefinedOrNull($scope.programKey) && $scope.programKey != ''){
+				 $scope.selProgram= parseInt($scope.programKey);
+			 }
+			 else{
+				 $scope.selProgram=$scope.programList[0].pgm_key;
+			 }
+			 			
+			 
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in BundleCatMasterProgram List Service');
+		  });
+		
+	};
+	
+	$scope.searchProd = function(){		
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		var pgmKey = $scope.selProgram;
+		if(pgmKey==undefined){
+			pgmKey="";
+		}
+		var catId = $scope.selMCAT;
+		if(catId==undefined){
+			catId="";
+		}
+		$scope.roleId = webStorage.local.get('userRoleId');
+		 $http({
+				url: "bundle/searchMasterProgramList.htm?calledFrom=program&task=search"+"&programKey="+pgmKey+"&masterCatalogKey="+catId+'&programName='+$scope.programName,
+				method:"GET",
+				data : {
+					
+				},
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+      },
+			 }).
+		 success(function(data,status,header,config) {
+			 var index=1;
+			 $scope.hideMsg();
+			 $('#checkAllDelete').attr("checked",false);
+			 
+			 $scope.addDataToTable.length=0;
+			 $scope.productList=data.BundleList;
+			 
+			 angular.forEach($scope.productList, function(item){
+						$scope.addDataToTable.push([
+		        	    '<input value = "'+item.cit_item_key+'" type="checkbox" name="ck" class="deleteProd" id="ck'+index+'">',
+		        	    "<a onClick=angular.element(document.getElementById('bndlCatMcatPgmList')).scope().getProductDetail('"+item.cat_catalog_id+"','"+item.cit_item_key+"','"+item.cpd_price_descriptor+"','"+item.cit_src_prod+"','"+item.cit_bundle_flag+"')>"+item.cit_src_prod+"</a>",
+		        	    item.cit_bundle_flag,
+		        	    item.cbd_cust_part_id,
+		        	    item.cbd_start_date,
+		        	    item.cbd_end_date,
+		        	    item.cop_valid_status,
+		        	    item.short_desc
+				 	]); 
+				 	index++;
+				});
+			  
+			  if ($scope.addDataToTable.length >0){
+				  $scope.dataLoad = true;
+				  $('#ecc_hpegrid1').dataTable().fnClearTable();
+	              $('#ecc_hpegrid1').dataTable().fnAddData($scope.addDataToTable);
+			  }
+		      else{
+		    	  $scope.hideMsg();
+		    	  $scope.showMsg('No products were found matching the search criteria', '');
+			  }
+			 			 
+			 $scope.checkBoxFunctionality();		       				
+		
+		 	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			$scope.hideMsg();
+			$scope.showMsg('','Error in Search BundleCatMasterProgramList Service');
+	  	});					
+	};
+	
+	
+	$scope.chkAllBoxes = function(){
+		if(document.getElementById("selectAll").checked == true){
+			 angular.forEach($scope.form.fBundleTemplateList, function(bundle){	
+					 if(document.getElementById(bundle.fBundleTemplateID) != null){
+						 bundle.chkflag = true;
+						 document.getElementById(bundle.fBundleTemplateID).checked = true;
+						 
+					 }	
+			 });
+		}else{
+			 angular.forEach($scope.form.fBundleTemplateList, function(bundle){	
+					 if(document.getElementById(bundle.fBundleTemplateID) != null){
+						 bundle.chkflag = false;
+						 document.getElementById(bundle.fBundleTemplateID).checked = false;
+						 
+					 }	
+			 });
+		}
+	};
+	
+	$scope.getProductDetail = function(catalogId, pId,pDesc,srcProd,bundlFlag){
+		webStorage.session.add('PrevPage', '#/BundleCatMasterProgramList');  		
+		var priceProfile =  '-1';
+ 		if ( bundlFlag == 'S'){ 	
+ 			//Edit Product Page
+ 			document.location.href='#/EditProduct?masterID='+catalogId+'&pID='+encodeURIComponent(pId)+'&pd='+pDesc+'&baseModel='+encodeURIComponent(srcProd);
+ 		}
+ 		else if(bundlFlag == 'B'){
+ 			//Bundle Details page
+ 			document.location.href='#/BundleViewTemplate?bundleID='+encodeURIComponent(srcProd)+'&templateFlag=false&task=onLoad&priceProfile='+priceProfile+'&priceDescriptor='+pDesc+'&catalogId='+catalogId;
+ 		}
+ 		else{
+ 			//Product Detail page
+ 			document.location.href='#/ManualProductDetail?ProductId='+encodeURIComponent(prodId);
+ 		}
+	};
+	
+	
+	 $scope.condtionalAlert = function (prodIds) {
+		 
+		 var pgmKey = $scope.selProgram;
+			if(pgmKey==undefined){
+				pgmKey="";
+			}
+			var catId = $scope.selMCAT;
+			if(catId==undefined){
+				catId="";
+			}
+			$scope.roleId = webStorage.local.get('userRoleId');
+	       
+         $http({
+				url: 'bundle/deleteMcatPrograms.htm?prodIds='+encodeURIComponent(prodIds.toString())+'&calledFrom=program&task=delete'+'&programKey='+pgmKey+'&masterCatalogKey='+catId,
+				method:"POST",
+				data : {
+					
+				},
+			headers: {
+             "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+         },
+			 }).success(function(data,status,header,config) {
+				 if(data.successMsg != undefined){
+					 $scope.hideMsg();
+					 $scope.showMsg(data.successMsg,'');
+				 }
+				 if (data.errorMsg != undefined){
+					 $scope.hideMsg();
+					 $scope.showMsg(data.errorMsg,'');
+				 }
+				 var index=1;
+				 $('#checkAllDelete').attr("checked",false);
+				 $scope.addDataToTable.length=0;
+				 $scope.productList=data.BundleList;
+				 
+				 angular.forEach($scope.productList, function(item){
+							$scope.addDataToTable.push([
+			        	    '<input value = "'+item.cit_item_key+'" type="checkbox" name="ck" class="deleteProd" id="ck'+index+'">',
+			        	    "<a onClick=angular.element(document.getElementById('bndlCatMcatPgmList')).scope().getProductDetail('"+item.cat_catalog_id+"','"+item.cit_item_key+"','"+item.cpd_price_descriptor+"','"+item.cit_src_prod+"','"+item.cit_bundle_flag+"')>"+item.cit_src_prod+"</a>",
+			        	    item.cit_bundle_flag,
+			        	    item.cbd_cust_part_id,
+			        	    item.cbd_start_date,
+			        	    item.cbd_end_date,
+			        	    item.cop_valid_status,
+			        	    item.short_desc
+					 	]); 
+					 	index++;
+					});
+				  
+				  if ($scope.addDataToTable.length >0){
+					  $scope.dataLoad = true;
+					  $('#ecc_hpegrid1').dataTable().fnClearTable();
+		              $('#ecc_hpegrid1').dataTable().fnAddData($scope.addDataToTable);
+				  }
+			      else{
+			    	  //$scope.hideMsg();
+			    	  //$scope.showMsg('','No products were found matching the search criteria');
+				  }
+									 
+				 $scope.checkBoxFunctionality();
+			       				
+				 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			});
+	    };
+	
+	
+	$scope.deleteProds = function(){
+		var arr = [];
+		
+		if($('.deleteProd:checked').length) {
+	          var chkId = '';
+	          var prodIds = '';
+	          $('.deleteProd:checked').each(function() {
+	            chkId += $(this).val() + ",";
+	          });
+	          chkId =  chkId.slice(0,-1);
+	          arr = chkId.split(",");
+	          prodIds = arr;
+	          
+	          dialog.show({
+		            template: '<div class="hpe-main-content" title="Are you sure you want to delete?">' +
+		                          '<span> Are you sure you want to delete?</span>' + 
+		                          '<br>' +
+		                          '<a class="btn btn-inline"   ng-click="close(true)" ><span>Yes</span></a>' +
+		                          '<a class="btn btn-inline"   ng-click="close(false)"><span>No</span></a>' +
+		                      '</div>',
+		            controller: 'bundleCatMasterProgramListCtrl',
+		            width: 600,
+		            param: $scope,
+		            draggable: true,
+		            title:'Warning'
+		        }).then(function (result) {
+		            if(result == true) {
+		            	$scope.condtionalAlert(prodIds);
+		            	$scope.scrollToMessage();
+		            }
+		           
+		        });
+	          
+
+	        }
+	        else {
+	        	 $scope.hideMsg();
+	        	 $scope.scrollToMessage();
+				 $scope.showMsg("Please select at least one Product to delete!","");
+	        }
+	};
+	
+	$scope.checkBoxFunctionality = function(){
+		$('#checkAllDelete').click(function(e){
+			var x = document.getElementsByClassName("deleteProd");
+			var i;
+			for (i = 0; i < x.length; i++) {
+			    if(x[i].disabled != true){
+			    	x[i].checked =this.checked;
+			    }
+			}
+	 	});
+		
+	};
+	
+	$scope.chkAllBoxes = function(){
+		var x = document.getElementsByClassName("deleteProd");
+		var i;
+		if(document.getElementById("selectAll").checked == true){
+			for (i = 0; i < x.length; i++) {
+			    if(x[i].disabled != true){
+			    	x[i].checked =true;
+			    }
+			}
+		}else{
+			for (i = 0; i < x.length; i++) {
+			    if(x[i].disabled != true){
+			    	x[i].checked =false;
+			    }
+			}
+		}
+	};
+	
+	$scope.cancel=function(){
+		document.location.href=webStorage.session.get('PrevPage');		
+	};
+	
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	
+	$scope.showMsg=function(success, error){
+		$window.scrollTo(0,0);
+		$scope.successMessage=success;
+		$scope.errorMessage=error;
+	};
+		
+	$scope.hideMsg=function(){
+	   	$scope.successMessage='';
+	   	$scope.errorMessage='';
+	};
+	
+	 $scope.isUndefinedOrNull = function(value){
+		 return !(angular.isUndefined(value) || value === null);
+	 }; 
+	
+}]);

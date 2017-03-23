@@ -1,0 +1,166 @@
+package com.hp.ecc.ui.biz.misc;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.Iterator;
+import java.util.List;
+
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.common.util.CTX;
+
+/**
+ * @author
+ * @version 1.0
+ * 
+ */
+
+public class GlobalCustPDMgr {
+
+	private final String glquery_group = "globalpricedescp";
+	private final String glquery_prcdescplist = "custPDList";
+	private final String glquery_dealprcdescplist = "dealPDList";
+	private final String glquery_exception_dealprcdescplist = "dealExcepPDList";
+	private final String glquery_dealobprcdescplist = "dealOBPDList";
+
+	// protected Category log = null;
+	/**
+	 * Create the GlobalCustPDMgr instance
+	 */
+	static public GlobalCustPDMgr getGlobalCustPDMgr() {
+		GlobalCustPDMgr mgr = new GlobalCustPDMgr();
+		return mgr;
+	}
+
+	protected GlobalCustPDMgr() {
+		CTX ctx = CTX.getCTX();
+		// log = ctx.getLog ( "GlobalCustPD Manager" ); //needed in actual code
+
+	}
+
+	public List getGlCustPDList(String custkey, String adbRegionToConnect) {
+
+		// set the region code in bean
+		GlCustPDBean pdBean = new GlCustPDBean();
+		pdBean.setCustKey(custkey);
+
+		// log.debug ( "!!!!!CustKey" + pdBean.getCustKey () );
+		// get DaxMgr singleton
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		// make the parsed statement, si and pg are SortInfo and Pagination
+		DaxParsedStmt pstmt = mgr.makeParsedStmt(glquery_group,
+				glquery_prcdescplist, pdBean, null, null);
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, null, pdBean);
+
+		return list;
+	}
+
+	/**
+	 * Returns the exception pd list for AP & LATIN america deals. The exception
+	 * process applicable only to the deals received from ASIAPAC & LATIN. The
+	 * Eclipse and Vista deals will be excluded.
+	 */
+	public List getExceptionPDList(String dealIDs[], String adbRegionToConnect) {
+		GlCustPDBean pdBean = new GlCustPDBean();
+		pdBean.setDealIDs(dealIDs);
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = mgr.makeParsedStmt(glquery_group,
+				glquery_exception_dealprcdescplist, pdBean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, PriceDescriptor.class, pdBean);
+		return list;
+	}
+
+	// FOR 4.1
+	public List getGlCustOBPDList(String custkey, String priceDesc, String adbRegionToConnect) {
+		// set the region code in bean
+		GlCustPDBean pdBean = new GlCustPDBean();
+		pdBean.setCustKey(custkey);
+		pdBean.setPriceDescp(priceDesc);
+
+		// log.debug ( "!!!!!CustKey" + pdBean.getCustKey () );
+		// log.debug ( "!!!!!Price Desc" + pdBean.getPriceDescp () );
+
+		// get DaxMgr singleton
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		// make the parsed statement, si and pg are SortInfo and Pagination
+		DaxParsedStmt pstmt = mgr.makeParsedStmt(glquery_group, "custOBPDList",
+				pdBean, null, null);
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, null, pdBean);
+
+		return list;
+	}
+
+	// END 4.1
+
+	// For CQ6 changes in 4.2
+
+	public List getGlDealPDList(String dealIDs[], String adbRegionToConnect) {
+		GlCustPDBean pdBean = new GlCustPDBean();
+		pdBean.setDealIDs(dealIDs);
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = mgr.makeParsedStmt(glquery_group,
+				glquery_dealprcdescplist, pdBean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, PriceDescriptor.class, pdBean);
+		return list;
+	}
+
+	public List getGlDealOBPDList(String priceDescriptor, String dealIDs[], String adbRegionToConnect) {
+		GlCustPDBean pdBean = new GlCustPDBean();
+		pdBean.setPriceDescp(priceDescriptor);
+		pdBean.setDealIDs(dealIDs);
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = mgr.makeParsedStmt(glquery_group,
+				glquery_dealobprcdescplist, pdBean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, PriceDescriptor.class, pdBean);
+		return list;
+	}
+
+	// End CQ6 changes in 4.2
+
+	/**
+	 * To get the price desciptors for a given country code and customer
+	 * 
+	 */
+	public List getPDForCustomerAndCntryCode(Customer customer, String adbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxParsedStmt stmt = null;
+		stmt = daxMgr.makeParsedStmt("customer", "getPDForCustomerDeals",
+				customer, null, null);
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		List PDList = daxDB.doSelect(stmt, PriceDescriptor.class, null);
+
+		return PDList;
+
+	}
+
+	public static void main(String[] args) {
+
+		GlobalCustPDMgr mgr = GlobalCustPDMgr.getGlobalCustPDMgr();
+
+		List list = mgr.getGlCustPDList("CUST00100218-CUST00100218", "default");
+		Iterator itr = list.iterator();
+		if (itr != null) {
+			System.out.println("Itr is not null");
+		} else {
+			System.out.println("Itr is null ");
+		}
+		while (itr.hasNext()) {
+			GlCustPDBean pdBean = (GlCustPDBean) itr.next();
+			System.out.println("PD " + pdBean.getPriceDescp());
+
+		}
+
+	}
+}

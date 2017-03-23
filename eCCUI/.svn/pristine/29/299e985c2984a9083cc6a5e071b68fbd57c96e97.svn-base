@@ -1,0 +1,55 @@
+package com.hp.ecc.ui.biz.publish;
+
+/**
+ * Represent an AutoUpload (Ariba) target.
+ * 
+ * @version 1.0
+ */
+
+public class AutoUploadTarget extends FtpTarget {
+
+	public AutoUploadTarget() {
+		super();
+	}
+
+	public AutoUploadTarget(Target t) {
+		super(t);
+	}
+
+	// NetworkId
+	public void setNetworkId(java.lang.String networkId) {
+		super.setNetworkId(networkId);
+	}
+
+	public java.lang.String getNetworkId() {
+		return super.getNetworkId();
+	}
+
+	// AccountId
+	public void setAccountId(java.lang.String accountId) {
+		super.setAccountId(accountId);
+	}
+
+	public java.lang.String getAccountId() {
+		return super.getAccountId();
+	}
+
+	// ShareSecret
+	public void setShareSecret(java.lang.String shareSecret) {
+		super.setShareSecret(shareSecret);
+	}
+
+	public java.lang.String getShareSecret() {
+		return super.getShareSecret();
+	}
+
+	// UploadUrl
+	public void setUploadUrl(java.lang.String uploadUrl) {
+		super.setUploadUrl(uploadUrl);
+	}
+
+	public java.lang.String getUploadUrl() {
+		return super.getUploadUrl();
+	}
+
+}

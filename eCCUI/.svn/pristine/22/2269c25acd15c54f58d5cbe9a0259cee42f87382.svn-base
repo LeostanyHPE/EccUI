@@ -1,0 +1,74 @@
+<div class="row" ng-controller="eclipseSearchAndAddCtrl" ng-init="eclipseSearchAndAdd()">
+    <div class="alert success" ng-show="successMessage!=''" id="successMsg">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''" id="errorMsg"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">				
+			<div class="label-unit">
+				<span>Search And Add Eclipse Soft Bundle Or Components</span>
+			</div>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+	        <div class="six columns">
+	           <div class="generals">
+	                <span>Customer Name:</span>
+	                 <div class="div_input" ng-bind="form.custName"></div>
+	           </div></div>
+	         <div class="six columns">	
+	            <div class="generals">
+	                <span>Customer ID:</span>
+	                 <div class="div_input" ng-bind="form.custId"></div>
+	            </div>
+	                      		             	             
+	        </div>	</div> 	
+		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>	 	  
+	  	<div class="customer_rows">   	              
+	        <div class="six columns">
+	           <div class="generals">
+	                <span>Eclipse Bundle Id:</span>	               	                
+	                <input type="text" ng-model="eclipseBundleId"></input>
+	           </div></div>
+	           <div class="six columns">	
+	            <div class="generals">
+	                <span>Contains Bundle Component:</span>
+	                 <input type="text" ng-model="eclipseBundleComponent"></input>
+	            </div>          	
+	        </div>	         
+		</div>
+		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>		     
+	  	<div class="customer_rows">
+	  	<div class="tweleve columns">
+	  		<div class="editable-button-box">
+		        <a class="btn btn-inline"  style="margin-top: -25px;" ng-click="search()"><span id="Search">Search</span></a> 
+		        <a class="btn btn-inline"  style="margin-top: -25px;" ng-click="cancel()"><span id="Cancel">Cancel</span></a>		         
+	  		</div>
+	  		</div>
+	  	</div>
+	</div>
+	<div class="customer_rows">
+	  	<div class="tweleve columns">
+	  		<div class="editable-button-box">
+		        <a class="btn btn-inline"  style="margin-top: -25px;" ng-click="add(searchListTrans)"><span id="Add">Add</span></a> 
+		        <a class="btn btn-inline"  style="margin-top: -25px;" ng-click="cancel()"><span id="Done">Done</span></a>		         
+	  		</div>
+	  		</div>
+	  	</div>
+	<div class="customer_rows">
+	  	<div class="tweleve columns">
+		  	<div class="generals" style="margin-top: 10px;" ng-repeat="bundle in searchListTrans">
+				<input class="form-chk" type="checkbox" ng-model="bundle.bundleChangeFlag" ng-change="bundleChange(bundle)">
+				<span style="float: none;">Eclipse Bundle Id : {{bundle.configId}} Bundle description :"{{bundle.bundleDesc}}" Deal Id : {{bundle.dealId}} Currency : {{bundle.bigDealCurrency}}</span>
+					<div class="generals" style="margin-top: 10px;margin-left: 30px;" ng-repeat="product in bundle.children">
+	  					<input class="form-chk" type="checkbox" ng-model="product.productChangeFlag"  ng-change="productChange(product)">
+	  						<span style="float: none; font-weight: normal;">Product : {{product.prod}} Short Description : "{{product.shortDesc}}" Deal Price : {{product.bigDealPrice}} Base Product : {{product.baseProdflag}}</span>
+		</div>
+		</div>
+	</div>
+	</div>
+</div>
+						

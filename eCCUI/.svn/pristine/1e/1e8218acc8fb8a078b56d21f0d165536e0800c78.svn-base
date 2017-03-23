@@ -1,0 +1,200 @@
+<div class="row"  ng-controller="EditCatalogCrtl" ng-init=initLoad();>
+	<div id="messageDiv"></div>
+   	<div id="successMess" class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div id="errorMess" class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline">				
+			<span>Catalog Information</span>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+  			<div class="four columns">
+	           <div class="generals">
+	                <span>Customer Name:</span>
+	                <div id="CustomerName"  class="div_input" maxlength="60" ng-bind="form.fCustomerName"></div>
+	           </div>
+	           <div class="generals">
+	               <span>Customer DUNS:</span>
+	               <div id="CustomerDUN" class="div_input"  ng-bind="form.fDUN"></div>
+	           </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	              <span> Customer ID:</span>
+	              <div id="CustomerID"  class="div_input"  ng-bind="custDetails.cust_id"></div>
+	           </div>
+	           <div class="generals">
+	               <span>Supplier ID/DUNs:</span>
+	               <div  class="div_input" ng-bind="form.fSupplierID" ></div>
+	            </div>
+	            <div class="generals" ng-show="form.sogId">
+	               <span> SOG ID:</span>
+	               <div  class="div_input" ng-bind="form.sogId" ng-show="form.sogId"></div>
+	           </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	              <span>EPrime Customer ID:</span>
+	              <div id="EPrimeCustomerID"  class="div_input"  ng-bind="custDetails.cust_key"></div>
+	           </div>
+	           <div class="generals">
+	              <span>EPrime Customer Type:</span>
+	              <div id="EPrimeCustomerType"  class="div_input"  ng-bind="custDetails.eprime_cust_type"></div>
+	           </div>
+	           <div class="generals" >
+	              <span> Language:</span>
+	              <div  class="div_input"  ng-bind="form.fLanguage"></div>
+	           </div>
+	        </div>
+  		</div>
+  		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	  		<div class="four columns">
+	        	<div class="generals">
+	              <span> Catalog Name:</span>
+	              <input type="text" maxlength="60" ng-model="form.fCatalogName"></input>
+	           </div>
+	           <div class="generals">
+	               <span>Language:</span>
+	               <div  class="div_input"  ng-bind="form.fLanguage"></div>
+	           </div>
+	           
+	            <div class="generals" ng-show="fedCust==true">
+	              <span>Mod Date:</span>
+	              <input type="text" class="calmodDate"  ng-model="fModDate" />
+	           </div> 
+	           
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	               <span>Catalog Scope:</span>
+	                <select ng-model="form.fCatalogScope" ng-options="item.id as item.value for item in catScopeList"></select>
+	            </div>
+	            <div class="generals">
+	               <span>Status:</span>
+	               <select ng-model="form.fStatus" ng-options="item as item for item in statusList">
+	               <option value="" />
+	               </select>
+	            </div>
+	            
+	             <div class="generals" ng-show="fedCust==true || gsaCust==true ">
+	              <span>Mod Number:</span>
+	              <input type="text" class="" value="" ng-model="form.fModNumber"></input>
+	            </div> 
+	            
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	             <span>Category:</span>
+	  		 	 <select ng-model="form.fCategoryType"  ng-options="option.id as finalCategory(option) for option in categoryList" ng-disabled="form.isTiedToPriceTier=='Y'"></select>
+	            </div>
+	            <div class="generals">
+	               <span>Catalog Format:</span>
+	                <select ng-model="form.fCatalogFormat" disabled ng-options="option.cat_format_key as option.cat_format_name for option in formatList"></select>
+	            </div>
+	             <div class="generals" style="margin-top: 15px;">
+	        		<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" type="checkbox" ng-model="form.fB2biCustFlag" />
+	    			<span style="float: none;"> B2Bi Customer</span>
+	            </div>
+	        </div>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	  		<div class="four columns">
+	           <div class="generals">
+	               <span>UNSPSC Version:</span>
+	              <select id="select-dropdown" ng-model="form.fUnspscType" ng-disabled="!form.fB2biCustFlag" ng-options="item.value as item.value for item in unspscVersion">
+	  		 	 </select>
+	            </div>
+	            <div class="generals">
+	              <span> ePrime price descriptor:</span>
+	              <input type="text" name="emailWarnings"  maxlength="7" ng-model="form.eprimePriceDescriptor" ng-disabled="form.isTiedToPriceTier=='Y'">
+	            </div>
+	            <div class="generals">
+	              <span> Catalog Expiry Day:</span>
+	              <input type="text" class="expiryDate" name="expiryDate" ng-model="formattedExpiryDate">
+	            </div>
+	            
+	            <div class="generals">
+	              <span> MDCP ORG ID:</span>
+	              <div  class="div_input"  ng-bind="form.mdcpOrgId"></div>
+	            </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	               <span>Terms and Conditions:</span>
+	               <input type="text" class="" value="" maxlength="80" ng-model="form.fTermsAndCondition"></input>
+	            </div>
+	            <div class="generals">
+	               <span>Account Code:</span>
+	               <input type="text" class="" value="" ng-model="form.fBorgID" ng-disabled=form.fCatalogFormat!=12></input>
+	            </div>
+	            <div class="generals">
+	               <span>Freight Zone Descriptor:</span>
+	               <select id="select-dropdown" ng-model="form.zonePriceDescriptor" ng-disabled="!form.applyFreightCharge" ng-options="item.price_descriptor as item.price_descriptor for item in getZonesJsonArray">
+	  		 	 </select>
+	            </div>
+	        </div>
+	        <div class="four columns" style="margin-left: -30px;">
+	        	<div class="generals" style="margin-top: 10px;">
+
+	    			<input class="form-chk" type="checkbox" name="emailWarnings" ng-model="form.fEmailWarnings">
+	    			<span style="float: none;">Email Warnings</span>
+                </div>
+                <div class="generals" style="margin-top: 15px;">
+	    			<input class="form-chk" type="checkbox" ng-checked="catalogData.cpd_charge_flag == 'Y'" ng-model="form.applyFreightCharge" ng-disabled="form.isTiedToPriceTier=='Y'">
+	    			<span style="float: none;">Apply freight charge</span>
+                </div>
+                <div class="generals" style="margin-top: 15px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.crossSellExcluded" name="emailWarnings">
+	    			<span style="float: none;">Exclude Cross Sell Products</span>
+                </div>
+                <div class="generals" style="margin-top: 15px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fEnableApproval"/>
+	    			<span style="float: none;">Approval Enable</span>  
+                </div>
+	        </div>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<div class="four columns">
+	            <div class="generals">
+	         		<span>Standard Filter Names:</span>
+	         		<div id="StandardFilterNames"  class="div_input" maxlength="60" ng-repeat="stdName in stdNames">{{stdName.filter_name}}</div>
+	         		
+	         	</div>
+	         </div>
+	        <div class="four columns">
+	         	<div class="generals">
+         		 	<span>Program Names:</span>
+         		 	<div id="ProgramNames"  class="div_input" maxlength="60" ng-repeat="pkName in pkNames">{{pkName.filter_name}}</div>         		 	
+         	</div>
+         	</div>
+         </div>
+         
+         	<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  		</div>
+	    	<div class="customer_rows">
+	    		<div class="four columns">
+		    		<div class="generals">
+		                <span style="margin-top: 15px;">Comment</span>
+		                <textarea ng-model="form.fComments" rows="6" cols="1" maxlength="50" style="margin-top: 15px;"> </textarea>
+		           	</div>
+	    		</div>
+	    	</div>
+	    	<div class="search">
+	         <div class="generals">
+	             <a class="btn btn-inline"  style="margin: 10px 0px 0px 0px;" ng-show="form.fIsSubCatalogStatusEnabled =='true' && roleId != 2" ng-click="SaveEditCatalog()">Save</a>
+	             <a class="btn btn-inline"  style="margin: 10px 0px 0px 0px;" ng-click="cancelEditChildCatalog()">Cancel</a>
+	         </div>
+	     </div>  
+  	</div>
+</div>

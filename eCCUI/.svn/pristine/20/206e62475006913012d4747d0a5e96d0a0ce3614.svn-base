@@ -1,0 +1,185 @@
+package com.hp.ecc.ui.biz.catalog;
+
+
+import java.util.List;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+
+
+/**
+ * <p>Title: CatalogProgram</p>
+ * <p>Description: BizObject for CatalogProgram </p>
+ * <p>Copyright: Copyright (c) 2002</p>
+ * <p>Company: Hewlett Packard</p>
+ * @author RAMA RAO
+ * @version 1.0
+ */
+
+/************************************************************************************
+ Change History:
+ DATE           CHANGED-BY                  COMMENTS
+ 01-20-03       RAMA RAO                    Created first time.
+ ***********************************************************************************/
+
+public class CatalogProgram extends BizObject {
+
+  public int fpgmKey = 0;
+  public String fcatMasterKey = "";
+  public String fcpmSvcProviderEmails = "";
+  public int fsla = 0;
+  public String fffsId = "";
+  public String ftxCurrencyCode = "";
+  public String ftxCurrencyDesc = "";
+  public String fffsName = "";
+  public String fpgmName = "";
+  public List fcatMasterKeyList = null;
+  public List fffsList = null;
+  public List fTrnCurrList = null;
+  public String fcustKey = "";
+  public String retMsg = "";
+  public int retCode = 0;
+
+  public CatalogProgram () {
+    super ();
+  }
+
+  //Get/set Program Key
+  public void setProgramKey ( int pgm_key ) {
+    fpgmKey = pgm_key;
+  }
+
+  public int getProgramKey () {
+    return fpgmKey;
+  }
+
+  //Get/set Program Name
+  public void setProgramName ( String pgm_name ) {
+    fpgmName = pgm_name;
+  }
+
+  public String getProgramName () {
+    return fpgmName;
+  }
+
+  //Get/set CAT MASTER KEY
+  public void setCatMasterKey ( String cat_master_key ) {
+    fcatMasterKey = cat_master_key;
+  }
+
+  public String getCatMasterKey () {
+    return fcatMasterKey;
+  }
+
+  //Get/set SLA
+  public void setSla ( int sla ) {
+    fsla = sla;
+  }
+
+  public int getSla () {
+    return fsla;
+  }
+
+  //Get/set FFS ID
+  public void setFfsId ( String ffs_id ) {
+    fffsId = ffs_id;
+  }
+
+  public String getFfsId () {
+    return fffsId;
+  }
+
+  //Get/set FFS Name
+  public void setFfsName ( String ffs_name ) {
+    fffsName = ffs_name;
+  }
+
+  public String getFfsName () {
+    return fffsName;
+  }
+
+  //Get/set TX Currency Code
+  public void setTxCurrencyCode ( String tx_curr_code ) {
+    ftxCurrencyCode = tx_curr_code;
+  }
+
+  public String getTxCurrencyCode () {
+    return ftxCurrencyCode;
+  }
+
+  //Get/set TX Currency Description
+  public void setTxCurrencyDesc ( String tx_curr_desc ) {
+    ftxCurrencyDesc = tx_curr_desc;
+  }
+
+  public String getTxCurrencyDesc () {
+    return ftxCurrencyDesc;
+  }
+
+
+  //Get/set CPM SVC Provider Emails
+  public void setCpmSvcProviderEmails ( String emails ) {
+    fcpmSvcProviderEmails = emails;
+  }
+
+  public String getCpmSvcProviderEmails () {
+    return fcpmSvcProviderEmails;
+  }
+
+
+  //Get/set CatMasterKeyList
+  public void setCatMasterKeyList ( List catMasterKeyLst ) {
+    fcatMasterKeyList = catMasterKeyLst;
+  }
+
+  public List getCatMasterKeyList () {
+    return fcatMasterKeyList;
+  }
+
+  //Get/set CatMasterKeyList
+  public void setFfsList ( List ffs_list ) {
+    fffsList = ffs_list;
+  }
+
+  public List getFfsList () {
+    return fffsList;
+  }
+
+
+  //Get/set CustKey
+  public void setCustKey ( String cust_key ) {
+    fcustKey = cust_key;
+  }
+
+  public String getCustKey () {
+    return fcustKey;
+  }
+
+  //Get/set CustKey
+  public void setTxCurrList ( List trnCurrList ) {
+    fTrnCurrList = trnCurrList;
+  }
+
+  public List getTxCurrList () {
+    return fTrnCurrList;
+  }
+
+  //Get/set CustKey
+  public void setRetCode ( int ret_code ) {
+    retCode = ret_code;
+  }
+
+  public int getRetCode () {
+    return retCode;
+  }
+
+  //Get/set CustKey
+  public void setRetMsg ( String ret_msg ) {
+    retMsg = ret_msg;
+  }
+
+  public String getRetMsg () {
+    return retMsg;
+  }
+
+}
+

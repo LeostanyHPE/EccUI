@@ -1,0 +1,733 @@
+eccApp.controller('catalogMasterListCtrl',['$scope', '$location', '$http', '$timeout','shareddata','webStorage','dialog',
+  function ($scope, $location, $http, $timeout,shareddata,webStorage,dialog) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.checkingCatalogTable = false;
+	$scope.userRegion = "";
+	
+	$scope.roleId = webStorage.local.get('userRoleId');
+	$scope.listOfMasterCatalog = [];
+	$scope.shareddata=shareddata;
+	$scope.selectCustomer = [];
+	$scope.catalogMasterListGridDiv_super = false;
+	$scope.catalogMasterListGridDiv       = false;
+	$scope.search_result_super            = false;
+	$scope.search_result_US_super         = false;
+	$scope.search_result_US               = false;
+	$scope.search_result                  = false;
+	$scope.isCreateMasterEnabled          = false;
+	$scope.multipleMessage = '';
+	
+	$scope.init = function() {
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Master Catalog List Task\"");
+
+		$scope.selectCustomer = webStorage.local.get('selCustData');
+		$("#showMultipleMessages").css("display","none");
+		$scope.multipleMessage = '';
+		
+		if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+			$location.path("/SelectCustomer").search({redirect: "page"});
+		}else{
+			$("#customerName").html($scope.selectCustomer.cust_name);
+			$("#customerId").html($scope.selectCustomer.cust_id);
+			$("#customerDun").html($scope.selectCustomer.cust_dun);
+			$("#customerType").html($scope.selectCustomer.cust_type);
+			$("#eprimeCustomerId").html($scope.selectCustomer.cust_key);
+			$("#eprimeCustomerType").html($scope.selectCustomer.eprime_cust_type);
+			$scope.loadTableWhilePageLoads("abc");
+	    	$(".accordion section:last-child").css({"border-bottom-width": 1,"border-bottom-color": '#CCCCCC',"border-bottom-style": 'solid'}) ;
+			
+		}		
+
+	};
+	$scope.loadTableWhilePageLoads = function(custId){
+		$scope.catalogMasterListGridDiv       = false;
+		$scope.checkBoxFunctionality();
+		$scope.loadTime = new Date().getTime();
+
+		 	$http({
+					url: 'mastercatalog/listMasterCatalogs.htm',
+					method:"GET",
+					headers: {
+	                    "Accept": "application/json; charset=utf-8",
+						"Cache-Control" : "no-cache",
+						"Pragma" : "no-cache",
+						"If-Modified-Since" : "0"
+	                },
+					data : {
+						"menu": "process"
+					}
+				 }).success(function(data,status,header,config) {
+					
+					 if( webStorage.session.get('BundleExportAfterRunMessage')){
+							$scope.showMsg(webStorage.session.get('BundleExportAfterRunMessage'),'');
+							webStorage.session.remove('BundleExportAfterRunMessage');
+						}	
+					 
+					 if((webStorage.session.get('BundleExportAfterRunMessageArray') != undefined && webStorage.session.get('BundleExportAfterRunMessageArray') != "") ||
+							 (webStorage.session.get('BundleExportAfterRunErrMessageArray') != undefined && webStorage.session.get('BundleExportAfterRunErrMessageArray') != ""))
+					 {
+						 $scope.multipleMessage = webStorage.session.get('BundleExportAfterRunMessageArray');
+						 var dataToShowInUI = "";
+						 if($scope.multipleMessage.length != 0)
+						 {
+								for(var hk8 = 0; hk8 < $scope.multipleMessage.length; hk8++)
+								{
+									dataToShowInUI = dataToShowInUI + '<span class="alert success">'+$scope.multipleMessage[hk8]+'</span> <br/><br/><br/>';
+								}
+						}
+						 
+						$scope.multipleMessage = ''; 
+						$scope.multipleMessage = webStorage.session.get('BundleExportAfterRunErrMessageArray');
+						if($scope.multipleMessage.length != 0)
+						{
+								for(var hk8 = 0; hk8 < $scope.multipleMessage.length; hk8++)
+								{
+									dataToShowInUI = dataToShowInUI + '<span class="alert error">'+$scope.multipleMessage[hk8]+'</span> <br/><br/><br/>';
+								}
+						}
+						 
+						 $("#showMultipleMessages").html(dataToShowInUI);
+						 $("#showMultipleMessages").css("display","block");
+						 webStorage.session.remove('BundleExportAfterRunMessageArray');
+						 webStorage.session.remove('BundleExportAfterRunErrMessageArray');
+					 }
+					 
+					 $scope.isCreateMasterEnabled  = data.isCreateMasterEnabled;
+					 /**/
+					 $scope.roleID = webStorage.local.get('userRoleId');
+					 if ( $scope.roleID == 12 )
+					 {
+						 $scope.catalogMasterListGridDiv       = false;
+						 $scope.catalogMasterListGridDiv_super = true;
+						 $("#masterListButtons").css({"display":'none'});
+						 $scope.userRegion	= webStorage.local.get('userRegion');
+						 if($scope.userRegion == "US"){
+						  		$scope.search_result_super            = false;
+						  		$scope.search_result_US_super         = true;
+						  	} else{
+						  		$scope.search_result_super            = true;
+						  		$scope.search_result_US_super         = false;
+						  	}
+				     }else{
+						 $scope.catalogMasterListGridDiv       = true;
+						 $scope.catalogMasterListGridDiv_super = false;
+						 $("#masterListButtons").css({"display":'none'});
+						 $scope.userRegion	= webStorage.local.get('userRegion');
+						 if($scope.userRegion == "US"){
+						  		$scope.search_result_US            = true;
+						  		$scope.search_result               = false;
+						  	} else{
+						  		$scope.search_result_US            = false;
+						  		$scope.search_result               = true;
+						  	}
+				     }
+					
+					
+					 $scope.listOfMasterCatalog = data.masters_list;
+				        $scope.addDataToTable=[];
+				        for (var index = 1; index <= $scope.listOfMasterCatalog.length; index++){
+				        	var item = "";
+				        	var publishTier = "";
+				        	item = $scope.listOfMasterCatalog[index-1];
+				        	if ( $scope.roleID == 12 )
+							 {
+				        		if( item.is_tied_to_price_tier != undefined && item.is_tied_to_price_tier == "Y")
+				        		{
+				        			publishTier = "<a onclick=angular.element(this).scope().publishTiers('"+item.cat_catalog_id+"')>Publish Tier</a>";
+				        		}
+				        		if(item.cpd_ob_price_descriptor != null && item.cpd_ob_price_descriptor != ""){				        			
+				        		if($scope.userRegion == "US"){
+					        		 $scope.addDataToTable.push([
+					        										0,
+					        										'<input value = "'+item.cat_catalog_id+'" type="checkbox" name="ck" class="ck" id="ck'+index+'">',
+					        										"<a id="+item.cat_catalog_id+" href='#/ViewMasterCatalog?masterId="+item.cat_catalog_id+"' onClick=angular.element(document.getElementById('listCtrl')).scope().viewMasterCatalog('"+item.cat_catalog_id+"')>"+item.cat_catalog_id+"</a>",
+					        										item.cat_catalog_name,
+					        										item.cpd_price_descriptor,
+					        										item.cpd_ob_price_descriptor.substring(0, 2),///item.cat_countries,
+					        										item.cat_sub_group_id,
+					        										item.cat_price_merge_id,
+					        										item.dealids,
+					        										item.cat_ffs_id,
+					        										$scope.convertDate(item.cat_last_modified_date),
+					        										"<a onclick=angular.element(this).scope().publishMasterCatalog('"+item.cat_catalog_id+"')>Publish</a>",								
+					        										"<a onclick=angular.element(this).scope().refershProductCount('"+item.cat_catalog_id+"',"+(index-1)+",angular.element(this))>Product Count</a>",
+					        										publishTier
+					        										]);
+					        	 }else{
+					        		 $scope.addDataToTable.push([
+					        										0,
+					        										'<input value = "'+item.cat_catalog_id+'" type="checkbox" name="ck" class="ck" id="ck'+index+'">',
+					        										"<a id="+item.cat_catalog_id+" href='#/ViewMasterCatalog?masterId="+item.cat_catalog_id+"' onClick=angular.element(document.getElementById('listCtrl')).scope().viewMasterCatalog('"+item.cat_catalog_id+"')>"+item.cat_catalog_id+"</a>",
+					        										item.cat_catalog_name,
+					        										item.cpd_price_descriptor,
+					        										item.cpd_ob_price_descriptor.substring(0, 2),///item.cat_countries,
+					        										item.cat_price_merge_id,
+					        										item.dealids,
+					        										item.cat_ffs_id,
+					        										$scope.convertDate(item.cat_last_modified_date),
+					        										"<a onclick=angular.element(this).scope().publishMasterCatalog('"+item.cat_catalog_id+"')>Publish</a>",								
+					        										"<a onclick=angular.element(this).scope().refershProductCount_1('"+item.cat_catalog_id+"',"+(index-1)+",angular.element(this))>Product Count</a>",
+					        										publishTier
+					        										]);
+					        	 }
+							 }
+							 }else if ( $scope.roleID == 2 )
+							 {
+								 if(item.cpd_ob_price_descriptor != null && item.cpd_ob_price_descriptor != ""){	
+								 if($scope.userRegion == "US"){
+					        		 $scope.addDataToTable.push([
+					        										0,
+					        										'<input value = "'+item.cat_catalog_id+'" type="checkbox" name="ck" class="ck" id="ck'+index+'">',
+					        										"<a id="+item.cat_catalog_id+" href='#/ViewMasterCatalog?masterId="+item.cat_catalog_id+"' onClick=angular.element(document.getElementById('listCtrl')).scope().viewMasterCatalog('"+item.cat_catalog_id+"')>"+item.cat_catalog_id+"</a>",
+					        										item.cat_catalog_name,
+					        										item.cpd_price_descriptor,
+					        										item.cpd_ob_price_descriptor.substring(0, 2),///item.cat_countries,
+					        										item.cat_sub_group_id,
+					        										item.cat_price_merge_id,
+					        										item.dealids,
+					        										item.cat_ffs_id,
+					        										$scope.convertDate(item.cat_last_modified_date),
+					        										"Publish",//"<a onclick=angular.element(this).scope().publishMasterCatalog('"+item.cat_catalog_id+"')>Publish</a>",								
+					        										"<a onclick=angular.element(this).scope().refershProductCount('"+item.cat_catalog_id+"',"+(index-1)+",angular.element(this))>Product Count</a>"
+					        						        	]);
+					        	 }else{
+					        		 $scope.addDataToTable.push([
+					        										0,
+					        										'<input value = "'+item.cat_catalog_id+'" type="checkbox" name="ck" class="ck" id="ck'+index+'">',
+					        										"<a id="+item.cat_catalog_id+" href='#/ViewMasterCatalog?masterId="+item.cat_catalog_id+"' onClick=angular.element(document.getElementById('listCtrl')).scope().viewMasterCatalog('"+item.cat_catalog_id+"')>"+item.cat_catalog_id+"</a>",
+					        										item.cat_catalog_name,
+					        										item.cpd_price_descriptor,
+					        										item.cpd_ob_price_descriptor.substring(0, 2),///item.cat_countries,
+					        										item.cat_price_merge_id,
+					        										item.dealids,
+					        										item.cat_ffs_id,
+					        										$scope.convertDate(item.cat_last_modified_date),
+					        										"Publish",//"<a onclick=angular.element(this).scope().publishMasterCatalog('"+item.cat_catalog_id+"')>Publish</a>",								
+					        										"<a onclick=angular.element(this).scope().refershProductCount_1('"+item.cat_catalog_id+"',"+(index-1)+",angular.element(this))>Product Count</a>"
+					        						        	]);
+					        	 }
+								 }
+							 }else{
+								 if(item.cpd_ob_price_descriptor != null && item.cpd_ob_price_descriptor != ""){	
+								 if($scope.userRegion == "US"){
+					        		 $scope.addDataToTable.push([
+					        										0,
+					        										'<input value = "'+item.cat_catalog_id+'" type="checkbox" name="ck" class="ck" id="ck'+index+'">',
+					        										"<a id="+item.cat_catalog_id+" href='#/ViewMasterCatalog?masterId="+item.cat_catalog_id+"' onClick=angular.element(document.getElementById('listCtrl')).scope().viewMasterCatalog('"+item.cat_catalog_id+"')>"+item.cat_catalog_id+"</a>",
+					        										item.cat_catalog_name,
+					        										item.cpd_price_descriptor,
+					        										item.cpd_ob_price_descriptor.substring(0, 2),///item.cat_countries,
+					        										item.cat_sub_group_id,
+					        										item.cat_price_merge_id,
+					        										item.dealids,
+					        										item.cat_ffs_id,
+					        										$scope.convertDate(item.cat_last_modified_date),
+					        										"<a onclick=angular.element(this).scope().publishMasterCatalog('"+item.cat_catalog_id+"')>Publish</a>",								
+					        										"<a onclick=angular.element(this).scope().refershProductCount('"+item.cat_catalog_id+"',"+(index-1)+",angular.element(this))>Product Count</a>"
+					        						        	]);
+					        	 }else{
+					        		 $scope.addDataToTable.push([
+					        										0,
+					        										'<input value = "'+item.cat_catalog_id+'" type="checkbox" name="ck" class="ck" id="ck'+index+'">',
+					        										"<a id="+item.cat_catalog_id+" href='#/ViewMasterCatalog?masterId="+item.cat_catalog_id+"' onClick=angular.element(document.getElementById('listCtrl')).scope().viewMasterCatalog('"+item.cat_catalog_id+"')>"+item.cat_catalog_id+"</a>",
+					        										item.cat_catalog_name,
+					        										item.cpd_price_descriptor,
+					        										item.cpd_ob_price_descriptor.substring(0, 2),
+                                                                     //item.cat_countries,
+					        										item.cat_price_merge_id,
+					        										item.dealids,
+					        										item.cat_ffs_id,
+					        										$scope.convertDate(item.cat_last_modified_date),
+					        										"<a onclick=angular.element(this).scope().publishMasterCatalog('"+item.cat_catalog_id+"')>Publish</a>",								
+					        										"<a onclick=angular.element(this).scope().refershProductCount_1('"+item.cat_catalog_id+"',"+(index-1)+",angular.element(this))>Product Count</a>"
+					        						        	]);
+					        	 }
+								 }
+							 }			        	
+				        	
+				        }
+				        
+				        if ( $scope.roleID == 12 )
+						{ 
+				        	if ($scope.addDataToTable.length >0){
+				        		if($scope.userRegion == "US"){
+				        			$scope.globalCodeToGenertaeDataGrid('search_result_US_super', $scope.addDataToTable);
+				        		}else{
+				        			$scope.globalCodeToGenertaeDataGrid('search_result_super', $scope.addDataToTable);
+				        		}
+				        	}
+				        	else{
+				        		$scope.hideMsg();
+				        		if($scope.userRegion == "US"){
+				        			$scope.globalCodeToGenertaeDataGrid('search_result_US_super', $scope.addDataToTable);
+				        		}else{
+				        			$scope.globalCodeToGenertaeDataGrid('search_result_super', $scope.addDataToTable);
+				        		}
+							/// $scope.showMsg('','No Records Found ');
+				        	}
+						}
+				        else
+				        {
+				        	 if ($scope.addDataToTable.length >0)
+				        	 {
+					        	 if($scope.userRegion == "US"){
+						        	 $scope.globalCodeToGenertaeDataGrid('search_result_US', $scope.addDataToTable);
+					        	 }else{
+						        	 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+					        	 }
+							} 
+					        else{
+								 $scope.hideMsg();
+								 if($scope.userRegion == "US"){
+						        	 $scope.globalCodeToGenertaeDataGrid('search_result_US', $scope.addDataToTable);
+					        	 }else{
+						        	 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+					        	 }
+								/// $scope.showMsg('','No Records Found ');
+							}
+				        }
+				   	
+				       
+				    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+				   });
+		
+	 };
+//	$scope.priceDescriptFinalVal = function(strVal){
+//		if(strVal){
+//			strVal.substring(0, 2);
+//		}else{
+//			strVal ="";
+//		}
+//		return strVal;
+//	 };
+	 $scope.refershProductCount = function(masterCatId, index, el){
+		 $scope.refreshCacheInUI();
+			var count = "";
+			$.ajax({ type: "POST",
+					 dataType: "json",
+					 data :{
+						"masterID" : masterCatId.toString() 
+					 },
+					 headers: {
+		                    "Accept": "application/json; charset=utf-8",
+							"Cache-Control" : "no-cache",
+							"Pragma" : "no-cache",
+							"If-Modified-Since" : "0"
+		             },
+					 url: "mastercatalog/productCount.htm",
+					 success: function(data){
+							 var start = 0;
+							 start = new Date().getTime();
+							 count = data.catalogProductCount;
+						     $(el).closest("tr").find('td:eq(11)').html(count);
+						 },
+					   error: function (error) {
+						   alert("Session expired please relogin : "+error);
+					   }
+				});
+		};
+		 $scope.refershProductCount_1 = function(masterCatId, index, el){
+			 $scope.refreshCacheInUI();
+				var count = "";
+				$.ajax({ type: "POST",
+						 dataType: "json",
+						 data :{
+							"masterID" : masterCatId.toString() 
+						 },
+						 headers: {
+			                    "Accept": "application/json; charset=utf-8",
+								"Cache-Control" : "no-cache",
+								"Pragma" : "no-cache",
+								"If-Modified-Since" : "0"
+			             },
+						 url: "mastercatalog/productCount.htm",
+						 success: function(data){
+								 var start = 0;
+								 start = new Date().getTime();
+								 count = data.catalogProductCount;
+							     $(el).closest("tr").find('td:eq(10)').html(count);
+							 },
+						   error: function (error) {
+							   alert("Session expired please relogin : "+error);
+						   }
+					});
+			};
+		$scope.checkBoxFunctionality = function(){
+			 	if($('.ck:checked').length) {
+			          var chkId = '';
+			          $('.ck:checked').each(function() {
+			            chkId += $(this).val() + ",";
+			          });
+			          chkId =  chkId.slice(0,-1);
+			          alert(chkId);
+			        }
+			        else {
+			         // alert('Nothing Selected');
+			        }
+			 	$('#checkAllEdit').click(function(e){
+			 	    //var table= $(e.target).closest('block');
+			 		var table = document.getElementById("search_result_super");
+			 	    $('td input:checkbox',table).prop('checked',this.checked);
+			 	});
+			 	
+			    $('.ck').click( function() {
+			        if($('.ck:checked').length == $('.ck').length) {
+			          $('.checkAllEdit').prop('checked', true);
+			        }
+			        else {
+			          $('.checkAllEdit').prop('checked', false);
+			        }
+			    });
+			    
+				$('#checkAllEdit2').click(function(e){
+					//var table= $(e.target).closest('block');
+			 	    var table = document.getElementById("search_result");
+			 	    $('td input:checkbox',table).prop('checked',this.checked);
+			 	});
+			 	
+			    $('.ck').click( function() {
+			        if($('.ck:checked').length == $('.ck').length) {
+			          $('.checkAllEdit2').prop('checked', true);
+			        }
+			        else {
+			          $('.checkAllEdit2').prop('checked', false);
+			        }
+			    });
+			    
+			    $('#checkAllEdit1').click(function(e){
+			 	    //var table= $(e.target).closest('block');
+			    	var table = document.getElementById("search_result_US_super");
+			 	    $('td input:checkbox',table).prop('checked',this.checked);
+			 	});
+			 	
+			    $('.ck').click( function() {
+			        if($('.ck:checked').length == $('.ck').length) {
+			          $('.checkAllEdit1').prop('checked', true);
+			        }
+			        else {
+			          $('.checkAllEdit1').prop('checked', false);
+			        }
+			    });
+			    
+			    $('#checkAllEdit3').click(function(e){
+			 	   // var table= $(e.target).closest('block');
+			    	var table = document.getElementById("search_result_US");
+			 	    $('td input:checkbox',table).prop('checked',this.checked);
+			 	});
+			 	
+			    $('.ck').click( function() {
+			        if($('.ck:checked').length == $('.ck').length) {
+			          $('.checkAllEdit3').prop('checked', true);
+			        }
+			        else {
+			          $('.checkAllEdit3').prop('checked', false);
+			        }
+			    });
+	 };
+	 
+	 $scope.propagateMasterCatalog = function(){
+			var arr = [];
+			if($('.ck:checked').length) {
+		          var chkId = '';
+		          var masterCatalogIds = '';
+		          $('.ck:checked').each(function() {
+		            chkId += $(this).val() + ",";
+		          });
+		          chkId =  chkId.slice(0,-1);
+		          arr = chkId.split(",");
+		          masterCatalogIds = arr;
+		          
+		          $http({
+						url: 'mastercatalog/propagateMasterCatalogs.htm?masterIDs='+masterCatalogIds.toString(),
+						method:"POST",
+						data : {
+							
+						},
+					headers: {
+	                    "Accept": "application/json; charset=utf-8",
+						"Cache-Control" : "no-cache",
+						"Pragma" : "no-cache",
+						"If-Modified-Since" : "0"
+	                },
+					 }).success(function(data,status,header,config) {
+						 $scope.hideMsg();
+						 if(data.successMsg != undefined){
+							 $scope.showMsg(data.successMsg.toString(),'');
+						 }
+						 if(data.errorMsg != undefined){
+							 $scope.showMsg('',data.errorMsg.toString());
+						 }else{
+							 $scope.hideMsg();
+							 $scope.showMsg(data.successMsg.toString(),'');
+						 }
+					 });
+			}
+			else {
+			        $scope.hideMsg();
+					$scope.showMsg("Please select at least one Master Catalog to propagate!","");
+		    }
+				
+	 };
+	
+
+	$scope.condtionalAlertDelete = function (masterCatalogIds) {			
+			 $http({
+					url: 'mastercatalog/deleteCatalogs.htm?masterIDs='+masterCatalogIds.toString(),
+					method:"POST",
+					data : {
+						
+					},
+				headers: {
+                    "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+             },
+				 }).success(function(data,status,header,config) {
+					 if(data.successMsg != undefined){
+						 $scope.hideMsg();
+						 $scope.showMsg(data.successMsg.toString(),'');
+					 }else if(data.errorMsg != undefined){
+						 $scope.hideMsg();
+						 $scope.showMsg('',data.errorMsg.toString());
+					 }else{
+						 $scope.hideMsg();
+						 $scope.showMsg(data.successMsg.toString(),'');
+					 }
+				 });		    
+		 };
+		
+		 
+	 $scope.deleteMasterCatalog = function(){
+				var arr = [];
+				if($('.ck:checked').length) {
+			          var chkId = '';
+			          var masterCatalogIds = '';
+			          $('.ck:checked').each(function() {
+			            chkId += $(this).val() + ",";
+			          });
+			          chkId =  chkId.slice(0,-1);
+			          arr = chkId.split(",");
+			          masterCatalogIds = arr;
+			          
+			          dialog.show({
+					         template: '<div class="hpe-main-content" title="Are you sure you want to delete?">' +
+					                       '<span>Are you sure you want to delete?</span>' + 
+					                       '<br>' +
+					                       '<a class="btn btn-inline"   ng-click="close(true)" ><span>Yes</span></a>' +
+					                       '<a class="btn btn-inline"   ng-click="close(false)"><span>No</span></a>' +
+					                   '</div>',
+					         controller: 'catalogMasterListCtrl',
+					         width: 400,
+					         param: $scope,
+					         draggable: true,
+					         title:'Warning'
+					     }).then(function (result) {
+					         if(result == true) {
+					         	$scope.condtionalAlertDelete(masterCatalogIds);
+					         	$scope.scrollToMessage();
+					         }
+					        
+					     });
+			         
+			        }
+			        else {
+			        	 $scope.hideMsg();
+			        	 $scope.scrollToMessage();
+						 $scope.showMsg("Please select at least one Master Catalog to delete!","");
+						 
+			        }
+				
+	 };
+	$scope.copyMasterCatalog = function(){
+			var arr = [];
+			if($('.ck:checked').length) {
+		          var chkId = '';
+		          $('.ck:checked').each(function() {
+		            chkId += $(this).val() + ",";
+		          });
+		          chkId =  chkId.slice(0,-1);
+		          arr = chkId.split(",");
+		          if(arr.length > 1){
+		        	  	 $scope.hideMsg();
+						 $scope.showMsg("Please check one and ONLY ONE catalog master to Copy!",'');
+		          }else{
+		        	  $scope.refreshCacheInUI();
+		        	  $location.path("/CreateMasterCatalog").search({masterID: arr.toString(),action : "copy"});
+		          }
+		        }
+		        else {
+		        	 $scope.hideMsg();
+					 $scope.showMsg("Please check one and ONLY ONE catalog master to Copy!","");
+		        }
+	};
+	$scope.bundleExportMasterCatalog = function(masterId){
+		var arr = [];
+		if($('.ck:checked').length) {
+	          var chkId = '';
+	          $('.ck:checked').each(function() {
+	            chkId += $(this).val() + ",";
+	          });
+	          chkId =  chkId.slice(0,-1);
+	          arr = chkId.split(",");
+	              
+	       webStorage.session.add('PrevPage', '#/ListMasterCatalog');
+	       webStorage.session.add('MCatsForBundleExport',arr.toString());
+		   document.location.href="#/BundleExport"; 
+		}
+		else
+		{
+			
+			$("#showMultipleMessages").css("display","none");
+			$scope.hideMsg();
+		    $scope.showMsg("","Please select atleast ONE catalog for Bundle Export !");
+		}
+	};
+	$scope.publishMasterCatalog = function(masterID){
+		if(masterID.length > 0){
+			$scope.refreshCacheInUI();
+              $scope.$apply();
+              webStorage.session.add('PrevPage', '#/ListMasterCatalog'); 
+              document.location.href="#/PublishCatalogList?masterID="+masterID;
+      		
+		}else{
+			
+		}
+	};
+	
+	$scope.publishTiers = function(masterID)
+	{
+	 $http({
+		url: 'mastercatalog/publishTiers.htm?masterID='+masterID,
+		method:"GET",
+		headers: {
+            "Accept": "application/json; charset=utf-8",
+			"Cache-Control" : "no-cache",
+			"Pragma" : "no-cache",
+			"If-Modified-Since" : "0"
+        }
+	 }).success(function(data,status,header,config) {
+		 if(data.successMsg != null){
+		 		 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,"");
+		 }
+		 if(data.errorMsg != null){
+	 		 $scope.hideMsg();
+			 $scope.showMsg("",data.errorMsg);
+	 	}
+	});
+	};
+	
+	$scope.viewMasterCatalog = function(masterId){
+		$scope.refreshCacheInUI();
+		$scope.$apply();
+		webStorage.session.add('ListMasterCatalogPage', '#/ListMasterCatalog'); 
+		document.location.href="#/ViewMasterCatalog?masterId="+ masterId.toString();
+	};
+	$scope.refreshCacheInUI = function(){
+		 $http({
+				url: 'clearCacheInUI.htm',
+				method:"GET",
+				headers: {
+					"Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+				}
+			 }).success(function(data,status,header,config) {
+				//To Clear Cache in UI...
+			});
+	};
+	
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+	};
+	$scope.hideMsg=function(){
+	    	$scope.successMessage='';
+	    	$scope.errorMessage='';
+	};
+
+
+	$scope.globalCodeToGenertaeDataGrid = function(tableId,aaData){
+		$.fn.dataTableExt.oJUIClasses.sSortJUI ="css_right icon-sort";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIAsc ="css_right icon-sort-up";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIDesc ="css_right icon-sort-down";
+		oTable = $("table#"+tableId+"").dataTable({
+			/*"bServerSide": true,        		     
+			"sAjaxSource": "/serverside/DataTableGsonServlet?catalogId="+masterId.toString(),
+	        "sServerMethod": "POST",
+	        "bProcessing": true,*/
+			"sEcho": 4,
+				"aaData": aaData,
+				"sPaginationType" : "commonStandard",
+				"bPaginate" :true,
+				"bJQueryUI": true,
+				"bRetrieve": true,
+				"bSortable":false,
+				"bAutoWidth": false,
+				"processing": false,
+				"serverSide": true,
+				"sDom": '<"t_header"RrClf><"t_body"t><"t_footer"pi>',
+				"bSort": true,
+				//"aaSorting":[ [2,'asc']] ,
+				"aaSortingFixed":[ [0,'desc']] ,
+				"aoColumnDefs": [
+				{ "sWidth": "9%","aTargets":[2,3,4,5,6,7,8,9,10,11] },
+				{ "sClass": "center unsortable", "aTargets": [ 1 ] },
+				{ "sClass": "center", "aTargets": [ 2] },
+				{ "sClass": "editable", "aTargets": [ 3,4,5] },
+				{ "sClass": "editable", "aTargets": [ 6 ] },
+				{ "bVisible": false, "aTargets": [ 0 ] },
+				{ "bSortable": false, "aTargets": [ 1 ] }
+				/*{"aTargets": [ 8 ], "bSortable": true, "sType": "date-euro"}*/
+				],
+				"oColReorder": {
+				"iFixedColumns": 2 // Define fixed column and checkbox column can not be dragged.
+				},
+				"oLanguage": {
+				"sLengthMenu": "<div class='sLengthText'>View Results of</div> _MENU_ ",
+				"sInfo": "<span class='number_highlight'>_TOTAL_</span> items, <span class='number_highlight'>_TOTALPAGE_</span> pages",
+				"sSearch": "Filter:",
+				"sInfoFiltered": "",
+				"sInfoEmpty":"<span class='number_highlight'>0</span> items, <span class='number_highlight'>0</span> pages",
+				"oPaginate": {
+				"sFirst": "<i class='icon-double-angle-left'></i>",
+				"sLast": "<i class='icon-double-angle-right'></i>",
+				"sNext": "<i class='icon-angle-right'></i>",
+				"sPrevious": "<i class='icon-angle-left'></i>"}
+				},
+				"oColVis": {
+				"buttonText": 'View By <i class="icon-chevron-down"></i>',
+				"aiExclude": [ 0,1 ],
+				"bShowAll": true,
+				"sShowAll": "Show All",
+				"sAlign":"left"
+		        }
+		});
+		if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+		$("#"+tableId+"_length select").selecter();
+		}
+	 	
+	 	$("#masterListButtons").css({"display":'block'});
+	 	
+	};
+
+	$scope.convertDate = function(inputFormat){
+		var dateFormat = inputFormat.split(" ");
+		var dateFormat2 = dateFormat[0].split("-");
+		var dateFormat3 = dateFormat2[2]+"/"+dateFormat2[1]+"/"+dateFormat2[0];
+		return dateFormat3;
+	};
+	
+	$scope.manageQuote = function(){
+		webStorage.session.add('PrevPage', '#/ListMasterCatalog'); 
+		document.location.href="#/ManageQuote";
+	};
+}]);

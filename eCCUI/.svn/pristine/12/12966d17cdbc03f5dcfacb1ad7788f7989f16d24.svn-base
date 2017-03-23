@@ -1,0 +1,2300 @@
+eccApp.controller('ViewIndivJobCtrl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.fileName=$scope.param.fileName;	
+	$scope.viewJobDetailsList=[];
+	$scope.dataLoad=false;
+	$scope.addDataToTable=[];
+	
+	$scope.loadDealData=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"View Individual Job Task\"");
+
+		$http({
+			url: 'admin/viewIndivJob.htm?fileName='+$scope.fileName,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {
+			  $scope.viewJobDetailsList = data;		  	
+			  	$scope.addDataToTable.length=0;				  	
+		        angular.forEach($scope.viewJobDetailsList, function(item){		        	
+		        	$scope.addDataToTable.push([
+		        	    item.updated_file_name,
+		        	    item.load_type,
+						item.last_modified_date_updated
+		        	]);  
+			    });
+		        if ($scope.addDataToTable.length >0){
+		        	$scope.dataLoad=true;
+				}
+		        else{
+					 $scope.hideMsg();
+					 $scope.showMsg('','No Records Found in Individual Job Service ');
+				}	 
+		       
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in individual Job Service');
+		  });			
+		};
+		
+		$scope.grid = {
+				header: ["Catalog ID", "Load Type", "Date"],
+	    		data: $scope.addDataToTable,
+	    		sort: [[0, "asc"]],
+	    		colDefs: [
+	    			{ "sClass": "left", "aTargets": [0,1,2] }
+	    		],
+	    		colViewBy: { // define view by function styleif sDom has C, this is required
+	    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+	    			"bShowAll": true,
+	    			"sShowAll": "Show All",
+	    			"sAlign": "left"
+	    		}
+		};
+		
+	$scope.returnToViewJob=function(){
+		document.location.href=webStorage.session.get('PrevPage');
+		
+	};
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	 
+}]);
+
+
+eccApp.controller('EclipseDealCrtl',['$scope', '$http', '$timeout', 'webStorage',
+  function ($scope, $http, $timeout, webStorage) {
+	var queryParams="";
+	$scope.dataLoad=false;
+	$scope.addDataToTable=[];
+	$scope.addDataToTable.length=0;
+	
+	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Eclipse Deal Task\"");
+
+		$scope.loadTime = new Date().getTime();
+		$scope.navRole=false;
+		$scope.dataLoad=false;
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+		$scope.masterCatalogList=[];
+		$scope.addDataToTable=[];
+		$scope.selectCustomer = [];	
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+	
+	$scope.reset=function(){
+		$scope.dealId = "";
+		$scope.init();
+	};
+	
+	$scope.isInteger=function(value) {
+	    return (value == parseInt(value));
+	};
+	
+	$scope.inquireEclipseDeals = function() {
+		$scope.loadTime = new Date().getTime();		
+		queryParams='';
+		if($scope.dealId == "" || $scope.dealId==undefined ||$scope.dealId.length>10||$scope.dealId=='%'){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter an integer value');
+			$scope.showAllBtn = false;
+			$scope.dataLoad=false;
+			return false;		
+		} else if($scope.isInteger($scope.dealId)) {
+			$scope.hideMsg();
+			$scope.loadTime = new Date().getTime();
+			if($scope.dealId) {
+				queryParams=queryParams+"dealId="+$scope.dealId;
+				$scope.checkCatalog();
+			} else {
+				$scope.hideMsg();
+				$scope.showMsg('','Please enter an integer value');
+				$scope.dataLoad=false;
+			}
+		} else {
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter an integer value');
+			$scope.dataLoad=false;
+		}
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+	
+	
+	$scope.checkCatalog= function(){
+		$scope.userRole= webStorage.local.get('userRole');
+		$scope.url="admin/eclipseDeal.htm?"+queryParams;
+		$http({
+			url: $scope.url,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {  
+			  $scope.masterCatalogList = [];
+			  $scope.addDataToTable=[];
+			  $scope.addDataToTable.length=0;
+			  $scope.masterCatalogList = data;	
+			  if($scope.masterCatalogList.length==0 || $scope.masterCatalogList==''){
+				  $scope.hideMsg();
+				  $scope.showMsg('','There are no data available for the given deal.');
+				  $scope.dataLoad=false; 
+			  } else {
+			   if($scope.userRole=='Super User' || $scope.userRole=='Super User - GL')  {
+					  $scope.navRole=true;
+					  $scope.tierDealFlag=$scope.masterCatalogList.tierDealFlag;
+					  $scope.pullTierDeal=$scope.masterCatalogList.pullTierDeal;
+					  $scope.numOfCatAssociation=$scope.masterCatalogList.noOfAssociation;
+					  $scope.dataLoad=false;	
+					  $scope.custDealList=data;
+				  } 
+			   else{
+				    $scope.addDataToTable.push([
+				    $scope.masterCatalogList.dealId,
+				    $scope.masterCatalogList.version,
+				    $scope.masterCatalogList.bdVersionNR,
+					$scope.masterCatalogList.status,
+					$scope.masterCatalogList.createDate,
+					$scope.masterCatalogList.lastModifiedDate								
+		        	]);  
+			        if ($scope.navRole!=true && $scope.addDataToTable.length >0){
+			        	$scope.dataLoad=true;
+					}
+			        else{
+			        	  $scope.hideMsg();
+						  $scope.showMsg('Please enter an integer value','');
+						  $scope.dataLoad=false;
+					}				        
+			  	}
+			  }
+			  $scope.grid = {
+			    		header: ["Deal Id", "ECC Version", "Eclipse Event Version", "Event Status", "Event Created Date", "Event Last Updated"],
+			    		data: $scope.addDataToTable,
+			    		sort: [[0, "asc"]],
+			    		colDefs: [
+			    			{ "sClass": "left", "aTargets": [0,1,2,3,4,5] }
+			    		],
+			    		colViewBy: { // define view by function styleif sDom has C, this is required
+			    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+			    			"bShowAll": true,
+			    			"sShowAll": "Show All",
+			    			"sAlign": "left"
+			    		}
+			    };
+			  }).
+		  error(function(data, status, headers, config) {
+			  	//$.loader("close");
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Eclipse Status Inquiry');
+		  });
+		
+	};
+	
+	$scope.refresh = function (){
+		if($( "input:checked" ).val()!="Y"){
+			alert("Select a Deal for refresh.");
+			return false;
+		}	
+		if( $scope.tierDealFlag=="Y" && $scope.pullTierDeal.value=="N"  ){
+            alert("Tier Deal can't be refreshed.");
+            return false;
+		}
+		if( $scope.numOfCatAssociation >0 ){
+            var confirm=window.confirm("Deal mapped with  " + $scope.numOfCatAssociation + " PriceTier/Master Catalogs. Manual refresh will put those catalogs into propagation queue. Do you want to refresh deal? ");
+            if(confirm){               
+                 $scope.refreshEclipseDeal();
+            }
+   }
+   else{
+            var confirm=window.confirm("Deal is not mapped with any catalogs. Do you want to refresh deal? ");
+            
+            if(confirm){               
+            	$scope.refreshEclipseDeal();
+            }
+   }	
+	};
+	
+	$scope.refreshEclipseDeal =function() {
+		$scope.loadTime = new Date().getTime();	
+		$scope.url="admin/refreshEclipseDeal.htm?dealId="+$scope.dealId;
+		$http({
+			url: $scope.url,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {
+			  $scope.hideMsg();
+			  if(data.successMsg)
+				  $scope.showMsg(data.successMsg,'');
+			  else
+				  $scope.showMsg('',data.errorMsg);
+			  $scope.navRole=false;
+			  $scope.dataLoad=false;
+			 
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Eclipse Status Inquiry');
+		  });
+		
+	};
+	
+	$scope.grid = {
+    		header: ["Deal Id", "ECC Version", "Eclipse Event Version", "Event Status", "Event Created Date", "Event Last Updated"],
+    		data: $scope.addDataToTable,
+    		sort: [[0, "asc"]],
+    		colDefs: [
+    			{ "sClass": "left", "aTargets": [0,1,2,3,4,5] }
+    		],
+    		colViewBy: { // define view by function styleif sDom has C, this is required
+    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    			"bShowAll": true,
+    			"sShowAll": "Show All",
+    			"sAlign": "left"
+    		}
+    };
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+}]);
+
+eccApp.controller('UploadInfoCrtl',['$scope', '$http', '$timeout','webStorage','dateParser','dialog',
+ function ($scope, $http, $timeout,webStorage,dateParser,dialog) {
+	var queryParams="";
+	$scope.dataLoad=false;
+	$scope.addDataToTable=[];
+	$scope.addDataToTable.length=0;
+	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Upload Information Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+		$scope.uploadInfoList=[];
+		$scope.addDataToTable=[];
+		$scope.selectCustomer = [];	
+		if($scope.keyword=='' || $scope.keyword==undefined){
+			queryParams=queryParams+"keyword= ";
+		} else {			
+			queryParams=queryParams+"keyword= "+$scope.keyword;
+		}		
+		$scope.checkUploadStatus();
+	};
+	
+	$scope.reset=function(){
+		$scope.keyword = "";
+		$scope.init();
+	};
+	
+	$scope.searchUploadInfo = function() {
+		$("#loadTime").html("");
+		queryParams='';
+		$scope.loadTime = new Date().getTime();
+		if($scope.keyword=='' || $scope.keyword==undefined){
+			queryParams=queryParams+"keyword= ";
+		} else {
+			queryParams=queryParams+"keyword="+$scope.keyword;
+		}
+		$scope.checkUploadStatus();
+	};
+	
+	$scope.checkUploadStatus= function(){		
+		$scope.url="admin/uploadInfo.htm?"+queryParams;	
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: $scope.url,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) { 
+			  $scope.hideMsg();
+			  $scope.uploadInfoList = [];
+			  $scope.addDataToTable.length=0;
+			  $scope.uploadInfoList = data;
+			  $scope.param={};
+			        angular.forEach($scope.uploadInfoList, function(item){	
+			        	$scope.addDataToTable.push([
+			        	    "<a id="+item.upload_id+" onClick=angular.element(document.getElementById('viewPropogation')).scope().viewIndProp('"+item.upload_id+"')>"+item.upload_id+"</a>",                        
+			        	    "<a id="+item.upload_id+" onClick=angular.element(document.getElementById('viewPropogation')).scope().viewIndProp('"+item.upload_id+"')>"+item.upload_desc+"</a>",
+							item.upload_start_time,
+							item.upload_status,
+							item.status_msg,
+							item.last_updated_dt,
+							"<a id="+item.upload_id+" onClick=angular.element(document.getElementById('viewPropogation')).scope().updateIndStatus('"+item.upload_id+"')>"+"Show Status"+"</a>",
+							
+			        	]);  
+				    });
+			        if ($scope.addDataToTable.length >0){
+			        	$scope.dataLoad=true;
+					}
+			        else{
+			        	  $scope.hideMsg();
+						  $scope.showMsg('','No upload information is found');
+						  $scope.dataLoad=false;
+					}	    	
+			        $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Upload Status Inquiry');
+		  });
+
+	    $scope.viewIndProp=function(uploadValue){
+			 webStorage.session.add('PrevPage', '#/UploadInfo');			 
+			 document.location.href="#/viewMyUpload?uploadValue="+uploadValue;
+	    };
+		
+	    $scope.updateIndStatus=function(uploadValue){
+			 $scope.param.uploadValue = uploadValue;
+			 $scope.propStatusPopup();
+	    };
+	    $scope.propStatusPopup = function () {
+	        dialog.show({
+	            	templateUrl: 'resources/html/admin/showPropStatus.html',
+	            controller: 'ShowPropStatus',
+	            width: 800,
+	            height : 400,
+	            param: $scope.param,
+	            draggable: true,
+	            title:''
+	        }).then(function (result) {
+	            if(result != false){
+	            	
+	            }           
+	        });
+	    };
+	    
+		$scope.grid = {
+	    		header: ["Upload ID", "Upload Type Information", "Upload Time(Start Time)", "Upload Status", "Upload Status Description", "Last Modified Time", "Propogation Status"],
+	    		data: $scope.addDataToTable,
+	    		sort: [[0, "desc"]],
+	    		colDefs: [
+	    			{ "sClass": "left", "aTargets": [0,1,2,3,4,5,6] }
+	    		],
+	    		colViewBy: { // define view by function styleif sDom has C, this is required
+	    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+	    			"bShowAll": true,
+	    			"sShowAll": "Show All",
+	    			"sAlign": "left"
+	    		}
+	    };
+		
+	};
+	$scope.grid = {
+			header: ["Upload ID", "Upload Type Information", "Upload Time(Start Time)", "Upload Status", "Upload Status Description", "Last Modified Time", "Propogation Status"],
+    		data: $scope.addDataToTable,
+    		sort: [[0, "desc"]],
+    		colDefs: [
+    			//{ "sClass": "center", "aTargets": [2, 3] },
+    			//{ "sClass": "center unsortable", "aTargets": [0] },
+    			{ "sClass": "left", "aTargets": [0,1,2,3,4,5,6] }
+    			//{ "sClass": "right", "aTargets": [4] },
+    			//{ "bSortable": false, "aTargets": [0] }
+    		],
+    		colViewBy: { // define view by function styleif sDom has C, this is required
+    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    			"bShowAll": true,
+    			"sShowAll": "Show All",
+    			"sAlign": "left"
+    		}
+    };
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+}]);
+
+
+eccApp.controller('ViewMyUploadInfo',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.uploadValue=$routeParams.uploadValue;	
+	$scope.viewMyDetailsList=[];
+	$scope.dataLoad=false;
+	$scope.addDataToTable=[];
+	$scope.loadDealData=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"View My Upload Information Task\"");
+
+		$http({
+			url: 'admin/viewMyUpload.htm?uploadValueId='+$scope.uploadValue,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {
+			 $scope.hideMsg();
+			 if(data.successMsg){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+			 }
+			 if(data.errorMsg){
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+			 }
+			 $scope.uploadList=[];
+			 $scope.uploadList=angular.fromJson(data.uploadInfo);
+			 $scope.upload_desc= $scope.uploadList.upload_type_desc;
+			 $scope.upload_start_time= $scope.uploadList.upload_time;
+			 $scope.upload_status= $scope.uploadList.upload_status;
+			 $scope.last_updated_dt= $scope.uploadList.last_modified_time;
+			 $scope.viewUploadList=[];
+			 $scope.viewUploadList=angular.fromJson(data.arrRowValidationInfo);
+			 $scope.addDataToTable.length=0;				  	
+		     angular.forEach($scope.viewUploadList, function(item){		        	
+		        	$scope.addDataToTable.push([
+		        	    item.page_no,
+		        	    item.row_no,
+						item.validation_msg,
+						item.cust_validation_msg
+		        	]);  
+			    });
+		        if ($scope.addDataToTable.length >0){
+		        	$scope.dataLoad=true;
+				}
+		        else{
+					 $scope.hideMsg();
+					 $scope.showMsg('No Upload Information is found ','');
+					 $scope.dataLoad=false;
+				}
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in upload Information');
+		  });
+		};
+		
+		$scope.grid = {
+				header: ["Page #", "Row #", "Standard Validation Message", "Custom Validation Message"],
+	    		data: $scope.addDataToTable,
+	    		sort: [[2, "asc"]],
+	    		colDefs: [
+	    			{ "sClass": "left", "aTargets": [0,1,2,3] }
+	    		],
+	    		colViewBy: { // define view by function styleif sDom has C, this is required
+	    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+	    			"bShowAll": true,
+	    			"sShowAll": "Show All",
+	    			"sAlign": "left"
+	    		}
+		};
+		
+	$scope.returnToUpload=function(){
+		document.location.href=webStorage.session.get('PrevPage');
+		document.location.href="#/UploadInfo";
+	};
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	 
+}]);
+
+eccApp.controller('ShowPropStatus',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.uploadValue=$scope.param.uploadValue;	
+	$scope.showPropList=[];
+	$scope.dataLoad=false;
+	$scope.addDataToTable=[];
+	$scope.loadDealData=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Show Prop Status Task\"");
+
+		$http({
+			url: 'admin/showPropStatus.htm?uploadValueId='+$scope.uploadValue,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {
+			 $scope.statusList = [];
+			  	$scope.statusList = data;		  	
+			  	$scope.addDataToTable.length=0;		        
+		        angular.forEach($scope.statusList, function(item){		        	
+		        	$scope.addDataToTable.push([		        	
+						item.catalogId,
+						item.processingStatus
+		        	]);  
+			    });
+		        if ($scope.addDataToTable.length >0){
+		        	$scope.dataLoad=true;
+				}
+		        else{
+					 $scope.hideMsg();
+					 $scope.showMsg('No Upload Status is found ','');
+				}
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in upload Status');
+		  });
+		};
+		
+		$scope.grid = {
+				header: ["Standard Catalog Id/PL Load ID", "Propogation Status"],
+	    		data: $scope.addDataToTable,
+	    		sort: [[1, "asc"]],
+	    		colDefs: [
+	    		  { "sClass": "left unsortable", "aTargets": [0,1] },
+	    		]	    		
+		};
+		
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	 
+}]);
+
+eccApp.controller('CreateManufCtrl',['$scope', '$http,$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	var queryParams="";
+	$scope.createManJobList=[];
+	$scope.dataLoad=false;
+	$scope.returnToViewCust=function(){
+		document.location.href=webStorage.session.get('PrevPage');
+		
+	};
+	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Crate Manufacturer Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+		try { 
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+				$location.path("/SelectCustomer").search({redirect: "page"});
+			}
+		} catch(e) { 
+			$scope.selectCustomer='';
+		}
+	};
+	
+	$scope.checkPhoneNumber=function phonenumber() 
+	{
+		var phoneno = /^[(]{0,1}[0-9]{3}[)]{0,1}[-\s\.]{0,1}[0-9]{3}[-\s\.]{0,1}[0-9]{4}$/;		  
+	  if($scope.phone.match(phoneno)) {
+	      return true;
+	        }
+	      else if($scope.phone.match(phoneno)==null)
+	        {
+	        return false;
+	        }
+	};
+	
+	$scope.createManRecord = function() {
+		    queryParams='';
+			var manName= $scope.manufacturerName;
+			var manId=$scope.manufacturerId;
+			var contactName= $scope.contactName;
+			var phone=$scope.phone;
+			
+			if(phone!=null && phone!=undefined && phone!='') {
+				if($scope.checkPhoneNumber()){
+					if($scope.manufacturerName == "" && $scope.manufacturerId== "" ||
+							$scope.manufacturerName==undefined &&  $scope.manufacturerId==undefined){
+						$scope.hideMsg();
+						$scope.showMsg('','For adding or editing, Manufacturer ID and Manufacturer name cannot be empty.');
+						$scope.dataLoad=false;
+						return false;
+					} else {
+						$scope.loadTime = new Date().getTime();
+						if(manName && manId && manName=="%" && manId=="%") {
+							queryParams=queryParams+"manufacturerName="+manName+"&manufacturerId="+manId+"&contactName="+contactName+"&phone="+phone;
+							$scope.createNewOne();
+						} else if (manName && manId && manName!="" && manId!="") {
+							queryParams=queryParams+"manufacturerName="+manName+"&manufacturerId="+manId+"&contactName="+contactName+"&phone="+phone;
+							$scope.createNewOne();
+						} else {
+							$scope.hideMsg();
+							$scope.showMsg('','For adding or editing, Manufacturer ID and Manufacturer name cannot be empty.');
+							$scope.dataLoad=false;
+							return false;
+						}
+					}
+				} else {
+					$scope.hideMsg();
+					$scope.showMsg('','Enter a valid Phone Number(Like XXX-XXX-XXXX).');
+					$scope.dataLoad=false;
+					return false;
+				}
+				
+				} else {
+					if($scope.manufacturerName == "" && $scope.manufacturerId== "" ||
+							$scope.manufacturerName==undefined &&  $scope.manufacturerId==undefined){
+						$scope.hideMsg();
+						$scope.showMsg('','For adding or editing, Manufacturer ID and Manufacturer name cannot be empty.');
+						$scope.dataLoad=false;
+						return false;
+					} else {
+						$scope.loadTime = new Date().getTime();
+						if(manName && manId && manName=="%" && manId=="%") {
+							queryParams=queryParams+"manufacturerName="+manName+"&manufacturerId="+manId+"&contactName="+contactName+"&phone="+phone;
+							$scope.createNewOne();
+						} else if (manName && manId && manName!="" && manId!="") {
+							queryParams=queryParams+"manufacturerName="+manName+"&manufacturerId="+manId+"&contactName="+contactName+"&phone="+phone;
+							$scope.createNewOne();
+						} else {
+							$scope.hideMsg();
+							$scope.showMsg('','For adding or editing, Manufacturer ID and Manufacturer name cannot be empty.');
+							$scope.dataLoad=false;
+							return false;
+						}
+					}
+			}
+			
+			$scope.loadTime = new Date().getTime();
+		};
+	
+	$scope.createNewOne=function(){
+		$http({
+			url: 'admin/createManufacturer.htm?'+queryParams,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {			 
+			 if(data.successMsg != undefined){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+				 document.location.href="#ListManufacturers?operation=add&manufacturerId="+data.id+"&manufacturerName="+data.name;
+				 webStorage.session.add('messageAfterSaveManufacturer', data.successMsg);
+				 }else if(data.errorMsg != undefined){
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+			 }else{
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			 $scope.hideMsg();
+			 $scope.showMsg('',data.errorMsg);
+			
+		});
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+	$scope.returnToViewManuf=function(){
+		document.location.href=webStorage.session.get('PrevPage');		
+	};
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+}]);
+
+
+eccApp.controller('editManufCtrl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.url="admin/editManufacturer.htm?manufacturerId=";
+	$scope.eccURL="&manufacturerName=";
+	$scope.createPubTargetList=[];
+	$scope.dataLoad=false;
+	$scope.roleID = webStorage.local.get('userRoleId');
+	$scope.returnToViewCust=function(){
+		document.location.href=webStorage.session.get('PrevPage');
+		
+	};
+	var input='';
+	var queryParams="";
+	$scope.checkPhoneNumber=function phonenumber(input) 
+	{
+		var phoneno = /^[(]{0,1}[0-9]{3}[)]{0,1}[-\s\.]{0,1}[0-9]{3}[-\s\.]{0,1}[0-9]{4}$/;
+		  
+	  if(input.match(phoneno)) {
+	      return true;
+	        }
+	      else
+	        {
+	        return false;
+	        }
+	};
+	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Edit Manufacturer Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+		
+		try { 
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			$http({
+				url: $scope.url+$routeParams.mfgId,
+				method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+				data : {
+					
+				}
+			 }).success(function(data,status,header,config) {
+				 $scope.manufacturerSrchCrtlList = [];
+				 $scope.manufacturerSrchCrtlList = data;
+				 angular.forEach($scope.manufacturerSrchCrtlList, function(item){		       
+						 $scope.manufacturerId = item.mfg_id;
+						 $scope.manufacturerName = item.mfg_name;
+						 $scope.contactName = item.contact_name==null?"":item.contact_name;
+						 $scope.phone=item.phone;
+				 });
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).error(function(data, status, headers, config) {
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+				});		
+			
+			
+		} catch(e) { 
+			$scope.selectCustomer='';
+		}
+	};
+	
+	$scope.updateManRecord = function() {
+			queryParams='';
+			var manName= $scope.manufacturerName;
+			var manId=$scope.manufacturerId;
+			var contactName= $scope.contactName==''?'':$scope.contactName;
+			var phone=$scope.phone;
+			$scope.url="admin/updateManufacturer.htm?";
+			if(phone!=null && phone!=undefined && phone!=''){
+				if($scope.checkPhoneNumber(phone)){
+					queryParams=queryParams+"mName="+manName+"&mId="+manId+"&cName="+contactName+"&mPh="+phone;
+					$scope.loadTime = new Date().getTime();
+					$scope.updateManf();
+				} else {
+					$scope.hideMsg();
+					$scope.showMsg('','Enter a valid Phone Number(Like XXX-XXX-XXXX).');
+					$scope.dataLoad=false;
+					return false;
+				}
+			} else {
+				queryParams=queryParams+"mName="+manName+"&mId="+manId+"&cName="+contactName+"&mPh="+phone;
+				$scope.loadTime = new Date().getTime();
+				$scope.updateManf();
+			}
+		};		
+		
+	
+	$scope.updateManf=function(){
+		$http({
+			url: $scope.url+queryParams,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {			 
+			 if(data.successMsg != undefined){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+				 document.location.href="#ListManufacturers?operation=edit&manufacturerId="+data.id+"&manufacturerName="+data.name;
+				 webStorage.session.add('messageAfterEditManufacturer', data.successMsg);
+				 }else if(data.errorMsg != undefined){
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+				
+			 }else{
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			 $scope.hideMsg();
+			 $scope.showMsg('',data.errorMsg);
+				});
+	};
+	$scope.returnToViewManuf=function(){
+		document.location.href=webStorage.session.get('PrevPage');
+		
+	};
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	 
+}]);
+
+eccApp.controller('createPubTargetCtrl',['$scope', '$http','$routeParams','$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.createPubTargetList=[];
+	var queryParams='';
+	$scope.dataLoad=false;	
+	$scope.shutDisplay=false;
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Create Publish Target Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+		$scope.names = [{ name: "FTP", value: "FTP" }, { name: "SFTP", value: "SFTP" },{ name: "HPSB", value: "HPSB"}];
+		$scope.myTargetMode = $scope.names[0];
+	};
+	
+	$scope.updateTarget = function(){
+		if($scope.myTargetMode.value=='HPSB') {
+			$scope.targetServer="N.A.";
+			$scope.targetAccount="N.A.";
+			$scope.targetPwd="N.A.";
+			$scope.shutDisplay=true;			
+		} else {
+			$scope.shutDisplay=false;
+		}
+	};
+	
+	$scope.createTargetRecord = function() {			
+			var tarName= $scope.targetName;
+			var tarServer=$scope.targetServer;
+			var tarAccount= $scope.targetAccount;
+			var tarPwd=$scope.targetPwd;
+			var tarDir=$scope.targetDir;
+			var tarMode=$scope.myTargetMode.value;
+			var regionCode=$scope.selCustRegion;
+			if(tarName==undefined || tarName =='' 
+				|| tarServer==undefined || tarServer ==''
+				|| tarAccount==undefined || tarAccount =='' 
+				|| tarPwd==undefined || tarPwd ==''
+				|| tarDir==undefined || tarDir =='' ){
+				$scope.hideMsg();
+				$scope.showMsg('','Target Name: Required Field;FTP Server: Required Field;FTP Account: Required Field;Account Password: Required Field;Target Directory: Required Field');
+				$scope.dataLoad=false;
+				return false;
+			}else { // All values entered by user
+				// Make Rest Call
+				if(tarMode=='HPSB'){
+					var answer = confirm ("Do you have an HPSB account created for this?"
+							+ "\n If Yes, click on OK. "
+							+ "Otherwise click on Cancel");
+					if(answer){
+						$scope.shutDisplay=false;
+						queryParams=queryParams+"targetName="+tarName+"&server="+tarServer+"&account="+tarAccount+"&pwd="+tarPwd+"&dir="+tarDir+"&mode="+tarMode+"&region="+regionCode;				
+						$scope.createNewTarget();
+					} else {
+						return false;
+					}
+				} else {
+					queryParams=queryParams+"targetName="+tarName+"&server="+tarServer+"&account="+tarAccount+"&pwd="+tarPwd+"&dir="+tarDir+"&mode="+tarMode+"&region="+regionCode;				
+					$scope.createNewTarget();
+				}
+			}			
+			$scope.loadTime = new Date().getTime();
+		};
+	
+	$scope.createNewTarget=function(){
+		$http({
+			url: 'admin/createPublishTargets.htm?'+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {			 
+			 if(data.successMsg != undefined){
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+				 document.location.href="#ManagePublishTargets?operation=add";//&targetId="+data.id+"&targetName="+data.name;
+				 webStorage.session.add('messageAfterSaveTarget', data.successMsg);
+				 }else if(data.errorMsg != undefined){
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+				
+			 }else{
+				 $scope.hideMsg();
+				 $scope.showMsg(data.successMsg,'');
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			 $scope.hideMsg();
+			 $scope.showMsg('',data.errorMsg);
+			
+		});
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+	$scope.returnToViewTarget=function(){
+			document.location.href="#/ManagePublishTargets";				
+	};
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+}]);
+
+
+eccApp.controller('DisplayPubTargetCtrl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$scope.url="admin/dispTarget.htm?targetId=";
+	$scope.salesPricing=true;
+	$scope.roleId= webStorage.local.get('userRoleId');
+	$scope.roleName = webStorage.local.get('userRole');
+	if($scope.roleId == '2' || $scope.roleId == '5' || $scope.roleId == '6' || $scope.roleId == '8' || $scope.roleName=='Sales Representative'||
+			$scope.roleName=='Sales Representative - Standard' ||
+			$scope.roleName=='Sales Representative - Standard - GL' ||
+			$scope.roleName=='Sales Representative - GL' || $scope.roleName=='Pricing Administrator'||
+			$scope.roleName=='Pricing Administrator - Standard' ||
+			$scope.roleName=='Pricing Administrator - Standard - GL' ||
+			$scope.roleName=='Pricing Administrator - GL') {
+		$scope.salesPricing=false;
+	}
+	$scope.returnToViewTarget=function(){
+		document.location.href=webStorage.session.get('PrevB4DisplayPage');
+		
+	};	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Display Publish Target Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			if($routeParams) {
+				if($routeParams.action=='editSave'){
+					$scope.messageAfterEditTarget=webStorage.session.get('messageAfterEditTarget');
+					if(!$scope.messageAfterEditTarget){
+						$scope.messageAfterEditTarget='';
+						$scope.hideMsg();
+					} 
+				}
+				if($routeParams.targetId!=undefined){					
+					$routeParams.publishTargetId=$routeParams.targetId;				
+				}
+			} else {
+				$scope.messageAfterSaveTarget='';
+				$scope.hideMsg();
+			}
+			$http({
+				url: $scope.url+$routeParams.publishTargetId,
+				method:"POST",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+				data : {
+					
+				}
+			 }).success(function(data,status,header,config) {
+				 if($routeParams && $routeParams.action=='editSave'){						
+						$scope.showMsg($scope.messageAfterEditTarget,'');
+				} 	
+				 $scope.dispTargetList = [];
+				 $scope.dispTargetList = data;
+				 angular.forEach($scope.dispTargetList, function(item){		       
+					 	 $scope.targetName = item.targetName;
+					 	 $scope.targetServer = item.ftpServer;
+						 $scope.targetAccount = item.ftpAccount;
+						 $scope.targetPwd=item.ftpPassword;
+						 $scope.targetDir=item.ftpDirectory;
+						 $scope.mode = item.method;
+				 });
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).error(function(data, status, headers, config) {
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+				});	
+	};
+	
+	$scope.editTargetRecord = function() {	
+			$scope.loadTime = new Date().getTime();
+			webStorage.session.add('PrevB4UpdatePage', '#/DisplayPublishTarget'); 
+			document.location.href="#/EditPublishTargets?action=edit&targetId="+$routeParams.publishTargetId;//+queryParams;	
+			
+		};	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	 
+}]);
+
+eccApp.controller('quickViewCrtl',['$scope', '$http', '$timeout','$location','webStorage',
+  function ($scope, $http, $timeout,$location,webStorage) {
+	
+	$("#loadTime").html("");
+	$scope.orgURL="admin/quickView.htm?custId=";
+	$scope.loadTime = new Date().getTime();
+	$scope.addDataToTable=[];
+	$scope.quickViewList=[];
+	var queryParams='';
+	$scope.addDataToTable.length=0;
+	$scope.dataLoad=false;
+	$scope.url="admin/quick.htm?";	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Quick View Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.hideMsg();
+		$scope.custId='';
+		$scope.masterCatalogList=[];
+		$scope.addDataToTable=[];
+		$scope.selectCustomer = [];		
+		try { 
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+				$location.path("/SelectCustomer").search({redirect: "page"});
+			}
+			$http({
+				url: $scope.orgURL+$scope.selectCustomer.cust_key,
+				method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+				data : {
+					
+				}
+			 }).success(function(data,status,header,config) {			
+				  	$scope.quickViewList = data;
+				  	if($scope.quickViewList.fShortDescription==true){
+				  		$scope.shortDescription=true;
+				  	} else {
+				  		$scope.shortDescription=false;
+				  	}				  		
+				  	if($scope.quickViewList.fDatasheet==true) {
+				  		$scope.dataSheetURL=true;
+				  	} else {
+				  		$scope.dataSheetURL=false;
+				  	}				  		
+				  	if($scope.quickViewList.fSource==true) {
+				  		$scope.source=true;
+				  	} else{
+				  		$scope.source=false;
+				  	}				  		
+				  	if($scope.quickViewList.fQuoteId==true){
+				  		$scope.quoteId=true;	
+				  	} else {
+				  		$scope.quoteId=false;
+				  	}
+				  		
+				  	$scope.hideMsg();
+			    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			  }).
+			  error(function(data, status, headers, config) {
+				  	//$.loader("close");
+					$scope.hideMsg();
+					$scope.showMsg('','Error in Quick View Settings save');
+			  });
+		} catch(e) { 
+			$scope.selectCustomer='';			
+		}
+	};
+	
+	$scope.saveSettings= function(){
+		queryParams='';
+		if($scope.selectCustomer)
+			queryParams=queryParams+"custId="+$scope.selectCustomer.cust_key;
+		if($scope.shortDescription)
+		 queryParams=queryParams+"&desc=true";
+		if($scope.dataSheetURL)
+			 queryParams=queryParams+"&url=true";
+		if($scope.source)
+			 queryParams=queryParams+"&src=true";
+		if($scope.quoteId)
+			 queryParams=queryParams+"&quoteId=true";		
+		$scope.editSaveQuickView();
+	};
+	
+	$scope.editSaveQuickView=function(){
+		$http({
+			url: $scope.url+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : {
+				
+			}
+		 }).success(function(data,status,header,config) {
+			 	$scope.hideMsg();
+			 	$scope.quickViewList = data;
+			 	if($scope.quickViewList.fShortDescription==true){
+			  		$scope.shortDescription=true;
+			  	} else {
+			  		$scope.shortDescription=false;
+			  	}				  		
+			  	if($scope.quickViewList.fDatasheet==true) {
+			  		$scope.dataSheetURL=true;
+			  	} else {
+			  		$scope.dataSheetURL=false;
+			  	}				  		
+			  	if($scope.quickViewList.fSource==true) {
+			  		$scope.source=true;
+			  	} else{
+			  		$scope.source=false;
+			  	}				  		
+			  	if($scope.quickViewList.fQuoteId==true){
+			  		$scope.quoteId=true;	
+			  	} else {
+			  		$scope.quoteId=false;
+			  	}
+		    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(headers, config) {
+			  	//$.loader("close");
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Quick View Settings save');
+		  });
+	};		
+	
+	$scope.showMsg=function(success, error){
+	    $scope.successMessage=success;
+	    $scope.errorMessage=error;
+	};	    
+	$scope.hideMsg=function(){
+	    $scope.successMessage='';
+	    $scope.errorMessage='';
+	};
+}]);
+
+eccApp.controller('propogationControlCrtl',['$scope', '$location','$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser',
+  function ($scope, $location,$http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser) {
+	$("#loadTime").html("");	
+	$scope.loadTime = new Date().getTime();
+	$scope.addDataToTable=[];
+	$scope.propogationControlList=[];
+	$scope.myList=[];
+	$scope.addDataToTable.length=0;
+	$scope.dataLoad=false;
+	$scope.url="admin/publishCountry.htm?";
+	$scope.selectCustomer=[];	
+	$scope.navRole=false;
+	$scope.accCode=[];	
+	$scope.regionCD='';
+	var queryParams='';
+	var customerKey='';
+	var customerId='';
+	var roleId='';
+	var taskPerformed='';	
+	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Propagation Control Task\"");
+
+			$scope.loadTime = new Date().getTime();			
+			$scope.selectCustomer=webStorage.local.get('selCustData');//encodeURIComponent
+			$scope.userRole= webStorage.local.get('userRole');	
+			if($scope.userRole=='Standard Catalog Manager - Standard' || $scope.userRole=='Standard Super User - Standard'
+				|| $scope.userRole=='Standard Catalog Manager - Standard - GL' || $scope.userRole=='Standard Super User - Standard - GL') {
+				//No need to select customer
+				queryParams=queryParams+"&region= "+"&custId= "+"&custKey= "+"&role="+webStorage.local.get('userRoleId');
+				$scope.propStatuses = [{ name: "All", value: "All" }, { name: "Y", value: "Propogate" },{ name: "N", value: "Do Not Propogate"}];
+				$scope.propStatus = $scope.propStatuses[0];	
+				$scope.catalogFilters = [{ name: "All", value: "All" }, { name: "Standard Catalogs", value: "STDCAT" },{ name: "Price Tiers", value: "PCAT"}];
+				$scope.catalogFilter = $scope.catalogFilters[0];				
+				$scope.searchPropControl();
+			} else {				
+				if($scope.selectCustomer == undefined || $scope.selectCustomer==null || $scope.selectCustomer.length == 0){
+					$location.path("/SelectCustomer").search({redirect: "page"});			
+				} else {
+					regionCD= $scope.selectCustomer.region_code;
+					customerKey=$scope.selectCustomer.cust_key;
+					customerId=$scope.selectCustomer.cust_id;		
+					roleId = webStorage.local.get('userRoleId');	
+					if($scope.userRole=='Super User' || $scope.userRole=='Super User - GL' || $scope.userRole=='Standard Super User - Standard' || $scope.userRole=='Standard Super User - Standard - GL'){
+						$scope.superRole=true;
+						$scope.cusNam=$scope.selectCustomer.cust_name;
+						$scope.cusIds=customerId;
+						$scope.cusDun=$scope.selectCustomer.cust_dun;
+						$scope.supplierId=$scope.selectCustomer.supplier_id;
+						$scope.eprimeCusId=$scope.selectCustomer.cust_key;
+						$scope.eprimeCusType=$scope.selectCustomer.eprime_cust_type;
+					} else {
+						$scope.superRole=false;
+					}
+					queryParams=queryParams+"&region="+regionCD+"&custId="+customerId+"&custKey="+customerKey+"&role="+roleId;
+					$scope.propStatuses = [{ name: "All", value: "All" }, { name: "Y", value: "Propogate" },{ name: "N", value: "Do Not Propogate"}];
+					$scope.propStatus = $scope.propStatuses[0];	
+					$scope.catalogFilters = [{ name: "All", value: "All" }, { name: "Standard Catalogs", value: "STDCAT" },{ name: "Price Tiers", value: "PCAT"}];
+					$scope.catalogFilter = $scope.catalogFilters[0];	
+					$scope.searchPropControl();	
+				}			
+			}
+			
+	};
+	$scope.searchPropogationControl=function(){	
+		$routeParams.successMsg='';
+		$routeParams.errorMsg='';
+		taskPerformed="search";	
+		$scope.searchPropControl();
+	};
+	
+	$scope.searchPropStatus= function(){
+		$routeParams.successMsg='';
+		$routeParams.errorMsg='';
+		taskPerformed="searchByStatus";
+		propoStatus=$scope.propStatus;
+		catFilter=$scope.catalogFilter;
+		$scope.searchPropControl();
+	};
+	
+	$scope.searchPropControl =function(){
+		queryParams='';
+		$scope.catalogId=$scope.catalogId==undefined?'' :$scope.catalogId;
+		$scope.catalogName=$scope.catalogName==undefined?'' :$scope.catalogName;
+		$scope.selectedCountry=$scope.selectedCountry==undefined?'' :$scope.selectedCountry;
+		regionCD=$scope.selectCustomer==undefined?'':$scope.selectCustomer.region_code;
+		if(taskPerformed=='')
+			taskPerformed=='default';
+		$scope.propStatus=$scope.propStatus==undefined?'':$scope.propStatus;
+		queryParams=queryParams+"&custKey="+customerKey+"&role="+roleId+"&catalogId="+$scope.catalogId+
+		"&catalogName="+$scope.catalogName+"&country="+$scope.selectedCountry+"&taskPerformed="+taskPerformed+"&region="+regionCD+"&propogationStatus="+$scope.propStatus.name+
+		"&catalogFilter="+$scope.catalogFilter.name+"&region="+regionCD+"&custId="+customerId;
+		$http({
+			url: 'admin/propControl.htm?'+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+
+            dataType: "json"
+			
+		 }).success(function(data,status,header,config) {			 	
+			 		$scope.hideMsg();			 			 			
+			  	$scope.propogationControlList = [];
+			  	$scope.propogationControlList = data;	
+			  	$scope.myList=data;
+			  	$scope.addDataToTable.length=0;	
+			  	$scope.dataLoad=false;
+			  	for (var index = 1; index <= $scope.propogationControlList.length; index++){ 
+			  	var item = "";
+	        	item = $scope.propogationControlList[index-1];	        	
+	        	if($scope.userRole=='Super User' || $scope.userRole=='Super User - GL' || $scope.userRole=='Standard Super User - Standard' || $scope.userRole=='Standard Super User - Standard - GL'){
+	        		$scope.navRole=true;
+	        		if(item.doNotPropagate=='Y'){
+		        		checked_value = "";
+		        	}else{
+		        		checked_value = "checked";
+		        	}
+	        	} else {	        		
+	        		if(item.doNotPropagate=='Y'){
+		        		checked_value = "disabled";
+		        	}else{
+		        		checked_value = "checked disabled";
+		        	}	        	
+	        	}
+	        	
+		        	$scope.addDataToTable.push([ 	        	                           
+		        	   '<input value = "'+item.catId+'" type="checkbox" name="ck" class="ck" id="ck'+index+'"'+checked_value+'>',
+		        	  item.catId,					
+		        	  item.catName,
+		        	  item.pmId,
+					  item.pdId	        	  
+		        	]);
+			  	 } 
+			  	 
+		        if ($scope.addDataToTable.length >0){
+		        	$scope.dataLoad=true;
+				} else {
+					 $scope.hideMsg();	
+					 $scope.showMsg('','No Catalog(s) Found ');
+				}		       
+		    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Propogation Control Service');
+		  });
+		$http({
+		url: $scope.url+queryParams,
+		method:"GET",
+		headers: {
+            "Accept": "application/json; charset=utf-8",
+			"Cache-Control" : "no-cache",
+			"Pragma" : "no-cache",
+			"If-Modified-Since" : "0"
+        },
+		data : {
+			
+		}
+	 }).success(function(data,status,header,config) {	
+		 $scope.hideMsg();
+		  	$scope.countryNames=data;
+		  	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	  }).
+	  error(function(data, status, headers, config) {
+		  	//$.loader("close");
+			$scope.hideMsg();
+			$scope.showMsg('','Error in Getting Country List');
+	  });
+};	
+
+$scope.grid = {
+		header: ["Do Not Propogate", "Catalog ID", "Catalog Name", "Price Merge ID", "Price Descriptor"],
+		data: $scope.addDataToTable,
+		sort: [[1, "desc"]],
+		colDefs: [
+					{ "sClass": "center", "aTargets": [1, 2] },
+					{ "sClass": "center unsortable", "aTargets": [0] },
+					//{ "sClass": "left", "aTargets": [1,2] },
+					//{ "sClass": "right", "aTargets": [4] },
+					{ "bSortable": false, "aTargets": [0] }
+				],
+		colViewBy: { // define view by function styleif sDom has C, this is required
+			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+			"bShowAll": true,
+			"sShowAll": "Show All",
+			"sAlign": "left"
+		}
+};	
+	$scope.updatePropogationControl=function() {
+		taskPerformed="update";		
+		queryParams='';
+		if($('.ck:checked').length) {
+	          var chkId = '';
+	          $('.ck:checked').each(function() {
+	        	  chkId += $(this).val() + ",";
+	          });
+	          chkId =  chkId.slice(0,-1);
+	        }
+		var unchkId='';
+		$("input:checkbox:not(:checked)").each(function () {
+			unchkId += $(this).val() + ",";
+        });
+		unchkId =  unchkId.slice(0,-1);
+        
+		$scope.catalogId=$scope.catalogId==undefined?'' :$scope.catalogId;
+		$scope.catalogName=$scope.catalogName==undefined?'' :$scope.catalogName;
+		$scope.selectedCountry=$scope.selectedCountry==undefined?'' :$scope.selectedCountry;
+		regionCD= $scope.selectCustomer==undefined?'' :$scope.selectCustomer.region_code;
+		$scope.propStatus=$scope.propStatus==undefined?'':$scope.propStatus;
+		queryParams=queryParams+"&custKey="+customerKey+"&role="+roleId+"&catalogId="+$scope.catalogId+
+		"&catalogName="+$scope.catalogName+"&country="+$scope.selectedCountry+"&taskPerformed="+taskPerformed+"&region="+regionCD+"&propogationStatus="+$scope.propStatus.name+
+		"&selectedCatalogsStatus="+chkId+"&region="+regionCD+"&custId="+customerId+"&deSelectedCatalogsStatus="+unchkId;
+		$http({
+			url: 'admin/updatePropControl.htm?'+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },	
+			data : {
+						
+					}
+		 }).success(function(data,status,header,config) {
+			 	if(data.SuccessMsg) {
+			 		$routeParams.successMsg=data.SuccessMsg;
+			 	} else {
+			 		$routeParams.successMsg='';
+			 	}			 		
+			 	if(data.ErrorMsg) {
+			 		$routeParams.errorMsg=data.ErrorMsg;
+			 	} else {
+			 		$routeParams.errorMsg='';
+			 	}
+			 	$scope.showMsg($routeParams.successMsg,$routeParams.errorMsg);	
+		    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Update Propogation Control Service');
+		  });
+	};
+
+	
+	$scope.showMsg=function(success, error){
+	 	$scope.successMessage=success;
+	 	$scope.errorMessage=error;
+	 };
+	 $scope.hideMsg=function(){
+	 	$scope.successMessage='';
+	 	$scope.errorMessage='';
+	 };
+}]);
+
+eccApp.controller('uploadDealsCrtl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser','$upload',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser,$upload) {	
+		$scope.successMessage	=	'';
+		$scope.errorMessage		=	'';
+		$scope.hideValue =false;
+		$scope.priceCheck =false;
+		var files=[];
+		
+		$scope.disableButton = function() {
+			if($scope.priceCheck){
+				$scope.priceCheck = false;				
+			} else {
+				$scope.file2=[];
+				$scope.priceCheck = true;
+			}
+			
+		};
+		
+	    $scope.upload = function (file0,file1,file2) {
+	    	if($scope.hideValue!=undefined && $scope.hideValue==true) {
+	    		if (file0 && file0.length && file1 && file1.length) {
+	    			files[0]=file0[0];
+		            files[1]=file1[0];
+	    		}
+	    		else {
+		        	 $scope.showMsg('','All two files -  Deal, Line Type needs to be uploaded.');
+		        	 return;
+		        }
+	    	} else {
+	    		if (file0 && file0.length && file1 && file1.length && file2 && file2.length) {
+		              files[0]=file0[0];
+		              files[1]=file1[0];
+		              files[2]=file2[0];
+	    		}
+	    		else {
+		        	 $scope.showMsg('','All three files -  Deal, Line Type and Price descriptor needs to be uploaded.');
+		        	 return;
+		        }
+	    	}
+	                $upload.upload({
+	                     method: 'POST',
+	                     url: 'admin/uploadDeals.htm?hide='+$scope.hideValue,
+	                     file: files
+	                }).progress(function (evt) {
+	                    var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+	                }).success(function (data, status, headers, config) {
+	                                   $scope.hideMsg();
+	                                   if(data.successMsg!=null){
+	                                          $scope.showMsg(data.successMsg,'');
+	                                   }else if(data.errorMsg!=null){
+	                                         $scope.showMsg('',data.errorMsg);
+	                                   }
+	                    
+                        $scope.file0 = [];
+                        $scope.file1 = [];
+                        $scope.file2 = [];
+	                }).error(function(data, status, headers, config) {
+	                                   $scope.hideMsg();
+	                             $scope.showMsg('',data.errorMsg);
+	                     });
+	    };
+	       $scope.showMsg=function(success, error){
+	       $scope.successMessage=success;
+	       $scope.errorMessage=error;
+	    };
+	       $scope.hideMsg=function(){
+	       $scope.successMessage='';
+	       $scope.errorMessage='';
+	       };
+	       
+		   	$scope.cancel=function(){
+				$scope.file0=[];
+		   		$scope.file1=[];
+		   		$scope.file2=[];
+		   		$scope.hideValue=false;
+		   		$scope.priceCheck = false;	
+			};	       
+	}]);
+
+
+eccApp.controller('ProdFamilyCodesCtrl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams', 'dateParser','$upload',
+   function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams, dateParser,$upload) {	
+	$scope.addDataToTable=[];
+	 $scope.uploadFlag="";
+	 $scope.btnDisabled=true;
+	$scope.enableFileUpload=function()
+	{	
+		$('.upFlg').each(function(){
+				if($(this).prop('checked')==true){
+			 $scope.code=true;
+			 $scope.codeToApply='';
+			 $scope.proddel=true;
+			 $scope.btnDisabled=false;
+			 $scope.hideMsg();
+		} else {
+			 $scope.code=false;
+			   $scope.proddel=false;
+			   $scope.btnDisabled=true;
+			   $scope.hideMsg();
+		}
+		});
+	};
+	
+	$scope.select = function($files) {
+	    $scope.selectedFile = $files[0];
+	};
+	
+	$scope.uploadPMCodes= function($files){
+		var newFile=$scope.files;
+		if (newFile && newFile.length) {
+                var file = newFile;
+                $upload.upload({
+                	method: 'POST',
+                	url: 'admin/uploadPMCodes.htm?category='+$scope.categorization,                  
+                    file: file
+                }).progress(function (evt) {
+                    var progressPercentage = parseInt(100.0 * evt.loaded / evt.total);
+                }).success(function (data, status, headers, config) {
+                	$scope.hideMsg();
+					 $scope.showMsg(data.successMsg,'');
+					 $scope.displayList = [];
+					  	$scope.displayList = data.displayList;		  	
+					  	$scope.addDataToTable.length=0;		        
+				        angular.forEach($scope.displayList, function(item){		        	
+				        	$scope.addDataToTable.push([		        	
+								item.ctg,
+								item.product_model,
+								item.code,	
+								item.status
+				        	]);  
+					    });
+				        if ($scope.addDataToTable.length >0){
+				        	$scope.dataLoad=true;
+						}
+				        else{
+							 $scope.hideMsg();
+							 if(data.errorMsg!=null){
+								 $scope.showMsg('',data.errorMsg);
+							 }
+							 
+						}				        
+                }).error(function(data, status, headers, config) {
+	       			 $scope.hideMsg();
+	       			$scope.dataLoad=false;
+	    			 $scope.showMsg('',data.errorMsg);
+    			});
+            }  else {
+            	$scope.hideMsg();
+            	$scope.showMsg('','Please input .xls/.xlsx file to upload');            	
+            }    
+    };
+	
+	$scope.url="admin/loadPMCodes.htm";
+	var displayList=[];
+	$scope.dataLoad=false;
+	
+	var input='';
+	var queryParams="";
+	
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Product Family Codes Task\"");
+
+		$scope.successMessage='';
+		$scope.errorMessage='';	
+		$scope.dataLoad=false;
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		$http({
+				url: $scope.url,
+				method:"POST",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+				data : {
+					
+				}
+			 }).success(function(data,status,header,config) {
+				$scope.categoryNames = data.ctgList;
+				$scope.categorization = $scope.categoryNames[0];
+				$scope.prodModNames = data.pmList;
+				$scope.productModel = $scope.prodModNames[0];				
+				$scope.displayList = [];
+			  	$scope.displayList = data.displayList;		  	
+			  	$scope.addDataToTable.length=0;		        
+		        angular.forEach($scope.displayList, function(item){		        	
+		        	$scope.addDataToTable.push([		        	
+						item.ctg,
+						item.product_model,
+						item.code,	
+						item.status
+		        	]);  
+			    });
+		        if ($scope.addDataToTable.length >0){
+		        	$scope.dataLoad=true;
+				}
+		        else{
+					 $scope.hideMsg();
+					 if(data.errorMsg!=null){
+						 $scope.showMsg('',data.errorMsg);
+					 }
+					 
+				}		    	
+				
+			}).error(function(data, status, headers, config) {
+				 $scope.hideMsg();
+				 $scope.showMsg('',data.errorMsg);
+				});	
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	};
+	
+	$scope.grid = {
+    		header: ["Categorization", "Product Model", "Code","Status"],
+    		data: $scope.addDataToTable,
+    		sort: [[0, "asc"]],
+    		colDefs: [
+    			//{ "sClass": "center", "aTargets": [2, 3] },
+    			//{ "sClass": "center unsortable", "aTargets": [0] },
+    			{ "sClass": "left", "aTargets": [0,1,2,3] }
+    			//{ "sClass": "right", "aTargets": [4] },
+    			//{ "bSortable": false, "aTargets": [0] }
+    		],
+    		colViewBy: { // define view by function styleif sDom has C, this is required
+    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    			"bShowAll": true,
+    			"sShowAll": "Show All",
+    			"sAlign": "left"
+    		}
+	
+    };
+	
+	$scope.cancel=function(){
+		document.location.href="#Home";
+	};
+	
+	$scope.savePMCodes=function(){
+		if($scope.proddel==true && $scope.code==true){
+			$scope.hideMsg();
+			$scope.showMsg('','Unable to save the information');
+			return false;
+		} else {
+			$scope.hideMsg();
+			var codeToApply=$scope.codeToApply;
+			var category = $scope.categorization;
+			var product = $scope.productModel;
+			if(category!='' && category!=undefined &&
+			   codeToApply!='' && codeToApply!=undefined &&
+			   product!='' && product!=undefined) {
+				$scope.successMessage='';
+				$scope.errorMessage='';	
+				$scope.dataLoad=false;
+				$http({
+						url: 'admin/savePMCodes.htm?cat='+category+'&prod='+product+'&code='+codeToApply,
+						method:"POST",
+						headers: {
+			                "Accept": "application/json; charset=utf-8",
+							"Cache-Control" : "no-cache",
+							"Pragma" : "no-cache",
+							"If-Modified-Since" : "0"
+			            },
+						data : {
+							
+						}
+					 }).success(function (data, status, headers, config) {
+		   				 $scope.hideMsg();
+						 $scope.showMsg(data.successMessage,'');
+						 $scope.displayList = [];
+						  	$scope.displayList = data.displayList;		  	
+						  	$scope.addDataToTable.length=0;		        
+					        angular.forEach($scope.displayList, function(item){		        	
+					        	$scope.addDataToTable.push([		        	
+									item.ctg,
+									item.product_model,
+									item.code,	
+									item.status
+					        	]);  
+						    });
+					        if ($scope.addDataToTable.length >0){
+					        	$scope.dataLoad=true;
+							}
+					        else{
+								 $scope.hideMsg();
+								 if(data.errorMsg!=null){
+									 $scope.showMsg('',data.errorMsg);
+								 }
+								 
+							}	
+					        $scope.codeToApply=codeToApply;
+					        $scope.categorization=category;
+							$scope.productModel=product;				        
+		            }).error(function(data, status, headers, config) {
+		       			 $scope.hideMsg();
+		    			 $scope.showMsg('',data.errorMsg);
+					});	
+			} else {
+				alert('Please enter the UNSPSC Code to save');
+				return false;
+			}
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+
+		}
+	};	
+		
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+	$scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+	};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	 
+}]);
+
+eccApp.controller('refreshVistaDealCrtl',['$scope', '$http', '$timeout','webStorage',
+  function ($scope, $http, $timeout,webStorage) {
+	$scope.localeURL = "admin/refreshVistaDeal.htm?vistaDealId=";
+	var localeVal='';
+	var customerKey='';
+	$scope.successMessage='';
+	$scope.errorMessage='';	
+	$scope.submitVistaDeal = function() {
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Refresh Vista Deal Task\"");
+
+		$scope.loadTime = new Date().getTime();
+		if($scope.vistaDealId==undefined || '') {
+			$scope.showMsg('','Please enter a valid Vista Deal Id');
+			return false;
+		} else {
+			$scope.hideMsg();		
+			$http.get($scope.localeURL+$scope.vistaDealId).success(function(data) {
+					$scope.hideMsg();
+					if(data.successMsg)
+						$scope.showMsg(data.successMsg,'');
+					else 
+						$scope.showMsg('',data.errorMsg);
+					$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		    	
+			  }).
+			  error(function(data, status, headers, config) {
+					$scope.hideMsg();
+					$scope.showMsg('','Error in Refresh Vista Deal Method');
+			  });
+		}
+	};
+$scope.showMsg=function(success, error){
+ 	$scope.successMessage=success;
+ 	$scope.errorMessage=error;
+ };
+ $scope.hideMsg=function(){
+ 	$scope.successMessage='';
+ 	$scope.errorMessage='';
+ };
+ $scope.changed = function (v) {
+	}; 
+}]);
+
+
+
+eccApp.controller('manageOffersCtrl',['$scope', '$http','$timeout','$location','webStorage','$routeParams',
+  function ($scope, $http,$timeout,$location,webStorage,$routeParams) {	
+	$scope.manageURL = "admin/manageOffers.htm";
+	var dealId='';
+	$scope.successMessage='';
+	$scope.errorMessage='';	
+	$scope.dataLoad=false;
+	$scope.manageCrtlList=[];
+	$scope.addDataToTable=[];
+	var queryParams='';
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Manage Offers Task\"");
+
+		$scope.loadTime = new Date().getTime();		
+		try { 
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+				$location.path("/SelectCustomer").search({redirect: "page"});
+			}
+			if($scope.selectCustomer){
+				$scope.custKey	=$scope.selectCustomer.cust_key;
+				$scope.custRegion=$scope.selectCustomer.region_code;
+				$scope.custId=$scope.selectCustomer.cust_id;
+				$scope.custName=$scope.selectCustomer.cust_name;
+				$scope.loadTime = new Date().getTime();
+				$scope.showOffers();
+			}
+		} catch(e) { 
+			$scope.selectCustomer='';
+		}	
+	};
+	
+	
+	
+	$scope.showOffers = function() {
+		queryParams='';		
+		queryParams = queryParams+"?custKey="+$scope.custKey+"&custRegion="+$scope.custRegion+"&custId="+$scope.custId;
+		$http({
+			url: $scope.manageURL+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : { }
+		 }).success(function(data,status,header,config) {
+			 $scope.manageCrtlList = data;
+			 $scope.addDataToTable.length=0;				  	
+			  	if($scope.manageCrtlList.length==0){
+			  		$scope.hideMsg();	
+					$scope.showMsg('','No New Offers Found ');
+					$scope.dataLoad=false;
+			  	} else {
+			  		for (var index = 1; index <= $scope.manageCrtlList.length; index++){ 
+					  	var item = "";
+			        	item = $scope.manageCrtlList[index-1];        	
+				        	$scope.addDataToTable.push([ 	        	                           
+				        	   "<a id="+item.offerID+" onClick=angular.element(document.getElementById('myOffer')).scope().viewOffer('"+item.offerID+"')>"+item.offerID+"</a>",	
+				        	  item.offerName,
+							  item.offerType,
+							  item.priceProfile,
+							  item.dealList,
+							  item.purchasingTerm,
+							  item.pricingRule
+				        	]);
+					  	 } 
+					  	 
+				        if ($scope.addDataToTable.length >0){
+				        	$scope.dataLoad=true;
+						}
+				        else {
+							 $scope.hideMsg();	
+							 $scope.showMsg('','No Targets Found ');
+						}			        
+				        
+			  	}
+		     $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+			  	//$.loader("close");
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Manage Offer Service');
+		  });
+		var offerInfo='';
+		
+		$scope.grid = {
+        		header: ["Offer ID", "Offer Name", "Offer Type", "Price Profile", "Deal List","Purchasing Term","Pricing Rule"],        		
+        		data: $scope.addDataToTable,
+        		sort: [[1, "desc"]],
+        		colDefs: [
+        					{ "sClass": "center", "aTargets": [1, 2] },
+        					{ "sClass": "center unsortable", "aTargets": [0] },
+        					{ "bSortable": false, "aTargets": [0] }
+        				],
+        		colViewBy: { // define view by function styleif sDom has C, this is required
+        			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+        			"bShowAll": true,
+        			"sShowAll": "Show All",
+        			"sAlign": "left"
+        		}
+        };		
+		
+		$scope.viewOffer=function(offerInfo){
+			webStorage.session.add('PrevPage', '#/ManageOffers'); 
+		 	document.location.href="#/ViewOffers?offerValue="+offerInfo;
+	    };	
+	    
+		$scope.addOffers=function(offerInfo){
+			webStorage.session.add('PrevPage', '#/ManageOffers'); 
+		 	document.location.href="#/CreateCustOffer";
+	    };	    
+		
+	 	$scope.showMsg=function(success, error){
+	    	$scope.successMessage=success;
+	    	$scope.errorMessage=error;
+	    };
+		$scope.hideMsg=function(){
+	    	$scope.successMessage='';
+	    	$scope.errorMessage='';
+		};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");	
+};
+}]);
+
+
+eccApp.controller('viewOffersCtrl',['$scope', '$http','$timeout','$location','webStorage','$routeParams',
+  function ($scope, $http,$timeout,$location,webStorage,$routeParams) {	
+	$scope.manageURL = "admin/viewOffer.htm";
+	var offerId='';
+	offerId=$routeParams.offerValue;
+	$scope.successMessage='';
+	$scope.errorMessage='';	
+	$scope.dataLoad=false;
+	$scope.viewCrtlList=[];
+	$scope.addDataToTable=[];
+	var queryParams='';
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"View Offers Task\"");
+
+		$scope.loadTime = new Date().getTime();	
+		$scope.dataLoad=false;
+		try { 	
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			$scope.custKey	=$scope.selectCustomer.cust_key;				
+			$scope.showAllOffers();			
+		} catch(e) { 
+			$scope.selectCustomer='';
+		}
+	};
+	
+	
+	
+	$scope.showAllOffers = function() {
+		queryParams='';		
+		queryParams = queryParams+"?custKey="+$scope.custKey+"&offerId="+offerId;
+		$http({
+			url: $scope.manageURL+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : { }
+		 }).success(function(data,status,header,config) {
+			 $scope.form = data;
+			 $scope.viewCrtlList = data.myUserList;		  	
+			  	$scope.addDataToTable.length=0;				  	
+		        angular.forEach($scope.viewCrtlList, function(item){		        	
+		        	$scope.addDataToTable.push([
+		        	    item.catalogId,
+		        	    item.catalogMasterName,
+						item.priceDescriptor,
+						item.catRegionCode
+		        	]);  
+			    });
+		        if ($scope.addDataToTable.length >0){
+		        	$scope.dataLoad=true;
+				}
+		        else{
+					 $scope.hideMsg();
+					 $scope.showMsg('','No Records Found in User List ');
+				}	 
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in View Offer Service');
+		  });
+		var offerInfo='';
+		
+		$scope.grid = {
+        		header: ["Catalog Master", "Catalog Master Name", "Master Price Descriptor", "Sale Country"],        		
+        		data: $scope.addDataToTable,
+        		sort: [[1, "desc"]],
+        		colDefs: [
+        					{ "sClass": "center", "aTargets": [1, 2] },
+        					{ "sClass": "center unsortable", "aTargets": [0] },
+        					{ "bSortable": false, "aTargets": [0] }
+        				],
+        		colViewBy: { // define view by function styleif sDom has C, this is required
+        			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+        			"bShowAll": true,
+        			"sShowAll": "Show All",
+        			"sAlign": "left"
+        		}
+        };		
+		
+		$scope.addOffers=function(offerInfo){
+			webStorage.session.add('PrevPage', '#/ManageOffers'); 
+		 	document.location.href="#/ViewOffers?offerId="+offerInfo;
+	    };
+	    
+	    $scope.cancelOffer=function(){
+	    	webStorage.session.add('PrevB4DisplayPage', '#/ViewOffers?offerId='+$routeParams.offerValue);
+	    	document.location.href="#/ManageOffers";
+	    };
+	    
+		$scope.editOffer=function(){
+			webStorage.session.add('PrevPage', '#/ViewOffers?offerId='+$routeParams.offerValue); 
+		 	document.location.href="#/CreateCustOffer?offerId="+$routeParams.offerValue;
+	    };
+		
+	 	$scope.showMsg=function(success, error){
+	    	$scope.successMessage=success;
+	    	$scope.errorMessage=error;
+	    };
+		$scope.hideMsg=function(){
+	    	$scope.successMessage='';
+	    	$scope.errorMessage='';
+		};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");	
+};
+}]);
+
+//Fetch Deals
+
+eccApp.controller('fetchDealsCtrl',['$scope', '$http','$timeout','$location','webStorage','$routeParams',
+  function ($scope, $http,$timeout,$location,webStorage,$routeParams) {	
+	$scope.fetchURL = "admin/fetchDeals.htm?";
+	$scope.successMessage='';
+	$scope.errorMessage='';	
+	$scope.dataLoad=false;
+	$scope.manageCrtlList=[];
+	$scope.addDataToTable=[];
+	$scope.fetchDealSpan='';
+	var queryParams='';
+	$scope.init=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Fetch Deals Task\"");
+
+		$scope.loadTime = new Date().getTime();		
+		try { 
+			$scope.selectCustomer=webStorage.local.get('selCustData');
+			if($scope.selectCustomer == undefined || $scope.selectCustomer.length == 0){
+				$location.path("/SelectCustomer").search({redirect: "page"});
+			}
+			if($scope.selectCustomer){
+				$scope.custKey	=$scope.selectCustomer.cust_key;
+				$scope.custRegion=$scope.selectCustomer.region_code;
+				$scope.custId=$scope.selectCustomer.cust_id;
+				$scope.custName=$scope.selectCustomer.cust_name;
+				$scope.loadTime = new Date().getTime();
+			}
+		} catch(e) { 
+			$scope.selectCustomer='';
+		}	
+		$scope.tierDeals = [{ name: "Select", value: "Select" }, { name: "AP", value: "AP" },{ name: "US", value: "US"},{ name: "LA", value:"LA" }, 
+	                     { name: "CA", value: "CA" },{ name: "EU", value: "EU"}];
+	$scope.tierDealFlag = $scope.tierDeals[0];
+	};
+	
+	$scope.clearText=function(buttonclicked) {
+		queryParams='';
+		if (buttonclicked == 'fetchDeal') {
+			$scope.fetchStatusBtn=true;
+			$scope.fetchDealBtn=false;
+			$scope.fetchDealSpan="abc";	
+			$scope.checkDeal = '';		
+			$scope.showDeal=true;
+			$scope.show=false;
+		} else if (buttonclicked == 'fetchDealStatus') {
+			$scope.fetchDealBtn=true;
+			$scope.fetchStatusBtn=false;
+			$scope.fetchDealSpan="bcd";
+			$scope.dealId = '';
+			$scope.show=true;
+			$scope.showDeal=false;
+			$scope.tierDealFlag = $scope.tierDeals[0];
+		}
+		
+	};	
+	
+	$scope.fetchDeal = function(){
+		if($scope.dealId=='' || $scope.dealId==undefined ||$scope.tierDealFlag.value=='Select'){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter a valid Deal Id and Select valid Region');
+			return;
+		} else {
+			queryParams="task=fetch"+"&dealId="+$scope.dealId+"&tierDealFlag="+$scope.tierDealFlag.value;
+			$scope.fetchDealsForGL();
+		}
+	};
+	
+	$scope.fetchstatus = function(){
+		if($scope.checkDeal=='' || $scope.checkDeal==undefined) {
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter a valid Deal Id to fetch Status');
+			return;
+		} else{
+			queryParams="task=status"+"&checkDeal="+$scope.checkDeal;
+			$scope.fetchDealsForGL();
+		}
+	};
+	
+	$scope.fetchDealsForGL = function(){
+		$http({
+			url: $scope.fetchURL+queryParams,
+			method:"POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+			data : { }
+		 }).success(function(data,status,header,config) {
+			 $scope.hideMsg();
+			 if(data[0] && data[0].successMsg){
+				 $scope.showMsg(data[0].successMsg,'');				
+			 }
+			 if(data[0] && data[0].errorMsg){
+				 $scope.showMsg('',data[0].errorMsg);
+			 }			 
+			 $scope.manageCrtlList = data;
+			 $scope.addDataToTable.length=0;			 
+			  	if(data[0] && (data[0].successMsg || data[0].errorMsg)){
+			  		$scope.dataLoad=false;
+			  	} else {
+			  		var item = "";
+			        item = $scope.manageCrtlList;        	
+				    $scope.addDataToTable.push([ 	        	                           
+				        	  item.dealID,
+							  item.version,
+							  item.status,
+							  item.createDate,
+							  item.lastModifiedDate
+				        	]);
+					  	 } 
+					  	 
+				        if ($scope.addDataToTable.length >0){
+				        	$scope.dataLoad=true;
+						}
+			  	
+		     $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Fetch Deal Service');
+		  });
+	};
+	
+	$scope.grid = {
+        		header: ["Deal ID", "Deal Version", "Fetch Status", "Fetch Event Created Date", "Fetch Event Last Updated"],        		
+        		data: $scope.addDataToTable,
+        		sort: [[0, "desc"]],
+        		colDefs: [
+        					{ "sClass": "center", "aTargets": [0,1,2,3,4] }
+        				],
+        		colViewBy: { // define view by function styleif sDom has C, this is required
+        			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+        			"bShowAll": true,
+        			"sShowAll": "Show All",
+        			"sAlign": "left"
+        		}
+        };		
+	 	$scope.showMsg=function(success, error){
+	    	$scope.successMessage=success;
+	    	$scope.errorMessage=error;
+	    };
+		$scope.hideMsg=function(){
+	    	$scope.successMessage='';
+	    	$scope.errorMessage='';
+		};
+	
+	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");	
+
+}]);
+//End of Fetch Deals
+

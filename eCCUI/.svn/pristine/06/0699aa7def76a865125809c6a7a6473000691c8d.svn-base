@@ -1,0 +1,270 @@
+package com.hp.ecc.ui.biz.processor.catalog;
+
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import org.apache.log4j.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.Master;
+import com.hp.ecc.ui.biz.catalog.MasterMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.UpdMultiProds;
+import com.hp.ecc.ui.biz.product.UpdMultiProdsMgr;
+import com.hp.ecc.ui.db.dao.UpdatePriceTierMultiProdsDao;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.controller.UpdatePriceTierMultiProdsController;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Service
+public class UpdatePriceTierMultiProdsProcessor {
+
+	@Autowired
+	UpdatePriceTierMultiProdsDao updatePriceTierMultiProdsDao;
+	
+	private static final Logger logger = LoggerFactory.getLogger(UpdatePriceTierMultiProdsProcessor.class);
+	private Category log  = com.hp.ecc.ui.common.util.FeCTX.getCTX ().getLog ();
+	
+	public List retrieveUpdatePriceTierMultiProds(String task, String priceTierId, String priceTierName, String searchProperty, String searchScope, String searchKeywords, String regionCode, String dbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId) {
+		UpdMultiProds updMultiProds = new UpdMultiProds();
+		String[] genericProgramId = null;
+	    boolean casual = false;
+	    boolean contract = false;
+		int scopeSearchType = PagesUtil.getSearchScopeType(searchScope);
+	    if(scopeSearchType == PagesUtil.CONTRACT_ID_CASUAL) {
+	      casual = true;
+	    }
+	    else if(scopeSearchType == PagesUtil.CONTRACT_ID_CONTRACT) {
+	      contract = true; 
+	    }
+	    
+	    String searchType = searchProperty; //form.getSearchProperty ();
+	    String searchPgmKey = null;
+
+	    String[] pgmIds = genericProgramId; //form.getGenericProgramId();
+	    if ( pgmIds != null && pgmIds.length > 0 ) {
+	    	if ( "search".equalsIgnoreCase(task))
+	    		searchPgmKey = pgmIds [1];
+
+	        if ( !StrUtil.isEmpty (searchPgmKey ) ) 
+	        	searchPgmKey = searchPgmKey == null || 
+	        		searchPgmKey.equalsIgnoreCase ( "-1" )  ? null : searchPgmKey;
+	    }
+	    
+	    if (StrUtil.isEmpty(searchScope)) {
+	        casual = false;
+	        contract = false;
+	        searchType = Product.GROUP_TYPE_OF_BASEPROD;
+	        searchKeywords = "";
+	      }
+		
+	    updMultiProds.setMasterKey(priceTierId);
+	    updMultiProds.setSearchByCasual(casual);
+	    updMultiProds.setSearchByContract(contract);
+	    updMultiProds.setSearchKeyWord(searchKeywords);
+	    updMultiProds.setSearchType(searchType);
+	    updMultiProds.setSearchPgmKey(searchPgmKey);
+	    updMultiProds.setRegionCode(regionCode);
+	    updMultiProds.setSearchScope(searchScope);
+	    
+	    List productList = this.retrieveMasterItem(updMultiProds, dbRegionToConnect, recordOnHand, recordOnDemand,sortBy, sortOrder, searchProdId);
+	    
+		return productList;
+	}//retrieveUpdatePriceTierMultiProds
+
+	public List retrieveMasterItem(UpdMultiProds updMultiProds, String dbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId) {		
+		MasterMgr mgr = new MasterMgr ();
+	    Master catalog = mgr.getMasterInfo(updMultiProds.getMasterKey(), dbRegionToConnect);
+	    catalog.setRegionCode(updMultiProds.getRegionCode());
+
+	    String type = updMultiProds.getSearchType();
+	    String code = updMultiProds.getSearchKeyWord();
+	    boolean contract = updMultiProds.getSearchByContract();
+	    boolean casual = updMultiProds.getSearchByCasual();
+	    int searchScopeType = 0;
+	    if ( contract ) {
+	      searchScopeType = PagesUtil.CONTRACT_ID_CONTRACT;
+	    }
+	    else if ( casual ) {
+	      searchScopeType = PagesUtil.CONTRACT_ID_CASUAL;
+	    }
+	    String pgmKey = updMultiProds.getSearchPgmKey ();
+	    
+	    List productList = updatePriceTierMultiProdsDao.retrieveMasterItem(catalog, type, code, searchScopeType, pgmKey, true, dbRegionToConnect, recordOnHand, recordOnDemand,sortBy, sortOrder, searchProdId);
+	    return productList;
+	}
+	
+	
+	public UpdMultiProds formToUpdMultiProds(String priceTierId, String genericProgramKey, String baseProductList, String propagateValue, String priceTierIdToProcess) {
+		UpdMultiProds mProds = new UpdMultiProds();
+		mProds.setMasterKey(priceTierId);
+		mProds.setPgmKey(genericProgramKey);
+		mProds.setUpdatePgmKey(true);
+		
+		List prodList = getSelectedItemKeys(baseProductList);
+		mProds.setSelectedProdList(prodList);
+		
+		log.debug("PGM Key::: " + mProds.getUpdatePgmKey() + " Key: " + genericProgramKey);
+		log.debug("Price Tier ID:::: " + mProds.getMasterKey());
+		
+		Hashtable prodSelectedItemList = getSelectedItemProductsList(baseProductList);
+		mProds.setProdList(prodSelectedItemList);
+		mProds.setPropAcrossAll(propagateValue);
+
+		String[] priceTierIdArray = null;
+		int count = 0;
+		if (mProds.getPropAcrossAll() != null) {
+			String propAcross = mProds.getPropAcrossAll();
+			if (propAcross.equals("S")) {
+				if (priceTierIdToProcess != null && priceTierIdToProcess.indexOf(",") > 0) {
+					StringTokenizer st = new StringTokenizer(priceTierIdToProcess,",");
+					priceTierIdArray = new String[st.countTokens()];
+					while (st.hasMoreElements()) {
+						priceTierIdArray[count] = (String)st.nextElement();
+						count++;
+					}
+				} else if (priceTierIdToProcess != null && priceTierIdToProcess.indexOf(",") < 0) {
+					priceTierIdArray = new String[1];
+					priceTierIdArray[0] = priceTierIdToProcess; 
+				}
+				mProds.setSelectedPriceTierList(priceTierIdArray);
+			} else if (propAcross.equals("A")) {
+				mProds.setSelectedPriceTierList(null);
+			} else {
+				mProds.setSelectedPriceTierList(null);
+			}
+		}
+		return mProds;
+	}
+	
+	public List getSelectedItemKeys(String baseProducts) {
+		List<String> prodList = new ArrayList<String>();
+		List productList = new ArrayList();
+		List tmpList = null;
+		String item = null;
+		
+		if (baseProducts != null && baseProducts.indexOf("?") > 0) {
+			StringTokenizer st = new StringTokenizer(baseProducts,"?");
+			while (st.hasMoreElements()) {
+				productList.add((String)st.nextElement());
+			}
+		} else if (baseProducts != null && baseProducts.indexOf("?") < 0) {
+			productList.add(baseProducts);
+		}
+		
+		if (productList.size() > 0) {
+			String product = null;
+			for (Object loopProduct:  productList) {
+				product = (String)loopProduct;
+				tmpList = StrUtil.split(product, "~");
+				prodList.add((String)tmpList.get(0));
+			}
+		}
+		
+		return prodList;
+	}
+	
+	public Hashtable getSelectedItemProductsList(String baseProducts) {
+		Hashtable<String, String> prodList = new Hashtable<String, String>();
+		List productList = new ArrayList();
+		List tmpList = null;
+		String item = null;
+		
+		if (baseProducts != null) {
+			if (baseProducts.length() > 0 && baseProducts.indexOf("?") < 0) {
+				productList.add(baseProducts);
+			}
+			if (baseProducts.indexOf("?") > 0) {
+				StringTokenizer st = new StringTokenizer(baseProducts,"?");
+				while (st.hasMoreElements()) {
+					productList.add((String)st.nextElement());
+				}
+			}
+			
+		}
+
+		if (productList.size() > 0) {
+			for (Object loopProduct:  productList) {
+				String product = (String)loopProduct;
+				tmpList = StrUtil.split(product, "~");
+				prodList.put((String) tmpList.get(0), (String) tmpList.get(1));
+			}
+		}
+		
+		return prodList;
+	}//getSelectedItemProductsList
+	
+	
+	public HashMap saveToDB(UpdMultiProds mProds, String dbRegion) {
+		HashMap<String, Object> savePriceTierStatus = new HashMap<String, Object>();
+	    UpdMultiProdsMgr mgr = UpdMultiProdsMgr.getUpdMultiProdsMgr ();
+	    int retCode = mgr.updItems(mProds, dbRegion);
+		
+	    if ( retCode == 1021 ) {
+	    	savePriceTierStatus.put("successMsg","Successfully updated product(s)!");
+	    } else if ( retCode == 1025 ) {
+	      String errMsg = mProds.getReturnMsg ();
+	      int idx = errMsg.indexOf ( ":" );
+	      errMsg = errMsg.substring ( idx + 1 );
+	      log.debug ( "######################## return err msg:" + errMsg );
+	      savePriceTierStatus.put("errorMsg","Failed To update product(s)!");
+	    } //errorMessage
+	    else
+	    	savePriceTierStatus.put("errorMsg","Failed To update product(s)!");
+	    
+	    return savePriceTierStatus;
+	  }//saveToDB
+
+	public List getPricetierList(Hashtable prodList, String regionCode, String dbRegion) {
+		List priceTierCatalogs = null;
+		List productKeys = new ArrayList();
+		DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+		String str = null;
+		Enumeration keys = prodList.keys();
+		while (keys.hasMoreElements()) {
+			String prodKey = (String) keys.nextElement();
+			str = (String) prodList.get(prodKey);
+			productKeys.add(str);
+		}
+		String[] strProdArray = StrUtil.listToStrArray(productKeys);
+		bean.setStrArray1(strProdArray);
+		bean.setString2(regionCode);
+		priceTierCatalogs = updatePriceTierMultiProdsDao.getPricetierList(bean, dbRegion);
+		
+		return priceTierCatalogs;
+	}//getPricetierList
+	
+	public List getSearchPricetierList(String searchPtId, String searchPtName, Hashtable Prods, String regionCode, String dbRegion) {
+		List returnList = new ArrayList();
+		String prods = null;
+		List PtCatalogs = new ArrayList();
+		List prodKeys = new ArrayList();
+		Hashtable<String, String> ptList = new Hashtable();
+		DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+		String str = null;
+		Enumeration keys = Prods.keys();
+		while (keys.hasMoreElements()) {
+			String prodKey = (String) keys.nextElement();
+			str = (String) Prods.get(prodKey);
+			prodKeys.add(str);
+		}
+		String[] strProdArray = StrUtil.listToStrArray(prodKeys);
+		bean.setStrArray1(strProdArray);
+		bean.setString2(regionCode);
+		bean.setString1("%" + searchPtId + "%");
+		bean.setString3("%" + searchPtName + "%");
+		
+		PtCatalogs = updatePriceTierMultiProdsDao.getSearchPricetierList(bean, dbRegion);
+		return PtCatalogs;
+	}//getSearchPricetierList
+		 
+}//class

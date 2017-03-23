@@ -1,0 +1,235 @@
+package com.hp.ecc.ui.common.scheduler;
+
+/**
+ * Title:
+ * Description:
+ * Copyright:    Copyright (c) 2001
+ * Company:
+ * @author
+ * @version 1.0
+ */
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.*;
+
+import org.apache.log4j.Category;
+
+import com.hp.ecc.ui.biz.publish.Schedule;
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.common.util.Config;
+import com.hp.ecc.ui.util.StrUtil;
+
+
+public class SchedulerMgr {
+  private static String COMCAT_SCHEDULER = "comcat.scheduler";
+  private static boolean runScheduler = false;
+  private static Category log = null;
+  private static CTX ctx = null;
+  
+  //code modified to fix build private -> public
+  public SchedulerMgr () {
+  }
+
+  public static void load ( CTX inCtx ) {
+    ctx = inCtx;
+    init ();
+    loadScheduler ();
+  }
+
+
+  private static void loadScheduler () {
+
+    if ( runScheduler ) {
+      try {
+    	  log.debug("Scheduler is being Started");
+        Scheduler s = Scheduler.getSysScheduler ();
+        CatalogTaskController c = new CatalogTaskController ();
+        //s.cancel();
+
+
+        //to round off the hour
+        Date startTime = getStartDate ( -1, 0 );
+        s.scheduleAtFixedRate ( c, startTime, 60 * 60 * 1000 );
+
+        /*DataSheetController dc = new DataSheetController ();
+        s.scheduleAtFixedRate ( dc, startTime, 60 * 60 * 1000 );*/
+
+      }
+      catch ( Exception ie ) {
+        ie.printStackTrace ();
+        log.error ( "Can't load scheduler", ie );
+        //TODO
+      }
+
+    }
+  }
+
+  private static void init () {
+
+	  
+    Config cfg = ctx.getConfig ();
+    log = ctx.getLog ( "load scheduler" );
+    String schP = System.getProperty ( COMCAT_SCHEDULER, null );
+    log.debug("INIT Called to start scheduler" +schP);
+    if ( schP == null ) {
+       	runScheduler = true;    	
+    } 
+    else {
+    	runScheduler = true;
+    }
+
+  }
+
+
+  private static boolean checkSchedulerProperty ( String vlu ) {
+    boolean ret = false;
+
+    if ( !StrUtil.isEmpty ( vlu ) ) {
+      ret = ( vlu.equalsIgnoreCase ( "YES" ) || vlu.equalsIgnoreCase ( "Y" ) )
+            ? true : false;
+    }
+    return ret;
+  }
+
+
+  public static Date getStartDate ( int hour, int min ) {
+
+    //Set the Time to 12.00 midnight
+    //schedule hour , minute and date
+    int sec = 0;
+
+    //Get the current date
+    Calendar cal = Calendar.getInstance ();
+
+    //If the hour is -1 , set current hour an dincrement the hour by one if min != 0
+    if ( hour == -1 ) {
+      hour = cal.get ( cal.HOUR_OF_DAY );
+      if ( cal.MINUTE != 0 ) {
+        hour++;
+        //set the minute to 10
+      }
+      min = 10;
+
+    }
+    else {
+
+      //Check whether scheduled time is already elapsed (ignore seconds)
+      if ( ( cal.get ( cal.HOUR_OF_DAY ) > hour ) ||
+           ( cal.get ( cal.HOUR_OF_DAY ) == hour
+             && cal.get ( cal.MINUTE ) > min ) ) {
+        //Start next day , same hour
+        cal.add ( Calendar.DATE, 1 );
+      }
+    }
+
+    //Set the Time in Calendar
+    cal.set ( cal.HOUR_OF_DAY, hour );
+    cal.set ( cal.MINUTE, min );
+    cal.set ( cal.SECOND, sec );
+
+    return cal.getTime ();
+
+  }
+
+  //meenakshi
+  //dax query for retrieving batches with number of times specified
+  public List selectBatchSched () {
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxDB db = mgr.getDaxDB ();
+    //Pagination pag = new Pagination();
+    Schedule schedule = new Schedule ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( "Schedule", "getScheduledBatches", schedule, null, null );
+
+    List blists = db.doSelect ( stmt, Schedule.class, schedule );
+
+    if ( !StrUtil.isListEmpty ( blists ) ) {
+      int size = blists.size ();
+      log.debug ( "Total number of tasks is " + size );
+    }
+
+    return blists;
+
+  }
+
+  //meenakshi
+  //dax query for retrieving batches scheduled for today
+  public List selectBatchSchedForToday () {
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxDB db = mgr.getDaxDB ();
+    //Pagination pag = new Pagination();
+    Schedule schedule = new Schedule ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( "Schedule"
+                                              , "getScheduledBatchesForToday"
+                                              , schedule, null, null );
+
+    List blists = db.doSelect ( stmt, Schedule.class, schedule );
+
+    if ( !StrUtil.isListEmpty ( blists ) ) {
+      int size = blists.size ();
+      log.debug ( "Total number of tasks is " + size );
+    }
+
+    return blists;
+
+  }
+
+  //meenakshi
+  //dax query for retrieving single schedules to be run now
+  public List selectCurrentSingSched () {
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxDB db = mgr.getDaxDB ();
+    //Pagination pag = new Pagination();
+    Schedule schedule = new Schedule ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( "Schedule"
+                                              , "getCurrentSingleSchedules"
+                                              , schedule, null, null );
+
+    System.out.println ( "stmt is " + stmt );
+
+    List blists = db.doSelect ( stmt, Schedule.class, schedule );
+
+    if ( !StrUtil.isListEmpty ( blists ) ) {
+      int size = blists.size ();
+      //log.debug("Total number of tasks is "+size);
+    }
+
+    return blists;
+
+  }
+
+  //meenakshi
+  //dax query for retrieving batch schedules to be run now with no number of times specified
+  public List selectCurrentBatchSched () {
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxDB db = mgr.getDaxDB ();
+    //Pagination pag = new Pagination();
+    Schedule schedule = new Schedule ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( "Schedule", "getCurrentBatches"
+                                              , schedule, null, null );
+    log.debug ( "stmt is " + stmt );
+
+    List blists = db.doSelect ( stmt, Schedule.class, schedule );
+
+    if ( !StrUtil.isListEmpty ( blists ) ) {
+      int size = blists.size ();
+      log.debug ( "Total number of tasks is " + size );
+    }
+
+    return blists;
+
+  }
+
+public void run(List tasks) {
+	// TODO Auto-generated method stub
+	
+}
+
+public void updateScheduleLog(Schedule newS) {
+	// TODO Auto-generated method stub
+	
+}
+
+
+}

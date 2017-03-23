@@ -1,0 +1,86 @@
+package com.hp.ecc.ui.biz.customer;
+
+/**
+ * <p>
+ * Title:
+ * </p>
+ * <p>
+ * Description:
+ * </p>
+ * <p>
+ * Copyright: Copyright (c)
+ * </p>
+ * <p>
+ * Company:
+ * </p>
+ * 
+ * @author unascribed
+ * @version 1.0
+ */
+
+public class CustomerAuthModel {
+	private String authCode = null;
+	private String custID = null;
+	private String custType = null;
+	private String accountID = null;
+	private String lastModifiedBy = null;
+	private String updateFlag = null;
+
+	public CustomerAuthModel() {
+	}
+
+	// authCode
+	public String getAuthCode() {
+		return authCode;
+	}
+
+	public void setAuthCode(String in) {
+		this.authCode = in;
+	}
+
+	// custID
+	public String getCustID() {
+		return custID;
+	}
+
+	public void setCustID(String in) {
+		this.custID = in;
+	}
+
+	// accountID
+	public String getAccountID() {
+		return accountID;
+	}
+
+	public void setAccountID(String in) {
+		this.accountID = in;
+	}
+
+	// custType
+	public String getCustType() {
+		return custType;
+	}
+
+	public void setCustType(String in) {
+		this.custType = in;
+	}
+
+	// lastModifiedBy
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	public void setLastModifiedBy(String in) {
+		this.lastModifiedBy = in;
+	}
+
+	// updateFlag
+	public String getUpdateFlag() {
+		return updateFlag;
+	}
+
+	public void setUpdateFlag(String in) {
+		this.updateFlag = in;
+	}
+
+}//class

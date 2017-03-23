@@ -1,0 +1,367 @@
+<div class="row" id="manageCategoryId" ng-controller="ManageCategoriesCtrl" ng-init="loadManageCategories()">
+  <div id="messageDiv"></div>
+  <div id="successMess" class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+  <div id="errorMess" class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+  <div class="customer_rows">
+  	<h1 class="h1Underline">				
+		<span>Manage Categories</span>
+	</h1>
+  </div>
+  <div class="customer_rows" style="border: 4px solid #f2f2f2;">
+   		<div class="four columns" style="border-right: 4px solid #f2f2f2;">
+   			<div class="customer_rows" >
+	 			<div class="generals" style="margin: 0px 0px 0px 10px;">
+	               <span style="width:85%">Categorization Name --Type :</span>
+	               <select style="width: 55%;" ng-model="selCatez" ng-options="item.id as finalCategory(item) for item in categoriezationsList | orderBy:['type','name']" ng-change="reloadManageCategories()">    
+	       		   </select>
+	           </div>
+	           <div class="generals" style="margin: 0px 0px 10px 10px;">
+	               <span style="width:80%">Locale :</span>
+	               <select style="width: 30%;" ng-model="selLocale" ng-options="item as item for item in categoryLocalesList" ng-change="reloadManageCategories()">    
+	       		   </select>
+	           </div>
+	           <div class="generals" style="margin: 0px 0px 10px 10px;" ng-hide="selCustStatus">
+	               <span style="width:80%">Products Set :</span>
+	               <select style="width: 55%;" ng-model="selProductsSet" ng-options="item.cat_catalog_id as finalProduct(item) for item in productsList | orderBy:['cat_catalog_name']" " ng-change="reloadManageCategories()">    
+	       		   </select>
+	           </div>
+		    </div>
+   			<div id="categoriesTree" class="customer_rows" style="border-top: 4px solid #f2f2f2;overflow: auto;height: 862px;padding-top: 5px;">
+	 			<div
+			      data-angular-treeview="true"
+			      data-tree-id="manageCategTree"
+			      data-tree-model="treeNodesList"
+			      data-node-id="nodeId"
+			      data-node-label="title"
+			      data-node-children="children"  style="margin-left:-10px;">
+			    </div>
+   			</div>
+   		</div>
+   		<div class="eight columns" style="padding: 2px 10px;overflow: auto;height: 970px;" >
+			  <div ng-show="pageStatus=='Parent'">
+			  	  <div class="customer_rows" ng-show="parentPage=='Normal'">
+				  	<h1 class="h1Underline">				
+						<span style="font-size: 12px;">{{parentNodeName}}</span>
+					</h1>
+				  </div>
+				  <div class="customer_rows"  ng-show="parentPage=='Normal'">
+				  	<div class="eight columns">
+				  		<div class="generals">
+				  			<span>Create top level category</span>
+				  			<a class="btn btn-inline" ng-click="parentPage='Create';createForm={};createForm.orderable='Y'">Create...</a> 
+				  		</div>
+				  	</div>
+				  </div>
+				  
+				  <div class="customer_rows"  ng-show="parentPage=='Create'">
+				  	<h1 class="h1Underline">				
+						<span style="font-size: 12px;">Category New Subcategory</span>
+					</h1>
+				  </div>
+				  <div class="customer_rows" ng-show="parentPage=='Create'">
+				  	<div class="four columns">
+				  		<div class="generals">
+				  			<span>Category Name:</span>
+		               		<input type="text" class="" value="" ng-model="createForm.categoryName" maxlength="256"></input>
+				  		</div>
+				  		<div class="generals" ng-show="parentCotentForm.fedCust">
+				  			<span>Open: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.open" ></input>
+				  		</div>
+				  		<div class="generals" ng-show="parentCotentForm.fedCust">
+				  			<span>Max: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.multi" ></input>
+				  		</div>
+				  	</div>
+				  	<div class="four columns">
+				  		<div class="generals">
+				  			<span>Category ID: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.extCategoryName" maxlength="20"></input>
+				  		</div>
+				  		<div class="generals" ng-show="parentCotentForm.fedCust">
+				  			<span>Image URL: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.imageURL"></input>
+				  		</div>
+				  		<div class="generals" ng-show="parentCotentForm.fedCust">
+				  			<span>Orderable: </span>
+		               		<select  ng-model="createForm.orderable" ng-options="item as item for item in orderableList">   </select>
+				  		</div>
+				  	</div>
+				  	<div class="four columns" ng-show="parentCotentForm.fedCust">
+				  		<div class="generals">
+		               		<span >Type: </span>
+			                <select multiple size="10"  style="height:85px;" ng-model="createForm.typeSelectList" ng-options="item.id as item.name for item in typeList">
+							</select>
+				  		</div>
+				  	</div>
+				  	<div class="twelve columns">
+				        <a class="btn btn-inline" ng-click="createParentCategory()"><span >Create</span></a> 
+				        <a class="btn btn-inline" ng-click="parentPage='Normal';createForm={};createForm.orderable='Y'"><span >Cancel</span></a>
+			  		</div>
+				  </div>
+				  
+				  <div class="customer_rows">
+			    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+			  	  </div>
+			  	  <div class="customer_rows" style="padding: 5px 5px 5px 5px;background-color: #EAEAEA;margin-bottom: 3px;" ng-show="clipBoardMessage!=''">
+	  					<span ng-bind="clipBoardMessage"></span>
+			  	  </div>
+			  </div>
+			  <div ng-show="pageStatus=='Child'">
+   				<div class="customer_rows" ng-show="childPage=='Update'">
+				  	<h1 class="h1Underline">				
+						<span style="font-size: 12px;">Current Category : {{childNodeTitle}}</span>
+					</h1>
+				</div>
+				<div class="customer_rows" ng-show="childPage=='Update'">
+					<div class="four columns">
+				  		<div class="generals">
+				  			<span>Name:</span>
+		               		<input type="text" value="" ng-model="childContentForm.categoryName" maxlength="255"></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Open: </span>
+		               		<input type="text" class="" value="" ng-model="childContentForm.open"></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Max: </span>
+		               		<input type="text" class="" value="" ng-model="childContentForm.multi"></input>
+				  		</div>
+				  	</div>
+				  	<div class="four columns">
+				  		<div class="generals">
+				  			<span>External ID: </span>
+		               		<input type="text" value="" ng-model="childContentForm.extCategoryName" maxlength="25"></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Image URL: </span>
+		               		<input type="text" class="" value="" ng-model="childContentForm.imageURL"></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Orderable: </span>
+		               		<select  ng-model="childContentForm.orderable" ng-options="item as item for item in orderableList">   </select>
+				  		</div>
+				  	</div>
+				  	<div class="four columns">
+				  		<div class="generals">
+				  			<span>Locale: </span>
+		               		<select  ng-model="childContentForm.locale" ng-options="item as item for item in categoryLocalesList" ng-change="changeChildLocale()">    
+		       		   		</select>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+		               		<span >Type: </span>
+			                <select multiple size="10"  style="height:85px;" ng-model="childContentForm.typeSelectList" ng-options="item.id as item.name for item in typeList">
+							</select>
+				  		</div>
+				  	</div>
+				  	<div class="twelve columns">
+				  		<a class="btn btn-inline" ng-click="updateCategory()" ng-show="createPermis"><span >Update</span></a>
+				        <a class="btn btn-inline btn-Critical btn-del" ng-click="condtionalAlert()" ng-show="deletePermis"><span ><i class="icon-trash"></i>Delete</span></a> 
+				        <a class="btn btn-inline" ng-click="childPage='Create';createForm={};createForm.orderable='Y'""  ng-show="updatePermis"><span >Create...</span></a>
+			  		</div>
+				</div>
+				<div class="customer_rows"  ng-show="childPage=='Create'">
+				  	<h1 class="h1Underline">				
+						<span style="font-size: 12px;">Category New Subcategory</span>
+					</h1>
+				 </div>
+				<div class="customer_rows" ng-show="childPage=='Create'">
+				  	<div class="four columns">
+				  		<div class="generals">
+				  			<span>Category Name:</span>
+		               		<input type="text" class="" value="" ng-model="createForm.categoryName" ></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Open: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.open" ></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Max: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.multi"></input>
+				  		</div>
+				  	</div>
+				  	<div class="four columns">
+				  		<div class="generals">
+				  			<span>Category ID: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.extCategoryName"></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Image URL: </span>
+		               		<input type="text" class="" value="" ng-model="createForm.imageURL"></input>
+				  		</div>
+				  		<div class="generals" ng-show="childContentForm.fedCust">
+				  			<span>Orderable: </span>
+		               		<select  ng-model="createForm.orderable" ng-options="item as item for item in orderableList"></select>
+				  		</div>
+				  	</div>
+				  	<div class="four columns" ng-show="childContentForm.fedCust">
+				  		<div class="generals">
+		               		<span >Type: </span>
+			                <select multiple size="10"  style="height:85px;" ng-model="createForm.typeSelectList" ng-options="item.id as item.name for item in typeList"  >
+							</select>
+				  		</div>
+				  	</div>
+				  	<div class="twelve columns" style="margin-top:10px;">
+				        <a class="btn btn-inline" ng-click="createCategory()"><span >Create</span></a> 
+				        <a class="btn btn-inline" ng-click="childPage='Update';childCategoryName='';childCategoryId=''"><span >Cancel</span></a>
+			  		</div>
+				</div>
+				 <div class="customer_rows">
+			    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+			  	  </div>
+			  	  <div class="customer_rows" style="padding: 5px 5px 5px 5px;background-color: #EAEAEA;margin-bottom: 3px;" ng-show="clipBoardMessage!=''">
+	  					<span ng-bind="clipBoardMessage"></span>
+			  	  </div>
+   			</div>
+   			<!-- <div class="customer_rows" ng-show="switchTableStatus">
+			  	<div id="ecc_hpegrid1" hpe-grid 
+			  		 grd-parent-select-all="true"
+		      		 grd-select-unselect-all-boxes = "chkAllBoxes()"
+			         grd-data="parentTable.data"
+			         grd-header="parentTable.header"
+			         grd-col-defs="parentTable.colDefs"
+			         grd-sort="parentTable.sort"
+			         grd-col-view-by="parentTable.colViewBy" class="table-scroll">
+			     </div>
+			</div>
+			<div class="customer_rows" ng-hide="switchTableStatus">
+			  	<div id="ecc_hpegrid2" hpe-grid 
+			  		 grd-child-select-all="true"
+		      		 grd-select-unselect-all-boxes = "chkAllBoxes()"
+			         grd-data="childTable.data"
+			         grd-header="childTable.header"
+			         grd-col-defs="childTable.colDefs"
+			         grd-sort="childTable.sort"
+			         grd-col-view-by="childTable.colViewBy" class="table-scroll">
+			     </div>
+			</div> -->
+			
+			<div class="customer_rows" ng-show="switchTableStatus" >
+				<div class="customer_rows" style="margin-top: 0px;">
+					<div id="showhideclmDiv" class="btn btn-inline" ng-init="mouseDownHide('tinyDropz1');">
+						<div ng-click="toggle('tinyDropz1');">
+							<span data-dropdown="tinyDrop1">Show/Hide Column</span>
+						</div>
+						<ul id="tinyDropz1" class="f-dropdown" stop-event="focusout">
+							<li ng-repeat="column in parentTablecolumns">
+								<input type="checkbox" ng-model="parentSelectedColumns[column.id]" ng-true-value="true" ng-false-value="false">
+								{{column.key | removeBR}}
+							</li>
+						</ul>
+					</div>
+					<div hpe-button btn-text="Search By" btn-type="inline" btn-icon="icon-filter" ng-click="toggleAutoFilter('.autoFilter')"></div>
+					<div class="dataTables_filter" id="ecc_hpegrid1_filter"><label>Filter: <input type="text" ng-model="searchText"></label></div>
+				</div>
+				<div class="gridTable">
+					<table id="tableGrid1" class="dataGrid" style="width: 100%;">
+						<thead>
+							<tr class="tableHeader font_black" style="border: 1px solid #999999;color: #000000;">
+								<th><input type="checkbox" id="checkAll_1" ng-model="parentTabChkAll" ng-change="chkAllBoxes('parentTable')"/></th>
+								<th ng-repeat="name in parentTablecolumns" class="table_details" perspective="{{name.perspective}}" 
+								 	ng-show="parentSelectedColumns[name.id]"
+									ng-class="{sortedASC: ($parent.reverse==true && sortedColumn == name.columnName),sortedDESC: ($parent.reverse==false && sortedColumn == name.columnName)};",
+									ng-click="sortColumn($parent, name.id, name.columnName, name.sortLocale, name.sort);">
+									<span class="tblHeaderTxt" ng-bind-html="name.key"></span>
+									<ng-switch on="name.sort">
+										<span ng-switch-when="false"></span><span class="icn_srt" ng-switch-default><a href="javascript:void(0)">&nbsp;</a></span>
+									</ng-switch>
+								</th>
+				           	</tr>
+							<tr class="autoFilter font_black table_details ngomParentAutoFilterWithSelectAll"></tr>
+						</thead>
+						<tbody>
+							<tr ng-class="{ odd : $index%2==0, even : !($index%2==0)}" 
+								ng-repeat="item in parentProdList | filter:searchText | orderBy:predicate:reverse | startFrom:(currentPage-startIndex)*itemsPerPage | limitTo:itemsPerPage ">
+								<td>
+									<input 	type="checkbox" 
+											ng-attr-id="{{item.prod}}" 
+											ng-model ="item.chkFlag"
+											ng-change="setCheckedFlag(item)" 
+											ng-show= "((item.accessMode == null && item.prod_access_mode == null) || (item.accessMode !=null && ( (item.accessMode.indexOf('D') >=0) || (item.accessMode.indexOf('M') >=0))) || (item.prod_access_mode !=null && ( (item.prod_access_mode.indexOf('D') >=0) || (item.prod_access_mode.indexOf('M') >=0))))"/>
+								</td>  	
+					            <td ng-class="sortedTD_{{columnNames[0].id}}" ng-show="parentSelectedColumns.Sku">{{item.prod}}</td>
+					            <td ng-class="sortedTD_{{columnNames[1].id}}" ng-show="parentSelectedColumns.ShortDescription">{{item.short_desc}}</td>
+					            <td ng-class="sortedTD_{{columnNames[2].id}}" ng-show="parentSelectedColumns.Category"><ul><li ng-repeat="childItem in item.fCategories"><a ng-click="getProductNodes(childItem.node_path)">{{childItem.node_name}}</a></li></ul></td>
+					        </tr>
+					    </tbody>
+					</table>
+				</div>
+			</div> 
+	
+			<div class="customer_rows" ng-hide="switchTableStatus">
+				<div class="customer_rows" style="margin-top: 0px;">
+					<div id="showhideclmDiv" class="btn btn-inline" ng-init="mouseDownHide('tinyDropz2');">
+						<div ng-click="toggle('tinyDropz2');">
+							<span data-dropdown="tinyDrop2">Show/Hide Column</span>
+						</div>
+						<ul id="tinyDropz2" class="f-dropdown" stop-event="focusout">
+							<li ng-repeat="column in childTablecolumns">
+								<input type="checkbox" ng-model="childSelectedColumns[column.id]" ng-true-value="true" ng-false-value="false">
+								{{column.key | removeBR}}
+							</li>
+						</ul>
+					</div>
+					<div hpe-button btn-text="Search By" btn-type="inline" btn-icon="icon-filter" ng-click="toggleAutoFilter('.autoFilter')"></div>
+					<div class="dataTables_filter" id="ecc_hpegrid1_filter"><label>Filter: <input type="text" ng-model="searchText"></label></div>
+				</div>
+				<div class="gridTable">
+					<table id="tableGrid2" class="dataGrid" style="width: 100%;">
+						<thead>
+							<tr class="tableHeader font_black" style="border: 1px solid #999999;color: #000000;">
+								<th><input type="checkbox" id="checkAll_2" ng-model="childTabChkAll" ng-change="chkAllBoxes('childTable')" /></th>
+								<th ng-repeat="name in childTablecolumns" class="table_details" perspective="{{name.perspective}}" 
+									ng-show="childSelectedColumns[name.id]"
+									ng-class="{sortedASC: ($parent.reverse==true && sortedColumn == name.columnName),sortedDESC: ($parent.reverse==false && sortedColumn == name.columnName)};",
+									ng-click="sortColumn($parent, name.id, name.columnName, name.sortLocale, name.sort);">
+									<span class="tblHeaderTxt" ng-bind-html="name.key"></span>
+									<ng-switch on="name.sort">
+										<span ng-switch-when="false"></span>
+										<span class="icn_srt" ng-switch-default><a href="javascript:void(0)">&nbsp;</a></span>
+									</ng-switch>
+								</th>
+				            </tr>
+							 <tr class="autoFilter font_black table_details ngomChildAutoFilterWithSelectAll"></tr>
+						</thead>
+						<tbody>
+							<tr ng-class="{ odd : $index%2==0, even : !($index%2==0)}" 
+								ng-repeat="item in childProdList | filter:searchText | orderBy:predicate:reverse | startFrom:(currentPage-startIndex)*itemsPerPage | limitTo:itemsPerPage ">
+								<td>
+								<input 	type="checkbox" 
+										ng-attr-id="{{item.prod}}"
+										ng-model ="item.chkFlag" 
+										ng-change="setCheckedFlag(item)" 
+										ng-show= "((item.accessMode == null && item.prod_access_mode == null) || (item.accessMode !=null && ( (item.accessMode.indexOf('D') >=0) || (item.accessMode.indexOf('M') >=0))) || (item.prod_access_mode !=null && ( (item.prod_access_mode.indexOf('D') >=0) || (item.prod_access_mode.indexOf('M') >=0))))"/>
+								</td> 	
+					            <td ng-class="sortedTD_{{columnNames[0].id}}" ng-show="childSelectedColumns.Sku">{{item.prod}}</td>
+					            <td ng-class="sortedTD_{{columnNames[1].id}}" ng-show="childSelectedColumns.ShortDescription">{{item.short_desc}}</td>
+					        </tr>
+					    </tbody>
+					</table>
+				</div>
+			</div>
+			<div class="customer_rows">
+				<div class="pagination ossPagination"></div>
+			</div>
+			<div class="customer_rows" >
+			<!--  && treeCatgorizationData.masterFlag ==0 -->
+				<div class="eight columns">
+			        <a class="btn btn-inline" ng-click="cutSelProducts()" ng-show="recordStatus" ><span >Cut</span></a> 
+			        <a class="btn btn-inline" ng-click="copySelProducts()" ng-show="recordStatus"><span >Copy</span></a>
+			        <a class="btn btn-inline" ng-click="pastSelProducts()" ng-show="cutCopyStatus"><span >Paste</span></a>
+		  		</div>
+		  		<div class="four columns" ng-show="pageStatus=='Parent'">
+			  		<div class="generals">
+			  			<span style="float: right;width: 28%;margin-top: 0px;">Uncategorized only </span>
+		        		<input style="margin: 0px 5px 0px 0px;width: 15px;height: 15px;float: right;" type="checkbox" ng-model="uncategStatus" ng-change="uncategorizedOnly()"/>
+		            </div>
+		  		</div>
+		  		<div class="four columns" ng-show="pageStatus=='Child'">
+			  		<div class="generals">
+			  			<span style="float: right;width: 15%;margin-top: 0px;">Recursive </span>
+		        		<input style="margin: 0px 5px 0px 0px;width: 15px;height: 15px;float: right;" type="checkbox" ng-model="recursiveStatus" ng-change="recursive()"/>
+		            </div>
+		  		</div>
+			</div>
+   		</div>
+   </div>
+</div>

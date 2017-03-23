@@ -1,0 +1,118 @@
+package com.hp.ecc.ui.biz.pricing.rate;
+
+import java.util.Date;
+
+public class CustSpecRateBean {
+
+	  public String custID;
+	  public String custKey;
+	  public String custDUNS;
+	  public String regionCode;
+	  public String custName;
+	  public Float exchangeRate;
+	  public String PL;
+	  public String currCD;
+	  public String isoCurrCD;
+	  public Date lastModifiedDate;
+	  public String tenantCode;
+
+
+	  /** default constructor
+	   *
+	   */
+	  public CustSpecRateBean () {
+	  }
+
+	  public void setCustKey ( String f_custKey ) {
+	    this.custKey = f_custKey;
+	  }
+
+	  public String getCustKey () {
+	    return this.custKey;
+	  }
+
+
+	  public void setCustID ( String f_custID ) {
+	    this.custID = f_custID;
+	  }
+
+	  public String getCustID () {
+	    return this.custID;
+	  }
+
+	  public void setCustDUNS ( String f_custDUNS ) {
+	    this.custDUNS = f_custDUNS;
+	  }
+
+	  public String getCustDUNS () {
+	    return this.custDUNS;
+	  }
+
+	  public void setCustName ( String f_custName ) {
+	    this.custName = f_custName;
+	  }
+
+	  public String getCustName () {
+	    return this.custName;
+	  }
+
+
+	  public void setRegionCode ( String f_regionCode ) {
+	    this.regionCode = f_regionCode;
+	  }
+
+	  public String getRegionCode () {
+	    return regionCode;
+	  }
+
+	  public void setPL ( String f_PL ) {
+	    this.PL = f_PL;
+	  }
+
+	  public String getPL () {
+	    return PL;
+	  }
+
+	  public void setCurrCd ( String f_currCD ) {
+	    this.currCD = f_currCD;
+	  }
+
+	  public String getCurrCD () {
+	    return currCD;
+	  }
+
+	  public void setIsoCurrCD ( String f_isoCurrCD ) {
+	    this.isoCurrCD = f_isoCurrCD;
+	  }
+
+	  public String getIsoCurrCD () {
+	    return this.isoCurrCD;
+	  }
+
+	  public void setExchangeRate ( Float f_exchangeRate ) {
+	    this.exchangeRate = f_exchangeRate;
+	  }
+
+	  public Float getExchangeRate () {
+	    return exchangeRate;
+	  }
+
+	  public void setLastModifiedDate ( Date f_DateFormat ) {
+	    this.lastModifiedDate = f_DateFormat;
+
+	  }
+
+	  public Date getLastModifiedDate () {
+	    return this.lastModifiedDate;
+	  }
+
+	public String getTenantCode() {
+		return tenantCode;
+	}
+
+	public void setTenantCode(String tenantCode) {
+		this.tenantCode = tenantCode;
+	}
+
+	}
+

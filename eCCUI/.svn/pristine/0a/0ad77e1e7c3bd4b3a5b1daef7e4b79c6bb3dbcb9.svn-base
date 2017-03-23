@@ -1,0 +1,504 @@
+
+eccApp.controller('ChangeRoleCtrl',['$scope', '$http', '$timeout','webStorage', '$routeParams', '$location', 
+  function ($scope, $http, $timeout, webStorage, $routeParams, $location) {
+	$scope.region =$routeParams.region;
+	$scope.emailId = webStorage.local.get('userEmail');
+	
+	$scope.getRoleName = function(item){
+		if(item.cust_type != 'BD'){
+			return item.customer_role+"-"+item.cust_type ;
+		}else{
+			return item.customer_role ;
+		}
+	};
+	$scope.init=function(){
+		$http({
+			url: "home/getRoles.htm?region="+$scope.region+"&uid="+$scope.emailId,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data, status, headers, config) {			  	
+			  $scope.userRoleList = data;		
+			  $scope.accessList = data.AccessList;
+		  }).error(function(data, status, headers, config) {
+			  	console.log("Error in Change Region service");				
+		  });
+	};
+	
+	$scope.changeRegion=function(){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "home/changeRegion.htm?selectedAccess="+$scope.selectedRole.role_name+"&region="+$scope.region+"&uid="+$scope.emailId+"&role_type="+$scope.selectedRole.role_type+"&custType="+$scope.selectedRole.cust_type,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).
+		  success(function(data, status, headers, config) {			  	
+			  	$scope.userData = data;
+			  	$scope.AccountId =webStorage.local.get('userAccountId');
+			  	$scope.$emit('eccMainMethod', 'ClearSession');
+			  	webStorage.local.add('userAccountId', $scope.AccountId);
+			  	
+			  	if($scope.selectedRole.cust_type != 'BD'){
+			  		if($scope.userData.RoleType =='STANDARD'){
+			  			$scope.userData.DefaultAccess= $scope.userData.DefaultAccess+" - Standard - "+$scope.selectedRole.cust_type;
+				  	}else{
+				  		$scope.userData.DefaultAccess= $scope.userData.DefaultAccess+" - "+$scope.selectedRole.cust_type;
+				  	}
+			  	}else{
+			  		if($scope.userData.RoleType=='STANDARD'){
+			  			$scope.userData.DefaultAccess= $scope.userData.DefaultAccess+" - Standard";
+				  	}
+			  	}
+			  	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			  	webStorage.local.add('userRegion', $scope.userData.Region);
+				webStorage.local.add('userRole', $scope.userData.DefaultAccess);
+				webStorage.local.add('userRoleId', $scope.userData.RoleId);
+				webStorage.local.add('status', 'true');
+				$scope.$emit('eccMainMethod', 'ChangeRegionRole');
+				
+				$scope.$emit('eccMainMethod', 'ChangeMenu');
+				
+				$location.path('/Home');			  	
+		  }).
+		  error(function(data, status, headers, config) {
+			  	console.log("Error in logout service");				
+		  });
+	};	
+	
+	$scope.finalRole = function(option) {		
+		if(option.role_name != '' && option.role_type != '' && option.role_name != undefined && option.role_type !=undefined){
+			return option.role_name + "-" + option.role_type;
+		}else{
+			return option.customer_role;
+		}
+	};
+	
+	$scope.isUndefinedOrNull = function(value){
+		 return !(angular.isUndefined(value) || value === null);
+	}; 
+	
+}]);
+
+
+eccApp.controller('HeaderCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams', '$templateCache', '$location', 'dialog', 
+   function ($scope, $http, $timeout, webStorage, $routeParams, $templateCache, $location, dialog) {
+	$scope.userRegion="";
+	$scope.userRole="";
+	$scope.submitTenantCode= "";
+	
+	$scope.peopleFinderVal="";
+	$scope.peopleFinderSearch=function(){
+		var url="http://peoplefinder.portal.hp.com/peoplefinder?pf_searchval="+$scope.peopleFinderVal+"&pf_hp=1&pf_detectsearch=1&pf_searchtype=0";
+		window.open(url, '_blank');
+	};
+	$scope.eccLogout=function(){
+		$http.get("home/logout.htm").
+		  success(function(data, status, headers, config) {			  	
+			  	$scope.message = data.Logout;
+			  	if($scope.message == "Success" ){
+			  		document.location.href="#/Logout";
+			  		$scope.$emit('LogoutMethod', 'Logout');
+			  	}			  	
+		  }).
+		  error(function(data, status, headers, config) {
+			  	console.log("Error in logout service");				
+		  });
+	};	
+	$scope.loadTenant = function(){
+		$http({
+			url: "home/loadTenant.htm",
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		}).
+		success(function(data, status, headers, config) {
+				$scope.userTenantList = data;
+				$scope.tenantCode   = $scope.userTenantList.LoginTenantCode;
+				$scope.selectedDefaultTenantCode = $scope.userTenantList.DefaultTenantCode;
+				$scope.tenantCode = $scope.userTenantList.DefaultTenantCode;
+				$scope.tenantList = $scope.userTenantList.TenantList;
+				$scope.defaultTenant = $scope.selectedDefaultTenantCode;
+			}).
+			error(function(data, status, headers, config) {
+				console.log("Error in home service");			
+			});
+	};
+	$scope.loadHeaderData = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Loading Header Data Task\"");
+		$http({
+			url: "home/homeService.htm",
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		}).
+		success(function(data, status, headers, config) {
+				$scope.userRoleList = data;
+				if($scope.userRoleList.LoginStatus){
+					$scope.$emit('eccMainMethod', 'ClearSession');
+					$templateCache.removeAll();
+				}
+				if(!$scope.userRoleList.DefaultRoleExists){
+					$scope.condtionalDialog("Default Role is not set for you. Do you want to set Default Role? ");
+				}
+				var changeStatus=webStorage.local.get('status');
+				webStorage.local.add('userEmail', $scope.userRoleList.EmailId);
+				//webStorage.local.add('userRoleId', $scope.userRoleList.RoleId);
+				webStorage.local.add('userAccountId', $scope.userRoleList.AccountId);
+				webStorage.local.add('loginTenantCode', $scope.userRoleList.LoginTenantCode);
+				webStorage.local.add('defaultTenantCode', $scope.userRoleList.DefaultTenantCode);
+				$scope.$emit('eccMainMethod', 'CopyRightContent');
+				if(changeStatus=='true'){
+					//console.log("Region Changed");
+				}else{
+					if($scope.userRoleList.CustType != 'BD'){
+						if($scope.userRoleList.RoleType=='STANDARD'){
+					  		$scope.userRoleList.DefaultAccess = $scope.userRoleList.DefaultAccess+" - Standard - "+$scope.userRoleList.CustType;
+					  	}else{
+					  		$scope.userRoleList.DefaultAccess = $scope.userRoleList.DefaultAccess+" - "+$scope.userRoleList.CustType;
+					  	}
+					}else{
+						if($scope.userRoleList.RoleType=='STANDARD'){
+					  		 $scope.userRoleList.DefaultAccess= $scope.userRoleList.DefaultAccess+" - Standard";
+					  	}
+					}
+					
+					webStorage.local.add('userRegion', $scope.userRoleList.Region);
+					webStorage.local.add('userRole', $scope.userRoleList.DefaultAccess);
+					webStorage.local.add('userRoleId', $scope.userRoleList.RoleId);
+				}
+				
+				$scope.userRegion	= webStorage.local.get('userRegion');
+				$scope.userRole		= webStorage.local.get('userRole');
+				$scope.userEmail	= webStorage.local.get('userEmail');
+				$scope.userRoleId 	= webStorage.local.get('userRoleId');
+				$scope.tenantCode   = webStorage.local.get('loginTenantCode');
+				$scope.defaultTenantCode = webStorage.local.get('defaultTenantCode');
+
+				$scope.$emit('eccMainMethod', 'ChangeMenu');
+			}).
+			error(function(data, status, headers, config) {
+				console.log("Error in home service");			
+			});
+	};
+	$scope.$on('HeadMethod', function (event, data) {
+		$scope.userRegion	= webStorage.local.get('userRegion');
+		$scope.userRole		= webStorage.local.get('userRole');
+		if(data=='ChangeTenant')
+		   $scope.tenantCode = webStorage.local.get('loginTenantCode');
+	});
+	$scope.changeRegionAccess=function(region_code, emailId){
+		document.location.href="#/Roles?region="+region_code;
+	};
+	$scope.changeTenant=function(tenantCode){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "home/changeTenant.htm?loginTenantCode=" + tenantCode,
+		    method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		}).success(function(data, status, headers, config) {
+			webStorage.local.add('loginTenantCode', data.LoginTenantCode);
+			$scope.tenantCode   = webStorage.local.get('loginTenantCode');
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			$scope.$emit('eccMainMethod', 'ClearCustomer');
+			$scope.$emit('eccMainMethod', 'CopyRightContent');
+			$location.path('/Home');			
+		}).error(function(data, status, headers, config) {
+			  	console.log("Error in changeCompany service");				
+		});
+	};
+	$scope.changeTenantDefault=function(defaultTenant){
+		$scope.submitTenantCode = defaultTenant;
+	};
+	$scope.submitTenantDefault=function(){
+		if ($scope.submitTenantCode != ''){
+			$("#loadTime").html("");
+			$scope.loadTime = new Date().getTime();
+			$http({
+				url: "home/submitDefaultTenant.htm?defaultTenantCode=" + $scope.submitTenantCode,
+			    method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            }
+			}).success(function(data, status, headers, config) {
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+				document.location.href="#/Home";
+			}).error(function(data, status, headers, config) {
+				  	console.log("Error in changeCompany service");				
+			});			
+		}
+	};
+	$scope.cancelTenantDefault=function(){
+		document.location.href="#/Home";
+	};
+	$scope.changeAccess=function(row){//row.role_name, row.role_type
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "home/changeAccess.htm?selectedAccess="+row.role_name+"&region="+$scope.userRegion+"&uid="+$scope.userRoleList.EmailId+"&role_type="+row.role_type+"&custType="+row.cust_type,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		}).
+		  success(function(data, status, headers, config) {			  	
+			  	$scope.userRoleList = data;
+			  	if(row.cust_type != 'BD'){
+			  		if($scope.userRoleList.RoleType=='STANDARD'){
+				  		 $scope.userRoleList.DefaultAccess= $scope.userRoleList.DefaultAccess+" - Standard - "+row.cust_type;
+				  	}else{
+				  		$scope.userRoleList.DefaultAccess= $scope.userRoleList.DefaultAccess+" - "+row.cust_type;
+				  	}
+			  	}else{
+			  		if($scope.userRoleList.RoleType=='STANDARD'){
+				  		 $scope.userRoleList.DefaultAccess= $scope.userRoleList.DefaultAccess+" - Standard";
+				  	}
+			  	}
+			  	$scope.userRole		= $scope.userRoleList.DefaultAccess;
+			  	$scope.AccountId =webStorage.local.get('userAccountId'); 
+			  	$scope.$emit('eccMainMethod', 'ClearSession');
+			  	webStorage.local.add('userAccountId', $scope.AccountId);
+			  	webStorage.local.add('loginTenantCode', $scope.userRoleList.LoginTenantCode);
+			  	webStorage.local.add('defaultTenantCode', $scope.userRoleList.DefaultTenantCode);
+			  	$scope.tenantList = $scope.userRoleList.TenantList;			  	
+			  	webStorage.local.add('userRegion', $scope.userRoleList.Region);
+			  	webStorage.local.add('userRole', $scope.userRoleList.DefaultAccess);
+			  	webStorage.local.add('userRoleId', $scope.userRoleList.RoleId);
+			  	webStorage.local.add('status', 'true');
+			  	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			  	$scope.$emit('eccMainMethod', 'ChangeMenu');
+			  	
+			  	//document.location.href="#/Home";
+			  	$location.path('/Home');
+		  }).
+		  error(function(data, status, headers, config) {
+			  	console.log("Error in changeAccess service");				
+		  });
+	};
+	$scope.getRoleName = function(item){
+		if(item.cust_type != 'BD'){
+			return item.customer_role+"-"+item.cust_type ;
+		}else{
+			return item.customer_role ;
+		}
+	};	
+	
+	$scope.condtionalDialog = function (message) {
+        dialog.show({
+            template: '<div class="hpe-main-content" title="Empty the recycle bin?">' +
+                          '<span>'+message+'</span>' +
+                          '<br />' +
+                          '<br />' +
+                          '<a class="btn btn-inline"   ng-click="close(true)" ><span>Now</span></a>' +
+                          '<a class="btn btn-inline"   ng-click="close(false)"><span>Later</span></a>' +
+                      '</div>',
+            controller: 'HeaderCtrl',
+            width: 400,
+            draggable: true,
+            title:'Warning'
+        }).then(function (result) {
+        	if(result==true){
+        		$location.path('/EditMyProfile');
+        	}
+        });
+    };
+}]);
+
+eccApp.controller('NavigationCtrl',['$scope', '$http', '$timeout','$route','webStorage','$location', function ($scope, $http, $timeout,$route,webStorage,$location) {
+	$scope.condition=true;
+	$scope.$route = $route;
+	$scope.selCustName="";
+	$scope.userRole = "";	
+	$scope.userRegion = "";		
+	$scope.userRoleId = "";
+	$scope.$on('NavMethod', function (event, data) {
+		 if(data=='DisplayCustomer'){
+			 $scope.displaySelCust();
+		 }
+		 if(data=='ClearSession'){
+			 $scope.clearSession();
+		 }
+		 if(data=='ClearCustomer'){
+			 $scope.selCustName="";
+			 $scope.selCustId="";
+			 $scope.selCustKey="";
+			 webStorage.local.remove('selCustData');
+		 }
+		 if(data=='ChangeMenu'){
+				$scope.userRole		= webStorage.local.get('userRole');	
+				$scope.userRegion	= webStorage.local.get('userRegion');		
+				$scope.userRoleId 	= webStorage.local.get('userRoleId');
+				$scope.tenantCode = webStorage.local.get('loginTenantCode');
+				$scope.defaultTenantCode = webStorage.local.get('defaultTenantCode');
+		 }
+	});
+	
+	$scope.$on('eccTenantMain', function (event, data) {
+        if(data=='ChangeTenant'){
+			$scope.tenantCode = webStorage.local.get('loginTenantCode');
+			$scope.defaultTenantCode = webStorage.local.get('defaultTenantCode');
+	    }
+	});	
+	$scope.displaySelCust=function(){
+		try { 
+		  $scope.custDetails=webStorage.local.get('selCustData');
+		  $scope.selCustName=$scope.custDetails.cust_name;
+		  $scope.selCustId	=$scope.custDetails.cust_id;
+		  $scope.selCustKey	=$scope.custDetails.cust_key;
+			$.apply();
+		} catch(e) { 
+			//console.log("error in selected customer");
+			$scope.selCustName="";
+		}
+	};
+	$scope.clearSession=function(){
+		$scope.selCustName="";
+		webStorage.local.clear() ;
+		webStorage.session.clear() ;
+	};
+	$scope.selectCustomer=function(cust_key){
+		document.location.href="#/ViewCustomer?custFlag=true&cust_key="+cust_key;
+	};
+	
+	$scope.manageOffer=function(userRegion, userRoleId){
+		if(userRoleId=='1' || userRoleId=='5'){		
+			var customer = webStorage.local.get('selCustData');	
+			
+			if(customer==null || customer==undefined){
+				return true;
+			} else if((customer.genesis_flag=='Y' && userRegion=='US') || userRegion=='GL'){
+				return true;
+			}
+		}
+		
+		return false;
+	};
+	
+	$scope.refreshVistaDeals=function(userRegion, userRoleId){
+		if(userRegion=='US'){
+			if(userRoleId=='12' || userRoleId=='13'){
+				return true;
+			}
+		} else {
+			return false;
+		}
+	};
+	$scope.publishCatList =  function(){
+		$location.path('/PublishCatalogList').search((new Date).getTime());
+	};
+	$scope.publishBatch =  function(){
+		$location.path('/BatchPublish').search((new Date).getTime());
+	};
+	$scope.publishStdCatList =  function(){
+		$location.path('/PublishStandardCatalogList').search((new Date).getTime());
+	};
+	/*$scope.$on('displaySelCustomer', function (event, data) {
+		  try { 
+				$scope.custDetails=webStorage.local.get('selCustData');
+				$.apply();
+				console.log($scope.custDetails);
+			} catch(e) { 
+				console.log("error in selected customer");
+				//$scope.selCustName="";
+			}
+		});*/
+	/*if($route.current.activetab == 'home'){
+		$("#title").html("Home");
+	}else if($route.current.activetab=='myworkspace'){
+		$("#title").html("My Workspace");
+	}else if($route.current.activetab == 'quotationsummary'){
+		$("#title").html("Quotation");
+	}else if($route.current.activetab == 'advancesearch'){
+		$("#title").html("Advance Search");
+	}else if($route.current.activetab == 'docflow'){
+		$("#title").html("Docflow");
+	}else if($route.current.activetab == 'orderchange'){
+		$("#title").html("Order Change");
+	}else if($route.current.activetab == 'frictionless'){
+		$("#title").html("FVO List");
+	}*/
+	
+	
+}]);
+eccApp.controller('FooterCtrl',['$scope', '$http', '$timeout','webStorage', function ($scope, $http, $timeout,webStorage) {
+	$scope.utcDate="";
+	$scope.utcYear="";
+	$scope.tenantCode = webStorage.local.get('loginTenantCode');
+	$scope.utcServerDate=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Loading Footer Data Task\"");
+		$scope.dayArray=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+		$scope.monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"];
+		
+		var d = new Date();
+		
+		$scope.day=('0' + d.getUTCDate()).slice(-2);
+		$scope.hours=('0' + d.getUTCHours()).slice(-2) ;
+		$scope.mins=('0' + d.getUTCMinutes()).slice(-2) ;
+		$scope.secs=('0' + d.getUTCSeconds()).slice(-2) ;
+
+		$scope.utcDate= $scope.dayArray[d.getUTCDay()]+", "+$scope.monthArray[d.getUTCMonth()]+" "+$scope.day+" "+$scope.hours+":"+$scope.mins+":"+$scope.secs+" | UTC "+d.getUTCFullYear() ;
+		$scope.utcYear=d.getUTCFullYear();
+	};
+	$scope.$on('FooterMethod', function (event, data) {
+		if(data=='copyRightContent'){
+			 $scope.tenantCode = webStorage.local.get('loginTenantCode');
+		}
+	});
+}]);
+
+eccApp.controller('HomeCtrl',['$scope', '$http', '$timeout', 'webStorage', function ($scope, $http, $timeout, webStorage) {
+	$scope.userRole= "";
+	$scope.userRoleId= "";
+	$scope.$on('HomeMethod', function (event, data) {
+		if(data=='ChangeHomeMenu'){
+			$scope.userRole= webStorage.local.get('userRole');
+			$scope.userRoleId= webStorage.local.get('userRoleId');
+		 }
+	});
+	
+	$scope.init = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Loading Home Data Task\"");
+		$scope.$emit('eccMainMethod', 'ChangeMenu');
+	};
+	
+	$scope.callPublishPage = function(){
+		if( $scope.userRoleId=='9' || $scope.userRoleId=='6' || $scope.userRoleId=='7' || $scope.userRoleId=='8' || $scope.userRoleId=='10' || $scope.userRoleId=='13') {
+			document.location.href="#PublishStandardCatalogList";
+		}
+		if($scope.userRoleId=='3' || $scope.userRoleId=='1' || $scope.userRoleId=='2'|| $scope.userRoleId=='7'|| $scope.userRoleId=='8' || $scope.userRoleId=='12'){
+			document.location.href="#PublishCatalogList";
+		}
+	};	
+}]);

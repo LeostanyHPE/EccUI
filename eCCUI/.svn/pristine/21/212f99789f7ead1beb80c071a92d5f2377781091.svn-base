@@ -1,0 +1,261 @@
+package com.hp.ecc.ui.biz.product;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import com.hp.ecc.ui.biz.filter.ProdFilter;
+
+/**
+ * @author Vinod Kumar Reddy
+ * @version 1.0
+ */
+public class ProductContent {private Map prodCatalogs;
+private Map prodCountries;
+private Map priceDescriptors;
+
+private String prodId;
+private String shortDesc;
+private Set nodePaths;
+private Date prodExpireDate;
+private boolean overallOrderability;
+private int parentCategorySate;
+private int productState;
+
+private static Date todaysDate;
+private static SimpleDateFormat dtFormatter;
+
+static {
+	Calendar clndr = Calendar.getInstance ();
+	clndr.set ( Calendar.HOUR_OF_DAY, 23 );
+	clndr.set ( Calendar.MINUTE, 59 );
+	clndr.set ( Calendar.SECOND, 59 );
+	todaysDate = clndr.getTime ();
+	dtFormatter = new SimpleDateFormat ( "dd-MMM-yyyy" );
+}
+
+public ProductContent ( String prodId ) {
+	prodCatalogs = new HashMap ();
+	prodCountries = new HashMap ();
+	nodePaths = new HashSet ();
+	overallOrderability = false;
+	parentCategorySate = ProdFilter.STATE_DEFAULT;
+	productState = ProdFilter.STATE_DEFAULT;
+	this.prodId = prodId;
+}
+
+public ProductContent ( Product prod ) {this ( prod.getProdId () );
+populateProductDetails ( prod );
+}
+
+public void populateProductDetails ( Product prod ) {shortDesc = prod.
+    getShortDesc ();
+prodExpireDate = prod.getProdExpireDate ();
+}
+
+public String getProdId () {return this.prodId;
+}
+
+public String getShortDesc () {return this.shortDesc;
+}
+
+public String getProdExpireDate () {if ( prodExpireDate != null ) {return
+    dtFormatter.format ( prodExpireDate );
+}
+return "";
+}
+
+
+public void addNodePath ( String nodePath ) {this.nodePaths.add ( nodePath );
+}
+
+public List getNodePaths () {return new ArrayList ( nodePaths );
+}
+
+public String getNodePath ( int idx ) {List nodePathList = getNodePaths ();
+if ( nodePathList.size () > idx ) {return ( String ) nodePathList.get ( idx );
+}
+return "";
+}
+
+
+public void setCatalogAvailability ( String catalogID, boolean available ) {if (
+    available ) {prodCatalogs.put ( catalogID, "Y" );
+}
+else {prodCatalogs.put ( catalogID, "N" );
+}
+}
+
+public String getCatalogAvailability ( String catalogID ) {return ( String )
+    prodCatalogs.get ( catalogID );
+}
+
+public void setXMSAvailabilty ( String country, boolean available ) {
+    ProductCountryInfo prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {if ( available ) {prodCntryInfo.setXmsAvailabilty (
+    "Y" );
+}
+else {prodCntryInfo.setXmsAvailabilty ( "N" );
+}
+}
+}
+
+public String getXMSAvailabilty ( String country ) {ProductCountryInfo
+    prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {return prodCntryInfo.getXmsAvailabilty ();
+}
+return "N";
+}
+
+public void setOrderability ( String country, boolean orderable ) {
+    ProductCountryInfo prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {if ( orderable ) {prodCntryInfo.setOrderability (
+    "Y" );
+overallOrderability = true;
+}
+else {prodCntryInfo.setOrderability ( "N" );
+}
+}
+}
+
+public String getOrderability ( String country ) {ProductCountryInfo
+    prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {return prodCntryInfo.getOrderability ();
+}
+return "N";
+}
+
+public void setListPrice ( String priceDesc, Double price ) {priceDescriptors.
+    put ( priceDesc, price );
+}
+
+public String getListPrice ( String priceDesc ) {Double prc = ( Double )
+    priceDescriptors.get ( priceDesc );
+if ( prc != null ) {return prc.toString ();
+}
+return "";
+}
+
+public void setDiscontinueDate ( String country, Date dcDate ) {
+    ProductCountryInfo prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {prodCntryInfo.setDiscontinueDate ( dcDate );
+}
+}
+
+public String getDiscontinueDate ( String country ) {ProductCountryInfo
+    prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {Date dscontdt = prodCntryInfo.getDiscontinueDate ();
+if ( dscontdt != null ) {return dtFormatter.format ( dscontdt );
+}
+}
+return "";
+}
+
+public String getDiscontinueFlag ( String country ) {ProductCountryInfo
+    prodCntryInfo = getProductCountryInfo ( country );
+if ( prodCntryInfo != null ) {Date dscontdt = prodCntryInfo.getDiscontinueDate ();
+if ( dscontdt == null ) {return "N";
+}
+if ( dscontdt.after ( todaysDate ) ) {return "N";
+}
+else {return "Y";
+}
+}
+return "N";
+}
+
+private ProductCountryInfo getProductCountryInfo ( String country ) {if ( (
+    country == null ) || ( country.trim ().length () == 0 ) ) {return null;
+}
+
+if ( prodCountries.containsKey ( country ) ) {return ( ProductCountryInfo )
+    prodCountries.get ( country );
+}
+ProductCountryInfo prodCntryInfo = new ProductCountryInfo ( country );
+prodCountries.put ( country, prodCntryInfo );
+return prodCntryInfo;
+}
+
+public boolean isOrderable () {return overallOrderability;
+}
+
+public void setParentCategorySate ( int parentCategorySate ) {this.
+    parentCategorySate = parentCategorySate;
+}
+
+public int getParentCategorySate () {return this.parentCategorySate;
+}
+
+public boolean isParentCategoryIncluded () {return ( ProdFilter.STATE_INCLUDE
+    == parentCategorySate );
+}
+
+public boolean isParentCategoryExcluded () {return ( ProdFilter.STATE_EXCLUDE
+    == parentCategorySate );
+}
+
+public void setProductState ( int productState ) {this.productState =
+    productState;
+}
+
+public int getProductState () {return this.productState;
+}
+
+public boolean isProductIncluded () {return ( ProdFilter.STATE_INCLUDE
+                                              == productState );
+}
+
+public boolean isProductExcluded () {return ( ProdFilter.STATE_EXCLUDE
+                                              == productState );
+}
+
+public boolean isProductInDefaultState () {return ( ProdFilter.STATE_DEFAULT
+    == productState );
+}
+
+/* Private inner class to store product's country specific attributes*/
+private class ProductCountryInfo {private String country;
+private String xmsAvailabilty;
+private String orderability;
+private Date discontinueDate;
+
+public ProductCountryInfo ( String country ) {this.country = country;
+}
+
+public String getXmsAvailabilty() {
+	return xmsAvailabilty;
+}
+
+public void setXmsAvailabilty(String xmsAvailabilty) {
+	this.xmsAvailabilty = xmsAvailabilty;
+}
+public void setOrderability ( String orderablity ) {this.orderability =
+    orderablity;
+}
+
+public String getOrderability () {return this.orderability;
+}
+
+public void setDiscontinueDate ( Date discontinue_Date ) {this.discontinueDate =
+    discontinue_Date;
+}
+
+public Date getDiscontinueDate () {return this.discontinueDate;
+}
+}
+
+/* (non-Javadoc)
+ * @see java.lang.Object#toString()
+ */
+@Override
+public String toString() {
+	return " [prodCatalogs=" + prodCatalogs + ", prodCountries="
+			+ prodCountries + ", priceDescriptors=" + priceDescriptors
+			+ ", prodId=" + prodId + ", shortDesc=" + shortDesc
+			+ ", nodePaths=" + nodePaths + ", prodExpireDate=" + prodExpireDate
+			+ ", overallOrderability=" + overallOrderability
+			+ ", parentCategorySate=" + parentCategorySate + ", productState="
+			+ productState + "]";
+}
+
+
+}

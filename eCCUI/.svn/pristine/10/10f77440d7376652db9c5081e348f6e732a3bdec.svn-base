@@ -1,0 +1,79 @@
+package com.hp.ecc.ui.biz.references;
+
+
+
+public class TbaInfo {
+	String countryCode;
+	String productLineCode;
+	String phdNodePin;
+	String phdLevel;
+	String priceTermCode;
+	String directFlag;
+	String adjustFactor;
+	String createdDate;
+	String lastModifedDate;
+	int recordCount = 0;
+	
+	public String getCountryCode() {
+		return countryCode;
+	}
+	public void setCountryCode(String countryCode) {
+		this.countryCode = countryCode;
+	}
+	public String getProductLineCode() {
+		return productLineCode;
+	}
+	public void setProductLineCode(String productLineCode) {
+		this.productLineCode = productLineCode;
+	}
+	public String getPhdNodePin() {
+		return phdNodePin;
+	}
+	public void setPhdNodePin(String phdNodePin) {
+		this.phdNodePin = phdNodePin;
+	}
+	public String getPhdLevel() {
+		return phdLevel;
+	}
+	public void setPhdLevel(String phdLevel) {
+		this.phdLevel = phdLevel;
+	}
+	public String getPriceTermCode() {
+		return priceTermCode;
+	}
+	public void setPriceTermCode(String priceTermCode) {
+		this.priceTermCode = priceTermCode;
+	}
+	public String getDirectFlag() {
+		return directFlag;
+	}
+	public void setDirectFlag(String directFlag) {
+		this.directFlag = directFlag;
+	}
+	public String getAdjustFactor() {
+		return adjustFactor;
+	}
+	public void setAdjustFactor(String adjustFactor) {
+		this.adjustFactor = adjustFactor;
+	}
+	public String getCreatedDate() {
+		return createdDate;
+	}
+	public void setCreatedDate(String createdDate) {
+		this.createdDate = createdDate;
+	}
+	public String getLastModifedDate() {
+		return lastModifedDate;
+	}
+	public void setLastModifedDate(String lastModifedDate) {
+		this.lastModifedDate = lastModifedDate;
+	}
+	public int getRecordCount() {
+		return recordCount;
+	}
+	public void setRecordCount(int recordCount) {
+		this.recordCount = recordCount;
+	}
+	
+	
+}

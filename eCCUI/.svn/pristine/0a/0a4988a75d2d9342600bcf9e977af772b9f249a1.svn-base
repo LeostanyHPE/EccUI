@@ -1,0 +1,53 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.beans;
+
+import java.util.ArrayList;
+
+/**
+ * @author hemanta rao jakal
+ *
+ */
+public class ArchiveFileBean {
+	private String hasWarningsStr = null;
+	private ArrayList<String> fileInfoArrayForPublish = null;
+	
+	//private HashMap<String, String> archiveStatusList = null;
+	
+	
+	public ArchiveFileBean () {
+		this.init ();
+	}
+
+
+	public void reset () {
+		this.init ();
+	}
+
+
+	private void init () {
+		this.hasWarningsStr = null;
+		this.fileInfoArrayForPublish=null;
+	}
+	
+	public String getHasWarningsStr() {
+		return hasWarningsStr;
+	}
+
+
+	public void setHasWarningsStr(String hasWarningsStr) {
+		this.hasWarningsStr = hasWarningsStr;
+	}
+
+
+	public ArrayList<String> getFileInfoArrayForPublish() {
+		return fileInfoArrayForPublish;
+	}
+
+
+	public void setFileInfoArrayForPublish(ArrayList<String> fileInfoArrayForPublish) {
+		this.fileInfoArrayForPublish = fileInfoArrayForPublish;
+	}
+	
+}

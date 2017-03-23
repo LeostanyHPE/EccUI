@@ -1,0 +1,57 @@
+package com.hp.ecc.ui.biz.beans;
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) 2002</p>
+ * <p>Company: Hewlett-Packard</p>
+ * @author Sagar Bilgi
+ * @version 1.0
+ */
+public class MyBean {
+  private String custKey;
+  private String retStatus;
+  private String retMessage;
+  private String productLine;
+  private String productFamily;
+  private String productLineDesc;
+
+  public MyBean () {}
+
+  public String getCustKey () {return custKey;
+  }
+
+  public String getRetStatus () {return retStatus;
+  }
+
+  public String getRetMessage () {return retMessage;
+  }
+
+  public String getProductLine () {return productLine;
+  }
+
+  public String getProductFamily () {return productFamily;
+  }
+
+  public String getProductLineDesc () {return productLineDesc;
+  }
+
+  public void setCustKey ( String value ) {custKey = value;
+  }
+
+  public void setRetStatus ( String value ) {retStatus = value;
+  }
+
+  public void setRetMessage ( String value ) {retMessage = value;
+  }
+
+  public void setProductLine ( String value ) {productLine = value;
+  }
+
+  public void setProductFamily ( String value ) {productFamily = value;
+  }
+
+  public void setProductLineDesc ( String value ) {productLineDesc = value;
+  }
+
+}

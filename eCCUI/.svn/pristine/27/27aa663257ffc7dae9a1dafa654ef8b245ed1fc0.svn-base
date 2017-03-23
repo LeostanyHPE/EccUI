@@ -1,0 +1,455 @@
+<div class="row"  ng-controller="EditMasterCatalogController" data-ng-init="loadEditMasterCatalog()">
+    <div id="messageDiv"></div>
+   	<div id="successMess" class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div id="errorMess" class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows">
+    	<h1 class="h1Underline" style="margin-top: 0px;">				
+			<span>Edit Catalog Master</span>
+		</h1>
+  	</div>
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+  			<div class="four columns">
+	           <div class="generals">
+	                <span>Customer Name:</span>
+	                <div id="CustomerName"  class="div_input" ng-bind="selCustDetails.cust_name"></div>
+	           </div>
+	           <div class="generals" ng-show="form.sogId">
+	               <span> SOG ID:</span>
+	               <div  class="div_input" ng-bind="form.sogId" ></div>
+	           </div>
+	           <div class="generals">
+	               <span>Customer DUNS:</span>
+	               <div id="CustomerDUN" class="div_input"  ng-bind="selCustDetails.cust_dun"></div>
+	           </div>
+	           <div class="generals">
+	              <span>Sale Country:</span>
+	              <div  class="div_input"  ng-bind="form.fPriceOBDesc"></div>
+	           </div>
+	           <div class="generals">
+	              <span>Price Descriptor:</span>
+	               <div  class="div_input"  ng-bind="form.prcDescriptor"></div>
+	           	</div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	              <span> Customer ID:</span>
+	              <div id="CustomerID"  class="div_input"  ng-bind="selCustDetails.cust_id"></div>
+	            </div>
+	            <div class="generals" ng-show="form.sogId">
+	               <span>SOG Name:</span>
+	               <div  class="div_input" ng-bind="form.sogName" ></div>
+	            </div>
+	            <div class="generals" ng-show="form.genesisCust=='N'">
+	                 <span>Supplier ID/DUN's:</span>
+	                 <div  class="div_input" ng-bind="supplierId" ></div>
+	            </div>
+	            <div class="generals">
+                    <span>Master ID:</span>
+                     <div  class="div_input"  ng-bind="form.masterID"></div>
+                </div>
+                <div class="generals" style="margin-top: 15px;" ng-show="form.isSMBCustomer==true || form.genesisCust=='Y' || (form.countryCode=='US' && form.regionCode=='GL')">
+	        		<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" type="checkbox" ng-model="form.offerDealPricing"  ng-disabled="form.offerContainsDeal=='N'" />
+	    			<span style="float: none;"> Ignore Deal Products</span>
+	            </div>
+	            <div class="generals" ng-show="form.isSMBCustomer==false && form.genesisCust=='N'">
+	                <span>Shop List Price Flag:</span>
+	                 <div class="div_input"   ng-bind="form.fshopListFlag"></div>
+	            </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	              <span>EPrime Customer ID:</span>
+	              <div id="EPrimeCustomerID"  class="div_input"  ng-bind="selCustDetails.cust_key"></div>
+	           </div>
+	           <div class="generals">
+	              <span>EPrime Customer Type:</span>
+	              <div id="EPrimeCustomerID"  class="div_input"  ng-bind="selCustDetails.eprime_cust_type"></div>
+	           </div>
+	            <div class="generals" ng-show="form.regionCode=='LA' ||(form.regionCode=='GL' && form.fLARegionSaleCountry )">
+	              <span>Exchange Rate Type:</span>
+	              <div  class="div_input" ng-bind="form.exchRateType" ></div>
+	           </div>
+	           <div class="generals" ng-show="form.genesisCust=='N' && form.regionCode=='US' ">
+	              <span> VISTA Account ID:</span>
+	              <div  class="div_input"  ng-bind="form.fSubGroupID"></div>
+	           </div>
+	           <div class="generals">
+	              <span>Price Merge ID:</span>
+                  <div  class="div_input"  ng-bind="form.priceMerge"></div>
+	            </div>
+	             <div class="generals" style="margin-top: 15px;" ng-show="form.isSMBCustomer==true || form.genesisCust=='Y'">
+	        		<input style="margin: 0px 15px 0px 0px ;width: 15px;height: 15px;" type="checkbox" ng-model="form.myCallCenterFlag"  />
+	    			<span style="float: none;"> Call Center Flag</span>
+	            </div>
+	            <div class="generals" ng-show="form.isSMBCustomer==false && form.genesisCust=='N'">
+	                <span>Price Procedure:</span>
+	                 <div class="div_input"   ng-bind="form.prcproc"></div>
+	            </div>
+	            <div class="generals">
+	                <span>FFS Id:</span>
+	                <div class="div_input"  ng-bind="form.fFFSID"></div>
+	           	</div>
+	        </div>
+  		</div>
+		<div class="customer_rows">
+			<div class="four columns">
+	        	<div class="generals">
+	              <span>MDCP ORG ID:</span>
+                  <select ng-model="form.fMdcpOrgId" ng-options="item as item for item in form.mdcpOrgIdList">
+        		  </select>
+	           </div>
+	        </div>
+			<div class="four columns">
+	           <div class="generals">
+                    <span>Catalog Master Name:</span>
+                    <input type="text" class="" value="" ng-model="form.catalogMasterName"></input>
+                </div>
+	         </div>
+		</div>
+		<div ng-show="form.isTiedToPriceTier == 'Y'">
+		<div class="customer_rows" ng-hide="(form.custSegment=='CMM' || form.custSegment=='MAD')">
+	    	<h1 class="h1Underline row" style="height: 0px;"></h1>
+	  	</div>
+	    <div class="customer_rows" ng-hide="(form.custSegment=='CMM' || form.custSegment=='MAD')">
+	    	<div class="two columns">
+	    		<div class="generals">
+	    			<span style="float: none;">Include Price Tier </span>
+	    			<input style="margin-right: 10px;margin-top: 0px;" type="checkbox" ng-model="form.fIncludePriceTierFlag" ng-change="changeIncludStdCatVal()" disabled="disabled"/>
+                </div>
+	    	</div>
+	    	<div class="two columns">
+	    		<div class="generals">
+	    			<span style="float: none;">Pull Price Tier Configs </span>
+	    			<input style="margin-right: 10px;margin-top: 0px;" ng-model="form.pullPTConfigs" type="checkbox" ng-disabled="!form.fIncludePriceTierFlag"/>
+                </div>
+	    	</div>
+	    </div>
+	    <div class="customer_rows" ng-hide="(form.custSegment=='CMM' || form.custSegment=='MAD')">
+	    	<div class="three columns">
+	            <div class="generals">
+	              <label>Available Price Tiers :</label>
+	              <div  class="div_input" style="width: 100%;margin-top: -5px;">
+	              	<select multiple  size="10"  style="width: 100%;height:60px;" ng-disabled="!form.fIncludePriceTierFlag" ng-model="priceTierLBVal" ng-options="item as item.cat_catalog_name for item in priceTierOption">
+					</select>
+	              </div>
+	           </div>
+	    	</div>
+	    	<div class="one columns" style="text-align: center; margin-top:20px;" ng-switch on="!form.fIncludePriceTierFlag">
+				<div ng-switch-when="true">
+	        		<img alt="" width= "25px" height= "25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;"><br>
+					<img alt="" width= "25px" height= "25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;">
+	        	</div>
+	        	<div ng-switch-when="false">
+	        		<img alt="" width= "25px" height= "25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;" ng-click="priceTierFromLB()"><br>
+					<img alt="" width= "25px" height= "25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;" ng-click="priceTierFromRB()">
+	        	</div>
+	    	</div>
+	    	<div class="three columns">
+	            <div class="generals">
+	              <label>Selected Price Tiers :</label>
+	              <div class="div_input" style="width: 100%;margin-top: -5px;" >
+	              	<select multiple size="10" style="width: 100%;height:60px;" ng-disabled="!form.fIncludePriceTierFlag" ng-model="priceTierRBVal" ng-options="item as item.cat_catalog_name for item in priceTierSelOption">
+					</select>
+	              </div>
+	           </div>
+	    	</div>
+	    </div>
+	    </div>
+	    <div class="customer_rows" ng-show="!form.isSMBCustomer && form.genesisCust!='Y' && !(form.countryCode=='US' && form.regionCode=='GL')">
+	  	 	<div class="twelve columns">
+	  	 		<h1 class="h1Underline">				
+					<span>Deal List</span>
+				</h1>
+	  	 		<div class="table-scroll">
+		    		<table id="dealList" class="dataGrid" width="100%">
+						<thead>
+							<tr class="GridHeaderRow">
+								<th class="center"><input type="checkbox" ng-model="dealChkAll" ng-change="dealSelectAll()" /></th> 
+								<th class="center">Eclipse Customer ID </th>
+								<th class="center">Deal ID </th>
+								<th class="center">Default Price Descriptor</th>
+								<th class="center">Deal Start Date</th>
+								<th class="center">Deal End Date</th>
+								<th class="center">Default sales Country </th>
+								<th class="center">Deal Type</th>
+								<th class="center">Requestor </th>
+								<th class="center">Approver</th>
+								<th class="center">Last Update Date</th>
+								<th class="center">Apply Deal Pricing Only</th>
+								<th class="center" ng-show="form.regionCode=='US' && form.custSegment=='PSEC'">Contract Price List Type ID </th>
+								<th class="center" ng-show="form.regionCode=='US'">Group/Account ID</th>
+								<th class="center">Replacement For Deal ID</th>
+								
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'"  ng-repeat="deal in dealListData">
+								<td class="center"><input type="checkbox" ng-model="deal.chkFlag" ng-disabled="deal.ptFlag"/></td>
+								<td>{{deal.cust_id}}</td>
+								<td>{{deal.deal_id}}</td>
+								<td>{{deal.price_descriptor}}</td>
+								<td>{{dateParser.changeDateFormat(deal.start_date)}}</td>
+								<td>{{dateParser.changeDateFormat(deal.end_date)}}</td>
+								<td>{{deal.control_cntry_cd}}</td>
+								<td ng-if="deal.dealtype">{{deal.dealtype}}</td>
+								<td ng-if="deal.deal_type">{{deal.deal_type}} </td>
+								<td>{{deal.requestor}}</td>
+								<td>{{deal.approver}}</td> 
+								<td>{{deal.last_modified_date | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+								<td class="center"><input type="checkbox" ng-disabled="!deal.chkFlag || deal.ptFlag" ng-model="deal.priceFlag"/></td>
+								<td ng-show="form.regionCode=='US' && form.custSegment=='PSEC'"><input type="text" style="width: 80px;height: 15px; margin: 2px 0px 2px 0px;" ng-model="deal.specialPricing" ng-disabled="!deal.vistaFlag || !deal.chkFlag|| deal.ptFlag"/></td>
+								<td ng-show="form.regionCode=='US'" >{{deal.custAccountIDs}}</td>
+								<td>{{deal.original_deal_id}}</td>								
+							</tr>
+						</tbody>
+					</table> 
+				</div>
+	  	 	</div>
+	  	</div>
+  	
+	  	<div class="customer_rows" ng-show="form.regionCode=='US' || form.regionCode=='AP' || (form.regionCode=='GL' && form.fAPRegionSaleCountry)">
+	  	 	<div class="twelve columns">
+	  	 		<h1 class="h1Underline">				
+					<span>Purchase Agreement</span>
+				</h1>
+	  	 		<div class="table-scroll" ng-show="paAssociatedPTFlag">
+		    		<table id="paList" class="dataGrid" width="100%">
+						<thead>
+							<tr class="GridHeaderRow">
+								<th></th> 
+								<th class="center">Purchase Agreement # </th>
+								<th class="center">CAC Code </th>
+								<th class="center">GEO Code</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'"  ng-repeat="pa in paListData">
+								<td class="center"><input type="radio" ng-model="selectedPA" value="{{pa.uniquePAVal}}" name="paRadioBtn" ng-click="selectedPAFun(pa)"/></td>
+								<td>{{pa.cpm_pa_no}}</td>
+								<td>{{pa.cpm_cac_code}}</td>
+								<td>{{pa.cpm_disc_geo}}</td>
+							</tr>
+						</tbody>
+					</table> 
+				</div>
+				<div class="table-scroll" ng-hide="paAssociatedPTFlag">
+		    		<table id="paList" class="dataGrid" width="100%">
+						<thead>
+							<tr class="GridHeaderRow">
+								<th></th> 
+								<th class="center">Purchase Agreement # </th>
+								<th class="center">CAC Code </th>
+								<th class="center">GEO Code</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'"  ng-repeat="paPT in paAssPTData">
+								<td class="center"><input type="radio" name="paRadioBtn" disabled checked/></td>
+								<td>{{paPT.cap_pa_no}}</td>
+								<td>{{paPT.cap_cac_code}}</td>
+								<td>{{paPT.cap_disc_geo}}</td>
+							</tr>
+						</tbody>
+					</table> 
+				</div>
+	  	 	</div>
+	  	</div>
+	   	<div class="customer_rows"  ng-show="form.isSMBCustomer || form.genesisCust =='Y' || (form.countryCode=='US' && form.regionCode=='GL')">
+	  	 	<div class="twelve columns">
+	  	 		<div class="twelve columns">
+		  	 		<h1 class="h1Underline">				
+						<span>Offer List</span>
+					</h1>
+		  	 		<div class="table-scroll">
+			    		<table id="offerList" class="dataGrid" width="100%">
+							<thead>
+								<tr class="GridHeaderRow">
+									<th></th> 
+									<th class="center">Offer ID </th>
+									<th class="center">Offer Name </th>
+									<th class="center">Offer Type</th>
+									<th class="center">Price Profile</th>
+									<th class="center">Purchasing Terms</th>
+									<th class="center">Pricing Rules </th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'" ng-repeat="offer in offerListData" >
+									<td class="center"><input type="radio" name="offerRadioBtn" ng-model = "form.selectedOffer" value="{{offer.uniqueId}}" ng-click="selectedOffer(offer)"/></td>
+									<td><a ng-click="displayOfferDetails(offer.offer_id)">{{offer.offer_id}}</a></td>
+									<td>{{offer.offer_desc}}</td>
+									<td>{{offer.ot_desc}}</td>
+									<td>{{offer.profile_desc}}</td>
+									<td>{{offer.pt_desc}}</td>
+									<td>{{offer.ppr_desc}}</td>
+								</tr>
+							</tbody>
+						</table> 
+					</div>
+		  	 	</div>
+	  	 	</div>
+	  	</div> 
+	    
+	    <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height: 5px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	  		<div class="four columns">
+	  			<div class="generals">
+	              <span>Include Standard Catalog:</span>
+                  <select  ng-model="form.fIncludeFlag" ng-options="item.id as item.name for item in includeStandCatList">
+        		  </select>
+	           	</div>
+	  		</div>
+	  		<div class="four columns">
+	  			<div class="generals" ng-hide="form.genesisCust != 'N'">
+	              	<span style="float: none;">Apply Standard Catalog Pricing </span>
+	    			<input style="margin-right: 5px;" ng-model="form.fApplyStdPricing" type="checkbox" ng-disabled="!form.fIncludePriceTierFlag || form.fIncludeFlag =='N'"/>
+	           	</div>
+	  		</div>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<div class="three columns">
+	            <div class="generals">
+	              <label>Available Catalogs</label>
+	              <div  class="div_input" style="width: 100%;margin-top: -5px;">
+	              	<select multiple  size="10"  style="width: 100%;height:60px;" ng-model="catalogLBVal" ng-options="item as item.cat_catalog_name for item in catalogOption" ng-disabled="form.fIncludeFlag=='N'"></select>
+	              </div>
+	           </div>
+	    	</div>
+	    	<div class="one columns" style="text-align: center; margin-top:20px;" ng-switch on="form.fIncludeFlag=='N'">
+				<div ng-switch-when="true">
+	        		<img alt="" width= "25px" height= "25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;"><br>
+					<img alt="" width= "25px" height= "25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;">
+	        	</div>
+	        	<div ng-switch-when="false">
+	        		<img alt="" width= "25px" height= "25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;" ng-click="catalogFromLB()"><br>
+					<img alt="" width= "25px" height= "25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;" ng-click="ptCheckCatalogFromRB()">
+	        	</div>
+	    	</div>
+	    	<div class="three columns">
+	            <div class="generals">
+	              <label>Selected Catalogs</label>
+	              <div class="div_input" style="width: 100%;margin-top: -5px;">
+	              	<select multiple size="10"  style="width: 100%;height:60px;" ng-model="catalogRBVal" ng-options="item as item.cat_catalog_name_dis for item in catalogSelOption" ng-disabled="form.fIncludeFlag=='N'">
+					</select>
+	              </div>
+	           </div>
+	    	</div>
+	    	<div class="three columns" >
+	    		<div class="generals" style="margin-left: 30px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.configExcludeFlag" ng-disabled="priceTierAssociateStatus" />
+	    			<span style="float: none;">Exclude Configs</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;margin-left: 30px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fExcludeProdFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">Exclude Products from Hierarchy</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;margin-left: 30px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fCSIncludeFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">Include Cross Sell</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;margin-left: 30px;" ng-show="(form.regionCode=='GL' && form.countryCode=='US') || form.regionCode=='US'">
+	    			<input class="form-chk" type="checkbox" ng-model="form.excludeHStockCodeFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">Exclude H Stock Code</span>  
+                </div>
+	    	</div>
+	    	<div class="two columns">
+	    		<div class="generals" ng-show="form.custSegment && (form.custSegment!='CMM' && form.custSegment!='MAD')">
+	    			<input class="form-chk" type="checkbox" ng-model="form.plcCheck" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">PLC Check</span>
+                </div>
+                <div class="generals"  ng-show="form.custSegment=='CMM' || form.custSegment=='MAD'" style="margin-top: 10px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fOfferAllOrdFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;"> Offer All GPSY Orderable Part #s</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fOfferEquivFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">Offer Equivalent Part #</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;" ng-show="form.custSegment && (form.custSegment!='CMM' && form.custSegment!='MAD')">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fOrderCheckFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">LCLP Check</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;" ng-show="form.custSegment && (form.custSegment!='CMM' && form.custSegment!='MAD')">
+	    			<input class="form-chk" type="checkbox" ng-model="omChkFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;">OM Check</span>
+                </div>
+                <div class="generals" style="margin-top: 10px;" ng-show="form.custSegment=='CMM' || form.custSegment=='MAD'">
+	    			<input class="form-chk" type="checkbox" ng-model="form.fOrderCheckFlag" ng-disabled="priceTierAssociateStatus"/>
+	    			<span style="float: none;"> GPSY Orderability Check(Activity Code)</span>
+                </div>
+	    	</div>
+	    </div>
+	    <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:5px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<div class="twelve columns">
+	    		<div class="generals">
+	              <span>Default Localization Option Categories:</span>
+                  <div class="div_input" ></div>
+	           	</div>
+	    	</div>
+	    	<div class="three columns">
+		    	<div class="generals">
+	              <label>Available </label>
+	              <div  class="div_input"  style="width: 100%;margin-top: -5px;">
+	              	<select multiple size="10" name="FromLB"  ng-model="localizationLBVal" style="width: 100%;height:60px;"   ng-options="item as item.opt_category_name for item in localizationOption" ng-disabled="ptLocStatusFlag">
+					</select>
+	              </div>
+		        </div>
+	        </div>
+	        <div class="one columns" style="text-align: center; margin-top:20px;" ng-switch on="ptLocStatusFlag">
+	        	<div ng-switch-when="true">
+	        		<img alt="" width= "25px" height= "25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;"><br>
+					<img alt="" width= "25px" height= "25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;">
+	        	</div>
+	        	<div ng-switch-when="false">
+	        		<img alt="" width= "25px" height= "25px" src="resources/images/hp/RhtArrow.png" style="cursor: pointer;" ng-click="localizationFromLB()"><br>
+					<img alt="" width= "25px" height= "25px" src="resources/images/hp/LftArrow.png" style="cursor: pointer;" ng-click="localizationFromRB()">
+	        	</div>
+	        </div>
+	    	<div class="three columns">
+	            <div class="generals">
+	              <label>Selected </label>
+	              <div class="div_input" style="width: 100%;margin-top: -5px;">
+	              	<select  multiple size="10" name="ToLB" style="width: 100%;height:60px;" ng-model="localizationRBVal" ng-options="item as item.opt_category_name for item in localizationSelOption" ng-disabled="ptLocStatusFlag">
+					</select>
+	              </div>
+	           </div>
+	    	</div>
+	    </div>
+	    <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="height:5px;"></h1>
+	    </div>
+	    <div class="customer_rows">
+	      	<div class="four columns">
+	    		<div class="generals">
+	    			<label>Selected Localization Option Codes </label>
+	                <textarea  rows="" cols="" ng-model="form.options" style="width:75%;" disabled> </textarea>
+	           	</div>
+	    	</div>
+	    	<div class="four columns">
+	           	<div class="generals">
+	           		<label>Selected Localization Option Countries </label>
+	                <textarea  rows="6" cols="1" ng-model="form.countries" style="width:75%;" disabled> </textarea>
+	           	</div>
+	    	</div>
+	    	<div class="four columns">
+	    		<div class="generals">
+	                <label>Comment</label>
+	                <textarea ng-model="form.comment" rows="6" cols="1" maxlength="50" style="width:75%;"> </textarea>
+	           	</div>
+	    	</div>
+	    </div>
+	  	<div class="customer_rows" style="margin-top:5px;">
+	  		<div class="eight columns">
+		        <a class="btn btn-inline"  ng-click="saveEditMaster()"><span id="save">Save</span></a> 
+		        <a class="btn btn-inline"  ng-click="cancelEditMaster()"><span id="Cancel">Cancel</span></a>
+		        <a class="btn btn-inline"  ng-click="resetEditMaster()"><span id="reset">Reset</span></a>
+	  		</div>
+	  	</div>
+  	</div>
+</div>

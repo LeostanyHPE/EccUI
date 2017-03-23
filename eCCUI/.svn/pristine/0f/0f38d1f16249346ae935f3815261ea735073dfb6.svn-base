@@ -1,0 +1,475 @@
+eccApp.controller('CatalogArchivesCtrl',['$scope', '$location','$http','$timeout','shareddata','webStorage','$routeParams','dateParser','dialog',
+  function($scope, $location, $http, $timeout,shareddata,webStorage,$routeParams, dateParser, dialog) {
+	$scope.dataLoad=false;
+
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.form = {};
+	$scope.addDataToTable=[];
+	$scope.defaultSet=true;
+	$scope.shareddata=shareddata;
+	$scope.dateParser=dateParser; 
+	$scope.status = '';
+	$scope.param = {};
+	$scope.catalog_id='';
+	$scope.minCheckedIndex = 0;
+	$scope.showRecord = false;
+	
+	$scope.searchArchive=function(fTask_value){
+		$scope.form.fTask = fTask_value;
+		$scope.showRecord = true;
+		$scope.loadViewCatalogArchives();
+	};
+
+	$scope.init=function(){	
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Archive List Task\"");
+
+		$scope.form.catalogID = $routeParams.catalog_id; 	
+		$scope.catalog_id=$routeParams.catalog_id;
+		$scope.loadViewCatalogArchives();
+	};
+
+
+	$(".creationDate_1").datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showOn: "both",
+		buttonImage: "resources/images/hp/calender.png",
+		buttonImageOnly: true,
+		buttonText: "",
+		dateFormat: "dd-M-yy",
+		showButtonPanel: true,
+		beforeShow: function( input ) {  
+			setTimeout(function() {  
+				var buttonPane = $( input ).datepicker( "widget" ).find( ".ui-datepicker-buttonpane" ).html('');  
+				var btn = $('<button class="ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all" type="button">Clear</button>'); 
+				btn.on("click", function () { 
+					$.datepicker._clearDate( input );
+				});
+				btn.appendTo( buttonPane );
+			});
+		},
+		onSelect : function(dateText, inst) {
+			$(".creationDate_2").datepicker("option","minDate", dateText);
+			$scope.form.fStartDateCreated = dateText;
+		}
+	});
+
+	$(".creationDate_2").datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showOn: "both",
+		buttonImage: "resources/images/hp/calender.png",
+		buttonImageOnly: true,
+		buttonText: "",
+		dateFormat: "dd-M-yy",
+		showButtonPanel: true,
+		beforeShow: function( input ) {  
+			setTimeout(function() {  
+				var buttonPane = $( input ).datepicker( "widget" ).find( ".ui-datepicker-buttonpane" ).html('');  
+				var btn = $('<button class="ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all" type="button">Clear</button>'); 
+				btn.on("click", function () { 
+					$.datepicker._clearDate( input );
+				});
+				btn.appendTo( buttonPane );
+			});
+		},
+		onSelect : function(dateText, inst) {
+			$scope.form.fEndDateCreated = dateText;
+		}
+	});
+
+	$(".publishDate_1").datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showOn: "both",
+		buttonImage: "resources/images/hp/calender.png",
+		buttonImageOnly: true,
+		buttonText: "",
+		dateFormat: "dd-M-yy",
+		showButtonPanel: true,
+		beforeShow: function( input ) {  
+			setTimeout(function() {  
+				var buttonPane = $( input ).datepicker( "widget" ).find( ".ui-datepicker-buttonpane" ).html('');  
+				var btn = $('<button class="ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all" type="button">Clear</button>'); 
+				btn.on("click", function () { 
+					$.datepicker._clearDate( input );
+				});
+				btn.appendTo( buttonPane );
+			});
+		},
+		onSelect : function(dateText, inst) {
+			$(".publishDate_2").datepicker("option","minDate", dateText);
+			$scope.form.fStartDatePublished = dateText;
+		}
+	});
+
+	$(".publishDate_2").datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showOn: "both",
+		buttonImage: "resources/images/hp/calender.png",
+		buttonImageOnly: true,
+		buttonText: "",
+		dateFormat: "dd-M-yy",
+		showButtonPanel: true,
+		beforeShow: function( input ) {  
+			setTimeout(function() {  
+				var buttonPane = $( input ).datepicker( "widget" ).find( ".ui-datepicker-buttonpane" ).html('');  
+				var btn = $('<button class="ui-datepicker-current ui-state-default ui-priority-secondary ui-corner-all" type="button">Clear</button>'); 
+				btn.on("click", function () { 
+					$.datepicker._clearDate( input );
+				});
+				btn.appendTo( buttonPane );
+			});
+		},
+		onSelect : function(dateText, inst) {
+			$scope.form.fEndDatePublished = dateText;
+		}
+	});
+
+
+	$scope.loadViewCatalogArchives = function() {
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		var error = '';
+
+		$("#catalogArchiveListGridDiv").css("display","none");
+		$scope.loadTime = new Date().getTime();
+
+		$http({
+			url: 'archive/viewCatalogArchives.htm',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+			}
+		}).success(function(data,status,header,config) {
+
+			$scope.archiveStatusList = data.archiveStatusList;
+
+			var formObj = JSON.parse(data.form);
+			$scope.form = formObj;
+			$scope.catalog_name = $scope.form.catalogName ;
+			$scope.searchViewCatalogAchiveList = [];
+			$scope.searchViewCatalogAchiveList = formObj.fCatalogArchiveList;
+			$scope.allowedDeleteArchiveFlag = $scope.form.allowedDeleteArchiveFlag;
+			$scope.addDataToTable.length=0;
+			var j=0;
+
+			angular.forEach($scope.searchViewCatalogAchiveList, function(item){	
+				$scope.files = item.archiveFiles.fileInfoArrayForPublish;
+				var fileNames = [];
+				for(var i=0;i<$scope.files.length;i++) {
+					if(item.canViewFileDirectly){
+						fileNames.push(
+								"<a id="+item.key+" title='View XML File'  onClick=angular.element(document.getElementById('catalogArchiveCtrl')).scope().openArchiveXmlWindow('"+item.key+"','no')>"+
+								$scope.files[i]+
+								"</a>" + "  "+
+								"<a id="+item.key+" title='View HTML File'  onClick=angular.element(document.getElementById('catalogArchiveCtrl')).scope().openArchiveXmlWindow('"+item.key+"','yes')>"+
+								"(view HTML version)"+
+								"</a>" + "   "
+						);
+					}else{
+						fileNames.push(
+								"<a id="+item.key+" title='View this file'  onClick=angular.element(document.getElementById('catalogArchiveCtrl')).scope().displayNonXMLFile('"+item.key+"','"+$scope.files[i]+"')>"+
+								$scope.files[i]+
+								"</a>" 
+						);
+					}
+				}
+
+				$scope.fileNames = fileNames;
+
+				$scope.warning = '';
+				if($scope.isUndefinedOrNull(item.archiveFiles.hasWarningsStr) && (item.archiveFiles.hasWarningsStr) == 'true'){
+					if($scope.isUndefinedOrNull(item.archiveFiles.warningFileName)){
+						warning_str = (item.archiveFiles.warningFileName).trim();
+					}
+					$scope.warning = "<a id="+item.key+" title='View warnings'  onClick=angular.element(document.getElementById('catalogArchiveCtrl')).scope().displayWarning('"+item.key+"','"+warning_str+"') style='color: red;'> Warnings </a>";
+				}else{
+					$scope.warning = "<span style='color: green;'>OK</span>" ;
+				}
+
+				$scope.addDataToTable.push([
+				                            "<input type='checkbox' name='archivesSelected' id='archivesSelected_"+j+"' multiple='multiple' format='####' value='"+item.key+"' />",
+				                            "<a id="+item.key+" title='View/Edit this archive'  onClick=angular.element(document.getElementById('catalogArchiveCtrl')).scope().displayCatalogArchive('"+item.key+"','"+$routeParams.catalog_id+"')>"+item.name+"</a>",
+				                            item.outputFormatName, 
+				                            item.dateCreatedStr,
+				                            item.datePublishedStr,
+				                            item.version,
+				                            item.statusLabel,
+				                            $scope.warning,
+				                            $scope.fileNames
+				                            ]);  
+
+				j++;
+			});
+
+			if(j==1){
+				$scope.minCheckedIndex = j;
+			}
+			var errorWhileFetchingList = '';
+			if ($scope.addDataToTable.length >0){
+				$scope.dataLoad=true;
+			}
+			else{
+				$scope.dataLoad=false;
+			}
+
+			var success = '';
+			if($scope.isUndefinedOrNull(data.success)){
+				success = data.success;
+			}
+
+			if($scope.isUndefinedOrNull(data.error)){
+				if($scope.isUndefinedOrNull(error)){
+					error = error + ", " +data.error ;
+				}else if($scope.isUndefinedOrNull(errorWhileFetchingList)){
+					error = data.error + ", " + errorWhileFetchingList;
+				}else{
+					error = data.error ;
+				}
+			}if($scope.isUndefinedOrNull(error)){
+				error = errorWhileFetchingList;
+			}
+			
+			if ($scope.showRecord == true) {				
+				
+				if(!($scope.addDataToTable.length > 0)){					
+					success = "Sorry, no records found. Please refine your search and try again.";
+				}
+				else{
+					success = $scope.addDataToTable.length+' record(s) found';
+				}
+				
+				
+				$scope.showRecord = false;
+			}
+
+			$scope.showMsg(success, error);
+			if(!$scope.isUndefinedOrEmptyOrNull(error) || !$scope.isUndefinedOrEmptyOrNull(success)){
+				$scope.scrollToMessage();
+			}
+
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).
+		error(function(data, status, headers, config) {
+			$scope.showInfo('Some difficulties in View Catalog Archive List Service, please try after some time');
+			$scope.scrollToMessage();
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		});
+	};
+	$scope.displayCatalogArchive=function(archive_key, catalog_id){
+		webStorage.session.add('ArchiveListPage', '#/ArchiveList?catalog_id='+$routeParams.catalog_id); 
+		document.location.href="#/EditArchive?archive_key="+archive_key+"&catalog_id="+catalog_id+"&catalog_name="+$scope.catalog_name;
+	};
+
+	$scope.displayCatalogXML=function(archive_key,user_friendly){
+		webStorage.session.add('ArchiveListPage', '#/ArchiveList?catalog_id='+$routeParams.catalog_id);
+		webStorage.session.add('EditArchivePage', '#/EditArchive?archive_key='+archive_key+'&catalog_id='+$routeParams.catalog_id+'&catalog_name='+$scope.catalog_name);
+		document.location.href="#/ViewArchive?archive_key="+archive_key+"&task=file_view&user_friendly="+user_friendly+"&catalog_name="+$scope.catalog_name;;
+	};
+
+	$scope.displayWarning=function(archive_key,warning_file_name){
+		webStorage.session.add('ArchiveListPage', '#/ArchiveList?catalog_id='+$routeParams.catalog_id);
+		webStorage.session.add('EditArchivePage', '#/EditArchive?archive_key='+archive_key+'&catalog_id='+$routeParams.catalog_id+'&catalog_name='+$scope.catalog_name);
+		document.location.href="#/ViewArchive?archive_key=" + archive_key + "&task=file_view&warning_file_name=" + warning_file_name+ "&catalog_id="+$scope.catalog_id+ "&catalog_name="+$scope.catalog_name ;
+	};
+
+	$scope.displayNonXMLFile=function(archive_key, non_xml_file_name){
+		webStorage.session.add('ArchiveListPage', '#/ArchiveList?catalog_id='+$routeParams.catalog_id);
+		webStorage.session.add('EditArchivePage', '#/EditArchive?archive_key='+archive_key+'&catalog_id='+$routeParams.catalog_id+'&catalog_name='+$scope.catalog_name);
+		document.location.href="#/ViewArchive?archive_key=" + archive_key + "&task=file_view&non_xml_file_name=" + encodeURIComponent(non_xml_file_name)+ "&catalog_id="+$scope.catalog_id+ "&catalog_name="+$scope.catalog_name ;
+	};
+
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+
+	$scope.openArchiveXmlWindow = function(archive_key, user_friendly) {
+		//reset the key selection to unchecked status w.r.t scope variables
+		$scope.param.archive_key1 = "";
+		$scope.param.archive_key2 = "";
+		$scope.form.fSelectedCatalogs = [];
+
+		$scope.param.archive_key = archive_key;
+		$scope.param.user_friendly = user_friendly;
+		$scope.param.task = "file_view";
+		$scope.selectArchiveDialog();
+		return false;
+	};
+
+	$scope.openExtDiffWindow = function() {
+		var archive_keys = document.all('archivesSelected');
+		var c = 0;
+		var key1,key2;
+		if(!$scope.isUndefinedOrEmptyOrNull(archive_keys))
+			for(i=0;i<archive_keys.length;i++)
+			{
+				if(archive_keys[i].checked)
+				{
+					if(c==0) key1 = archive_keys[i].value;
+					else key2 = archive_keys[i].value;
+					c++;
+				}
+			}
+
+		if(c!=2)
+		{
+			$scope.showMsg('','Please select two archives to find diff.');
+			$scope.scrollToMessage();
+			return;
+		}
+		else {
+			var url= "&archive_key1="+key1;
+			url+= "&archive_key2="+key2;
+			url+= "&user_friendly=no";
+
+			$scope.param.archive_key1 = key1;
+			$scope.param.archive_key2 = key2;
+			$scope.param.user_friendly = "no";
+			$scope.param.task = "generate_diff";
+			$scope.selectArchiveDialog();
+
+		}
+		return false;
+	};
+
+	$scope.condtionalAlertDelete = function (fTask_value) {
+	     dialog.show({
+	         template: '<div class="hpe-main-content" title="Do you want to Delete?">' +
+	                       '<span> Do you want to Delete?</span>' + 
+	                       '<br>' +
+	                       '<a class="btn btn-inline"   ng-click="close(true)" ><span>Yes</span></a>' +
+	                       '<a class="btn btn-inline"   ng-click="close(false)"><span>No</span></a>' +
+	                   '</div>',
+	         controller: 'CatalogArchivesCtrl',
+	         width: 600,
+	         param: $scope,
+	         draggable: true,
+	         title:'Warning'
+	     }).then(function (result) {
+	         if(result == true) {
+	         	$scope.deleteArchive();
+	         	$scope.scrollToMessage();
+	         }
+	        
+	     });
+	 };
+	 
+	$scope.deleteArchive = function(fTask_value) {
+		var archive_keys = document.all('archivesSelected');
+		var c = 0;
+		var i = 0;
+		var keys_for_delete = [] ;
+		if(!$scope.isUndefinedOrEmptyOrNull(archive_keys))
+			for(i=0;i<archive_keys.length;i++)
+			{
+				if(archive_keys[i].checked)
+				{
+					keys_for_delete[c] = archive_keys[i].value;
+					c++;
+				}
+			}
+
+		if($scope.minCheckedIndex == 1 && c==0){
+			if(document.getElementById("archivesSelected_0").checked){
+				keys_for_delete[0] = document.getElementById("archivesSelected_0").value;
+				c++;
+			}
+		}
+
+		if(c==0)
+		{
+			$scope.showMsg('','No archives selected for delete');
+			$scope.scrollToMessage();
+		}else {
+			$scope.form.fSelectedCatalogs = keys_for_delete;
+			$scope.form.fTask = fTask_value;
+			$scope.loadViewCatalogArchives();
+		}
+		return false;
+	};
+
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+
+	$scope.showMsg=function(success, error){
+		$scope.successMessage=success;
+		$scope.errorMessage=error;
+	};
+	$scope.hideMsg=function(){
+		$scope.successMessage='';
+		$scope.errorMessage='';
+		$scope.infoMessage='';
+	};
+	$scope.showInfo=function(info){
+		$scope.infoMessage=info;
+	};
+
+	$scope.grid = {
+			header: ["", "Archive", "Format", "Creation Date", "Publish Date", "Version", "Status", "Validation", "Files"],
+			data: $scope.addDataToTable,
+			sort: [[1, "asc"]],
+			colDefs: [
+			          { "sClass": "center", "aTargets": [2, 3] },
+			          { "sClass": "center unsortable", "aTargets": [0] },
+			          { "sClass": "left", "aTargets": [1, 5] },
+			          { "sClass": "right", "aTargets": [4] },
+			          { "bSortable": false, "aTargets": [0] }
+			          ],
+			          colViewBy: { // define view by function styleif s Dom has C, this is required
+			        	  "buttonText": 'View By <i class="icon-chevron-down"></i>',
+			        	  //"aiExclude": [0],//define the column don>t need to display in view by
+			        	  "bShowAll": true,
+			        	  "sShowAll": "Show All",
+			        	  "sAlign": "left"
+			          }
+	};
+
+	$scope.isUndefinedOrNull = function(value){
+		return !(angular.isUndefined(value) || value === null);
+	};
+
+	$scope.isUndefinedOrEmptyOrNull = function(value){
+		if(angular.isUndefined(value) || value === null ||  value == ''){
+			return true;
+		}else{
+			return false;
+		}
+	};
+
+	$scope.selectArchiveDialog = function () {
+		dialog.show({
+			templateUrl: 'resources/html/archive/viewArchiveDialog.html',
+			controller: 'ViewCatalogArchiveFileDialogCtrl',
+			width: 1150,
+			height : 600,
+			draggable: true,
+			param: $scope.param,
+			title:''
+		}).then(function (result) {
+			if(result != undefined && result != false){//Check this value with that of argument value in ng-click method in respective html page
+				if(result.substr(0, 4) == 'info'){
+					$scope.showInfo(result.substr(5));
+				}else{
+					$scope.showMsg('', result);
+				}
+				$scope.scrollToMessage();
+			}else{
+				$scope.hideMsg();
+			}	
+		});
+	};
+
+	$scope.returnToCatalogPage = function(){
+		document.location.href=webStorage.session.get('CatalogPage');
+	};
+
+}]);

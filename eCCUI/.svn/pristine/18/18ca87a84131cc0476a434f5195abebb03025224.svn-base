@@ -1,0 +1,138 @@
+package com.hp.ecc.ui.biz.alert;
+
+
+/**
+ * @author Andy Li
+ * @version 1.0
+ *
+ */
+
+public class AlertInfo {
+  /**
+   * Get ID
+   */
+  public String getID () {
+    return this.fID;
+  }
+
+
+  /**
+   * Set ID
+   */
+  void setID ( String id ) {
+    this.fID = id;
+  }
+
+
+  /**
+   * Get ID
+   */
+  public int getPriority () {
+    return this.fPriority;
+  }
+
+
+  /**
+   * Set ID
+   */
+  void setPriority ( int p ) {
+    this.fPriority = p;
+  }
+
+
+  /**
+   * Get ID
+   */
+  public String getName () {
+    return this.fName;
+  }
+
+
+  /**
+   * Set ID
+   */
+  void setName ( String name ) {
+    this.fName = name;
+  }
+
+
+  /**
+   * Get Desc
+   */
+  public String getDesc () {
+    return this.fDesc;
+  }
+
+
+  /**
+   * Set Desc
+   */
+  void setDesc ( String desc ) {
+    this.fDesc = desc;
+  }
+
+  /**
+   * @return
+   */
+  public Long getMaxAlertKey () {
+    return maxAlertKey;
+  }
+
+  /**
+   * @return
+   */
+  public Long getMinAlertKey () {
+    return minAlertKey;
+  }
+
+  /**
+   * @param long1
+   */
+  public void setMaxAlertKey ( Long long1 ) {
+    maxAlertKey = long1;
+  }
+
+  /**
+   * @param long1
+   */
+  public void setMinAlertKey ( Long long1 ) {
+    minAlertKey = long1;
+  }
+
+
+  /**
+   * AlertInfo object construtor. The object
+   */
+  AlertInfo ( String id ) {
+    this.setID ( id );
+    //TODO
+    this.setDesc ( "desc-" + id );
+  }
+
+  public AlertInfo () {
+  }
+
+
+  private String fID;
+  private String fName;
+  private String fDesc;
+  private int fPriority;
+  private Long minAlertKey;
+  private Long maxAlertKey;
+  private int recordCount;
+
+  /**
+   * @return
+   */
+  public int getRecordCount () {
+    return recordCount;
+  }
+
+  /**
+   * @param i
+   */
+  public void setRecordCount ( int recordCount ) {
+    this.recordCount = recordCount;
+  }
+
+}

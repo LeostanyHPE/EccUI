@@ -1,0 +1,498 @@
+<comcat-dax-config>
+
+	<stmt-group id="price_detail">
+
+	<stmt id="getPriceMergeId">
+	            SELECT {string2}:= DECODE( customer.CUST_SEGMENT, 'TCFG', 'NONE', NVL(cat_info.OFFER_ID, cat_info.CAT_PRICE_MERGE_ID) )
+		          FROM cat_info, customer
+		          WHERE cat_info.cat_catalog_id = {?:string1}
+		          AND cat_info.cust_key = customer.cust_key
+		          AND ROWNUM = 1
+        </stmt>
+        <stmt id="select_history">
+            SELECT 
+            	{seq}:=CPH_PRC_HISTORY_KEY, 
+            	{price}:=CPH_PRICE, 
+            	{priceSourceID}:=CPH_PRICE_SRC_ID,
+            	{priceSourceType}:=CPH_PRICE_SRC_TYPE,
+            	{changeDate}:=CPH_LAST_MODIFIED_DATE
+            FROM cat_item_price_history 
+            WHERE cit_price_item_key = {?:catItemKey} order by CPH_LAST_MODIFIED_DATE desc 
+        </stmt>
+
+        <stmt id="select_catalog">
+            SELECT 
+            	{catalogID}:=c.CAT_CATALOG_ID, 
+            	{nextPriceDescriptor}:=p.CPD_PRICE_DESCRIPTOR
+            FROM cat_item i, cat_info c, cat_price_descriptor p 
+            WHERE i.cit_item_key = {?:catItemKey} AND 
+                  c.cat_catalog_id = i.cat_catalog_id AND
+                  c.cat_catalog_id = p.cat_catalog_id 
+        </stmt>
+
+		<stmt id="select_price_source">
+            SELECT 
+            	{priceSourceKey}:= ITEM_PRICE_SRC_KEY, 
+            	{catalogItemKeyForPrice}:= PRICE_ITEM_KEY,
+            	{price}:= PRICE,
+            	{startDate}:= PRICE_START_DATE,
+            	{endDate}:= PRICE_END_DATE,
+            	{sourceID}:= PRICE_SRC_ID,
+            	{sourceType}:= PRICE_SRC_TYPE,
+            	{priceChangeReason}:= PRICE_CHANGE_REASON,
+            	{fwDiscCode}:= FW_DISC_CD
+            FROM (
+            SELECT 
+            	ps.CPS_ITEM_PRICE_SRC_KEY ITEM_PRICE_SRC_KEY, 
+            	ps.CIT_PRICE_ITEM_KEY PRICE_ITEM_KEY,
+            	ps.CPS_PRICE PRICE,
+            	ps.CPS_PRICE_START_DATE PRICE_START_DATE,
+            	ps.CPS_PRICE_END_DATE PRICE_END_DATE,
+            	ps.CPS_PRICE_SRC_ID PRICE_SRC_ID,
+            	ps.CPS_PRICE_SRC_TYPE PRICE_SRC_TYPE,
+            	ps.CPS_PRICE_CHANGE_REASON PRICE_CHANGE_REASON,
+            	ps.CPS_FW_DISC_CD FW_DISC_CD		
+            FROM cat_item_price_source ps, cat_item item
+            WHERE ps.cit_price_item_key = {?:catItemKeyForPrice} 
+            	  and ps.CPS_PRICE_DESCRIPTOR = {?:priceDescriptor}
+            	  and item.cat_catalog_id = ps.cat_catalog_id
+				  and item.cit_src_prod = ps.cit_src_prod
+            	  and ( item.cit_config_id is null or 'N' = be_config_util.get_corona_read_flag ('gui'))
+            UNION ALL
+            SELECT 
+            	ps.CPS_ITEM_PRICE_SRC_KEY ITEM_PRICE_SRC_KEY, 
+            	ps.CIT_PRICE_ITEM_KEY PRICE_ITEM_KEY,
+            	cpi.net_price price,
+            	cpi.PRICE_START_DATE PRICE_START_DATE,
+            	cpi.PRICE_END_DATE PRICE_END_DATE,
+            	DECODE(cpi.price_source, 'LP', DECODE(NVL(cpi.deal_number,'X'), 'X', 'LOCAL_PRICE', cpi.deal_number), cpi.deal_number)  PRICE_SRC_ID,
+            	cpi.PRICE_SRC_TYPE PRICE_SRC_TYPE,
+            	ps.CPS_PRICE_CHANGE_REASON PRICE_CHANGE_REASON,
+            	ps.CPS_FW_DISC_CD FW_DISC_CD
+            FROM cat_item_price_source ps, cat_item item, config_permutation_info cpi
+            WHERE 'Y' = be_config_util.get_corona_read_flag('gui')
+					AND( ps.cit_price_item_key = {?:catItemKeyForPrice} 
+					AND ps.CPS_PRICE_DESCRIPTOR = {?:priceDescriptor}
+					AND item.cat_catalog_id = ps.cat_catalog_id
+					AND item.cit_src_prod = ps.cit_src_prod
+					AND item.cit_config_id IS NOT NULL
+					AND UPPER(cpi.price_id(+)) = {?:priceMergeId}
+					AND ps.cit_src_prod = cpi.config_prod_id(+) 
+					AND ps.cps_price_descriptor = cpi.price_descriptor(+) )
+            	)
+        </stmt>
+
+        <stmt id="select_prod_info">
+             SELECT {catalogItemKey}:= ITEM_KEY, 
+				  	{catalogItemKeyForPrice}:= PRICE_ITEM_KEY, 
+				 	{baseModel}:= BASE_MODEL, 
+					{sourceProdID}:= SRC_PROD,
+					{bundleFlag}:= BUNDLE_FLAG,
+					{prodSource}:= SOURCE,
+					{configID}:= CONFIG_ID,
+				 	{catalogItemPriceKey}:= CIP_KEY, 
+					{sourceID}:= PRICE_SRC_ID,
+				 	{sourceType}:= PRICE_SRC_TYPE,
+					{priceDescriptor}:= PRICE_DESCRIPTOR,
+				 	{zonePriceDescriptor}:= ZONE_DESCRIPTOR,
+				 	{netPrice}:= NET_PRICE,
+					{localPrice}:= LOCAL_PRICE,
+					{netPriceNoFFS}:= NET_PRICE_NO_FFS,
+					{pricingRule}:= PRICING_RULE,
+					{startDate}:= PRICE_START_DATE,
+				 	{endDate}:= PRICE_END_DATE,
+				    {glListPrice}:=GL_LIST_PRICE,
+				    {paNetPrice}:=PA_NET_PRICE,
+				    {glLandedNetPrice}:=GL_LANDED_NET_PRICE,
+				    {tba}:=TBA_RATE,
+				    {exchangeRate}:=EXCHG_RATE
+            FROM (
+             SELECT i.CIT_ITEM_KEY ITEM_KEY, 
+				  	i.CIT_PRICE_ITEM_KEY PRICE_ITEM_KEY, 
+				 	i.CIT_BASE_MODEL BASE_MODEL, 
+					i.CIT_SRC_PROD SRC_PROD,
+					i.CIT_BUNDLE_FLAG BUNDLE_FLAG,
+					i.CIT_SOURCE SOURCE,
+					i.CIT_CONFIG_ID CONFIG_ID,
+				 	p.CIP_KEY CIP_KEY, 
+					p.CIP_PRICE_SRC_ID PRICE_SRC_ID,
+				 	p.CIP_PRICE_SRC_TYPE PRICE_SRC_TYPE,
+					p.CIP_PRICE_DESCRIPTOR PRICE_DESCRIPTOR,
+				 	p.CIP_ZONE_DESCRIPTOR ZONE_DESCRIPTOR,
+				 	p.CIP_NET_PRICE NET_PRICE,
+					p.CIP_LOCAL_PRICE LOCAL_PRICE,
+					p.CIP_NET_PRICE_NO_FFS NET_PRICE_NO_FFS,
+					p.CIP_PRICING_RULE PRICING_RULE,
+					p.CIP_PRICE_START_DATE PRICE_START_DATE,
+				 	p.CIP_PRICE_END_DATE PRICE_END_DATE,
+				 	p.CIP_GLP_LIST_PRICE GL_LIST_PRICE,
+				 	p.CIP_PA_NET_PRICE PA_NET_PRICE,
+				 	p.CIP_GLP_LANDED_NET_PRICE GL_LANDED_NET_PRICE,
+				 	p.CIP_TBA_RATE TBA_RATE,
+				 	p.CIP_EXCHG_RATE EXCHG_RATE
+             FROM cat_item i, cat_item_price p 
+             WHERE i.cit_item_key = {q:catalogItemKey}
+            	    AND p.cit_price_item_key = {q:catalogItemKeyForPrice}
+            	    AND p.cip_price_descriptor = {q:priceDescriptor}
+            	    AND p.cip_zone_descriptor {sqlEqZonePD}
+   					AND (i.cit_config_id is null or 'N' = be_config_util.get_corona_read_flag('gui') )
+             UNION ALL
+             SELECT /*+ ordered use_nl(i, p, cpi)*/
+             		i.CIT_ITEM_KEY ITEM_KEY, 
+				  	i.CIT_PRICE_ITEM_KEY PRICE_ITEM_KEY, 
+				 	i.CIT_BASE_MODEL BASE_MODEL, 
+					i.CIT_SRC_PROD SRC_PROD,
+					i.CIT_BUNDLE_FLAG BUNDLE_FLAG,
+					i.CIT_SOURCE SOURCE,
+					i.CIT_CONFIG_ID CONFIG_ID,
+				 	p.CIP_KEY CIP_KEY, 
+					DECODE(cpi.price_source, 'LP', DECODE(NVL(cpi.deal_number,'X'), 'X', 'LOCAL_PRICE', cpi.deal_number), 'PA', cpi.agreement, cpi.DEAL_NUMBER)  PRICE_SRC_ID,
+					cpi.PRICE_SRC_TYPE PRICE_SRC_TYPE,
+					p.CIP_PRICE_DESCRIPTOR PRICE_DESCRIPTOR,
+				 	p.CIP_ZONE_DESCRIPTOR ZONE_DESCRIPTOR,
+				 	cpi.NET_PRICE NET_PRICE,
+					p.CIP_LOCAL_PRICE LOCAL_PRICE,
+					p.CIP_NET_PRICE_NO_FFS NET_PRICE_NO_FFS,
+					p.CIP_PRICING_RULE PRICING_RULE,
+					cpi.PRICE_START_DATE PRICE_START_DATE,
+				 	cpi.PRICE_END_DATE PRICE_END_DATE,
+				 	null,
+				 	null,
+				 	null,
+				 	null,
+				 	null
+             FROM  cat_item i, cat_item_price p, config_permutation_info cpi
+			 WHERE 'Y' = be_config_util.get_corona_read_flag('gui')
+				   AND ( i.cit_item_key = {q:catalogItemKey}
+				   AND p.cit_price_item_key = {q:catalogItemKeyForPrice}
+				   AND p.cip_price_descriptor = {q:priceDescriptor}
+				   AND p.cip_zone_descriptor {sqlEqZonePD}
+				   AND p.cip_zone_descriptor IS NULL
+				   AND i.cat_catalog_id = p.cat_catalog_id
+				   AND i.cit_src_prod = p.cit_src_prod
+				   AND i.cit_config_id IS NOT NULL
+				   AND UPPER(cpi.price_id(+)) = {q:priceMergeId}
+				   AND p.cit_src_prod = cpi.config_prod_id(+) 
+				   AND p.cip_price_descriptor = cpi.price_descriptor(+)  )
+			)
+        </stmt>
+
+        <stmt id="select_price_source_desc">
+            SELECT 
+            	{sourceType}:=PRICE_SRC_TYPE,
+            	{sourceDesc}:=PRICE_SRC_DESC
+             FROM pricing_source_desc 
+        </stmt>
+
+	<!--
+	 PROCEDURE update_item_price_from_GUI
+	  (itemKey IN VARCHAR2, 
+	   prcItemKey IN VARCHAR2, 
+	   catalogID IN VARCHAR2, 
+	   prcRule IN VARCHAR2,
+	   lastModby IN VARCHAR2, 
+	   prcDescriptor IN VARCHAR2, 
+	   price IN NUMBER, 
+	   prcStartDate IN DATE, 
+	   prcEndDate IN DATE,
+	   prcChgReason IN VARCHAR2, 
+	   o_ret OUT NUMBER, msg OUT VARCHAR2)
+	 -->
+
+        <stmt id="update_price">
+            CALL BE_PRICING.update_item_price_from_GUI(
+            	{i:prodInfo.catalogItemKey},
+            	{i:prodInfo.catalogItemKeyForPrice},
+            	{i:catalogInfo.catalogID},
+            	{i:priceSource.sourceID},
+            	{i:lastModifiedBy},
+            	{i:catalogInfo.currentPriceDescriptor},
+            	{i:priceSource.price},
+            	{i:priceSource.startDate},
+            	{i:priceSource.endDate},
+            	{i:priceSource.priceChangeReason},
+           		{o:ret},
+          		{o:msg} 
+          	)
+        </stmt>
+        <stmt id="getProdDetails">
+        	SELECT 
+        	{catalogId}:=item.cat_catalog_id cat_catalog_id, 
+        	{catType}:=ci.ct_type_id,
+        	{sourceProdID}:=item.cit_src_prod src_prod, 
+        	{baseModel}:=item.cit_base_model base_model,
+       		{prodSource}:=item.cit_source source, 
+       		{sourceID}:=prc.cip_price_src_id price_src_id, 
+       		{sourceType}:=prc.cip_price_src_type price_src_type,
+       		{netPrice}:=prc.cip_net_price net_price, 
+       		{localPrice}:=prc.cip_local_price local_price, 
+       		{altPriceDescriptor}:=prc.cip_alt_price_descriptor alt_price_descriptor,
+       		{configID}:=item.cit_context_id context_id,
+       		{pricingRule}:=(SELECT ppr_desc
+          	FROM prs_pricing_rule ppr, offer_info oi
+         	WHERE ppr.ppr_id = oi.ppr_id
+           	AND oi.offer_id = ci.offer_id) pricing_rule,
+       		{dealType}:=NVL ((DECODE ((SELECT deal_type_flag
+                        FROM all_deal_info adi
+                       WHERE adi.deal_id = prc.cip_price_src_id),
+                     'C', 'CUST SAT',
+                     'P', 'PROJECT',
+                     'S', 'STANDARD'
+                    )
+            ),
+            ''
+           ) deal_type_flag,
+           {priceErr}:=prc.cip_price_err_msg price_err_msg,
+           {priceDescriptor}:=(select cpd_ob_price_descriptor from cat_price_descriptor cpd
+	        where cpd.cat_catalog_id =item.cat_catalog_id) price_descriptor,
+		   {glListPrice}:=prc.cip_glp_list_price glp_list_price,
+	       {paNetPrice}:=prc.cip_pa_net_price pa_net_price,
+	       {glLandedNetPrice}:=prc.cip_glp_landed_net_price glp_landed_net_proce,
+	       {tba}:=prc.cip_tba_rate tba_rate,
+	       {exchangeRate}:=prc.cip_exchg_rate exchg_rate
+  			FROM cat_item item, cat_item_price prc, cat_info ci
+ 			WHERE ci.cat_catalog_id = item.cat_catalog_id
+			   AND prc.cit_price_item_key = item.cit_price_item_key
+			   AND item.cit_item_key = {?:string1}
+        
+     </stmt>        
+    
+   	
+   	<stmt id="getCatBdlDetails">
+   	SELECT 
+   	{bdlId}:=cbi.cbd_id cbd_id, 
+   	{bdlTmplId}:=cbi.bdt_template_id bdt_template_id, 
+   	{catalogId}:=cbi.cat_catalog_id cat_catalog_id,
+    {priceDescriptor}:=(SELECT cpd_ob_price_descriptor
+          FROM cat_price_descriptor cpd
+         WHERE cpd.cat_catalog_id = cbi.cat_catalog_id) price_descriptor,
+    {altPriceDescriptor}:=cip.cip_alt_price_descriptor alt_price_descriptor,
+    {sourceType}:=cip.cip_price_src_type price_src_type, 
+    {sourceID}:=cip.cip_price_src_id price_src_id,
+       {netPrice}:=cip.cip_net_price net_price, 
+       {localPrice}:=cip.cip_local_price local_price, 
+       {pricingRule}:=(SELECT ppr_desc
+          FROM prs_pricing_rule ppr, offer_info oi
+         WHERE ppr.ppr_id = oi.ppr_id
+		           AND oi.offer_id = cinfo.offer_id) pricing_rule,
+       {dealType}:=NVL ((DECODE ((SELECT deal_type_flag
+                        FROM all_deal_info adi
+                       WHERE adi.deal_id = cip.cip_price_src_id),
+                     'C', 'CUST SAT',
+                     'P', 'PROJECT',
+                     'S', 'STANDARD'
+                    )
+            ),
+            ''
+           ) deal_type_flag,
+       {priceErr}:=cip.cip_price_err_msg price_err_msg,
+       {glListPrice}:=cip.cip_glp_list_price glp_list_price,
+	   {paNetPrice}:=cip.cip_pa_net_price pa_net_price,
+	   {glLandedNetPrice}:=cip.cip_glp_landed_net_price glp_landed_net_price,
+	   {tba}:=cip.cip_tba_rate tba_rate,
+	   {exchangeRate}:=cip.cip_exchg_rate exchg_rate 
+		FROM 		
+	   cat_info cinfo, 
+       cat_item ci,
+	   cat_item_price cip, 
+	   cat_bundle_info cbi
+	   where cinfo.cat_catalog_id=ci.cat_catalog_id
+	   and ci.cit_price_item_key = cip.cit_price_item_key
+	   and ci.cit_item_key={?:string1}
+	   and ci.CIT_SRC_PROD = cbi.cbd_id
+   	 	</stmt>
+   	 	
+   	 <stmt id="getStdCatProdDetails">
+   	 		SELECT 
+   	 		{baseModel}:=citem.cit_base_model base_model, 
+   	 		{catalogId}:=cio.cat_catalog_id cat_catalog_id, 
+   	 		{sourceProdID}:=citem.cit_src_prod src_prod,
+       		{priceProfile}:=pip.pip_profile_id profile_id, 
+       		{localPrice}:=pip.pip_local_price local_price, 
+       		{netPrice}:=pip.pip_net_price net_price, 
+       		{sourceID}:=pip.pip_price_src_id price_src_id,
+       		{sourceType}:=pip.pip_price_src_type price_src_type, 
+       		{altPriceDescriptor}:=pip.pip_alt_price_descriptor alt_price_descriptor, 
+       		{priceProfile}:=pip.pip_profile_id profile_id,
+       		{configID}:=pip.pip_context_id context_id,
+	   		{dealType}:=NVL ((DECODE ((SELECT deal_type_flag
+                        FROM all_deal_info adi
+                       WHERE adi.deal_id = pip.pip_price_src_id),
+                     'C', 'CUST SAT',
+                     'P', 'PROJECT',
+                     'S', 'STANDARD'
+                    )
+            ),
+            ''
+           ) deal_type_flag,
+           {saleCntry}:=NVL((select country from country_cd_info 
+			where cntry_cd= NVL((select substr(pip.pip_price_descriptor, 1, 2) from dual), '')),'') cntry,
+		   {priceErr}:=pip.pip_price_err_msg price_err_msg,
+	       {glListPrice}:=pip.pip_glp_list_price glp_list_price,
+		   {paNetPrice}:=pip.pip_pa_net_price pa_net_price,
+		   {glLandedNetPrice}:=pip.pip_glp_landed_net_price glp_landed_net_price,
+		   {tba}:=pip.pip_tba_rate tba_rate,
+		   {exchangeRate}:=pip.pip_exchg_rate exchg_rate
+		  FROM cat_item_options cio, cat_item citem, profile_item_price pip
+ 		  WHERE citem.cit_item_key = cio.cat_item_key
+   		  AND cio.cop_opt_key = {?:catalogItemKey}
+          AND pip.pip_key =cat_util.make_profile_item_price_key (NVL ({?:priceProfile}, '0'),
+                                                citem.cit_src_prod,
+                                                citem.cit_context_id,
+                                                citem.cit_bundle_flag,
+                                                NVL ({?:priceDescriptor}, '0')
+                                               )
+   	 	</stmt>
+   	 		
+   	 		<stmt id="getStdCatBdlDetails">
+   	 		select 
+			{catalogId}:=cinfo.cat_catalog_id cat_catalog_id, 
+			{bdlId}:=cbi.cbd_id cbd_id, 
+			{bdlTmplId}:=cbi.bdt_template_id bdt_template_id,
+			{configID}:=citem.cit_context_id context_id, 
+			{prodSource}:=citem.cit_source source,
+			{netPrice}:=pip.pip_net_price net_price,
+			{localPrice}:=pip.pip_local_price, 
+			{sourceID}:=pip.pip_price_src_id price_src_id,
+			{sourceType}:=pip.pip_price_src_type price_src_type,
+			{altPriceDescriptor}:=pip.pip_alt_price_descriptor alt_price_descriptor,
+			{priceProfile}:=pip.pip_profile_id profile_id,
+			{saleCntry}:=NVL((select country from country_cd_info 
+			where cntry_cd= NVL((select substr(pip.pip_price_descriptor, 1, 2) from dual), '')),'') cntry,
+			{priceErr}:=pip.pip_price_err_msg price_err_msg,
+	        {glListPrice}:=pip.pip_glp_list_price glp_list_price,
+		    {paNetPrice}:=pip.pip_pa_net_price pa_net_price,
+		    {glLandedNetPrice}:=pip.pip_glp_landed_net_price glp_landed_net_price,
+		    {tba}:=pip.pip_tba_rate tba_rate,
+		    {exchangeRate}:=pip.pip_exchg_rate exchg_rate
+			from cat_info cinfo, 
+			cat_item citem, 
+			profile_item_price pip,
+			cat_bundle_info cbi
+   			where cinfo.cat_catalog_id={?:catalogId} 
+   			and cinfo.cat_catalog_id=citem.cat_catalog_id 
+   			and citem.cit_src_prod = {?:sourceProdID}
+   			AND cbi.cbd_id = citem.cit_src_prod
+            AND cbi.cat_catalog_id= citem.cat_catalog_id
+   			and pip.pip_key(+) =
+          	cat_util.make_profile_item_price_key (NVL ({?:priceProfile}, '0'),
+                                                citem.cit_src_prod,
+                                                citem.cit_context_id,
+                                                citem.cit_bundle_flag,
+                                                NVL ({?:priceDescriptor}, '0')
+                                               )
+   	 		
+   	 		</stmt>
+   	
+   	 		<stmt id="getBdlPriceDetail">
+		   	 		SELECT 
+		{catalogId}:=cinfo.cat_catalog_id cat_catalog_id, 
+		{priceDescriptor}:=cpr.cpr_price_descriptor price_descriptor,
+		{catType}:=cinfo.ct_type_id type_id,
+		{bdlTmplId}:=btp.bdt_id bdt_template_id, 
+		{sourceProdID}:=btp.btp_src_prod src_prod, 
+		{baseModel}:=btp.btp_base_model base_model,
+		{configID}:=btp.btp_context_id context_id, 
+		{bdlId}:=cbp.cbd_id cbd_id, 
+		{netPrice}:=cpr.cpr_price,
+		{localPrice}:=cpr.cpr_local_price local_price, 
+		{sourceID}:=cpr.cpr_source_id price_source_id, 
+		{sourceType}:=cpr.cpr_source_type price_src_type,
+		{altPriceDescriptor}:=cpr.cpr_alt_price_descriptor alt_price_descriptor,
+		{dealType}:=NVL ((DECODE ((SELECT deal_type_flag
+		                        FROM all_deal_info adi
+		                       WHERE adi.deal_id = cpr.cpr_source_id),
+		                     'C', 'CUST SAT',
+		                     'P', 'PROJECT',
+		                     'S', 'STANDARD'
+		                    )
+		            ),
+		            ''
+		           ) deal_type_flag,
+		{pricingRule}:=NVL((SELECT ppr_desc
+		         FROM prs_pricing_rule ppr, offer_info oi
+		         WHERE ppr.ppr_id = oi.ppr_id
+		         AND oi.offer_id = cinfo.offer_id),'') pricing_rule,
+	   {priceErr}:=cpr.cpr_price_err_msg price_err_msg,
+       {glListPrice}:=cpr.cpr_glp_list_price glp_list_price,
+       {paNetPrice}:=cpr.cpr_pa_net_price pa_net_price,
+       {glLandedNetPrice}:=cpr.cpr_glp_landed_net_price glp_landed_net_price,
+       {tba}:=cpr.cpr_tba_rate tba_rate,
+       {exchangeRate}:=cpr.cpr_exchg_rate exchg_rate
+		FROM 
+		cat_info cinfo,
+		cat_bundle_prods cbp,
+		bdl_template_prods btp,
+		cat_bundle_price cpr
+		WHERE cinfo.cat_catalog_id = {?:catalogId}
+		AND nvl(cinfo.CAT_PARENT_CATALOG_ID, cinfo.CAT_CATALOG_ID) = cbp.cat_catalog_id
+		AND cbp.cbd_id = {?:bdlId}
+		AND cbp.btp_comp_id = btp.btp_comp_id
+		AND btp.btp_comp_id ={?:bdlCompId}
+		AND cpr.cpr_key = cbp.cpr_key
+		AND cpr.cpr_price_descriptor = {?:priceDescriptor}
+   	 </stmt>
+   	 		
+   	 		
+   	 <stmt id="getPriceProfileBdlPriceDetail">
+	  SELECT 
+		{catalogId}:=cinfo.cat_catalog_id cat_catalog_id, 
+		{priceDescriptor}:=pip.pip_price_descriptor price_descriptor,
+		{catType}:=cinfo.ct_type_id type_id,
+		{bdlTmplId}:=btp.bdt_id bdt_template_id, 
+		{sourceProdID}:=btp.btp_src_prod src_prod, 
+		{baseModel}:=btp.btp_base_model base_model,
+		{configID}:=btp.btp_context_id context_id, 
+		{bdlId}:=cbp.cbd_id cbd_id, 
+		{netPrice}:=pip.pip_net_price net_price,
+		{localPrice}:=pip.pip_local_price local_price, 
+		{sourceID}:=pip.pip_price_src_id price_source_id, 
+		{sourceType}:=pip.pip_price_src_type price_src_type,
+		{altPriceDescriptor}:=pip.pip_alt_price_descriptor alt_price_descriptor,
+		{priceProfile}:=pip.pip_profile_id profile_id,
+		{dealType}:=NVL ((DECODE ((SELECT deal_type_flag
+		                        FROM all_deal_info adi
+		                       WHERE adi.deal_id = pip.pip_price_src_id),
+		                     'C', 'CUST SAT',
+		                     'P', 'PROJECT',
+		                     'S', 'STANDARD'
+		                    )
+		            ),
+		            ''
+		           ) deal_type_flag,
+		{pricingRule}:=NVL((SELECT ppr_desc
+		         FROM prs_pricing_rule ppr, offer_info oi
+		         WHERE ppr.ppr_id = oi.ppr_id
+		         AND oi.offer_id = cinfo.offer_id),'') pricing_rule,
+		{saleCntry}:=NVL((select country from country_cd_info 
+		where cntry_cd= NVL((select substr(pip.pip_price_descriptor, 1, 2) from dual), '')),'') cntry,
+	    {priceErr}:=pip.pip_price_err_msg price_err_msg,
+        {glListPrice}:=pip.pip_glp_list_price glp_list_price,
+	    {paNetPrice}:=pip.pip_pa_net_price pa_net_price,
+	    {glLandedNetPrice}:=pip.pip_glp_landed_net_price glp_landed_net_price,
+	    {tba}:=pip.pip_tba_rate tba_rate,
+	    {exchangeRate}:=pip.pip_exchg_rate exchg_rate	
+		FROM 
+		cat_info cinfo,
+		cat_bundle_prods cbp,
+		bdl_template_prods btp,
+		profile_item_price pip,
+	        products prd
+		WHERE cinfo.cat_catalog_id = {?:catalogId} 
+		AND cinfo.cat_catalog_id = cbp.cat_catalog_id
+		AND cbp.cbd_id = {?:bdlId}
+		AND cbp.btp_comp_id = btp.btp_comp_id
+		AND btp.btp_comp_id ={?:bdlCompId}
+         AND btp.btp_src_prod = prd.prod		
+		AND pip.pip_key =
+             cat_util.make_profile_item_price_key (NVL ({?:priceProfile}, '0'),
+                                                   btp.btp_src_prod,
+                                                   btp.btp_context_id,
+                                                   'S',
+                                                     NVL ({?:priceDescriptor}, '0')
+                                               )     		
+   	 		</stmt>
+   
+
+	</stmt-group>
+</comcat-dax-config>

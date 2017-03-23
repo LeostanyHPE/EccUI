@@ -1,0 +1,406 @@
+eccApp.controller('sogAssignLocalizationCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams','$window',
+  function ($scope, $http, $timeout, webStorage, $routeParams,$window) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	
+	$scope.form = {};
+	$scope.localizationSelOption= [];
+	$scope.localizationLBVal= [];
+	$scope.localizationRBVal= [];
+	
+	$scope.loadSogAssignLocalizationCtrl = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"SOG Assign Localization Options Task\"");
+		
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.form.sogId = $routeParams.sogID;
+		var sogData =  webStorage.session.get('sogHeaderData');
+		
+		if(sogData !=null && sogData != undefined && sogData.csog_id == $scope.form.sogId){
+			 $scope.form.sogName = sogData.csog_name;
+		}
+		
+		$http({
+			url: 'csog/sogLocOptionCatAssign.htm',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {
+			 $scope.localList = JSON.parse(data.CSOGLocAssign_locallist);
+			 $scope.form = JSON.parse(data.form);
+			 $scope.countryList = JSON.parse(data.CSOGLocAssign_countryList);
+			 $scope.countryList.unshift({"cntry_cd" : "","COUNTRIESNAMEAPPENDED" : "Select Country"});
+			 $scope.form.countries = $scope.countryList[0].cntry_cd;
+			 
+			 angular.forEach($scope.localList, function(local){	
+					 local.opt_category_id	=	local.value.split('~')[0];
+					 local.options = local.value.split('~')[1];
+					 local.countries = local.value.split('~')[2];
+				 });
+			 
+			 if($routeParams.returnFlag != undefined && $routeParams.returnFlag == 'true'){
+					$scope.form.countries = $routeParams.country;
+					$scope.changeCountry();
+			 }
+			 $("#propDiv").attr('disabled', !($scope.form.isPropagationEnabled=="true"?true:false));
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+					
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+				
+		 });
+						
+	};
+	
+	$scope.localSelArray=[];
+	$scope.localizationFromLB = function(){
+		if($scope.localizationLBVal){
+			angular.forEach($scope.localizationLBVal, function(selLB){
+				$scope.localizationSelOption.push(selLB);
+				$scope.localSelArray.push(selLB.opt_category_id);
+				
+				if(selLB.options!=null){
+					if(!$scope.form.options ){
+						$scope.form.options	=	selLB.options;
+					}else{
+						if(selLB.options.constructor != Array)
+							selLB.options = selLB.options.split(",");
+						for(var i in selLB.options){
+							if($scope.form.options.indexOf(selLB.options[i]) == -1)
+							$scope.form.options	=	$scope.form.options+", "+selLB.options[i];
+						}
+					}
+				}
+				if(selLB.countries!=null){
+					if(!$scope.form.selectedCountryCodes ){
+						$scope.form.selectedCountryCodes	=	selLB.countries;
+					}else{
+						$scope.form.selectedCountryCodes	=	$scope.form.selectedCountryCodes+", "+selLB.countries;
+					}
+				}
+				
+				if($scope.form.selectedCountryCodes == '' || $scope.form.selectedCountryCodes == undefined){
+					$scope.form.selectedCountryCodes	= $scope.form.countries;
+				}else{
+					$scope.form.selectedCountryCodes	= $scope.form.selectedCountryCodes+","+ $scope.form.countries;
+				}
+				
+				angular.forEach($scope.localList, function(item,index){	
+					if(item.opt_category_id==selLB.opt_category_id && item.countries==selLB.countries ){
+						$scope.localList.splice(index, 1);
+						$scope.localizationLBVal=[];
+					}
+				});
+			});
+		}
+		
+	};
+	
+	$scope.localizationFromRB = function(){
+		if($scope.localizationRBVal ){
+			angular.forEach($scope.localizationRBVal, function(selRB){
+				$scope.localList.push(selRB);
+				$scope.localSelArray.splice($scope.localSelArray.indexOf(selRB.opt_category_id),1);
+				angular.forEach($scope.localizationSelOption, function(item,index){	
+					if(item.opt_category_id==selRB.opt_category_id && item.countries==selRB.countries ){
+						$scope.localizationSelOption.splice(index, 1);
+						$scope.localizationRBVal=[];
+					}
+				});
+			});
+			
+			$scope.form.options="";
+			$scope.form.selectedCountryCodes="";
+			angular.forEach($scope.localizationSelOption, function(item){	
+				if(item.options!=null){
+					if(!$scope.form.options){
+						$scope.form.options	=	item.options;
+					}else{
+						if(item.options.constructor != Array)
+							item.options = item.options.split(",");
+						for(var i in item.options){
+							if($scope.form.options.indexOf(item.options[i]) == -1)
+							$scope.form.options	=	$scope.form.options+", "+item.options[i];
+						}
+					}
+				}
+				
+				if(item.countries!=null){
+					if(!$scope.form.selectedCountryCodes){
+						$scope.form.selectedCountryCodes	=	item.countries;
+					}else {
+						$scope.form.selectedCountryCodes	=	$scope.form.selectedCountryCodes+", "+item.countries;
+					}
+				}
+				
+			});
+			if($scope.form.selectedCountryCodes =='' || $scope.form.selectedCountryCodes == undefined){
+				$scope.form.selectedCountryCodes	= $scope.form.countries;
+			}else{
+				$scope.form.selectedCountryCodes	= $scope.form.selectedCountryCodes+","+ $scope.form.countries;
+			}
+		}
+	};
+	
+	$scope.saveLocalizationOption = function(){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		if($scope.form.countries == ""){
+			$scope.hideMsg();
+			$scope.showMsg('','Please select a country before clicking save');
+			return;
+		}
+		if($scope.localizationSelOption == ""){
+			$scope.hideMsg();
+			$scope.showMsg('','Please select one or more localization option category before clicking save');
+			return;
+		}
+		
+		$scope.hideMsg();
+		$scope.form.localeSelHidden	=$scope.localSelArray.toString();
+		
+		$http({
+			url: 'csog/sogLocOptionCatAssign.htm?task=save',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {
+			 $scope.form = JSON.parse(data.form);
+			 $scope.localList = JSON.parse(data.CSOGLocAssign_locallist);
+			 $scope.selectedList = JSON.parse(data.CSOGLocAssign_localSel_list);
+			 
+				$scope.hideMsg();
+			  	 $scope.showMsg('Successfully Updated the Localization','');
+
+			 
+			 if($scope.selectedList != null && $scope.selectedList.length > 0){
+				 angular.forEach($scope.selectedList, function(local){	
+					 local.opt_category_id	=	local.value.split('~')[0];
+					 local.options = local.value.split('~')[1];
+					 local.countries = local.value.split('~')[2];
+				 });
+				
+				 $scope.localizationSelOption.length = 0;
+				 $scope.localSelArray = [];
+				 $scope.form.options="";
+				 $scope.form.selectedCountryCodes="";
+				 angular.forEach($scope.selectedList, function(local){	
+					 $scope.localizationSelOption.push(local);
+					 $scope.localSelArray.push(local.opt_category_id);	
+						if(local.options!=null){
+							if(!$scope.form.options ){
+								$scope.form.options	=	local.options;
+							}else{
+								if(local.options.constructor != Array)
+									local.options = local.options.split(",");
+								for(var i in local.options){
+									if($scope.form.options.indexOf(local.options[i]) == -1)
+									$scope.form.options	=	$scope.form.options+", "+local.options[i];
+								}
+							}
+						}
+						if(local.countries!=null && local.countries != ''){
+							if(!$scope.form.selectedCountryCodes ){
+								$scope.form.selectedCountryCodes	=	local.countries;
+							}else{
+								$scope.form.selectedCountryCodes	=	$scope.form.selectedCountryCodes+", "+local.countries;
+							}
+						}
+						angular.forEach($scope.localList, function(item,index){	
+							if(item.opt_category_id==local.opt_category_id && item.countries==local.countries ){
+								$scope.localList.splice(index, 1);
+								$scope.localizationLBVal=[];
+							}
+						});
+						
+						if($scope.form.selectedCountryCodes =='' || $scope.form.selectedCountryCodes == undefined){
+							$scope.form.selectedCountryCodes	= $scope.form.countries;
+						}else{
+							if($scope.form.selectedCountryCodes.indexOf($scope.form.countries) == -1)
+							$scope.form.selectedCountryCodes	= $scope.form.selectedCountryCodes+","+ $scope.form.countries;
+						}
+				 });
+			 }
+			 $("#propDiv").attr('disabled', !($scope.form.isPropagationEnabled=="true"?true:false));
+			 
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+				
+		 });
+		
+	};
+	
+	$scope.changeCountry = function(){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.hideMsg();
+		$scope.form.options="";
+		$scope.form.selectedCountryCodes="";
+		$scope.localizationSelOption = [];
+		$scope.countryName = '';
+		
+		angular.forEach($scope.countryList,function(country){
+			if($scope.form.countries == country.cntry_cd)
+				$scope.countryName = country.country;
+		});
+		
+		$http({
+			url: 'csog/sogLocOptionCatAssign.htm?task=changeCountry',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {
+			 $scope.form = JSON.parse(data.form);
+			 $scope.localList = JSON.parse(data.CSOGLocAssign_locallist);
+			 
+			 angular.forEach($scope.localList, function(local){	
+				 local.opt_category_id	=	local.value.split('~')[0];
+				 local.options = local.value.split('~')[1];
+				 local.countries = local.value.split('~')[2];
+			 });
+			 
+			 $scope.selectedList = JSON.parse(data.CSOGLocAssign_localSel_list);
+			 
+			 if($scope.selectedList != null && $scope.selectedList.length > 0){
+				 angular.forEach($scope.selectedList, function(local){	
+					 local.opt_category_id	=	local.value.split('~')[0];
+					 local.options = local.value.split('~')[1];
+					 local.countries = local.value.split('~')[2];
+				 });
+					
+				 $scope.localSelArray = [];
+				 angular.forEach($scope.selectedList, function(local){	
+					 $scope.localizationSelOption.push(local);
+					 $scope.localSelArray.push(local.opt_category_id);	
+						if(local.options!=null){
+							if(!$scope.form.options ){
+								$scope.form.options	=	local.options;
+							}else{
+								if(local.options.constructor != Array)
+									local.options = local.options.split(",");
+								for(var i in local.options){
+									if($scope.form.options.indexOf(local.options[i]) == -1)
+									$scope.form.options	=	$scope.form.options+", "+local.options[i];
+								}
+							}
+						}
+						if(local.countries!=null && local.countries != ''){
+							if(!$scope.form.selectedCountryCodes ){
+								$scope.form.selectedCountryCodes	=	local.countries;
+							}else{
+								$scope.form.selectedCountryCodes	=	$scope.form.selectedCountryCodes+", "+local.countries;
+							}
+						}
+						angular.forEach($scope.localList, function(item,index){	
+							if(item.opt_category_id==local.opt_category_id && item.countries==local.countries ){
+								$scope.localList.splice(index, 1);
+								$scope.localizationLBVal=[];
+							}
+						});
+						
+						if($scope.form.selectedCountryCodes =='' || $scope.form.selectedCountryCodes == undefined){
+							$scope.form.selectedCountryCodes	= $scope.form.countries;
+						}else{
+							if($scope.form.selectedCountryCodes.indexOf($scope.form.countries) == -1)
+							$scope.form.selectedCountryCodes	= $scope.form.selectedCountryCodes+","+ $scope.form.countries;
+						}
+				 });
+			 }
+			 
+			 $scope.form.localeSelHidden	=$scope.localSelArray.toString();
+			 $("#propDiv").attr('disabled', !($scope.form.isPropagationEnabled=="true"?true:false));
+					
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+				
+		 });
+		
+	};
+	
+	$scope.manageExceptions = function(){
+		if($scope.form.countries == ""){
+			$scope.hideMsg();
+			$scope.showMsg('','Please select a country');
+			return;
+		}
+		
+		if($scope.form.localeSelHidden == null || $scope.form.localeSelHidden == undefined || $scope.form.localeSelHidden == ""){
+			$scope.hideMsg();
+			$scope.showMsg('','No Localization Option Category Assigned for this SOG');
+			return;
+		}
+		
+		$scope.hideMsg();
+		webStorage.session.add('selectedLocalData', $scope.selectedList);
+		document.location.href="#/SogLocOptionCatManageException?sogID="+$scope.form.sogId+"&country="+$scope.countryName+"&countryCode="+$scope.form.countries;
+	};
+	
+	 $scope.propagateChanges = function(){
+		 $("#loadTime").html("");
+			$scope.loadTime = new Date().getTime();
+		 $http({
+				url: 'csog/sogLocOptionCatAssign.htm?task=propagate',
+				method:"POST",
+				data:$scope.form,
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            }
+			 }).success(function(data,status,header,config) {
+				 $scope.form = JSON.parse(data.form);
+				 var propChangeFail = data.propChangesFailure;
+				 var propChangeSuccess = data.propChangesSuccess;
+				 if(propChangeFail!=null){
+					 $scope.hideMsg();
+				  	 $scope.showMsg('',propChangeFail);
+				 }else {
+					 $scope.hideMsg();
+				  	 $scope.showMsg(propChangeSuccess,'');
+				 }
+				 $("#propDiv").attr('disabled', !($scope.form.isPropagationEnabled=="true"?true:false));
+						
+				 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			 }).error(function(data, status, headers, config) {
+				  ///	console.log("Session Expired please try to relogin.");
+					
+			 });
+		 
+	 };
+	
+	$scope.returnSOGHome = function(){
+		document.location.href="#/sogHome?sogID="+$scope.form.sogId;
+	};
+	
+	 $scope.showMsg=function(success, error){
+		 $window.scrollTo(0,0);
+		   	$scope.successMessage=success;
+		   	$scope.errorMessage=error;
+		};
+		
+	$scope.hideMsg=function(){
+		   	$scope.successMessage='';
+		   	$scope.errorMessage='';
+		};
+	
+	
+}]);

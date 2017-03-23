@@ -1,0 +1,189 @@
+eccApp.controller('priceTierAsscPgmProdListCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams', 'dialog',
+  function ($scope, $http, $timeout, webStorage, $routeParams, dialog) {
+
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.dataLoad=false;
+	$scope.form = {};
+	$scope.addDataToTable = [];
+	$scope.catalogist = [];
+	$scope.prodList=[];
+	$scope.form.fGenericProgram='';
+	$scope.param={};
+		
+	$scope.grid = {
+    		header: ["Product/Bundle", "Short Description", "Bundle Flag", "Start Date", "End Date", "Validate"],
+    		data: $scope.addDataToTable,
+    		sort: [[1, "asc"]],
+    		colDefs: [
+    			//{ "sClass": "center", "aTargets": [2, 3] },
+	    		//{ "sClass": "center unsortable", "aTargets": [0] },
+	    		{ "sClass": "left", "aTargets": [0,1,2,3,4,5] }
+	    		//{ "sClass": "right", "aTargets": [4] },
+	    		//{ "bSortable": false, "aTargets": [0] }
+    		],
+    		colViewBy: { // define view by function styleif sDom has C, this is required
+    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    			//"aiExclude": [0],//define the column don>t need to display in view by
+    			"bShowAll": true,
+    			"sShowAll": "Show All",
+    			"sAlign": "left"
+    		}
+    };
+	
+	$scope.loadPriceTierAsscPgmProds = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Price Tier Associates Program Product List Task\"");
+		
+		$scope.form.program = $routeParams.program;
+		$scope.form.programKey = $routeParams.programKey;
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http.get("priceTier/priceTierAsscPgmProdList.htm?program="+$scope.form.program+"&programKey="+$scope.form.programKey).
+		 success(function(data,status,header,config) {
+			 $scope.catalogList=data.catalog_list;
+			 
+			 if(!$scope.catalogList){
+				 $scope.hideMsg();
+				 $scope.showMsg('','No Price Tiers Associates available for the selected program');
+				 return;
+			 }
+			 
+			 $scope.prodList=data.BundleList;
+			 $scope.form = JSON.parse(data.form);
+			 $scope.selMCAT =$scope.catalogList[0].cat_catalog_id;
+			 $scope.form.fGenericProgram=$scope.form.fGenericProgram;
+			 $scope.addDataToTable.length = 0;
+			 
+			 angular.forEach($scope.prodList, function(item){	
+		        	
+				 $scope.addDataToTable.push([
+			        	item.cit_src_prod,
+						item.ctc_short_desc,
+						item.cit_bundle_flag,
+						item.cbd_start_date,
+						item.cbd_end_date,
+						item.cop_valid_status
+					]);  
+			    });
+		        if ($scope.addDataToTable.length>0){
+		        	$scope.dataLoad=true;
+		        }
+		        else{
+					 $scope.hideMsg();
+					 $scope.showMsg('','No Price Tier Associates Program Prods Found! ');
+				}
+		    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Price Tier Associates Program Prod List Service');
+		  });
+		
+	};
+	
+	$scope.searchAsscPgmProds = function(){
+		$scope.form.task = $routeParams.task;
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		var masterKey = $scope.selMCAT;
+		
+		var queryParams="";				
+		if(masterKey != undefined){
+			queryParams=queryParams+"&masterKey="+masterKey;
+		}
+		
+		$http.get("priceTier/searchPriceTierAsscPgmProdList.htm?task=search&program="+$scope.form.fGenericProgram+"&programKey="+$scope.form.programKey+queryParams).
+		 success(function(data,status,header,config) {
+			 
+			 $scope.catalogList=data.catalog_list;
+			 
+			 if(!$scope.catalogList){
+				 $scope.hideMsg();
+				 $scope.showMsg('','No Price Tiers Associates available for the selected program');
+				 return;
+			 }
+			 
+			 $scope.prodList=[];
+			 $scope.addDataToTable=[];
+			 $scope.addDataToTable.length = 0;
+			 $scope.form = JSON.parse(data.form);
+			 $scope.prodList=data.BundleList;
+			 $scope.form.fGenericProgram=$scope.form.fGenericProgram;
+			 
+			angular.forEach($scope.prodList, function(item){		        	
+				 $scope.addDataToTable.push([
+			        	item.cit_src_prod,
+						item.ctc_short_desc,
+						item.cit_bundle_flag,
+						item.cbd_start_date,
+						item.cbd_end_date,
+						item.cop_valid_status
+					]);  
+			    });
+		       				
+			 if ($scope.addDataToTable.length>0){
+		        $scope.dataLoad=true;
+		     }
+		     else{
+				$scope.hideMsg();
+				$scope.showMsg('','No Price Tier Program Prods Found! ');
+			 }
+		     $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+			  	//$.loader("close");
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Search Price Tier Program Prod List Service');
+		  });
+						
+	};
+	
+	$scope.cancelAsscPgmProds=function(){
+		document.location.href=webStorage.session.get('PrevPage');		
+	};
+	
+	$scope.showMsg=function(success, error){
+		   	$scope.successMessage=success;
+		   	$scope.errorMessage=error;
+	};
+		
+	$scope.hideMsg=function(){
+		   	$scope.successMessage='';
+		   	$scope.errorMessage='';
+	};
+	
+	$scope.finalMCATName = function(item) {
+		
+		if(item.cat_catalog_name != '' && item.cat_catalog_id != '' && item.cat_catalog_name != undefined && item.cat_catalog_id !=undefined){
+			return item.cat_catalog_name + " (" + item.cat_catalog_id +")";
+		}else{
+			return " ";
+		}
+	};
+	
+	
+	$scope.selectGenericProgram = function(){
+		$scope.param.programName=$routeParams.program;
+		$scope.condtionalAlert();
+	};
+	
+	$scope.condtionalAlert = function () {
+        dialog.show({
+            	templateUrl: 'resources/html/bundle/selectProgram.html',
+            controller: 'selectProgramCrtl',
+            width: 1150,
+            height : 600,
+            param: $scope.param,
+            draggable: true,
+            title:'Generic Programs'
+        }).then(function (result) {
+                if(result != false){
+                	$scope.form.fGenericProgram = result.pgmName;
+                	$scope.form.programKey = result.pgmKey;
+                }
+           
+        });
+    };
+	
+}]);

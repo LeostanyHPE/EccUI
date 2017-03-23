@@ -1,0 +1,191 @@
+/**
+ * AddProductForm class
+ *
+ * @author Jing Wei
+ * @version 1.0
+ */
+
+package com.hp.ecc.ui.view.beans;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class AddProductForm {
+
+	public AddProductForm() {
+	}
+
+	// sku
+	public String getSku() {
+		return this.sku;
+	}
+
+	public void setSku(String sku) {
+		this.sku = sku;
+	}
+
+	// number
+	public String getNumber() {
+		return this.number;
+	}
+
+	public void setNumber(String number) {
+		this.number = number;
+	}
+
+	// categories
+	public String getCategory() {
+		return this.category;
+	}
+
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	// des
+	public String getDes() {
+		return this.des;
+	}
+
+	public void setDes(String des) {
+		this.des = des;
+	}
+
+	// masterID
+	public void setMasterID(String masterID) {
+		this.masterID = masterID;
+	}
+
+	public String getMasterID() {
+		return this.masterID;
+	}
+
+	// task
+	public String getTask() {
+		return this.fTask;
+	}
+
+	public void setTask(String task) {
+		this.fTask = task;
+	}
+
+	// selected product list
+	public String[] getProductListSelected() {
+		return this.fProductListSelected;
+	}
+
+	public void setProductListSelected(String[] list) {
+		this.fProductListSelected = list;
+	}
+
+	// menu
+	public String getMenu() {
+		return this.fMenu;
+	}
+
+	public void setMenu(String menu) {
+		this.fMenu = menu;
+	}
+	
+	
+
+	public int getRecordOnHand() {
+		return recordOnHand;
+	}
+
+	public void setRecordOnHand(int recordOnHand) {
+		this.recordOnHand = recordOnHand;
+	}
+
+	public int getRecordOnDemand() {
+		return recordOnDemand;
+	}
+
+	public void setRecordOnDemand(int recordOnDemand) {
+		this.recordOnDemand = recordOnDemand;
+	}
+
+	public String getSortBy() {
+		return sortBy;
+	}
+
+	public void setSortBy(String sortBy) {
+		this.sortBy = sortBy;
+	}
+
+	public String getSortOrder() {
+		return sortOrder;
+	}
+
+	public void setSortOrder(String sortOrder) {
+		this.sortOrder = sortOrder;
+	}
+
+	public int getRecordCount() {
+		return recordCount;
+	}
+
+	public void setRecordCount(int recordCount) {
+		this.recordCount = recordCount;
+	}
+
+	/**
+	 * Reset all properties to their default values.
+	 * 
+	 * @param mapping
+	 *            The mapping used to select this instance
+	 * @param request
+	 *            The servlet request we are processing
+	 */
+	public void reset() {
+		this.init();
+	}
+
+	private void init() {
+		this.sku = null;
+		this.number = null;
+		this.category = null;
+		this.des = null;
+		this.masterID = null;
+		this.fTask = null;
+		this.fMenu = null;
+		this.fProductListSelected = null;
+		this.fTenantCode = null;
+	}
+
+	public String getFilterProdId() {
+		return filterProdId;
+	}
+
+	public void setFilterProdId(String filterProdId) {
+		this.filterProdId = filterProdId;
+	}
+	
+	public String getTenantCode() {
+		return fTenantCode;
+	}
+
+	public void setTenantCode(String tenantCode) {
+		this.fTenantCode = tenantCode;
+	}
+
+	private String sku;
+	private String number;
+	private String category;
+	private String des;
+
+	private String[] fProductListSelected;
+
+	private String fTask;
+	private String fMenu;
+	private String masterID;
+	
+	 private int recordOnHand;
+	  private int recordOnDemand;
+	  
+	  private String sortBy;
+	  private String sortOrder;
+	  private int recordCount;
+	  private String filterProdId;
+	  private String fTenantCode;
+	
+}

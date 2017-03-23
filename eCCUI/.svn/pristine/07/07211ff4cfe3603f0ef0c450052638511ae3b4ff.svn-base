@@ -1,0 +1,153 @@
+package com.hp.ecc.ui.biz.alert;
+
+import java.util.*;
+import org.dom4j.Element;
+import org.dom4j.Node;
+
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.common.util.ConfigBase;
+
+/**
+ * @author Andy Li
+ * @version 1.0
+ *
+ */
+
+public class AlertInfoMgr {
+  /**
+   * Create the AlertInfoMgr singleton
+   * Please note the double lock is not fool-proof until JDK
+   * comes up with better facility available. It should be
+   * good enough for now.
+   */
+  static public AlertInfoMgr getAlertInfoMgr () {
+
+    if ( sAlertInfoMgr != null ) {
+      return sAlertInfoMgr;
+    }
+
+    synchronized ( AlertInfoMgr.class ) {
+      if ( sAlertInfoMgr != null ) {
+        return sAlertInfoMgr;
+      }
+      AlertInfoMgr mgr = new AlertInfoMgr ();
+      sAlertInfoMgr = mgr;
+
+      return sAlertInfoMgr;
+    }
+  }
+
+  private AlertInfoMgr () {
+    this.loadAlertInfo ();
+  }
+
+  void loadAlertInfo () {
+    String path = CTX.getCTX ().getConfig ().getPath (
+        "comcat-config/warning-config" );
+    this.loadAlertInfo ( path );
+  }
+
+  void loadAlertInfo ( String spec_fn ) {
+    ConfigBase cfg = new ConfigBase ( CTX.getCTX().getConfigStream(spec_fn) );
+    Element root = ( Element ) cfg.getNode ( "comcat-warnings" );
+    Element uniqueRoot = ( Element ) cfg.getNode ( "comcat-warnings/uniqueness" );
+    this.loadAlertInfo ( root );
+    this.loadUniqueAlertInfo ( uniqueRoot );
+  }
+
+  void loadAlertInfo ( Element root ) {
+    for ( int i = 0, size = root.nodeCount (); i < size; i++ ) {
+      Node n = root.node ( i );
+      if ( !( n instanceof Element ) ) {
+        continue;
+      }
+      Element e = ( Element ) n;
+
+      String id = e.attributeValue ( "id" );
+      String name = e.attributeValue ( "name" );
+      String pri = e.attributeValue ( "priority" );
+      String desc = e.elementTextTrim ( "description" );
+      int p = 0;
+      if ( pri != null ) {
+        p = Integer.parseInt ( pri );
+      }
+      AlertInfo ai = new AlertInfo ( id );
+      ai.setName ( name );
+      ai.setDesc ( desc );
+      ai.setPriority ( p );
+      this.fInfo.put ( id, ai );
+      this.fInfoIndex.add ( ai );
+    }
+  }
+
+  void loadUniqueAlertInfo ( Element root ) {
+    for ( int i = 0, size = root.nodeCount (); i < size; i++ ) {
+      Node n = root.node ( i );
+      if ( !( n instanceof Element ) ) {
+        continue;
+      }
+      Element e = ( Element ) n;
+
+      String id = e.attributeValue ( "id" );
+      String name = e.attributeValue ( "name" );
+      String pri = e.attributeValue ( "priority" );
+      String desc = e.elementTextTrim ( "description" );
+
+      int p = 0;
+      if ( pri != null ) {
+        p = Integer.parseInt ( pri );
+
+      }
+      AlertInfo ai = new AlertInfo ( id );
+      ai.setName ( name );
+      ai.setDesc ( desc );
+      ai.setPriority ( p );
+      this.fUniqueInfo.put ( id, ai );
+      this.fUniqueInfoIndex.add ( ai );
+    }
+  }
+
+  public List getUniqueAlertInfoList () {
+    return fUniqueInfoIndex;
+  }
+
+  AlertInfo getAlertInfo ( String id, boolean null_ok ) {
+    AlertInfo ai = ( AlertInfo )this.fInfo.get ( id );
+    if ( ai == null && !null_ok ) {
+      throw new IllegalArgumentException ( "invalid alert id: " + id );
+    }
+    return ai;
+  }
+
+  public StringBuffer _dbgGenJavaCode ( StringBuffer sb ) {
+    if ( sb == null ) {
+      sb = new StringBuffer ();
+
+    }
+    Iterator itr = this.fInfoIndex.iterator ();
+    while ( itr.hasNext () ) {
+      AlertInfo ai = ( AlertInfo ) itr.next ();
+      sb.append ( "    /**\n" );
+      sb.append ( "     * " );
+      sb.append ( ai.getDesc () );
+      sb.append ( "\n" );
+      sb.append ( "     */\n" );
+      sb.append ( "    public final static String " );
+      sb.append ( ai.getName () );
+      sb.append ( " = \"" );
+      sb.append ( ai.getID () );
+      sb.append ( "\";" );
+      sb.append ( "\n\n" );
+    }
+
+    return sb;
+  }
+
+  private Map fInfo = new HashMap ();
+  private List fInfoIndex = new LinkedList ();
+
+  private Map fUniqueInfo = new HashMap ();
+  private List fUniqueInfoIndex = new LinkedList ();
+
+  private static AlertInfoMgr sAlertInfoMgr = null;
+}

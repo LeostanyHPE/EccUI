@@ -1,0 +1,336 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.admin;
+
+import java.util.HashMap;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.hp.ecc.ui.biz.admin.FetchDealForm;
+import com.hp.ecc.ui.biz.admin.MDCPList;
+import com.hp.ecc.ui.biz.admin.Manufacturer;
+import com.hp.ecc.ui.biz.admin.RankingForm;
+import com.hp.ecc.ui.biz.admin.Target;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.biz.customer.MDCPDetailsBean;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.db.dao.AdminDao;
+import com.hp.ecc.ui.view.beans.CustOfferForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author narayasr
+ *
+ */
+@Service
+public class AdminProcessor {
+	
+	@Autowired
+	AdminDao adminDao;
+	public String publishDeal(String adbRegionToConnect, String tenantCode){		  
+		    JSONArray catalogsList = adminDao.publishDealList(adbRegionToConnect, TenantConstants.getMixedSharedTenant(tenantCode));		  
+		    return catalogsList.toString();
+	}
+		
+	public String loadEPrimeFTPQueue(String pubName, String adbRegionToConnect, String tenantCd){		
+		 JSONArray eprimeFTPList = adminDao.loadEPrimeFTPQueue(pubName, adbRegionToConnect, tenantCd);
+		 return eprimeFTPList.toString();
+    }
+	
+	public String propQueue(String catalogId,String custKey,String showAll, String adbRegionToConnect, String tenantCode){		
+		 JSONArray propQueueList = adminDao.propQueue(catalogId,custKey,showAll, adbRegionToConnect, TenantConstants.getMixedSharedTenant(tenantCode));		  
+		 return propQueueList.toString();
+	}
+	
+	public String updatePropQueue(String catalogId,String custKey,String propKey, HttpServletRequest request){		
+		 String propQueueList = adminDao.updatePropQueue(catalogId,custKey,propKey, request);		  
+		 return propQueueList;
+	}
+	
+	public String loadDailyStatus(String loadDailyStatus, String adbRegionToConnect){
+		JSONArray loadDailyStatusNameList = adminDao.loadDailyStatus(loadDailyStatus, adbRegionToConnect);		  
+	    return loadDailyStatusNameList.toString();
+	}
+	
+	public String viewJobStatus(String viewJobStatus, String adbRegionToConnect, String tenantCd){
+		JSONArray viewJobStatusNameList = adminDao.viewJobStatus(viewJobStatus, adbRegionToConnect);	
+		JSONArray returnJobStatusList = null;
+		if( viewJobStatusNameList != null ){
+			int count = viewJobStatusNameList.size();
+			returnJobStatusList = new JSONArray();
+			JSONObject obj = null;
+			String fileName = null;
+			for (int i=0; i<count; i++){
+				obj = (JSONObject) viewJobStatusNameList.get(i);
+				fileName = (String) obj.get("updated_file_name");
+				if( tenantCd.equals("HPE") && fileName.startsWith("hpe")){
+					returnJobStatusList.add(obj);
+				}
+				else if(tenantCd.equals("HPI") && !fileName.startsWith("hpe")){
+					returnJobStatusList.add(obj);
+				}
+			}//i
+		}
+		
+	    return returnJobStatusList.toString();
+	}
+	
+	public String viewMyUpload(String fileName, HttpServletRequest request){
+		String viewJobStatusNameList = adminDao.viewMyUpload(fileName, request);		  
+	    return viewJobStatusNameList;
+	}
+	
+	public String showPropStatus(String fileName, HttpServletRequest request){
+		String viewJobStatusNameList = adminDao.showPropStatus(fileName, request);		  
+	    return viewJobStatusNameList;
+	}
+	
+	public String viewJobDetails(String fileName, String adbRegionToConnect){
+		JSONArray viewJobStatusNameList = adminDao.viewJobDetails(fileName, adbRegionToConnect);		  
+	    return viewJobStatusNameList.toString();
+	}	
+	
+	public String searchLocale(String locale,String custKey, String adbRegionToConnect,String tenantCode){
+		JSONArray viewJobStatusNameList = adminDao.searchLocale(locale,custKey, adbRegionToConnect,tenantCode);		  
+	    return viewJobStatusNameList.toString();
+	}
+	
+	public String manufacturerList(String manName,String manId, String adbRegionToConnect){
+		JSONArray manufacturersList = adminDao.lookForManufacturer(manName,manId, adbRegionToConnect);		  
+	    return manufacturersList.toString();
+	}
+	
+	public String editView(String manId, String adbRegionToConnect){
+		JSONArray manufacturersList = adminDao.get(manId, adbRegionToConnect);		  
+	    return manufacturersList.toString();
+	}
+	
+	
+	
+	public Manufacturer getManufacturer(String name, String adbRegionToConnect){
+		Manufacturer manufacturer = adminDao.getManufacturerDetails(name, adbRegionToConnect);
+	    return manufacturer;
+	}
+	
+	
+	public int createManufacturer(Manufacturer manufacturer, String adbRegionToConnect) {
+		return adminDao.createManufacturer(manufacturer, adbRegionToConnect);
+	}
+	
+	public int updateManufacturer(Manufacturer manufacturer, String adbRegionToConnect) {
+		return adminDao.updateManufacturer(manufacturer, adbRegionToConnect);
+	}
+	
+	public HashMap<String, Object> deleteManufacturer(String[] listIds, String adbRegionToConnect){
+		return adminDao.deleteManufacturer(listIds, adbRegionToConnect);
+	}
+	
+	
+	public String masterCatalogSearch(String catalogId, String adbRegionToConnect, String tenantCode){
+		String masterCatalogList = adminDao.masterCatalogSearch(catalogId, adbRegionToConnect, TenantConstants.getMixedSharedTenant(tenantCode));
+		return masterCatalogList;
+	}
+	
+	public String autoPublish(String regionCode, String adbRegionToConnect, String tenantCode){
+		JSONArray masterCatalogList = adminDao.autoPublish(regionCode, adbRegionToConnect, TenantConstants.getMixedSharedTenant(tenantCode));
+		return masterCatalogList.toString();
+	}
+	
+	public String eclipseDealStatus(String dealId, HttpServletRequest request, String tenantCode , String userType){
+		String regionCode = PagesUtil.getRegionCode(request);
+		String fdDealFlag = "";
+		 if (userType.equalsIgnoreCase("FD")){
+				fdDealFlag =  "Y";
+			 }
+		 else{
+			 fdDealFlag =  "N";
+		 }
+		String masterCatalogList = adminDao.eclipseDealStatus(dealId, request,tenantCode,fdDealFlag);
+		return masterCatalogList;
+	}
+
+	public String refreshEclipseDeal(String dealId, HttpServletRequest request){
+		String masterCatalogList = adminDao.refreshEclipseDeal(dealId, request);
+		return masterCatalogList;
+	}	
+	public String viewCheckProp(String uploadHandler, String adbRegionToConnect){
+		JSONArray viewCheckPropList = adminDao.viewCheckProp(uploadHandler);		  
+	    return viewCheckPropList.toString();
+	}
+	
+	public String uploadInfoList(String keyword,HttpServletRequest request){
+		String masterCatalogList = adminDao.uploadInfoList(keyword,request);
+		return masterCatalogList.toString();
+	}
+	
+	public String searchPublishTargets(String regionCode,String targetName,String targetService,String targetAccount, String adbRegionToConnect){
+		String manufacturersList = adminDao.searchPublishTargets(regionCode,targetName,targetService,targetAccount, adbRegionToConnect);		  
+	    return manufacturersList;
+	}
+	
+
+	public HashMap<String, Object> deleteTargets(String[] listIds, String adbRegionToConnect){
+		return adminDao.deleteTarget(listIds,adbRegionToConnect);
+	}
+	
+	public List<Target> createTarget(Target target, String adbRegionToConnect) {
+		return adminDao.createTarget(target, adbRegionToConnect);
+	}
+	
+	public List<Target> getTarget(String targetId, String adbRegionToConnect) {
+		return adminDao.getTarget(targetId, adbRegionToConnect);
+	}
+	
+	public List<Target> updateTarget(Target target, String adbRegionToConnect) {
+		return adminDao.updateTarget(target, adbRegionToConnect);
+	}
+	
+	public String updateAutoPublishStatus(String[] acc,String[] email,String adbRegionToConnect,HttpServletRequest request) {
+		return adminDao.updateAutoPublishStatus(acc,email,adbRegionToConnect,request);
+	}
+	
+	public String quickViewSettings(String custId,String desc,String url,String src, String quote, String adbRegionToConnect){		
+		return adminDao.saveQuickViewSettings(custId,desc,url,src,quote, adbRegionToConnect);
+   }
+	
+	public String retrieveQuickView(String cusId, String adbRegionToConnect){
+		String retrieveQuickViewList = adminDao.retrieveQuickView(cusId, adbRegionToConnect);
+		return retrieveQuickViewList.toString();
+	}
+	
+	public String publishCountryList(String region,String custKey, String custId, String role,String adbRegionToConnect, String tenantCode){
+		String countryList = adminDao.publishCountryList(region,custKey,custId, role,adbRegionToConnect,tenantCode);
+		return countryList;
+	}
+	
+	public String searchPropogationControl(Session session,String task,String custKey,String roleId,String regionCode,String searchCatalog,
+			String catName, String cntry,String propStatus,String cFilter,String region,String custId,String dbToConnect, String tenantCode){
+		return adminDao.searchPropogationControl(session,task,custKey,roleId,regionCode,searchCatalog,catName,cntry,propStatus,cFilter,region,custId,dbToConnect,tenantCode);
+		
+	}
+	
+	public String updatePropogationControl(Session session,String task,String custKey,String roleId,String regionCode,String searchCatalog,
+			String catName, String cntry,String propStatus,String[] selectedCatalogsStatus,String[] unSelectedCatalogsStatus,String region,String custId,String dbToConnect){
+		return adminDao.updatePropogationControl(session,task,custKey,roleId,regionCode,searchCatalog,catName,cntry,propStatus,selectedCatalogsStatus,unSelectedCatalogsStatus,region,custId,dbToConnect);
+		
+	}
+	
+	public String uploadDeals(MultipartFile[] file, HttpServletRequest request,String catalog){
+		return adminDao.uploadDeals(file,request,catalog);
+		
+	}
+	public String loadPMCodes(HttpServletRequest request){
+		return adminDao.loadPMCodes(request);
+		
+	}
+	
+	public String savePMCodes(String cat,String prod,String code,HttpServletRequest request){
+		return adminDao.savePMCodes(cat,prod,code,request);
+		
+	}
+	
+	public String uploadPMCodes(MultipartFile file, HttpServletRequest request,String cat){
+		return adminDao.uploadPMCodes(file,request,cat);
+		
+	}
+	
+	public String retrievePA(String cusKey,HttpServletRequest request){
+		return adminDao.retrievePA(cusKey,request);
+		
+	}
+	
+	public String updatePAInfo(Model model, String task,String form, HttpServletRequest request,String custKey){
+		return adminDao.updatePAInfo(model,task,form,request,custKey);
+	}
+	
+	 public String loadRanking(String custKey,String categoryId,HttpServletRequest request){
+		 return adminDao.loadRanking(custKey,categoryId,request);
+	}
+	 
+	 public String saveRanking(String custKey,String[] form,String categoryId,HttpServletRequest request){
+		 return adminDao.saveRanking(custKey,form,categoryId,request);
+	}
+	 
+	 public String retrieveMDCP(String custKey,HttpServletRequest request) {
+		 return adminDao.retrieveMDCP(custKey,request);
+	 }
+	 
+	 public String addMDCPRecord(String mdcpOrgId,String gunsNo, String customerTenant){
+		 return adminDao.addMDCPRecord(mdcpOrgId,gunsNo, customerTenant);
+	}
+	 
+	 public String updateMDCPRecord(String custKey,List mdcpList,HttpServletRequest request){
+		 return adminDao.updateMDCPRecord(custKey,mdcpList,request);
+	}
+	 
+	public String refreshVistaDeal(String dealId,HttpServletRequest request){		  
+		 return adminDao.refreshVistaDeal(dealId,request);	
+	}
+	
+	public String manageDeals(String custId,String custKey,String regionCode,HttpServletRequest request){
+		return adminDao.manageDeals(custId, custKey, regionCode, request);
+	}
+	
+	public List getOffers(String custId,String custKey,String regionCode,HttpServletRequest request){
+		return adminDao.getOffers(custId, custKey, regionCode, request);
+	}
+	
+	public String searchDealsSearchCriteria(String dealId,String custId,String custName,String custDun,String custKey,String regionCode,HttpServletRequest request) {
+		return adminDao.searchDealsSearchCriteria(dealId, custId, custName, custDun, custKey, regionCode, request);
+	}
+	
+	public String addDealsSearchCriteria(String[] deals,String custId,String custKey,String regionCode,HttpServletRequest request) {
+		return adminDao.addDealsSearchCriteria(deals, custId, custKey, regionCode, request);
+	}
+	
+	public CustOfferForm viewOffer(String offerId,String custKey,
+            HttpServletRequest request) {
+		return adminDao.viewOffer(offerId, custKey, request);
+	}
+	public CustOfferForm createOfferProcessRetrieval(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.createOfferProcessRetrieval(form, request);
+	}	
+	public CustOfferForm processChangeOfferType(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.processChangeOfferType(form, request);
+	}		
+	public CustOfferForm processChangeCountry(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.processChangeCountry(form, request);
+	}	
+	public CustOfferForm processChangePurchaseTerm(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.processChangePurchaseTerm(form, request);
+	}	
+	public CustOfferForm processChangePricingRule(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.processChangePricingRule(form, request);
+	}	
+	public CustOfferForm createOfferProcessSave(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.createOfferProcessSave(form, request);
+	}		
+	
+	
+	public CustOfferForm editOfferProcessRetrieval(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.editOfferProcessRetrieval(form, request);
+	}
+	public CustOfferForm editOfferProcessChangePurchaseTerm(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.editOfferProcessChangePurchaseTerm(form, request);
+	}	
+	public CustOfferForm editOfferProcessChangePricingRule(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.editOfferProcessChangePricingRule(form, request);
+	}	
+	public CustOfferForm editOfferProcessSave(CustOfferForm form,HttpServletRequest request) {
+		return adminDao.editOfferProcessSave(form, request);
+	}
+	
+	public String fetchDeals (String task,String dealId,String tierDealFlag,String checkDeal,HttpServletRequest request ) {
+		return adminDao.fetchDeals(task, dealId,tierDealFlag,checkDeal, request);
+	}
+			
+}//class

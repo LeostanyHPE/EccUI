@@ -1,0 +1,2194 @@
+package com.hp.ecc.ui.biz.product;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.*;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.hp.ecc.ui.biz.JedisServerLayer;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.biz.catalog.FilterSelItem;
+import com.hp.ecc.ui.biz.catalog.Master;
+import com.hp.ecc.ui.biz.catalog.crosssale.CrossSaleMgr;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.category.Category;
+import com.hp.ecc.ui.biz.category.SearchMgr;
+import com.hp.ecc.ui.biz.filter.ProdFilter;
+import com.hp.ecc.ui.biz.filter.ProdFilterMgr;
+import com.hp.ecc.ui.biz.pricetier.PriceTierUtil;
+import com.hp.ecc.ui.common.web.catalog.master.MasterWebUtil;
+import com.hp.ecc.ui.db.util.DBUtil;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.web.util.HtmlUtil;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+
+/**
+ * Title: Description: Copyright: Copyright (c):
+ * 
+ * @author
+ * @version 
+ */
+
+public class CatalogProdUtil {
+
+	private static String customSearchWhere1 = " and   prc.CIT_PRICE_ITEM_KEY = item.CIT_PRICE_ITEM_KEY	and   prc.CIP_PRICE_DESCRIPTOR = pd.CPD_PRICE_DESCRIPTOR";
+	private static String customSearchWhere2 = " and   NVL(prc.CIP_ZONE_DESCRIPTOR, '0') = ";
+	private static String customSearchWhere3 = " and prod.PROD = opt.COP_LOCALIZE_PROD	and prog.PGM_KEY(+) = NVL(item.CIT_PGM_KEY,'')";
+
+	private static String customFedSearchWhere3 = " and prod.PROD = opt.COP_LOCALIZE_PROD	";
+
+	private static String stdSearchWhere = "cat_item.CAT_CATALOG_ID = cat_info.CAT_CATALOG_ID and cat_item_options.cat_item_key = cat_item.cit_item_key and ";
+
+	/*
+	 * stdSearchWhere1A is used when profileID is NULL as products are fetched
+	 * from CAT_ITEM_PRICE
+	 */
+	private static String stdSearchWhere1A = " cat_item_price.CIT_PRICE_ITEM_KEY(+) = cat_item.CIT_PRICE_ITEM_KEY and nvl(cat_item_price.CIP_PRICE_DESCRIPTOR, '0') = ";
+
+	/*
+	 * stdSearchWhere1B is used when profileID is NOT NULL as products are
+	 * fetched from PROFILE_ITEM_PRICE
+	 */
+	private static String stdSearchWhere1B = " profile_item_price.PIP_KEY(+) = cat_item.CIT_PRICE_ITEM_KEY and nvl(profile_item_price.PIP_PRICE_DESCRIPTOR, '0') = ";
+	private static String stdSearchWhere2 = " products.prod = cat_item_options.COP_LOCALIZE_PROD ";
+	private static String stdSearchWhere3 = " and exists (select 'x' from ctg_prod , ctg_prod_att	  where ctg_prod.CTG_ID = cat_info.CAT_BROWSE_CTG_ID   and ctg_prod.PROD = cat_item_options.COP_LOCALIZE_PROD	   and ctg_prod_att.ctg_id = cat_info.CAT_CONTENT_CTG_ID  and  ctg_prod_att.node_id = ctg_prod.node_id 	   and ctg_prod_att.prod = ctg_prod.PROD and ctg_prod_att.country_code =";
+
+	// private static DaxMgr mgr;
+	// private static DaxDB db;
+
+	public static String STMT_GROUP = "catalogProd";
+	public static String STD_CAT = "stdCatalogSearch";
+	public static String CAT_FLTR_STMT = "updateCatFilterItems";
+
+	private static String scopeStr = null; // HEMANTH
+
+	public CatalogProdUtil() {
+	}
+
+	/**
+	 * This method is used to get the products which will be used to display in
+	 * the catlaog list page and also for the search.
+	 * 
+	 */
+	// Quick view- Sumit
+	public static JSONArray retrieveCatalogItem(Catalog catalog, String type,String code, int scopeSearchType, String pgmKey, String styleId, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId,String searchSource, String searchPl, String searchConfigId) {
+
+		System.out.println("Setting change for getProductsUsingView: ");
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" info.CAT_CATALOG_ID = '");
+		whereClause.append(catalog.getId() + "' and ");
+		whereClause
+				.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		String catId = "CAT-00000";
+		if (catalog.getCatMasterKey() == null) {
+			if (catalog.getId() != null)
+				catId = catalog.getId();
+		} else
+			catId = catalog.getCatMasterKey();
+		whereClause
+				.append("'"
+						+ catId
+						+ "' = cbi.cat_catalog_id (+) and item.cit_src_prod = cbi.cbd_id(+) and ");
+		String where = makeSearchClause(type, code, scopeSearchType, pgmKey);
+		whereClause.append(where);
+		whereClause.append(customSearchWhere1);
+		// whereClause.append("'" + catalog.getPriceDescriptor() + "'");
+		whereClause.append(customSearchWhere2);
+		if (catalog.getZoneDescriptor() != null) {
+			whereClause.append("NVL('" + catalog.getZoneDescriptor()
+					+ "', '0')");
+		} else {
+			whereClause.append("NVL(" + catalog.getZoneDescriptor() + ", '0')");
+		}
+		whereClause.append(customSearchWhere3);
+		
+		//Pagination
+		String forSorting = null;
+		String autoSearchString = null;
+		
+		int start = recordOnHand + 1;
+		int end = recordOnHand + recordOnDemand;
+				
+		if (searchProdId != null && searchProdId.length() > 0) {
+			searchProdId = DBUtil.escapeSQLFieldForBiz(searchProdId);
+			autoSearchString = " and opt.COP_BASE_MODEL LIKE '" + searchProdId.toUpperCase() + "%'";
+		} 
+		else if (searchSource != null && searchSource.length() > 0) {
+			searchSource = DBUtil.escapeSQLFieldForBiz(searchSource);
+			autoSearchString = " and upper(item.cit_source) LIKE '" + searchSource.toUpperCase() + "%'";
+		}
+		else if (searchPl != null && searchPl.length() > 0) {
+			searchPl = DBUtil.escapeSQLFieldForBiz(searchPl);
+			autoSearchString = " and prod.pl LIKE '" + searchPl.toUpperCase() + "%'";
+		}
+		else if (searchConfigId != null && searchConfigId.length() > 0) {
+			searchConfigId = DBUtil.escapeSQLFieldForBiz(searchConfigId);
+			autoSearchString = " and item.CIT_CONFIG_ID LIKE '" + searchConfigId.toUpperCase() + "%'";
+		}
+		
+		if( autoSearchString != null && !autoSearchString.equals("")){
+			whereClause.append(autoSearchString);			
+		}
+		
+			whereClause.append(" and rownum <="+ (end));
+			
+			forSorting = "(b.ttt BETWEEN " + start + " AND " + end + ")";
+			if ((sortBy != null && sortBy.length() > 0)
+					&& (sortOrder != null && sortOrder.length() > 0)) {
+				forSorting += " order by " + sortBy + ' ' + sortOrder;
+			}
+		
+		System.out.println("forSorting: " + forSorting);
+		System.out.println("where clause is " + whereClause.toString());
+		
+		Product catProd = new Product();
+		catProd.setString1(whereClause.toString());
+		catProd.setRegionCode(catalog.getRegionCode());
+		catProd.setCntryCode(catalog.getCntryCode());
+		catProd.setCatalogType(catalog.getCatalogType());
+		catProd.setCatalogID(catalog.getId());
+		catProd.setEnd(end);
+		catProd.setStart(start);
+		catProd.setSortBy(sortBy);
+		catProd.setSortOrder(sortOrder);
+		catProd.setSortByAndSortOrder(forSorting);
+		
+		// Quick view- Sumit
+		JSONArray l = getProductsUsingView(catProd, styleId, adbRegionToConnect);
+
+		/*
+		 * Commented to improve performance. Already processRetrievalList() in
+		 * ViewCatalogAction.java has a call to attachCategoriesToProducts()
+		 */
+
+		// assignCategoriesToProducts ( l, catalog.getCategorizationID () );
+		return l;
+	}
+	
+	public static JSONArray retrieveCatalogItemForPerf(Catalog catalog, String type,String code, int scopeSearchType, String pgmKey, String styleId, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId, String searchPartNumber,String searchSource, String searchPl, String searchConfigId, String queryId) {
+		long startTime = System.currentTimeMillis();
+		boolean isSearchOrOrderBy = false;
+		System.out.println("Setting change for getProductsUsingView: ");
+		StringBuilder whereClause = new StringBuilder();
+		whereClause.append(" info.CAT_CATALOG_ID = '");
+		whereClause.append(catalog.getId() + "' and ");
+		whereClause
+				.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		String catId = "CAT-00000";
+		if (catalog.getCatMasterKey() == null) {
+			if (catalog.getId() != null)
+				catId = catalog.getId();
+		} else
+			catId = catalog.getCatMasterKey();
+		whereClause
+				.append("'"
+						+ catId
+						+ "' = cbi.cat_catalog_id (+) and item.cit_src_prod = cbi.cbd_id(+) and ");
+		String where = makeSearchClause(type, code, scopeSearchType, pgmKey);
+		whereClause.append(where);
+		whereClause.append(customSearchWhere1);
+		// whereClause.append("'" + catalog.getPriceDescriptor() + "'");
+		whereClause.append(customSearchWhere2);
+		if (catalog.getZoneDescriptor() != null) {
+			whereClause.append("NVL('" + catalog.getZoneDescriptor()
+					+ "', '0')");
+		} else {
+			whereClause.append("NVL(" + catalog.getZoneDescriptor() + ", '0')");
+		}
+		whereClause.append(customSearchWhere3);
+		
+		//Pagination
+		String forSorting = null;
+		String autoSearchString = null;
+		
+		int start = recordOnHand + 1;
+		int end = recordOnHand + recordOnDemand;
+				
+		if (searchProdId != null && searchProdId.length() > 0) {
+			searchProdId = DBUtil.escapeSQLFieldForBiz(searchProdId);
+			autoSearchString = " and opt.COP_BASE_MODEL LIKE '" + searchProdId.toUpperCase() + "%'";
+		} 
+		else if (searchPartNumber != null && searchPartNumber.length() > 0) {
+			searchPartNumber = DBUtil.escapeSQLFieldForBiz(searchPartNumber);
+			autoSearchString = " and upper(opt.COP_LOCALIZE_PROD) LIKE '" + searchPartNumber.toUpperCase() + "%'";
+		}
+		else if (searchSource != null && searchSource.length() > 0) {
+			searchSource = DBUtil.escapeSQLFieldForBiz(searchSource);
+			autoSearchString = " and upper(item.cit_source) LIKE '" + searchSource.toUpperCase() + "%'";
+		}
+		else if (searchPl != null && searchPl.length() > 0) {
+			searchPl = DBUtil.escapeSQLFieldForBiz(searchPl);
+			autoSearchString = " and prod.pl LIKE '" + searchPl.toUpperCase() + "%'";
+		}
+		else if (searchConfigId != null && searchConfigId.length() > 0) {
+			searchConfigId = DBUtil.escapeSQLFieldForBiz(searchConfigId);
+			autoSearchString = " and item.CIT_CONFIG_ID LIKE '" + searchConfigId.toUpperCase() + "%'";
+		}
+		
+		if( autoSearchString != null && !autoSearchString.equals("")){
+			whereClause.append(autoSearchString);	
+			
+			//To fetch from DB
+			isSearchOrOrderBy=true;
+		}
+		
+		StringBuilder whereClausePef = new StringBuilder();
+		whereClausePef.append(whereClause);
+		String forSortingPef = "1=1";
+		
+			whereClause.append(" and rownum <="+ (end));
+			forSorting = "(b.ttt BETWEEN " + start + " AND " + end + ")";
+			if ((sortBy != null && sortBy.length() > 0)
+					&& (sortOrder != null && sortOrder.length() > 0)) {
+				forSorting += " order by " + sortBy + ' ' + sortOrder;
+				forSortingPef += " order by " + sortBy + ' ' + sortOrder;
+				
+				//To fetch from DB
+				isSearchOrOrderBy=true;
+			}
+		
+		System.out.println("forSorting: " + forSorting);
+		System.out.println("where clause is " + whereClause.toString());
+		
+		Product catProd = new Product();
+		catProd.setString1(whereClause.toString());
+		catProd.setRegionCode(catalog.getRegionCode());
+		catProd.setCntryCode(catalog.getCntryCode());
+		catProd.setCatalogType(catalog.getCatalogType());
+		catProd.setCatalogID(catalog.getId());
+		catProd.setEnd(end);
+		catProd.setStart(start);
+		catProd.setSortBy(sortBy);
+		catProd.setSortOrder(sortOrder);
+		catProd.setSortByAndSortOrder(forSorting);
+		catProd.setCategorizationId(catalog.getCategorizationID());
+		
+		Product catProdPef = new Product();
+		catProdPef.setString1(whereClausePef.toString());
+		catProdPef.setRegionCode(catalog.getRegionCode());
+		catProdPef.setCntryCode(catalog.getCntryCode());
+		catProdPef.setCatalogType(catalog.getCatalogType());
+		catProdPef.setCatalogID(catalog.getId());
+		catProdPef.setEnd(end);
+		catProdPef.setStart(start);
+		catProdPef.setSortBy(sortBy);
+		catProdPef.setSortOrder(sortOrder);
+		catProdPef.setSortByAndSortOrder(forSortingPef);
+		catProdPef.setCategorizationId(catalog.getCategorizationID());
+			
+		System.out.println("Time taken to prepare DB query statement: "+ (System.currentTimeMillis() - startTime) + "msec");
+		
+		String catalogId = catalog.getId();
+		JedisServerLayer jServerLayer = new JedisServerLayer();
+		String priceMergeId = jServerLayer.getPriceMergeIdFromCache(catalogId);		
+		if( priceMergeId == null){
+			long startTime1 = System.currentTimeMillis();
+			priceMergeId = PriceTierUtil.getPriceMergeId(catalogId, adbRegionToConnect);
+			System.out.println("Total Time taken to retrieve getPriceMergeId from DB: "+ (System.currentTimeMillis() - startTime1) + "msec");
+			
+			jServerLayer.putPriceMergeIdToCache(catalogId, priceMergeId);
+		}		
+		catProd.setPriceMergeId(priceMergeId);
+		catProdPef.setPriceMergeId(priceMergeId);	
+		
+		// Quick view- Sumit
+		//JSONArray l = getProductsUsingView(catProd, styleId, adbRegionToConnect);
+
+		JSONArray l = null;
+		if( isSearchOrOrderBy){
+			//Always fetch from DB
+			long startTime5 = System.currentTimeMillis();
+			l = getProductsUsingView(catProd, styleId, adbRegionToConnect);
+			catalog.setQueryId(queryId);
+			catalog.setPostProcess(true);
+			System.out.println("Total Time taken to retrieve products in case of SearchBy or OrderBy: "+ (System.currentTimeMillis() - startTime5) + "msec");
+		}
+		else{
+			if(queryId == null || queryId.isEmpty()){			
+				Random queryRandom = new Random();
+				queryId = catalog.getId() + "-" +queryRandom.nextLong();
+				catalog.setQueryId(queryId);
+				
+				getProductsUsingView(catProdPef, adbRegionToConnect, start, end, queryId);	
+				
+				long startTime2 = System.currentTimeMillis();
+				l = getProductsUsingView(catProd, styleId, adbRegionToConnect);
+				System.out.println("Total Time taken to retrieve products: "+ (System.currentTimeMillis() - startTime2) + "msec");
+			}
+			else{
+				catalog.setQueryId(queryId);
+				l = jServerLayer.getRetrieveData(queryId, start, end);
+				
+				if( l == null ){
+					l = getProductsUsingView(catProd, styleId, adbRegionToConnect);
+					
+					//catalog.setQueryId(null);  //need to check
+					catalog.setPostProcess(true);
+				}
+				
+			}
+		}
+
+		return l;
+	}
+	
+
+	public static List retrieveProductOptions(Product p, String adbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt stmt = null;
+		String contextID = p.getContextID();
+		String bundleFlag = p.getBundleFlag();
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" opt.CAT_CATALOG_ID = '");
+		whereClause.append(p.getCatalogID() + "' and opt.COP_BASE_MODEL = '");
+		whereClause.append(p.getProdId() + "' and trim(opt.CIT_CONTEXT_ID) ");
+		if (contextID == null || "".equalsIgnoreCase(contextID)) {
+			whereClause.append(" IS NULL ");
+		} else {
+			whereClause.append(" = '" + contextID + "'");
+		}
+		if (bundleFlag != null && !("".equalsIgnoreCase(bundleFlag))) {
+
+			whereClause.append(" and opt.COP_BUNDLE_FLAG = '");
+			whereClause.append(bundleFlag + "'");
+		}
+		stmt = daxMgr.makeParsedStmt("productOptions",
+				"selectOptionsListByContextID", p, null, null);
+		p.setString1(whereClause.toString());
+		return daxDB.doSelect(stmt, p.getClass(), p);
+
+	}
+
+	public static List retrieveMasterItem(Master catalog, String type,String code, int searchScopeType, String pgmKey, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId, String searchPartNumber, String searchSource, String searchPl, String searchConfigId, String queryId) {
+		return retrieveMasterItemForPerf(catalog, type, code, searchScopeType, pgmKey,false, adbRegionToConnect, recordOnHand, recordOnDemand, sortBy, sortOrder, searchProdId, searchPartNumber, searchSource, searchPl, searchConfigId, queryId);
+
+	}
+	
+	
+	public static List retrieveMasterItemForPerf(Master catalog, String type,String code, int searchScopeType, String pgmKey,boolean updateFlag, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId, String searchPartNumber, String searchSource, String searchPl, String searchConfigId, String queryId) {
+		long startTime = System.currentTimeMillis();
+		
+		boolean isSearchOrOrderBy = false;
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" info.CAT_CATALOG_ID = '");
+		whereClause.append(catalog.getID() + "' and ");
+		if (updateFlag) {
+			whereClause
+					.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and item.cit_delete_flag = 'N' and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		} else {
+			whereClause
+					.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		}
+		String catId = "CAT-00000";
+		if (catalog.getID() != null)
+			catId = catalog.getID();
+		whereClause
+				.append("'"
+						+ catId
+						+ "' = cbi.cat_catalog_id (+) and item.cit_src_prod = cbi.cbd_id(+) and ");
+
+		String where = makeSearchClause(type, code, searchScopeType, pgmKey);
+		whereClause.append(where);
+		whereClause.append(customSearchWhere1);
+		// whereClause.append("'" + catalog.getPriceDescriptor() + "'");
+		whereClause.append(customSearchWhere3);
+		
+		
+		String forSorting = null;
+		String autoSearchString = null;
+		
+		int start = recordOnHand + 1;
+		int end = recordOnHand + recordOnDemand;
+		
+		if (searchProdId != null && searchProdId.length() > 0) {
+			searchProdId = DBUtil.escapeSQLFieldForBiz(searchProdId);
+			autoSearchString = " and item.CIT_BASE_MODEL LIKE '" + searchProdId.toUpperCase() + "%'";
+		} 
+		else if (searchPartNumber != null && searchPartNumber.length() > 0) {			
+			searchPartNumber = DBUtil.escapeSQLFieldForBiz(searchPartNumber);
+			autoSearchString = " and upper(opt.COP_LOCALIZE_PROD) LIKE '" + searchPartNumber.toUpperCase() + "%'";
+		}
+		else if (searchSource != null && searchSource.length() > 0) {			
+			searchSource = DBUtil.escapeSQLFieldForBiz(searchSource);
+			autoSearchString = " and upper(item.cit_source) LIKE '" + searchSource.toUpperCase() + "%'";
+		}
+		else if (searchPl != null && searchPl.length() > 0) {
+			searchPl = DBUtil.escapeSQLFieldForBiz(searchPl);
+			autoSearchString = " and prod.pl LIKE '" + searchPl.toUpperCase() + "%'";
+		}
+		else if (searchConfigId != null && searchConfigId.length() > 0) {
+			searchConfigId = DBUtil.escapeSQLFieldForBiz(searchConfigId);
+			autoSearchString = " and item.CIT_CONFIG_ID LIKE '" + searchConfigId.toUpperCase() + "%'";
+		}
+		
+		if( autoSearchString != null && !autoSearchString.equals("")){
+			whereClause.append(autoSearchString);			
+			
+			//To fetch from DB
+			isSearchOrOrderBy = true;
+		}	
+		
+		StringBuilder whereClausePef = new StringBuilder();
+		whereClausePef.append(whereClause);
+		String forSortingPef = "1=1";
+		
+			whereClause.append(" and rownum <="+ (end));
+			forSorting = "(b.ttt BETWEEN " + start + " AND " + end + ")";
+			if ((sortBy != null && sortBy.length() > 0)
+					&& (sortOrder != null && sortOrder.length() > 0)) {
+				forSorting += " order by " + sortBy + ' ' + sortOrder;
+				forSortingPef += " order by " + sortBy + ' ' + sortOrder;
+				
+				//To fetch from DB
+				isSearchOrOrderBy = true;
+			}	
+					
+		System.out.println("forSorting: " + forSorting);
+		System.out.println("where clause is " + whereClause.toString());
+				
+		Product catProd = new Product();
+		catProd.setRegionCode(catalog.getRegionCode());
+		catProd.setString1(whereClause.toString());
+		catProd.setCatalogID(catalog.getID());
+		catProd.setCntryCode(catalog.getOBPriceDescriptor().substring(0, 2));				
+		catProd.setEnd(end);
+		catProd.setStart(start);
+		catProd.setSortBy(sortBy);
+		catProd.setSortOrder(sortOrder);
+		catProd.setSortByAndSortOrder(forSorting);
+		
+		Product catProdPef = new Product();
+		catProdPef.setRegionCode(catalog.getRegionCode());
+		catProdPef.setString1(whereClausePef.toString());
+		catProdPef.setCatalogID(catalog.getID());
+		catProdPef.setCntryCode(catalog.getOBPriceDescriptor().substring(0, 2));				
+		catProdPef.setEnd(end);
+		catProdPef.setStart(start);
+		catProdPef.setSortBy(sortBy);
+		catProdPef.setSortOrder(sortOrder);
+		catProdPef.setSortByAndSortOrder(forSortingPef);
+	
+		
+		System.out.println("Time taken to prepare DB query: "+ (System.currentTimeMillis() - startTime) + "msec");
+		
+		String catalogId = catalog.getID();
+		JedisServerLayer jServerLayer = new JedisServerLayer();
+		String priceMergeId = jServerLayer.getPriceMergeIdFromCache(catalogId);		
+		if( priceMergeId == null){
+			long startTime1 = System.currentTimeMillis();
+			priceMergeId = PriceTierUtil.getPriceMergeId(catalogId, adbRegionToConnect);
+			System.out.println("Total Time taken to retrieve getPriceMergeId from DB: "+ (System.currentTimeMillis() - startTime1) + "msec");
+			
+			jServerLayer.putPriceMergeIdToCache(catalogId, priceMergeId);
+		}		
+		catProd.setPriceMergeId(priceMergeId);
+		catProdPef.setPriceMergeId(priceMergeId);		
+
+		List l = null;
+		if( isSearchOrOrderBy){
+			//Always fetch from DB
+			long startTime2 = System.currentTimeMillis();
+			l = getProducts(catProd, adbRegionToConnect);	
+			catalog.setQueryId(queryId);
+			catalog.setPostProcess(true);
+			System.out.println("Total Time taken to retrieve products in case of SearchBy or OrderBy: "+ (System.currentTimeMillis() - startTime2) + "msec");
+		}
+		else{
+			if(queryId == null || queryId.isEmpty()){					
+				Random queryRandom = new Random();
+				queryId = catalog.getID() + "-" +queryRandom.nextLong();
+				catalog.setQueryId(queryId);
+				
+				getProducts(catProdPef, adbRegionToConnect, start, end, queryId);	
+				
+				long startTime2 = System.currentTimeMillis();
+				l = getProducts(catProd, adbRegionToConnect);	
+				System.out.println("Total Time taken to retrieve products: "+ (System.currentTimeMillis() - startTime2) + "msec");
+			}
+			else{
+				catalog.setQueryId(queryId);
+				l = jServerLayer.getRetrieveData(queryId, start, end);
+				
+				if( l == null ){
+					l = getProducts(catProd, adbRegionToConnect);
+					
+					//catalog.setQueryId(null);
+					catalog.setPostProcess(true);
+					
+				}				
+			}
+		}
+		
+		return l;
+	}//retrieveMasterItemForPerf
+	
+	
+
+	/**
+	 * This method is used to get the products which will be used to display in
+	 * the master catalog list page and serach.
+	 * 
+	 */
+	public static List retrieveMasterItem(Master catalog, String type,String code, int searchScopeType, String pgmKey,boolean updateFlag, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId, String searchSource, String searchPl, String searchConfigId) {
+		long startTime = System.currentTimeMillis();
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" info.CAT_CATALOG_ID = '");
+		whereClause.append(catalog.getID() + "' and ");
+		if (updateFlag) {
+			whereClause
+					.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and item.cit_delete_flag = 'N' and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		} else {
+			whereClause
+					.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		}
+		String catId = "CAT-00000";
+		if (catalog.getID() != null)
+			catId = catalog.getID();
+		whereClause
+				.append("'"
+						+ catId
+						+ "' = cbi.cat_catalog_id (+) and item.cit_src_prod = cbi.cbd_id(+) and ");
+
+		String where = makeSearchClause(type, code, searchScopeType, pgmKey);
+		whereClause.append(where);
+		whereClause.append(customSearchWhere1);
+		// whereClause.append("'" + catalog.getPriceDescriptor() + "'");
+		whereClause.append(customSearchWhere3);
+		
+
+		String forSorting = null;
+		String autoSearchString = null;
+		
+		int start = recordOnHand + 1;
+		int end = recordOnHand + recordOnDemand;
+		
+		if (searchProdId != null && searchProdId.length() > 0) {
+			autoSearchString = " and item.CIT_BASE_MODEL LIKE '" + searchProdId.toUpperCase() + "%'";
+		} 
+		else if (searchSource != null && searchSource.length() > 0) {			
+			autoSearchString = " and upper(item.cit_source) LIKE '" + searchSource.toUpperCase() + "%'";
+		}
+		else if (searchPl != null && searchPl.length() > 0) {
+			autoSearchString = " and prod.pl LIKE '" + searchPl.toUpperCase() + "%'";
+		}
+		else if (searchConfigId != null && searchConfigId.length() > 0) {
+			autoSearchString = " and item.CIT_CONFIG_ID LIKE '" + searchConfigId.toUpperCase() + "%'";
+		}
+		
+		if( autoSearchString != null && !autoSearchString.equals("")){
+			whereClause.append(autoSearchString);			
+		}
+		
+			whereClause.append(" and rownum <="+ (end));
+			forSorting = "(b.ttt BETWEEN " + start + " AND " + end + ")";
+			if ((sortBy != null && sortBy.length() > 0)
+					&& (sortOrder != null && sortOrder.length() > 0)) {
+				forSorting += " order by " + sortBy + ' ' + sortOrder;
+			}
+		
+		System.out.println("forSorting: " + forSorting);
+		System.out.println("where clause is " + whereClause.toString());
+		
+		Product catProd = new Product();
+		catProd.setRegionCode(catalog.getRegionCode());
+		catProd.setString1(whereClause.toString());
+		catProd.setCatalogID(catalog.getID());
+		catProd.setCntryCode(catalog.getOBPriceDescriptor().substring(0, 2));
+				
+		catProd.setEnd(end);
+		catProd.setStart(start);
+		catProd.setSortBy(sortBy);
+		catProd.setSortOrder(sortOrder);
+		catProd.setSortByAndSortOrder(forSorting);
+		
+		System.out.println("Time taken to form query: " + (System.currentTimeMillis() - startTime) + "msec");
+		
+		List l = getProducts(catProd, adbRegionToConnect);
+		// assignCategoriesToProducts(l,catalog.getProdCtgID() );
+		
+		return l;
+	}
+
+	public static JSONArray retrieveFedMasterItem(Master catalog, String type,String code, int searchScopeType, String adbRegionToConnect) {
+
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" info.CAT_CATALOG_ID = '");
+		whereClause.append(catalog.getID() + "' and ");
+		whereClause
+				.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and item.cit_item_key = cia.cat_item_key(+) and item.cit_delete_flag = 'N' and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+
+		String where = makeSearchClause(type, code, searchScopeType, null);
+		whereClause.append(where);
+		whereClause.append(customSearchWhere1);
+		// whereClause.append("'" + catalog.getPriceDescriptor() + "'");
+		whereClause.append(customFedSearchWhere3);
+		System.out.println("where clause is " + whereClause.toString());
+
+		Product catProd = new Product();
+		catProd.setRegionCode(catalog.getRegionCode());
+		catProd.setString1(whereClause.toString());
+		catProd.setCntryCode(catalog.getOBPriceDescriptor().substring(0, 2));
+		// System.out.println("-------------------catalog.getOBPriceDescriptor().substring(0,2):"+catalog.getOBPriceDescriptor().substring(0,2));
+		JSONArray l = getProductsForFedCust(catProd, adbRegionToConnect);
+		// assignCategoriesToProducts(l,catalog.getProdCtgID() );
+		return l;
+	}
+	
+	
+	/*
+	 * This method is used to get the product list for standard catalog.
+	 */
+	public static JSONObject retrieveStdCatalogItemsForPef(Catalog catalog, Catalog stdCat, String catalogId,String priceDescriptor, String profileID, String countryCode,String locale, List stdSearchInfo,String regionCode, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId, String queryId) {
+		JSONObject productListData = new JSONObject();
+		boolean isSearchOrOrderBy = false;
+		String string2 = "";
+		/*
+		 * product-list for Catalog Product Offering need to be fetched from
+		 * CAT_ITEM_PRICE when profileID is null and from PROFILE_ITEM_PRICE
+		 * when profileID is not null
+		 */
+		if ("-1".equals(profileID) || StrUtil.isEmpty(profileID))
+			profileID = null;
+		if (StrUtil.isEmpty(priceDescriptor))
+			priceDescriptor = null;
+
+		StringBuilder whereClause = new StringBuilder();
+		whereClause.append(" cat_info.CAT_CATALOG_ID = '");
+		whereClause.append(catalogId + "' and ");
+		whereClause.append(stdSearchWhere);
+
+		// whereClause.append(countryCode + "' and ");
+
+		if (profileID == null) {
+			whereClause.append(stdSearchWhere1A);
+			if (priceDescriptor != null) {
+				System.out.println("priceDescriptor != null but = "
+						+ priceDescriptor);
+				whereClause.append("NVL('" + priceDescriptor + "', '0') and ");
+			} else {
+				whereClause.append("NVL(" + priceDescriptor + ", '0') and ");
+			}
+
+		} else {
+			whereClause
+					.append(" profile_item_price.pip_key(+) = cat_util.make_profile_item_price_key (NVL ('"
+							+ profileID
+							+ "', '0'), cat_item.cit_src_prod, cat_item.cit_context_id,"
+							+ " cat_item.cit_bundle_flag, ");
+			if (priceDescriptor == null) {
+				whereClause.append(" NVL (null, '0')) AND ");
+			} else {
+				whereClause.append(" NVL ('" + priceDescriptor
+						+ "', '0')) AND ");
+			}
+		}
+
+		whereClause.append(stdSearchWhere2);
+		makeStdCatSearchClause(stdSearchInfo, countryCode, whereClause,	profileID);
+		
+		if ( stdSearchInfo != null && stdSearchInfo.size()>0){
+			//To fetch from DB
+			isSearchOrOrderBy = true;
+		}
+		
+		//Pagination
+		String forSorting = null;
+		int start = recordOnHand + 1;
+		int end = recordOnHand + recordOnDemand;
+		string2 = whereClause.toString();
+		
+		StringBuilder whereClausePef = new StringBuilder();
+		whereClausePef.append(whereClause);
+		String forSortingPef = "1=1";
+			
+		if (searchProdId != null && searchProdId.length() > 0) {
+			searchProdId = DBUtil.escapeSQLFieldForBiz(searchProdId);
+			forSorting = "PROD LIKE '" + searchProdId.toUpperCase() + "%'";
+			
+			//To fetch from DB
+			isSearchOrOrderBy = true;
+			
+		} else {
+			whereClause.append(" and rownum <="+ end);
+			
+			forSorting = "(b.ttt BETWEEN " + start + " AND " + end + ")";
+			if ((sortBy != null && sortBy.length() > 0)
+					&& (sortOrder != null && sortOrder.length() > 0)) {
+				forSorting += " order by " + sortBy + ' ' + sortOrder;
+				
+				//To fetch from DB
+				isSearchOrOrderBy = true;
+			}
+		}
+		System.out.println("forSorting: " + forSorting);
+		System.out.println("where clause = " + whereClause);
+		
+		
+		// we can't sort by category path using SQL
+		// we will do it later
+
+		
+		boolean bSortByGaDateorEsDate = false;
+		
+		// Get the total count to be displayed in the gui --- New
+
+		/*CatalogMgr catalogMgr = new CatalogMgr();
+		Catalog stdCat = catalogMgr.getCatalogInfo(catalogId, adbRegionToConnect);*/
+
+		/**
+		 * Instead of passing the Product bean, we are passing a
+		 * ProductAndCtgAttBean. This bean combines the properties of both
+		 * Product and CtgProdAtt bean.
+		 **/
+
+		ProductAndCtgAttBean catProdAtt1 = new ProductAndCtgAttBean();		
+		catProdAtt1.setCtgId(stdCat.getProdCtgID());
+		catProdAtt1.setCntryCode(countryCode);
+		catProdAtt1.setString1(whereClause.toString());
+		catProdAtt1.setcatalogID(catalogId);
+		
+		ProductAndCtgAttBean catProdAtt2 = new ProductAndCtgAttBean();
+		catProdAtt2.setCtgId(stdCat.getProdCtgID());
+		catProdAtt2.setCntryCode(countryCode);
+		catProdAtt2.setString1(string2);
+		catProdAtt2.setcatalogID(catalogId);
+		
+		ProductAndCtgAttBean catProdAttPef = new ProductAndCtgAttBean();
+		catProdAttPef.setCtgId(stdCat.getProdCtgID());
+		catProdAttPef.setCntryCode(countryCode);
+		catProdAttPef.setString1(whereClausePef.toString());
+		catProdAttPef.setcatalogID(catalogId);
+		
+		// Added for chianti - Vinod
+		if (profileID != ""){
+			catProdAtt1.setProfileId(profileID);
+			catProdAtt2.setProfileId(profileID);
+			catProdAttPef.setProfileId(profileID);
+		}else{
+			catProdAtt1.setProfileId("");
+			catProdAtt2.setProfileId("");
+			catProdAttPef.setProfileId("");
+		}
+		if (priceDescriptor != ""){
+			catProdAtt1.setPriceDescriptor(priceDescriptor);
+			catProdAtt2.setPriceDescriptor(priceDescriptor);
+			catProdAttPef.setPriceDescriptor(priceDescriptor);
+		}else{
+			catProdAtt1.setPriceDescriptor("");
+			catProdAtt2.setPriceDescriptor("");
+			catProdAttPef.setPriceDescriptor("");
+		}
+		// End
+		catProdAtt1.setRegionCode(regionCode);
+		catProdAtt2.setRegionCode(regionCode);
+		catProdAttPef.setRegionCode(regionCode);
+		
+		//Pagination
+		catProdAtt1.setEnd(end);
+		catProdAtt1.setStart(start);
+		catProdAtt1.setSortBy(sortBy);
+		catProdAtt1.setSortOrder(sortOrder);
+		catProdAtt1.setSortByAndSortOrder(forSorting);
+		
+		catProdAtt2.setEnd(end);
+		catProdAtt2.setStart(start);
+		catProdAtt2.setSortBy(sortBy);
+		catProdAtt2.setSortOrder(sortOrder);
+		catProdAtt2.setSortByAndSortOrder(forSorting);
+		
+		catProdAttPef.setEnd(end);
+		catProdAttPef.setStart(start);
+		catProdAttPef.setSortBy(sortBy);
+		catProdAttPef.setSortOrder(sortOrder);
+		catProdAttPef.setSortByAndSortOrder(forSortingPef);
+		
+		List list=null;
+		if( isSearchOrOrderBy){
+			//Always fetch from DB
+			long startTime2 = System.currentTimeMillis();
+			list = getProductListForStdCatalog(profileID, catalog, stdCat, locale, catProdAtt1, adbRegionToConnect);	
+			productListData.put("productList", list);
+			catalog.setQueryId(queryId);
+			catalog.setPostProcess(true);
+			System.out.println("Total Time taken to retrieve products in case of SearchBy or OrderBy: "+ (System.currentTimeMillis() - startTime2) + "msec");			
+		}
+		else{
+			if(queryId == null || queryId.isEmpty()){					
+				Random queryRandom = new Random();
+				queryId = catalog.getId() + "-" +queryRandom.nextLong();
+				catalog.setQueryId(queryId);
+				
+				getProductListForStdCatalog(profileID, catalog, stdCat, locale, catProdAttPef, adbRegionToConnect, start, end, queryId);
+				
+				long startTime2 = System.currentTimeMillis();
+				list = getProductListForStdCatalog(profileID, catalog, stdCat, locale, catProdAtt1, adbRegionToConnect);	
+				productListData.put("productList", list);
+				System.out.println("Total Time taken to retrieve products: "+ (System.currentTimeMillis() - startTime2) + "msec");
+			}
+			else{
+				JedisServerLayer jServerLayer = new JedisServerLayer();				
+				list = jServerLayer.getRetrieveData(queryId, start, end);
+				catalog.setQueryId(queryId);
+				
+				if( list == null ){
+					list = getProductListForStdCatalog(profileID, catalog, stdCat, locale, catProdAtt1, adbRegionToConnect);
+					
+					//catalog.setQueryId(null);
+					catalog.setPostProcess(true);
+				}	
+				productListData.put("productList", list);
+			}
+		}
+			
+		long startTime3 = System.currentTimeMillis();
+		long totalCnt = getProductCountForStdCatalog(profileID, catProdAtt2, adbRegionToConnect);
+		System.out.println("Time taken to fetch product count: "+ (System.currentTimeMillis() - startTime3) + "msec");
+		productListData.put("recordCount", totalCnt);
+		
+		return productListData;
+	}
+	
+	private static long getProductCountForStdCatalog(String profileID, ProductAndCtgAttBean catProdAtt2, String adbRegionToConnect){
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt pstmt1 = null;
+		if (profileID == null) {
+			pstmt1 = mgr.makeParsedStmt("catalogProd", "getTotalStdCatalogItemCount", catProdAtt2, null, null);
+		} else {
+			pstmt1 = mgr.makeParsedStmt("catalogProd","getTotalStdCatalogItemCount_PIP", catProdAtt2, null, null);
+		}
+		
+		List results = db.doSelect(pstmt1, null, catProdAtt2);
+		System.out.println("results list size: "+ ((results != null) ? results.size() : 0));
+		
+		ProductAndCtgAttBean prod = null;
+		long totalCnt = 0L;
+		if (results.size() > 0) {
+			prod = (ProductAndCtgAttBean) results.get(0);
+			totalCnt = Long.parseLong(prod.getTotalCount());
+	
+			System.out.println("total size: " + totalCnt);
+		}
+		
+		return totalCnt;
+	}//getProductCountForStdCatalog
+	
+	
+	private static List getProductListForStdCatalog(String profileID, Catalog catalog, Catalog stdCat, String locale, ProductAndCtgAttBean catProdAtt1, String adbRegionToConnect){
+		boolean bSortByCategories = false;
+		
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt pstmt = null;
+		if (profileID == null) {
+			pstmt = mgr.makeParsedStmt(STMT_GROUP, "getCatalogProdAtt",	catProdAtt1,null,null);
+		} else {
+			pstmt = mgr.makeParsedStmt(STMT_GROUP, "getCatalogProdAtt_PIP",	catProdAtt1,null,null);
+		}
+		// System.out.println("Statement: "+ pstmt.toString());
+		List catProdAttList = db.doSelect(pstmt, null, catProdAtt1);		
+
+		System.out.println("catProdAttList size: " + catProdAttList.size());
+				
+		List list = new ArrayList();
+
+		Product prodBuffer = null;
+		ProductAndCtgAttBean productAndCtgAttBuffer = null;
+		for (int k = 0; k < catProdAttList.size(); k++) {
+			productAndCtgAttBuffer = (ProductAndCtgAttBean) catProdAttList.get(k);
+			prodBuffer = productAndCtgAttBuffer.getProduct();
+			prodBuffer.setCtgProdAtt(productAndCtgAttBuffer.getCtgProdAtt());
+			list.add(prodBuffer);
+		}
+
+		assignCategoriesToProducts(list, stdCat.getProdCtgID(), null, locale, adbRegionToConnect);
+		org.apache.log4j.Category fLog = org.apache.log4j.Category
+				.getInstance(CatalogProdUtil.class);
+		if (bSortByCategories) {
+			fLog.debug("start sorting by category path");
+			// now do sort
+			Collections.sort(list, new Comparator() {
+				public int compare(Object o1, Object o2) {
+					String namePath1, namePath2;
+					namePath1 = namePath2 = "";
+					Product p1 = (Product) o1;
+					Product p2 = (Product) o2;
+					if (p1.getCategory() != null
+							&& p1.getCategory().getNamePath("default") != null) {
+						namePath1 = p1.getCategory().getNamePath("default");
+					}
+					if (p2.getCategory() != null
+							&& p2.getCategory().getNamePath("default") != null) {
+						namePath2 = p2.getCategory().getNamePath("default");
+					}
+					return namePath1.compareTo(namePath2);
+				}
+
+				public boolean equals(Object o) {
+					return equals(o);
+				}
+			});
+			fLog.debug("end sorting by category path");
+		}
+		
+		if (StrUtil.isEmpty(catalog.getProdFilterID())) {			
+			return list;
+		}
+
+		ProdFilterMgr pmgr = new ProdFilterMgr();
+		ProdFilter filter = pmgr.getFilter(catalog.getProdFilterID(), adbRegionToConnect);
+
+		removeCategoryFromProductByFilter(list, filter, adbRegionToConnect);
+		
+		return list;		
+	}//getProductListForStdCatalog
+	
+	
+	private static void getProductListForStdCatalog(String profileID, Catalog catalog, Catalog stdCat, String locale, ProductAndCtgAttBean catProdAtt1, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String queryId){
+		List productListData = new ArrayList();
+		
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt pstmt = null;
+		if (profileID == null) {
+			pstmt = mgr.makeParsedStmt(STMT_GROUP, "getCatalogProdAtt",	catProdAtt1,null,null);
+		} else {
+			pstmt = mgr.makeParsedStmt(STMT_GROUP, "getCatalogProdAtt_PIP",	catProdAtt1,null,null);
+		}
+		
+		JedisServerLayer jServerLayer = new JedisServerLayer();
+		jServerLayer.execute(stdCat.getId(), queryId, pstmt, recordOnHand, recordOnDemand, catProdAtt1, adbRegionToConnect,"SCAT",locale, stdCat.getProdCtgID(), catalog.getProdFilterID());			
+	}//getProductListForStdCatalog
+	
+
+	/*
+	 * This method is used to get the product list for standard catalog.
+	 */
+	public static JSONObject retrieveStdCatalogItems(String catalogId,String priceDescriptor, String profileID, String countryCode,String locale, List stdSearchInfo,String regionCode, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String sortBy, String sortOrder, String searchProdId) {
+		JSONObject productListData = new JSONObject();
+		String string2 = "";
+		/*
+		 * product-list for Catalog Product Offering need to be fetched from
+		 * CAT_ITEM_PRICE when profileID is null and from PROFILE_ITEM_PRICE
+		 * when profileID is not null
+		 */
+		if ("-1".equals(profileID) || StrUtil.isEmpty(profileID))
+			profileID = null;
+		if (StrUtil.isEmpty(priceDescriptor))
+			priceDescriptor = null;
+
+		StringBuilder whereClause = new StringBuilder();
+		whereClause.append(" cat_info.CAT_CATALOG_ID = '");
+		whereClause.append(catalogId + "' and ");
+		whereClause.append(stdSearchWhere);
+
+		// whereClause.append(countryCode + "' and ");
+
+		if (profileID == null) {
+			whereClause.append(stdSearchWhere1A);
+			if (priceDescriptor != null) {
+				System.out.println("priceDescriptor != null but = "
+						+ priceDescriptor);
+				whereClause.append("NVL('" + priceDescriptor + "', '0') and ");
+			} else {
+				whereClause.append("NVL(" + priceDescriptor + ", '0') and ");
+			}
+
+		} else {
+			whereClause
+					.append(" profile_item_price.pip_key(+) = cat_util.make_profile_item_price_key (NVL ('"
+							+ profileID
+							+ "', '0'), cat_item.cit_src_prod, cat_item.cit_context_id,"
+							+ " cat_item.cit_bundle_flag, ");
+			if (priceDescriptor == null) {
+				whereClause.append(" NVL (null, '0')) AND ");
+			} else {
+				whereClause.append(" NVL ('" + priceDescriptor
+						+ "', '0')) AND ");
+			}
+		}
+
+		whereClause.append(stdSearchWhere2);
+		makeStdCatSearchClause(stdSearchInfo, countryCode, whereClause,	profileID);
+		
+		//Pagination
+		String forSorting = null;
+		int start = recordOnHand + 1;
+		int end = recordOnHand + recordOnDemand;
+		string2 = whereClause.toString();
+			
+		if (searchProdId != null && searchProdId.length() > 0) {
+			forSorting = "PROD LIKE '" + searchProdId.toUpperCase() + "%'";
+		} else {
+			whereClause.append(" and rownum <="+ end);
+			
+			forSorting = "(b.ttt BETWEEN " + start + " AND " + end + ")";
+			if ((sortBy != null && sortBy.length() > 0)
+					&& (sortOrder != null && sortOrder.length() > 0)) {
+				forSorting += " order by " + sortBy + ' ' + sortOrder;
+			}
+		}
+		System.out.println("forSorting: " + forSorting);
+		System.out.println("where clause = " + whereClause);
+		
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		// we can't sort by category path using SQL
+		// we will do it later
+
+		boolean bSortByCategories = false;
+		boolean bSortByGaDateorEsDate = false;
+		
+		// Get the total count to be displayed in the gui --- New
+
+		CatalogMgr catalogMgr = new CatalogMgr();
+		Catalog stdCat = catalogMgr.getCatalogInfo(catalogId, adbRegionToConnect);
+
+		/**
+		 * Instead of passing the Product bean, we are passing a
+		 * ProductAndCtgAttBean. This bean combines the properties of both
+		 * Product and CtgProdAtt bean.
+		 **/
+
+		ProductAndCtgAttBean catProdAtt1 = new ProductAndCtgAttBean();
+		ProductAndCtgAttBean catProdAtt2 = new ProductAndCtgAttBean();
+		catProdAtt1.setCtgId(stdCat.getProdCtgID());
+		catProdAtt1.setCntryCode(countryCode);
+		catProdAtt1.setString1(whereClause.toString());
+		catProdAtt1.setcatalogID(catalogId);
+		
+		catProdAtt2.setCtgId(stdCat.getProdCtgID());
+		catProdAtt2.setCntryCode(countryCode);
+		catProdAtt2.setString1(string2);
+		catProdAtt2.setcatalogID(catalogId);
+		// Added for chianti - Vinod
+		if (profileID != ""){
+			catProdAtt1.setProfileId(profileID);
+			catProdAtt2.setProfileId(profileID);
+		}else{
+			catProdAtt1.setProfileId("");
+			catProdAtt2.setProfileId("");
+		}
+		if (priceDescriptor != ""){
+			catProdAtt1.setPriceDescriptor(priceDescriptor);
+			catProdAtt2.setPriceDescriptor(priceDescriptor);
+		}else{
+			catProdAtt1.setPriceDescriptor("");
+			catProdAtt2.setPriceDescriptor("");
+		}
+		// End
+		catProdAtt1.setRegionCode(regionCode);
+		catProdAtt2.setRegionCode(regionCode);
+		
+		//Pagination
+		catProdAtt1.setEnd(end);
+		catProdAtt1.setStart(start);
+		catProdAtt1.setSortBy(sortBy);
+		catProdAtt1.setSortOrder(sortOrder);
+		catProdAtt1.setSortByAndSortOrder(forSorting);
+		
+		catProdAtt2.setEnd(end);
+		catProdAtt2.setStart(start);
+		catProdAtt2.setSortBy(sortBy);
+		catProdAtt2.setSortOrder(sortOrder);
+		catProdAtt2.setSortByAndSortOrder(forSorting);
+		
+		DaxParsedStmt pstmt = null;
+		DaxParsedStmt pstmt1 = null;
+		if (profileID == null) {
+			pstmt = mgr.makeParsedStmt(STMT_GROUP, "getCatalogProdAtt",	catProdAtt1,null,null);
+			pstmt1 = mgr.makeParsedStmt("catalogProd",
+					"getTotalStdCatalogItemCount", catProdAtt2, null, null);
+		} else {
+			pstmt = mgr.makeParsedStmt(STMT_GROUP, "getCatalogProdAtt_PIP",
+					catProdAtt1,null,null);
+			pstmt1 = mgr.makeParsedStmt("catalogProd",
+					"getTotalStdCatalogItemCount_PIP", catProdAtt2, null, null);
+		}
+		// System.out.println("Statement: "+ pstmt.toString());
+		List catProdAttList = db.doSelect(pstmt, null, catProdAtt1);
+
+		List results = db.doSelect(pstmt1, null, catProdAtt2);
+
+		System.out.println("catProdAttList size: " + catProdAttList.size());
+		System.out.println("results list size: "
+				+ ((results != null) ? results.size() : 0));
+		ProductAndCtgAttBean prod = null;
+		long totalCnt = 0L;
+
+		if (results.size() > 0) {
+			prod = (ProductAndCtgAttBean) results.get(0);
+			totalCnt = Long.parseLong(prod.getTotalCount());
+			productListData.put("recordCount", totalCnt);
+			System.out.println("total size: " + totalCnt);
+		}
+
+		List list = new ArrayList();
+
+		Product prodBuffer = null;
+		ProductAndCtgAttBean productAndCtgAttBuffer = null;
+		for (int k = 0; k < catProdAttList.size(); k++) {
+			productAndCtgAttBuffer = (ProductAndCtgAttBean) catProdAttList
+					.get(k);
+			prodBuffer = productAndCtgAttBuffer.getProduct();
+			prodBuffer.setCtgProdAtt(productAndCtgAttBuffer.getCtgProdAtt());
+			list.add(prodBuffer);
+		}
+
+		assignCategoriesToProducts(list, stdCat.getProdCtgID(), null, locale, adbRegionToConnect);
+		org.apache.log4j.Category fLog = org.apache.log4j.Category
+				.getInstance(CatalogProdUtil.class);
+		if (bSortByCategories) {
+			fLog.debug("start sorting by category path");
+			// now do sort
+			Collections.sort(list, new Comparator() {
+				public int compare(Object o1, Object o2) {
+					String namePath1, namePath2;
+					namePath1 = namePath2 = "";
+					Product p1 = (Product) o1;
+					Product p2 = (Product) o2;
+					if (p1.getCategory() != null
+							&& p1.getCategory().getNamePath("default") != null) {
+						namePath1 = p1.getCategory().getNamePath("default");
+					}
+					if (p2.getCategory() != null
+							&& p2.getCategory().getNamePath("default") != null) {
+						namePath2 = p2.getCategory().getNamePath("default");
+					}
+					return namePath1.compareTo(namePath2);
+				}
+
+				public boolean equals(Object o) {
+					return equals(o);
+				}
+			});
+			fLog.debug("end sorting by category path");
+		}
+
+		
+
+		// This method has been commented out since we have combined it in the
+		// query with STMT-id = "getCatalogProdAtt"
+		// assignCtgProdAttToProducts(list, stdCat.getProdCtgID(), countryCode,
+		// sort,whereClause.toString());
+
+		CatalogMgr cmgr = new CatalogMgr();
+		Catalog sc = new Catalog();
+		sc.setCatalogType(Catalog.STD_CATLAOG);
+		sc.setId(catalogId);
+		Catalog catalog = cmgr.getCatalogInfo(sc, adbRegionToConnect);
+
+		if (StrUtil.isEmpty(catalog.getProdFilterID())) {
+			productListData.put("productList", list);
+			return productListData;
+		}
+
+		ProdFilterMgr pmgr = new ProdFilterMgr();
+		ProdFilter filter = pmgr.getFilter(catalog.getProdFilterID(), adbRegionToConnect);
+
+		removeCategoryFromProductByFilter(list, filter, adbRegionToConnect);
+		
+		productListData.put("productList", list);
+		return productListData;
+
+	}
+	/*
+	 * Method for retrieving GSA catalog items. GSA catalog items have twoy
+	 * additional fields than custom catalogs: mod number and promotion number
+	 */
+
+	public static List retrieveGSAMasterItem(Master catalog, String type,
+			String code, int searchScopeType, String pgmKey, String adbRegionToConnect) {
+		return retrieveGSAMasterItem(catalog, type, code, searchScopeType,
+				pgmKey, false, adbRegionToConnect);
+
+	}
+
+	/*
+	 * This method is used to get the GSA catalog items which will be used to
+	 * display in the master catalog list page and search in case of GSA
+	 * catalog.
+	 */
+	public static List retrieveGSAMasterItem(Master catalog, String type,
+			String code, int searchScopeType, String pgmKey, boolean updateFlag, String adbRegionToConnect) {
+
+		StringBuffer whereClause = new StringBuffer();
+		whereClause.append(" info.CAT_CATALOG_ID = '");
+		whereClause.append(catalog.getID() + "' and ");
+		if (updateFlag) {
+			whereClause
+					.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and item.cit_delete_flag = 'N' and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+		} else {
+			whereClause
+					.append("item.CAT_CATALOG_ID = info.CAT_CATALOG_ID and pd.CAT_CATALOG_ID = item.CAT_CATALOG_ID and opt.cat_item_key = item.cit_item_key and ");
+
+			/* Join with GSA_GPSY_DEAL for mod number and promotion number */
+		}
+		whereClause.append(" gsa.PROD = opt.COP_LOCALIZE_PROD and ");
+		/*
+		 * GSA Purple code changes - Raghavendra
+		 * 
+		 * Added these 2 conditionas in GSA Purple project GSA_GPSY_DEAL table
+		 * is no more used. It is being replaced by GSA_STG_CATALOG and these
+		 * are the extra join conditions
+		 */
+		whereClause.append(" gsa.contract_id = prc.cip_price_src_id AND");
+		whereClause.append(" gsa.validation_status = 10 AND ");
+		/* GSA Purple code changes END */
+
+		String where = makeSearchClause(type, code, searchScopeType, pgmKey);
+		whereClause.append(where);
+		whereClause.append(customSearchWhere1);
+		// whereClause.append("'" + catalog.getPriceDescriptor() + "'");
+		whereClause.append(customSearchWhere3);
+		System.out.println("where clause is " + whereClause.toString());
+		Product catProd = new Product();
+		catProd.setString1(whereClause.toString());
+		List l = getGSAProducts(catProd, adbRegionToConnect);
+		// assignCategoriesToProducts(l,catalog.getProdCtgID() );
+		return l;
+	}
+	
+	private static void getProducts(Product catProd, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String queryId ) {
+		CatProdDaxDataCollector ddc = CatProdDaxDataCollector
+				.getCatProdDaxDataCollector();
+		String catalogId = catProd.getCatalogID();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		// code added for DAX optimization
+	/*	String priceMergeId = null;
+		priceMergeId = PriceTierUtil.getPriceMergeId(catalogId, adbRegionToConnect);
+		catProd.setPriceMergeId(priceMergeId);*/
+
+		// end of optimization code
+		
+		DaxParsedStmt pstmt = null;
+		if (catProd.getCatalogType() == 3) {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt("catalogProd",
+						"childCatalogSearchAP", catProd, null, null);			
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"childCatalogSearchAP", catProd, null, null);					
+						
+					} else {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"childCatalogSearch", catProd, null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt("catalogProd",
+							"childCatalogSearch", catProd, null, null);					
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt("catalogProd", "childCatalogSearch",
+						catProd, null, null);
+			}
+		}
+
+		else {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt("catalogProd",
+						"customCatalogSearchAP", catProd, null, null);
+				
+				//queryId += "customCatalogSearchAP";
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"customCatalogSearchAP", catProd, null, null);
+						
+					} else {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"customCatalogSearch", catProd,  null, null);
+						
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt("catalogProd",
+							"customCatalogSearch", catProd,  null, null);
+					
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt("catalogProd",
+						"customCatalogSearch", catProd,  null, null);
+			}
+		}
+
+		pstmt.setFetchSize(5000);
+		
+		/* -----Rediss implementation-------- */
+		JedisServerLayer jServerLayer = new JedisServerLayer();
+		jServerLayer.execute(catalogId, queryId, pstmt, recordOnHand, recordOnDemand, catProd, ddc, adbRegionToConnect, "MCAT");
+		
+		/* -----Rediss implementation-------- */
+
+		/*JSONObject jsonObject = null;
+		CatProdDataCollector prodDataCollector = new CatProdDataCollector();
+		for(int i=0; i<list.size(); i++){
+			jsonObject = (JSONObject)list.get(i);			
+			
+			prodDataCollector.addBean(jsonObject);			
+		}//j
+		List productList =  prodDataCollector.getDataList();
+		
+		JSONArray returnJsonArray  = new JSONArray();
+		returnJsonArray.addAll(productList);
+		
+		return returnJsonArray;*/
+	}
+	
+
+	private static JSONArray getProducts(Product catProd, String adbRegionToConnect) {
+		CatProdDaxDataCollector ddc = CatProdDaxDataCollector
+				.getCatProdDaxDataCollector();
+		String catalogId = catProd.getCatalogID();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		// code added for DAX optimization
+		/*String priceMergeId = null;
+		priceMergeId = PriceTierUtil.getPriceMergeId(catalogId, adbRegionToConnect);
+
+		catProd.setPriceMergeId(priceMergeId);*/
+
+		// end of optimization code
+
+		DaxParsedStmt pstmt = null;
+		if (catProd.getCatalogType() == 3) {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt("catalogProd",
+						"childCatalogSearchAP", catProd, null, null);
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"childCatalogSearchAP", catProd, null, null);
+					} else {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"childCatalogSearch", catProd, null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt("catalogProd",
+							"childCatalogSearch", catProd, null, null);
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt("catalogProd", "childCatalogSearch",
+						catProd, null, null);
+			}
+		}
+
+		else {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt("catalogProd",
+						"customCatalogSearchAP", catProd, null, null);
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"customCatalogSearchAP", catProd, null, null);
+					} else {
+						pstmt = mgr.makeParsedStmt("catalogProd",
+								"customCatalogSearch", catProd,  null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt("catalogProd",
+							"customCatalogSearch", catProd,  null, null);
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt("catalogProd",
+						"customCatalogSearch", catProd,  null, null);
+			}
+		}
+		
+		System.out.println("Query <======>"+ pstmt.toString());
+		
+		pstmt.setFetchSize(5000);
+		long startTime = System.currentTimeMillis();
+		JSONArray list = db.doSelectJson(pstmt, null, catProd, ddc);
+		System.out.println("Time taken to fetch product list from DB: " + (System.currentTimeMillis() - startTime) + "msec");
+
+		long startTime1 = System.currentTimeMillis();
+		JSONObject jsonObject = null;
+		CatProdDataCollector prodDataCollector = new CatProdDataCollector();
+		for(int i=0; i<list.size(); i++){
+			jsonObject = (JSONObject)list.get(i);			
+			
+			prodDataCollector.addBean(jsonObject);			
+		}//j
+		List productList =  prodDataCollector.getDataList();
+		System.out.println("Time taken to remove duplicate logic: " + (System.currentTimeMillis() - startTime1) + "msec");
+		JSONArray returnJsonArray  = new JSONArray();
+		returnJsonArray.addAll(productList);
+		
+		return returnJsonArray;
+	}
+
+	
+	// Quick view- Sumit
+	private static JSONArray getProductsUsingView(Product catProd, String styleId, String adbRegionToConnect) {
+		
+		System.out.println("CatalogProdUtil.getProductsUsingView(): getting parameter styleId ="+styleId);
+		String groupId ="catalogProd";
+		
+		
+			groupId ="catalogProd";
+			System.out.println("getProductsUsingView(): groupId is set to ="
+					+ groupId);
+		
+		CatProdDaxDataCollector ddc = CatProdDaxDataCollector
+				.getCatProdDaxDataCollector();
+		String catalogId = catProd.getCatalogID();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		// code added for DAX optimization
+		String priceMergeId = null;
+		priceMergeId = PriceTierUtil.getPriceMergeId(catalogId, adbRegionToConnect);
+
+		catProd.setPriceMergeId(priceMergeId);
+
+		// end of optimization code
+
+		// System.out.println ( "Before makeParsedStmt **** "
+		// +catProd.getCatalogType()+"\n\n\n\n");
+		System.out.println("Using groupId = " + groupId + " to make DAX calls");
+		System.out.println("childCatalogSearchAP query change!");
+		DaxParsedStmt pstmt = null;
+		if (catProd.getCatalogType() == 3) {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt(groupId, "childCatalogSearchAP",
+						catProd, null, null);
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"childCatalogSearchAP", catProd, null, null);
+					} else {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"childCatalogSearch", catProd, null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt(groupId,
+							"childCatalogSearch", catProd, null, null);
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt(groupId, "childCatalogSearch",
+						catProd, null, null);
+			}
+		}
+
+		else {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt(groupId,
+						"customCatalogSearchAP", catProd, null, null);
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"customCatalogSearchAP", catProd, null, null);
+					} else {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"customCatalogSearch", catProd, null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt(groupId,
+							"customCatalogSearch", catProd, null, null);
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt(groupId,
+						"customCatalogSearch", catProd, null, null);
+			}
+		}
+
+			// System.out.println("Statement: " + pstmt.toString ());
+		pstmt.setFetchSize(5000);
+		JSONArray list = db.doSelectJson(pstmt, null, catProd, ddc);
+
+		System.out.println("Query result size " + list.size());
+		
+		JSONObject jsonObject = null;
+		CatProdDataCollector prodDataCollector = new CatProdDataCollector();
+		for(int i=0; i<list.size(); i++){
+			jsonObject = (JSONObject)list.get(i);			
+			
+			prodDataCollector.addBean(jsonObject);			
+		}//j
+		List productList =  prodDataCollector.getDataList();
+		
+		JSONArray returnJsonArray  = new JSONArray();
+		returnJsonArray.addAll(productList);
+				
+		return returnJsonArray;
+	}
+
+	
+	private static void getProductsUsingView(Product catProd, String adbRegionToConnect, int recordOnHand, int recordOnDemand, String queryId) {
+		
+		String groupId ="catalogProd";
+			
+		System.out.println("getProductsUsingView(): groupId is set to ="+ groupId);
+		
+		CatProdDaxDataCollector ddc = CatProdDaxDataCollector.getCatProdDaxDataCollector();
+		String catalogId = catProd.getCatalogID();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		// code added for DAX optimization
+		/*String priceMergeId = null;
+		long startTime = System.currentTimeMillis();
+		priceMergeId = PriceTierUtil.getPriceMergeId(catalogId, adbRegionToConnect);
+		System.out.println("Time taken to retrieve price MergeId: "+ (System.currentTimeMillis() - startTime) + "msec");
+		catProd.setPriceMergeId(priceMergeId);*/
+
+		// end of optimization code
+
+		// System.out.println ( "Before makeParsedStmt **** "
+		// +catProd.getCatalogType()+"\n\n\n\n");
+		System.out.println("Using groupId = " + groupId + " to make DAX calls");
+		System.out.println("childCatalogSearchAP query change!");
+		DaxParsedStmt pstmt = null;
+		if (catProd.getCatalogType() == 3) {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt(groupId, "childCatalogSearchAP",
+						catProd, null, null);
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"childCatalogSearchAP", catProd, null, null);
+					} else {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"childCatalogSearch", catProd, null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt(groupId,
+							"childCatalogSearch", catProd, null, null);
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt(groupId, "childCatalogSearch",
+						catProd, null, null);
+			}
+		}
+
+		else {
+
+			if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("AP")) {
+				pstmt = mgr.makeParsedStmt(groupId,
+						"customCatalogSearchAP", catProd, null, null);
+			} else if (catProd.getRegionCode() != null
+					&& catProd.getRegionCode().equals("GL")) {
+				if (catProd.getCntryCode() != null) {
+					String catRegCode = MasterWebUtil.getRegionCode(catProd
+							.getCntryCode(), adbRegionToConnect);
+					if ("AP".equals(catRegCode)) {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"customCatalogSearchAP", catProd, null, null);
+					} else {
+						pstmt = mgr.makeParsedStmt(groupId,
+								"customCatalogSearch", catProd, null, null);
+					}
+
+				} else {
+					pstmt = mgr.makeParsedStmt(groupId,
+							"customCatalogSearch", catProd, null, null);
+				}
+			} else {
+				pstmt = mgr.makeParsedStmt(groupId,
+						"customCatalogSearch", catProd, null, null);
+			}
+		}
+
+			// System.out.println("Statement: " + pstmt.toString ());
+		pstmt.setFetchSize(5000);
+		/* -----Rediss implementation-------- */
+		JedisServerLayer jServerLayer = new JedisServerLayer();
+		jServerLayer.execute(catalogId, queryId, pstmt, recordOnHand, recordOnDemand, catProd, ddc, adbRegionToConnect,"CAT");		
+		/* -----Rediss implementation-------- */
+		
+		/*long startTime1 = System.currentTimeMillis();
+		JSONArray list = db.doSelectJson(pstmt, null, catProd, ddc);
+		System.out.println("Time taken to retrieve products: "+ (System.currentTimeMillis() - startTime1) + "msec");
+		System.out.println("Query result size " + list.size());
+		
+		long startTime2 = System.currentTimeMillis();
+		JSONObject jsonObject = null;
+		CatProdDataCollector prodDataCollector = new CatProdDataCollector();
+		for(int i=0; i<list.size(); i++){
+			jsonObject = (JSONObject)list.get(i);			
+			
+			prodDataCollector.addBean(jsonObject);			
+		}//j
+		List productList =  prodDataCollector.getDataList();
+		
+		JSONArray returnJsonArray  = new JSONArray();
+		returnJsonArray.addAll(productList);
+		System.out.println("Time taken to remove duplicate products: "+ (System.currentTimeMillis() - startTime2) + "msec");*/
+
+	}
+
+
+	private static JSONArray getProductsForFedCust(Product catProd, String adbRegionToConnect) {
+		CatProdDaxDataCollector ddc = CatProdDaxDataCollector
+				.getCatProdDaxDataCollector();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		System.out.println("Before makeParsedStmt **** "
+				+ catProd.getCatalogType() + "\n\n\n\n");
+		DaxParsedStmt pstmt = null;
+
+		pstmt = mgr.makeParsedStmt("catalogProd", "fedCustomCatalogSearch",
+				catProd, null, null);
+		JSONArray list = db.doSelectJson(pstmt, null, catProd, ddc);
+		System.out.println("Query result size " + list.size());
+
+		/*if (list != null) {
+			// Fill the options
+			Iterator i = list.iterator();
+			Product p = null;
+
+			while (i.hasNext()) {
+				p = (Product) i.next();
+				String[] optArray = p.getOptionsList();
+				String options = StrUtil.joinEndFree(optArray, ",");
+				p.setOptions(options);
+			}
+		}
+
+		// Get the total count to be displayed in the gui --- New
+		DaxParsedStmt pstmt1 = mgr.makeParsedStmt("catalogProd",
+				"getTotalCatItemCountFedCust", catProd, null, null);
+		List results = db.doSelectJson(pstmt1, null, catProd);
+		Product prod = null;
+		long totalCnt = 0L;
+		if (results.size() > 0) {
+			prod = (Product) results.get(0);
+			totalCnt = Long.parseLong(prod.getTotalCount());
+		}*/
+		return list;
+	}
+
+	/*
+	 * Method for retrieving GSA catalog products. GSA catalog items have two
+	 * additional fields than custom catalogs: mod number and promotion number
+	 */
+	private static List getGSAProducts(Product catProd, String adbRegionToConnect) {
+		CatProdDaxDataCollector ddc = CatProdDaxDataCollector
+				.getCatProdDaxDataCollector();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		System.out.println("Before makeParsedStmt **** ");
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("catalogProd",
+				"gsaCatalogSearch", catProd, null,null);
+		List list = db.doSelect(pstmt, null, catProd, ddc);
+		if (list != null) {
+			// Fill the options
+			Iterator i = list.iterator();
+			Product p = null;
+
+			while (i.hasNext()) {
+				p = (Product) i.next();
+				String[] optArray = p.getOptionsList();
+				String options = StrUtil.joinEndFree(optArray, ",");
+				p.setOptions(options);
+			}
+		}
+		// Get the total count to be displayed in the gui --- New
+		DaxParsedStmt pstmt1 = mgr.makeParsedStmt("catalogProd",
+				"getGSATotalCatItemCount", catProd, null, null);
+		List results = db.doSelect(pstmt1, null, catProd);
+		Product prod = null;
+		long totalCnt = 0L;
+		if (results.size() > 0) {
+			prod = (Product) results.get(0);
+			totalCnt = Long.parseLong(prod.getTotalCount());
+		}
+		return list;
+	}
+
+	public static void assignCtgProdAttToProducts(List products, String ctgId,
+			String countryCode, String adbRegionToConnect) {
+
+		// CategorizationMgr ctgMgr = new CategorizationMgr("CatProdMgr");
+		if (ctgId != null) {
+			Categorization ctg = CategorizationMgr.getCategorization(Integer
+					.parseInt(ctgId), adbRegionToConnect);
+
+			Product p = new Product();
+
+			Iterator itr = products.iterator();
+			List prodList = new ArrayList();
+			while (itr.hasNext()) {
+				prodList.add(((Product) itr.next()).getProdId());
+			}
+			String[] prodArr = StrUtil.listToStrArray(prodList);
+
+			p.setProdIdInList(prodArr);
+
+			p.setCtgId(new Integer(ctgId));
+
+			p.setCntryCode(countryCode);
+
+			DaxMgr mgr = DaxMgr.getInstance();
+			DaxParsedStmt pstmt = null;
+
+			pstmt = mgr.makeParsedStmt("catalogProd", "getCatProdAtt", p, null,
+					null);
+			DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+			List result = db.doSelect(pstmt, CtgProdAtt.class, p);
+
+			HashMap ret = new HashMap();
+			CtgProdAtt ctgAtt;
+			for (int i = 0; i < result.size(); i++) {
+				ctgAtt = (CtgProdAtt) result.get(i);
+				ret.put(ctgAtt.getProdId(), ctgAtt);
+			}
+
+			Iterator it = products.iterator();
+			while (it.hasNext()) {
+				p = (Product) it.next();
+				p.setCtgProdAtt((CtgProdAtt) ret.get(p.getProdId()));
+			}
+		}
+	}
+
+	private static void assignCategoriesToProducts(List products, String ctgId, String adbRegionToConnect) {
+		// CategorizationMgr ctgMgr = new CategorizationMgr("GUI");
+		if (ctgId != null) {
+			Categorization ctg = CategorizationMgr.getCategorization(Integer
+					.parseInt(ctgId), adbRegionToConnect);
+			SearchMgr searchM = new SearchMgr(ctg,
+					SearchMgr.PRODSET_CATALOG_PRODUCTS);
+			searchM.attachCategoriesToProducts(products, true, adbRegionToConnect);
+		}
+	}
+
+	public static void assignCategoriesToProducts(List products, String ctgId,
+			String nodeId, String locale, String adbRegionToConnect) {
+		// CategorizationMgr ctgMgr = new CategorizationMgr("GUI");
+		System.out.println("locale IS " + locale);
+		if (ctgId != null) {
+			Categorization ctg = CategorizationMgr.getCategorization(Integer
+					.parseInt(ctgId), adbRegionToConnect);
+			SearchMgr searchM = new SearchMgr(ctg,
+					SearchMgr.PRODSET_CATALOG_PRODUCTS);
+			searchM.attachCategoriesToProducts(products, locale, nodeId, true, adbRegionToConnect);
+		}
+	}
+
+	private static void makeStdCatSearchClause(List stdSearchInfo,
+			String countryCode, StringBuilder whereClause, String profileID) {
+		Iterator i = stdSearchInfo.iterator();
+		StdCatSearchInfo s = null;
+		String dbAttr = null;
+		String searchAttr = null;
+		String searchVal = null;
+		String searchTo = null;
+		String searchFrom = null;
+		while (i.hasNext()) {
+			s = (StdCatSearchInfo) i.next();
+
+			dbAttr = s.getDbAttribute();
+			searchAttr = s.getSearchAttr();
+			if (searchAttr.equals(ProductFields.EOL)
+					|| searchAttr.equals(ProductFields.DISCONTINUE_DATE)) {
+
+				if (dbAttr == null) {
+					
+					dbAttr = getDbAttr(searchAttr, profileID);
+
+				}
+				if (s.getValueType().equals("EQUAL")) {
+					searchVal = s.getSearchValue();
+					searchVal = DBUtil.escapeSQLFieldForBiz(searchVal);
+					if (searchVal != null && dbAttr != null) {
+						whereClause.append(stdSearchWhere3).append(
+								"'" + countryCode + "'");
+						whereClause.append("and (" + dbAttr + " LIKE '%")
+								.append(searchVal).append("%)'");
+
+					}
+
+				} else if (s.getValueType().equals("RANGE")) {
+					searchFrom = s.getValueFrom();
+					searchTo = s.getValueTo();
+					if (dbAttr != null) {
+						if ((searchFrom != null) && (searchTo == null)) {
+							whereClause.append(stdSearchWhere3).append(
+									"'" + countryCode + "'");
+							whereClause.append(" and " + dbAttr + "> '"
+									+ searchFrom + "')");
+						} else if ((searchFrom == null) && (searchTo != null)) {
+							whereClause.append(stdSearchWhere3).append(
+									"'" + countryCode + "'");
+							whereClause.append(" and " + dbAttr + " < '"
+									+ searchTo + "')");
+						} else if ((searchFrom != null) && (searchTo != null)) {
+							whereClause.append(stdSearchWhere3).append(
+									"'" + countryCode + "'");
+							whereClause.append(" and " + dbAttr + " BETWEEN '"
+									+ searchFrom + "' AND '" + searchTo + "')");
+						}
+					}
+				}
+			} else {
+				if (dbAttr == null) {
+					/*
+					 * fix for HPeZilla Bug 55063 - Raghavendra
+					 */
+					dbAttr = getDbAttr(searchAttr, profileID);
+
+				}
+				if (s.getValueType().equals("EQUAL")) {
+					searchVal = s.getSearchValue();
+					searchVal = DBUtil.escapeSQLFieldForBiz(searchVal);
+					if (searchVal != null && dbAttr != null) {
+						whereClause.append(" and (" + dbAttr + " LIKE '%")
+								.append(searchVal).append("%')");
+						/*
+						 * whereClause.append (
+						 * " or Cat_item_options.cop_localize_prod " +
+						 * " LIKE '%" ).append ( searchVal ). append ( "%')" );
+						 */
+					}
+
+				} else if (s.getValueType().equals("RANGE")) {
+					searchFrom = s.getValueFrom();
+					searchTo = s.getValueTo();
+					if (dbAttr != null) {
+						if ((searchFrom != null) && (searchTo == null)) {
+							whereClause.append(" and " + dbAttr + "> '"
+									+ searchFrom + "'");
+						} else if ((searchFrom == null) && (searchTo != null)) {
+							whereClause.append(" and " + dbAttr + " < '"
+									+ searchTo + "'");
+						} else if ((searchFrom != null) && (searchTo != null)) {
+							whereClause.append(" and " + dbAttr + " BETWEEN '"
+									+ searchFrom + "' AND '" + searchTo + "'");
+						}
+					}
+				}
+
+			}
+		}
+
+	}
+
+	private static String getDbAttr(String searchAttr, String profileID) {
+		if (searchAttr != null) {
+			if (searchAttr.equals(ProductFields.EOL)) {
+				return ProductFields.EOL_DB_ATTR;
+			}
+
+			else if (searchAttr.equals(ProductFields.LAST_MODIFIED_DATE)) {
+				return ProductFields.LAST_MOD_DB_ATTR;
+			}
+
+			else if (searchAttr.equals(ProductFields.NET_PRICE)) {
+				/*
+				 * fix for HPeZilla Bug 55063 - Raghavendra
+				 */
+				return StrUtil.isEmpty(profileID) ? ProductFields.NET_PRICE_DB_ATTR
+						: ProductFields.NET_PRICE_DB_ATTR_PIP;
+
+			} else if (searchAttr.equals(ProductFields.DISCONTINUE_DATE)) {
+				return ProductFields.DISCONTINUE_DATE_DB_ATTR;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+
+	}
+
+	private static void removeCategoryFromProductByFilter(List prodList,
+			ProdFilter filter, String adbRegionToConnect) {
+		if (prodList != null) {
+			
+			for (int i = 0; i < prodList.size(); i++) {
+				Product prod = (Product) prodList.get(i);
+
+				List categoryList = prod.getCategoriesList();
+				if (categoryList != null && categoryList.size() > 1) {
+					int len = categoryList.size();
+					ArrayList removeList = new ArrayList();
+					for (int j = 0; j < len; j++) {
+						Category node = (Category) categoryList.get(j);
+						if (node != null) {
+							String[] nodePath = new String[node.getNodeLevel()
+									.intValue()];
+
+							int idx = 0;
+							for (int k = 0; k < nodePath.length; k++) {
+								int newIdx = node.getNodePath().indexOf("^",
+										idx);
+								nodePath[k] = node.getNodePath().substring(0,
+										newIdx + 1);
+								idx = newIdx + 1;
+							} // for (int k=0;k<nodePath.length;k++)
+
+							if (filter
+									.getProdParentStateFromNodePaths(nodePath, adbRegionToConnect) == ProdFilter.STATE_EXCLUDE) {
+								removeList.add(new Integer(j));
+							}
+						}
+					} // for (int j=0;j<categoryList.size();j++)
+
+					if (removeList.size() > 0 && removeList.size() < len) {
+						Iterator it = removeList.iterator();
+						while (it.hasNext()) {
+							categoryList.remove(((Integer) it.next())
+									.intValue());
+						}
+					} // if (removeList.size()>0 && removeList.size()<len)
+				} // if (categoryList != null)
+			}
+		}
+	}
+
+	/*
+	 * This method is used by the catalog and master product mgr classesto form
+	 * the search clause.
+	 */
+	private static String makeSearchClause(String type, String code,
+			int scopeSearchType, String pgmKey) {
+		boolean noSupport = false;
+		String whereClause;
+		StringBuffer sb = new StringBuffer();
+		int pgmKeyInt = -1;
+		if (!StrUtil.isEmpty(pgmKey)) {
+			Integer Int = Integer.valueOf(pgmKey);
+			pgmKeyInt = Int.intValue();
+
+		}
+		if (pgmKeyInt > -1) {
+			sb.append("item.CIT_PGM_KEY=").append(pgmKey + " and ");
+		}
+
+		if ("BASEPROD".equals(Product.GROUP_TYPE_OF_BASEPROD)) {
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				sb.append("UPPER(opt.COP_LOCALIZE_PROD) like '");
+				sb.append(upperCode);
+				sb.append("%' and ");
+			}
+
+		} else if (type.equals(Product.GROUP_TYPE_OF_MODEL)) {
+
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				sb.append("exists (select 'x' from PRICING_HIERARCHY hier, PHD_INFO phd WHERE hier.region_code = info.CAT_REGION_CODE AND hier.hierarchy_code =  phd.hierarchy_cd AND phd.prod = opt.COP_LOCALIZE_PROD and ");
+				sb.append("upper(phd.prod_model) like '%" + upperCode
+						+ "%') and ");
+			}
+
+		} else if (type.equals(Product.GROUP_TYPE_OF_PF)) {
+			// this.setSearchField(ProductFields.PFSM, code+"%");
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				sb.append("exists (select 'x' from PRICING_HIERARCHY hier, PHD_INFO phd WHERE hier.region_code = info.CAT_REGION_CODE AND hier.hierarchy_code =  phd.hierarchy_cd AND phd.prod = opt.COP_LOCALIZE_PROD and ");
+				sb.append("upper(phd.prod_family) like '%" + upperCode
+						+ "%') and ");
+			}
+
+		} else if (type.equals(Product.GROUP_TYPE_OF_PL)) {
+			// this.setSearchField(ProductFields.PRODUCT_LINE, code+"%");
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				sb.append("upper(prod.pl) LIKE  '").append(
+						upperCode + "%' and ");
+				// sb.append("and products.prod=cat_item.cit_src_prod");
+			}
+
+		} else if (type.equals(Product.GROUP_TYPE_OF_SERIES)) {
+
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				sb.append("exists (select 'x' from PRICING_HIERARCHY hier, PHD_INFO phd WHERE hier.region_code = info.CAT_REGION_CODE AND hier.hierarchy_code =  phd.hierarchy_cd AND phd.prod = opt.COP_LOCALIZE_PROD and ");
+				sb.append("upper(phd.prod_series) like '%" + upperCode
+						+ "%') and ");
+			}
+
+		} else if (type.equals(Product.GROUP_TYPE_OF_CONFIG_ID)) {
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				sb.append("upper(item.cit_config_id) LIKE  '%").append(
+						upperCode + "%' and ");
+			}
+
+		} else if (type.equals(Product.GROUP_TYPE_OF_SOURCE)) {
+			if (!StrUtil.isEmpty(code)) {
+				String upperCode = code.toUpperCase();
+				
+				sb.append("upper(item.cit_source) LIKE  '%").append(
+						upperCode + "%' and ");
+			}
+
+		} else {
+			noSupport = true;
+		}
+		if (!noSupport && scopeSearchType != 0) {
+
+			scopeStr = PagesUtil.getSearchScope(scopeSearchType);
+			if (scopeStr != null) {
+				// sb.append(" item.cit_contract_identifier = '"+scopeStr+"' and ");
+				if (scopeStr.equalsIgnoreCase("contract")) {
+					sb.append(" UPPER(item.cit_contract_identifier) = UPPER('"
+							+ scopeStr + "') and ");
+				} else {
+					sb.append(" item.cit_contract_identifier = '" + scopeStr
+							+ "' and ");
+				}
+			}
+		}
+
+		// setSearchField(ProductFields.EXCLUDE_FLAG, "'N'", super.EQUAL);
+		sb.append(" item.cit_exclude_flag = 'N'");
+		whereClause = sb.toString();
+		return whereClause;
+	}
+
+	public static void updateCatFilterItem(FilterSelItem items, String adbRegionToConnect) {
+
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt stmt = null;
+		stmt = mgr.makeParsedStmt(STMT_GROUP, CAT_FLTR_STMT, items, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		db.doSP(stmt, null, items);
+
+	}
+
+	public static void sortProductList(final String field, final String order,
+			List list) {
+
+		if (field.equalsIgnoreCase("status")) {
+
+			Collections.sort(list, new Comparator() {
+				public int compare(Object o1, Object o2) {
+					String status1, status2;
+					status1 = status2 = "";
+					Product p1, p2;
+					if (order.equalsIgnoreCase("d")) {
+						p1 = (Product) o1;
+						p2 = (Product) o2;
+					} else {
+						p1 = (Product) o2;
+						p2 = (Product) o1;
+					}
+					if (p1.getStatus() != null) {
+						status1 = p1.getStatus();
+					}
+					if (p2.getStatus() != null) {
+						status2 = p2.getStatus();
+					}
+					return status2.compareTo(status1);
+				}
+
+				public boolean equals(Object o) {
+					return equals(o);
+				}
+			});
+		} else {
+
+			Collections.sort(list, new Comparator() {
+				public int compare(Object o1, Object o2) {
+					Date date1, date2;
+					date1 = date2 = null;
+					Product p1, p2;
+					if (order.equalsIgnoreCase("d")) {
+						p1 = (Product) o1;
+						p2 = (Product) o2;
+					} else {
+						p1 = (Product) o2;
+						p2 = (Product) o1;
+					}
+
+					if (p2.getCtgProdAtt() == null) {
+						return p1.getCtgProdAtt() == null ? 0 : -1;
+					}
+					if (p1.getCtgProdAtt() == null) {
+						return 1;
+					}
+					if (field.equalsIgnoreCase("gaDate")) {
+						date1 = p1.getCtgProdAtt().getGaDate();
+						date2 = p2.getCtgProdAtt().getGaDate();
+
+					}
+					if (field.equalsIgnoreCase("esDate")) {
+
+						date1 = p1.getCtgProdAtt().getEsDate();
+						date2 = p2.getCtgProdAtt().getEsDate();
+					}
+					if (date2 == null) {
+						return date1 == null ? 0 : -1;
+					}
+					if (date1 == null) {
+						return 1;
+					}
+					return date2.compareTo(date1);
+
+				}
+
+				public boolean equals(Object o) {
+					return equals(o);
+				}
+			});
+		}
+	}
+		
+
+}//class

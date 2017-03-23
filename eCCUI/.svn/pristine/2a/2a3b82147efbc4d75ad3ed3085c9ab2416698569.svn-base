@@ -1,0 +1,523 @@
+package com.hp.ecc.ui.view.beans;
+
+import java.util.Date;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+
+/**
+ * <p>Title: ConfigLandingObj</p>
+ * <p>Description: Object/Bean for AddConfigLanding paeg. Contains get/set methods for object properties.</p>
+ * <p>Copyright: Copyright (c) 2005</p>
+ * <p>Company: Hewlett Packard</p>
+ * @author Rama Rao
+ * @version 1.0
+ */
+
+/************************************************************************************
+ * Change History: DATE CHANGED-BY COMMENTS
+ ***********************************************************************************/
+
+public class ManageConfigObj extends BizObject {
+
+	private String fConfigID;
+	private String fReplacedConfigID;
+	private String fReplacmentForID;
+	private String fDescription;
+	private Date fAffectivityDateFrom;
+	private Date fAffectivityDateTo;
+	private Date fCreateDateFrom;
+	private Date fCreateDateTo;
+	private String fLocalizedCountries;
+	private String fCatalog_id;
+	private String fSource;
+	private String fCountryCd;
+	private String fCountryName;
+	private String fRegionCode;
+	private Date fCreateDate;
+	private String fExistingConfig;
+	private String fExistingConfigIDs;
+	private String fContractIdentifier;
+	private String fConfigProd;
+	private String fConfigBaseProd;
+	private String fPriceDescriptor;
+	private boolean fFlag;
+	private String fCatalogType;
+	private String fCustKey;
+	private int fReturnCode;
+	private String fReturnMessage;
+	private String fKeepFlag;
+	private String fDisabledConfigID;
+	private String fBusinessRegion;
+	private String fProgramSegment;
+
+	public ManageConfigObj() {
+		super();
+	}
+
+	/**
+	 * Get ConfigID
+	 * 
+	 * @return String
+	 */
+	public String getConfigID() {
+		return this.fConfigID;
+	}
+
+	/**
+	 * Set configID
+	 * 
+	 * @param String
+	 */
+	public void setConfigID(String confId) {
+		this.fConfigID = confId;
+	}
+
+	/**
+	 * Get ReplacedConfigID
+	 * 
+	 * @return String
+	 */
+	public String getReplacedConfigID() {
+		return this.fReplacedConfigID;
+	}
+
+	/**
+	 * Set ReplacedconfigID
+	 * 
+	 * @param String
+	 */
+	public void setReplacedConfigID(String replacedConfId) {
+		this.fReplacedConfigID = replacedConfId;
+	}
+
+	/**
+	 * Get Description
+	 * 
+	 * @return String
+	 */
+	public String getDescription() {
+		return this.fDescription;
+	}
+
+	/**
+	 * Set Description
+	 * 
+	 * @param String
+	 */
+	public void setDescription(String desc) {
+		this.fDescription = desc;
+	}
+
+	/**
+	 * Get LocalizedCountries
+	 * 
+	 * @return String
+	 */
+	public String getLocalizedCountries() {
+		return this.fLocalizedCountries;
+	}
+
+	/**
+	 * Set LocalizedCountries
+	 * 
+	 * @param String
+	 */
+	public void setLocalizedCountries(String localizedCountries) {
+		this.fLocalizedCountries = localizedCountries;
+	}
+
+	/**
+	 * Get AffectivityDateFrom
+	 * 
+	 * @return String
+	 */
+	public Date getAffectivityDateFrom() {
+		return this.fAffectivityDateFrom;
+	}
+
+	/**
+	 * Set AffectivityDateFrom
+	 * 
+	 * @param String
+	 */
+	public void setAffectivityDateFrom(Date affectivityDateFrom) {
+		this.fAffectivityDateFrom = affectivityDateFrom;
+	}
+
+	/**
+	 * Get AffectivityDateTo
+	 * 
+	 * @return String
+	 */
+	public Date getAffectivityDateTo() {
+		return this.fAffectivityDateTo;
+	}
+
+	/**
+	 * Set AffectivityDateTo
+	 * 
+	 * @param String
+	 */
+	public void setAffectivityDateTo(Date affectivityDateTo) {
+		this.fAffectivityDateTo = affectivityDateTo;
+	}
+
+	/**
+	 * Get CreateDateFrom
+	 * 
+	 * @return String
+	 */
+	public Date getCreateDateFrom() {
+		return this.fCreateDateFrom;
+	}
+
+	/**
+	 * Set CreateDateFrom
+	 * 
+	 * @param String
+	 */
+	public void setCreateDateFrom(Date createDateFrom) {
+		this.fCreateDateFrom = createDateFrom;
+	}
+
+	/**
+	 * Get CreateDateTo
+	 * 
+	 * @return String
+	 */
+	public Date getCreateDateTo() {
+		return this.fCreateDateTo;
+	}
+
+	/**
+	 * Set CreateDateTo
+	 * 
+	 * @param String
+	 */
+	public void setCreateDateTo(Date createDateTo) {
+		this.fCreateDateTo = createDateTo;
+	}
+
+	/**
+	 * Get Catalog_id
+	 * 
+	 * @return String
+	 */
+	public String getCatalogID() {
+		return this.fCatalog_id;
+	}
+
+	/**
+	 * Set Catalog_id
+	 * 
+	 * @param String
+	 */
+	public void setCatalogID(String catalog_id) {
+		this.fCatalog_id = catalog_id;
+	}
+
+	/**
+	 * Get Source
+	 * 
+	 * @return String
+	 */
+	public String getSource() {
+		return this.fSource;
+	}
+
+	/**
+	 * Set Source
+	 * 
+	 * @param String
+	 */
+	public void setSource(String source) {
+		this.fSource = source;
+	}
+
+	/**
+	 * Get CountryCd
+	 * 
+	 * @return String
+	 */
+	public String getCountryCode() {
+		return this.fCountryCd;
+	}
+
+	/**
+	 * Set CountryCd
+	 * 
+	 * @param String
+	 */
+	public void setCountryCode(String countryCd) {
+		this.fCountryCd = countryCd;
+	}
+
+	/**
+	 * Get CountryName
+	 * 
+	 * @return String
+	 */
+	public String getCountryName() {
+		return this.fCountryName;
+	}
+
+	/**
+	 * Set CountryName
+	 * 
+	 * @param String
+	 */
+	public void setCountryName(String countryName) {
+		this.fCountryName = countryName;
+	}
+
+	/**
+	 * Get RegionCode
+	 * 
+	 * @return String
+	 */
+	public String getRegionCode() {
+		return this.fRegionCode;
+	}
+
+	/**
+	 * Set RegionCode
+	 * 
+	 * @param String
+	 */
+	public void setRegionCode(String regionCode) {
+		this.fRegionCode = regionCode;
+	}
+
+	/**
+	 * Get CreateDate
+	 */
+	public Date getCreateDate() {
+		return this.fCreateDate;
+	}
+
+	/**
+	 * Set CreateDate
+	 */
+	public void setCreateDate(Date createDate) {
+		this.fCreateDate = createDate;
+	}
+
+	/**
+	 * Get ExistingConfig
+	 */
+	public String getExistingConfig() {
+		return this.fExistingConfig;
+	}
+
+	/**
+	 * Set ExistingConfig
+	 */
+	public void setExistingConfig(String existingConfig) {
+		this.fExistingConfig = existingConfig;
+	}
+
+	/**
+	 * Get ContractIdentifier
+	 */
+	public String getContractIdentifier() {
+		return this.fContractIdentifier;
+	}
+
+	/**
+	 * Set ContractIdentifier
+	 */
+	public void setContractIdentifier(String contractIdentifier) {
+		this.fContractIdentifier = contractIdentifier;
+	}
+
+	/**
+	 * Get Flag
+	 */
+	public boolean getFlag() {
+		return this.fFlag;
+	}
+
+	/**
+	 * Set Flag
+	 */
+	public void setFlag(boolean flag) {
+		this.fFlag = flag;
+	}
+
+	/**
+	 * Get ReplacmentForID
+	 */
+	public String getReplacmentForID() {
+		return this.fReplacmentForID;
+	}
+
+	/**
+	 * Set ReplacmentForID
+	 */
+	public void setReplacmentForID(String replacmentForID) {
+		this.fReplacmentForID = replacmentForID;
+	}
+
+	/**
+	 * Get ExistingConfigIDs
+	 */
+	public String getExistingConfigIDs() {
+		return this.fExistingConfigIDs;
+	}
+
+	/**
+	 * Set ExistingConfigIDs
+	 */
+	public void setExistingConfigIDs(String existingConfigIDs) {
+		this.fExistingConfigIDs = existingConfigIDs;
+	}
+
+	/**
+	 * Get ConfigProd
+	 */
+	public String getConfigProd() {
+		return this.fConfigProd;
+	}
+
+	/**
+	 * Set ConfigProd
+	 */
+	public void setConfigProd(String configProd) {
+		this.fConfigProd = configProd;
+	}
+
+	/**
+	 * Get ConfigBaseProd
+	 */
+	public String getConfigBaseProd() {
+		return this.fConfigBaseProd;
+	}
+
+	/**
+	 * Set ConfigBaseProd
+	 */
+	public void setConfigBaseProd(String configBaseProd) {
+		this.fConfigBaseProd = configBaseProd;
+	}
+
+	/**
+	 * Get PriceDescriptor
+	 */
+	public String getPriceDescriptor() {
+		return this.fPriceDescriptor;
+	}
+
+	/**
+	 * Set PriceDescriptor
+	 */
+	public void setPriceDescriptor(String priceDescriptor) {
+		this.fPriceDescriptor = priceDescriptor;
+	}
+
+	/**
+	 * Get CatalogType
+	 */
+	public String getCatalogType() {
+		return this.fCatalogType;
+	}
+
+	/**
+	 * Set CatalogType
+	 */
+	public void setCatalogType(String catalogType) {
+		this.fCatalogType = catalogType;
+	}
+
+	/**
+	 * Get CustKey
+	 */
+	public String getCustKey() {
+		return this.fCustKey;
+	}
+
+	/**
+	 * Set CustKey
+	 */
+	public void setCustKey(String custKey) {
+		this.fCustKey = custKey;
+	}
+
+	/**
+	 * Get ReturnCode
+	 */
+	public int getReturnCode() {
+		return this.fReturnCode;
+	}
+
+	/**
+	 * Set ReturnCode
+	 */
+	public void setReturnCode(int returnCode) {
+		this.fReturnCode = returnCode;
+	}
+
+	/**
+	 * Get ReturnMessage
+	 */
+	public String getReturnMessage() {
+		return this.fReturnMessage;
+	}
+
+	/**
+	 * Set ReturnMessage
+	 */
+	public void setReturnMessage(String returnMessage) {
+		this.fReturnMessage = returnMessage;
+	}
+
+	/**
+	 * Get KeepFlag
+	 */
+	public String getKeepFlag() {
+		return this.fKeepFlag;
+	}
+
+	/**
+	 * Set KeepFlag
+	 */
+	public void setKeepFlag(String keepFlag) {
+		this.fKeepFlag = keepFlag;
+	}
+
+	/**
+	 * Get DisabledConfigID
+	 */
+	public String getDisabledConfigs() {
+		return this.fDisabledConfigID;
+	}
+
+	/**
+	 * Set KeepFlag
+	 */
+	public void setDisabledConfigs(String disabledConfigID) {
+		this.fDisabledConfigID = disabledConfigID;
+	}
+
+	/**
+	 * Get Segment
+	 */
+	public String getProgramSegment() {
+		return fProgramSegment;
+	}
+
+	public void setProgramSegment(String fProgramSegment) {
+		this.fProgramSegment = fProgramSegment;
+	}
+
+	/**
+	 * Get Business Region
+	 */
+	public String getBusinessRegion() {
+		return fBusinessRegion;
+	}
+
+	public void setBusinessRegion(String businessRegion) {
+		this.fBusinessRegion = businessRegion;
+	}
+
+}//class

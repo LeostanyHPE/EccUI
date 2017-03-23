@@ -1,0 +1,213 @@
+package com.hp.ecc.ui.view.controller;
+
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.view.beans.ViewCombinedOfferingBean;
+import com.hp.ecc.ui.view.beans.ViewPromotionsForm;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.processor.offer.PullPriceTierProductProcessor;
+import com.hp.ecc.ui.biz.processor.offer.ViewCombinedOfferingProcessor;
+import com.hp.ecc.ui.biz.processor.offer.ViewPromotionProcessor;
+
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.view.beans.PullPriceTierProductBean;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Controller
+public class OfferController {
+	
+	@Autowired
+	PullPriceTierProductProcessor pullPriceTierProductProcessor;
+	
+	@Autowired
+	ViewCombinedOfferingProcessor viewCombinedOfferingProcessor;
+	
+	@Autowired
+	ViewPromotionProcessor viewPromotionProcessor;
+	
+	@RequestMapping(value = "/offer/viewPriceTierProductOffering.htm", headers="Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String priceTierProductOffering(Locale locale, Model model, HttpServletRequest request) {
+		String masterCatalogId = request.getParameter("masterCatalogID");
+		PullPriceTierProductBean form = new PullPriceTierProductBean();
+		form.setMasterCatalogId(masterCatalogId);
+		
+		String task=request.getParameter("task");
+				
+		return pullPriceTierProductProcessor.processRetrieval(form, task, PagesUtil.getDbRegionToConnect(request),0,200,"","").toString();			
+	}//priceTierProductOffering
+	
+	
+	/**
+	 * This method is the action method for processing the request based on the task.
+	 * It first checks if the customer is set in session. If the customer is not set
+	 * in session then the request will be forwarded to select the customer.
+	 * In case the customer is already set then it gets the task to be performed
+	 * and accordingly handles the request. 
+	 */	
+	@RequestMapping(value = "/offer/pullPriceTierProductOffering.htm", headers="Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody String pullPriceTierProductOffering(Locale locale, Model model, HttpServletRequest request,@RequestParam(value="task",required=false) String task,
+			@RequestParam(value="masterCatalogID",required=false) String masterCatalogId,@RequestParam(value="form",required=false) String formJson,
+			@RequestParam(value="sortBy",required=false) String sortBy,@RequestParam(value="sortOrder",required=false) String sortOrder,@RequestParam(value="recordsOnHand",required=false) String recordsOnHands,
+			@RequestParam(value="recordsOnDemand",required=false) String recordsOnDemands,@RequestParam(value="products",required=false) String products) {			
+		JSONObject returnData = null;
+//		String SESSION_OFFER_MASTERCATALOG="OFFERMASTERCATALOG";
+//	    String SESSION_PULLPRICEPRODUCT_COUNT="PULLPRICETIERPRODUCTCOUNT";
+//		boolean isSameMasterCatalog=false;
+		PullPriceTierProductBean form = null;		
+		String loginUserID = PagesUtil.getLoginUserID ( request );
+		Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+		Customer cust = ses.getCurrentCustomer ( false );	
+				
+		//String task = request.getParameter ("task");
+		//String masterCatalogId = request.getParameter ("masterCatalogID");
+		//String sortBy="";
+		//String sortOrder="";
+		if( task==null || task.equals("pull")||task.equals("")){
+			form = new PullPriceTierProductBean();
+		}
+		else if( task.equals("search")){
+			//String formJson = request.getParameter("form");			
+			form = new Gson().fromJson(formJson, PullPriceTierProductBean.class);			
+		}
+		/*if(request.getParameter("sortBy") !=null){
+			
+			sortBy 	 = request.getParameter("sortBy");
+		}
+       if(request.getParameter("sortOrder") !=null){
+			
+    	   sortOrder 	 = request.getParameter("sortOrder");
+		}*/
+		form.setMasterCatalogId(masterCatalogId);
+		form.setCustType(cust.getCustType());
+		form.setCustSegment(cust.getCustSegment());
+		form.setGenisisCustomerFlag(cust.getGenesisCustomer());
+	    int recordOnHand=0;
+	    int recordOnDemand=200;
+	    
+		if ( task == null ||  "".equals(task) ||task == "" || "search".equals ( task ) ){
+			if(null !=recordsOnHands){
+			 recordOnHand = Integer.parseInt(recordsOnHands);}
+			if(null!=recordsOnDemands){         
+			 recordOnDemand = Integer.parseInt(recordsOnDemands);
+			}
+			returnData = pullPriceTierProductProcessor.processRetrieval(form, task, PagesUtil.getDbRegionToConnect(request),recordOnHand,recordOnDemand,sortBy,sortOrder);
+		    
+			returnData.put("recordOnDemand", recordOnDemand);
+			returnData.put("recordOnHand", recordOnHand);
+//			Object  sessionCatalogId= request.getSession().getAttribute(SESSION_OFFER_MASTERCATALOG);
+//			if(null!=sessionCatalogId && masterCatalogId.equals(sessionCatalogId))
+			//{
+//				isSameMasterCatalog=true;
+//			}
+			//else
+//			{
+//				isSameMasterCatalog=false;
+//			}
+//		  	if(isSameMasterCatalog)
+//		  	{
+//		  		Object totalRecords=request.getSession().getAttribute(SESSION_PULLPRICEPRODUCT_COUNT);
+//		  		if(null!=totalRecords)
+//		  		{
+//		  		int recordCount=(Integer) totalRecords;
+//		  		returnData.put("recordCount",recordCount);
+//		  		}
+//		  	}
+//		  	else
+//		  	{
+		  		int recordCount=pullPriceTierProductProcessor.getProductCount(form, task, PagesUtil.getDbRegionToConnect(request),recordOnHand,recordOnDemand,sortBy,sortOrder);
+		  		returnData.put("recordCount",recordCount);
+//		  		request.getSession().setAttribute(SESSION_PULLPRICEPRODUCT_COUNT, recordCount);
+//		  		request.getSession().setAttribute(SESSION_OFFER_MASTERCATALOG, masterCatalogId);
+//		  	}
+		  	
+		  //	returnData.put("recordCount", 100);
+		  	
+		}		
+		else if ( "pull".equals ( task )){
+			//String products = request.getParameter("products");
+			products = products.replace("[", "");
+			products = products.replace("]", "");
+				
+			ArrayList<String> prodList = new ArrayList<String>();
+			
+			StringTokenizer str = new StringTokenizer(products, ",");
+			while(str.hasMoreTokens()){
+				String str1 = str.nextToken();
+				str1 = str1.replace("\"", "");
+				prodList.add(str1);
+			}
+			String[] prodlist = prodList.toArray(new String[prodList.size()]);
+			
+			returnData = pullPriceTierProductProcessor.pullProducts(prodlist,form,loginUserID, PagesUtil.getDbRegionToConnect(request));
+		}					
+		
+		return returnData.toJSONString();
+	}//pullPriceTierProductOffering
+	
+	@RequestMapping(value = "/offer/viewCombinedOffering.htm", headers="Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String viewCombinedOffering(Locale locale, Model model,HttpServletRequest request) {
+		Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+		Customer cust = ses.getCurrentCustomer ( false );
+		
+		String masterCatalogId = request.getParameter("masterCatalogID");
+		String task = request.getParameter("task");
+		
+		ViewCombinedOfferingBean form = new ViewCombinedOfferingBean();
+		form.setMasterCatalogId(masterCatalogId);
+		form.setCustType(cust.getCustType());
+		form.setCustSegment(cust.getCustSegment());
+		form.setGenisisCustomerFlag(cust.getGenesisCustomer());
+								
+		return viewCombinedOfferingProcessor.processRetrival(form, task, PagesUtil.getDbRegionToConnect(request)).toString();			
+	}//viewCombinedOffering
+	
+	@RequestMapping(value = "/product/viewPromotions.htm",  headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String viewPromotions(Locale locale, Model model,	HttpServletRequest request) {
+		System.out.println("Inside viewPromotions service " + locale.toString());
+		Gson gson = new Gson();
+		JSONObject promotionData = new JSONObject();
+		String task  = request.getParameter( "task");
+	    String masterID = request.getParameter("masterID");
+	    String catalogID = request.getParameter("catalogID");
+	    String promoBundleID = request.getParameter("promoBundleID");
+	    String isChildCatalog = request.getParameter("isChildCatalog");
+	    String catalogName = request.getParameter("catalogName");
+	    String stdCatalogID = request.getParameter("stdCatId");
+	    
+	    Session session = SessionMgr.getSessionMgr ().getSession (request, false);
+	    
+	    ViewPromotionsForm form = new ViewPromotionsForm();
+	    form.setMasterID(masterID);
+	    form.setCatalogID(catalogID);
+	    form.setPromoBundleID(promoBundleID);
+	    form.setCatalogName(catalogName);	 
+	    if( isChildCatalog != null)
+	    	form.setIsChildCatalog(Boolean.parseBoolean(isChildCatalog));
+	    
+	    if ( task == null || task.equals ( "search" )) {
+	    	JSONArray pData = viewPromotionProcessor.getCatalogPromoBundles(masterID, promoBundleID, stdCatalogID, PagesUtil.getDbRegionToConnect(request));	
+	    	promotionData.put("PromoBundleList",pData);
+		}
+	    
+	    promotionData.put("formData", gson.toJson(form));
+	    	    
+	   return promotionData.toJSONString(); 		
+	}//viewPromotions
+
+}//class

@@ -1,0 +1,155 @@
+package com.hp.ecc.ui.biz.catalog;
+
+public class ProdListHolder {
+	
+	String[] productsArray;
+	
+	String priceTierID;
+	
+	String[] priceTierIDs;
+	
+	String[] priceDescriptor;
+	
+	String masterCatalogID;
+	
+	String lastModifiedBy;
+	
+	String[] catalogCountry;
+	
+	String message;
+	
+	String retCode;
+	
+	String whereClause;
+	// price tier price merge id
+	String[] priceMergeId;
+	
+	// master price merge id
+	String masterPriceMergeId;
+	
+	String string1;
+	String string2;
+
+	public String getString2() {
+		return string2;
+	}
+
+	public void setString2(String string2) {
+		this.string2 = string2;
+	}
+
+	String sortByAndSortOrder;
+		
+
+	public String getSortByAndSortOrder() {
+		return sortByAndSortOrder;
+	}
+
+	public void setSortByAndSortOrder(String sortByAndSortOrder) {
+		this.sortByAndSortOrder = sortByAndSortOrder;
+	}
+
+	public String getString1() {
+		return string1;
+	}
+
+	public void setString1(String string1) {
+		this.string1 = string1;
+	}
+
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
+	}
+
+	public String getMasterCatalogID() {
+		return masterCatalogID;
+	}
+	                                      
+	public void setMasterCatalogID(String masterCatalogID) {
+		this.masterCatalogID = masterCatalogID;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public String getPriceTierID() {
+		return priceTierID;
+	}
+
+	public void setPriceTierID(String priceTierID) {
+		this.priceTierID = priceTierID;
+	}
+	
+	public String[] getPriceTierIDs() {
+		return priceTierIDs;
+	}
+
+	public void setPriceTierIDs(String[] priceTierIDs) {
+		this.priceTierIDs = priceTierIDs;
+	}
+	
+	public String[] getPriceDescriptor() {
+		return priceDescriptor;
+	}
+
+	public void setPriceDescriptor(String[] priceDescriptor) {
+		this.priceDescriptor = priceDescriptor;
+	}
+
+	public String[] getProductsArray() {
+		return productsArray;
+	}
+
+	public void setProductsArray(String[] productsArray) {
+		this.productsArray = productsArray;
+	}
+
+	public String getRetCode() {
+		return retCode;
+	}
+
+	public void setRetCode(String retCode) {
+		this.retCode = retCode;
+	}
+
+	public String getWhereClause() {
+		return whereClause;
+	}
+
+	public void setWhereClause(String whereClause) {
+		this.whereClause = whereClause;
+	}
+
+	public String[] getCatalogCountry() {
+		return catalogCountry;
+	}
+
+	public void setCatalogCountry(String[] catalogCountry) {
+		this.catalogCountry = catalogCountry;
+	}
+	public String[] getPriceMergeId() {
+		return priceMergeId;
+	}
+
+	public void setPriceMergeId(String[] priceMergeId) {
+		this.priceMergeId = priceMergeId;
+	}
+
+	public String getMasterPriceMergeId() {
+		return masterPriceMergeId;
+	}
+
+	public void setMasterPriceMergeId(String masterPriceMergeId) {
+		this.masterPriceMergeId = masterPriceMergeId;
+	}	
+	
+}//class

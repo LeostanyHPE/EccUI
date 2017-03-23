@@ -1,0 +1,117 @@
+package com.hp.ecc.ui.biz.format;
+
+import java.util.Date;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+
+
+/**
+ * <p>
+ * Title: CatalogFormat
+ * </p>
+ * <p>
+ * Copyright: Copyright (c)
+ * </p>
+ * <p>
+ * Company: Hewlett Packard
+ * </p>
+ * 
+ * @author
+ * @version 1.0
+ */
+
+public class CatalogFormatInfo extends BizObject
+		implements Format {
+	public void setCatFormatKey(String pCatFormatKey) {
+		this.catFormatKey = pCatFormatKey;
+
+	}
+
+	public String getCatFormatKey() {
+		return this.catFormatKey;
+	}
+
+	public void setRegionCode(String pRegionCode) {
+		this.regionCode = pRegionCode;
+
+	}
+
+	public String getRegionCode() {
+		return this.regionCode;
+	}
+
+	public void setCatFormatName(String pCatFormatName) {
+		this.catFormatName = pCatFormatName;
+
+	}
+
+	public String getCatFormatName() {
+		return this.catFormatName;
+	}
+
+	public void setCustKey(String custkey) {
+		this.custKey = custkey;
+
+	}
+
+	public String getCustKey() {
+		return this.custKey;
+	}
+
+	public void setCatFormatType(String pCatFormatType) {
+		this.catFormatType = pCatFormatType;
+
+	}
+
+	public String getCatFormatType() {
+		return this.catFormatType;
+	}
+
+	public void setLastModifiedDate(Date pLastModifiedDate) {
+		this.lastModifiedDate = pLastModifiedDate;
+
+	}
+
+	public Date getLastModifiedDate() {
+		return this.lastModifiedDate;
+	}
+
+	public void setScope(String pScope) {
+		this.scope = pScope;
+
+	}
+
+	public String getScope() {
+		return this.scope;
+	}
+
+	public boolean getDeletable() {
+		return this.deletable;
+	}
+
+	public void setDeletable(boolean de) {
+		this.deletable = de;
+	}
+    
+	
+	public String getTenantCode() {
+		return tenantCode;
+	}
+
+	public void setTenantCode(String tenantCode) {
+		this.tenantCode = tenantCode;
+	}
+
+
+	private String catFormatKey;
+	private String regionCode;
+	private String catFormatName;
+	private String custKey;
+	private String catFormatType;
+	private boolean deletable;
+    private String tenantCode;
+	private String scope;
+
+	private Date lastModifiedDate;
+
+}// class

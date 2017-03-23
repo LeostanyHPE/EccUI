@@ -1,0 +1,48 @@
+<div class="row" id="viewCatalogArchiveFileController"	ng-controller="ViewCatalogArchiveFileCtrl"	ng-init="loadCatalogArchiveFile()">
+	<!-- Added by hemanta rao jakal -->
+	<div id="messageDiv"></div>
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}}</div>
+	<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div>
+	<div class="alert default" ng-show="infoMessage!=''"><span>{{infoMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Archive File View</span>
+		</h1>
+	</div>
+	<div id="archiveViewLoadingMessageDiv" >Loading archive content please wait..............</div>
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Catalog Name:</span>
+					<div id="catalogName" class="div_input" ng-bind="catalog_name"></div>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>File:</span>
+					<div id="fileName" class="div_input"  ng-bind="file_name"></div>
+				</div>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<div class="twelve columns">
+				<section>
+					<div id="archiveContentDataGridDiv" style="display: none;">
+						<table id="search_result" class="TableBackground search_result" 
+							style="width: 150%">
+							<thead id="search_head">
+							</thead>
+							<tbody>
+							</tbody>
+						</table>
+					</div>
+				</section>
+			</div>
+		</div>
+		<div class="customer_rows">
+			<a class="btn btn-inline" ng-click="returnToEditCatalogArchivePage()" style="margin: 10px 0px 0px 0px;">View Archive</a> 
+			<a class="btn btn-inline" ng-click="returnToCatalogArchivePage()" style="margin: 10px 0px 0px 0px;">Find Another Archive</a>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,203 @@
+<div class="row" id="manageContentId" ng-controller="manageContentController" ng-init="manageContentOnLoad()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+ 	<div class="customer_rows" style="border:4px solid #f2f2f2;margin-top: 10px;">
+		<div class="four columns" style="border-right: 4px solid #f2f2f2;">
+   			<div class="customer_rows" style="padding:5px 5px;">
+	 			<div class="generals" style="display:none;" id="ctgSelectBox">
+	               <span>All Categorizations :</span>
+	               <select 	ng-model="allCategorizationModel" id="allCategorization"
+            				 	ng-options="item.ctg_id as finalCategory(item) for item in categorizationList" 
+            				 	ng-change="changeEventOfCategories()">    
+	       		   </select>
+	           </div>
+	           <div class="generals" style="display:none;" id="catalogSelectBox">
+	               <span>Customer Catalogs:</span>
+	               <select 	ng-model="allCatalogsModel" id="allCatalogs"
+            				 	ng-options="item.cat_catalog_id as item.cat_catalog_id for item in catalogList" 
+            				 	ng-change="changeEventOfCatalogs()">    
+	       		   </select>
+	           </div>
+	           <div class="generals" style="display:none;" id="stdCatalogSelectBox">
+	               <span>Standard Catalogs:</span>
+	               <select 	ng-model="allstdCatalogsModel" id="allstdCatalogs"
+            				 	ng-options="item.cat_catalog_id as item.cat_catalog_id for item in stdCatalogList" 
+            				 	ng-change="changeEventOfstdCatalogs()">    
+	       		   </select>
+	           </div>
+		    </div>
+   			<div class="customer_rows" style="border-top: 4px solid #f2f2f2;overflow: auto;height: 720px;padding-top: 10px;">
+				   <div
+				   	  data-tree-idwin = "manageContentTree"
+				      data-angular-treeviewwin ="true"
+				      data-tree-modelwin ="treeData"
+				      data-node-idwin ="id"
+				      data-node-labelwin ="text"
+				      data-node-childrenwin ="children" >
+				    </div>  
+   			</div>
+  		</div>
+   		<div class="eight columns" id="rightManageContentId" style="padding: 2px 15px;overflow: auto;height: 750px;display:none;">
+			<div id="rightManageContentHeadId" style="display:none;">
+				<div class="customer_rows">
+			    	<h1 class="h1Underline">				
+						<span>Current {{treeSelectedValues}}</span>
+					</h1>
+			  	</div>
+			  	<div class="customer_rows">
+			  		<div class="four columns">
+				  	 	<div class="generals" id="localesShowOrHide">
+				    		<span>Locales:</span>
+            				<select ng-model="select_localesList" id="select_localesList" ng-options="item.lang_cd as item.java_lang_cd for item in localesList"  ng-change="changeEventOfLocales()">
+       		  				 </select>
+       		  			</div>
+       		  			<div class="generals">
+							 <span>Short Description:</span>
+	             			 <input type="text" class="" value="" id="manageContent_shortDescription" ng-model="form.shortDesc" size="20" maxlength="255"></input>
+						</div>
+						<div class="generals">
+							<span>Image Name:</span>
+							<input type="file" id="uploadedFile" ng-file-select ng-model="files" style="display: none;" accept="image/gif,image/jpeg" onchange="angular.element(this).scope().setFiles(this)" fileUpload/>
+                    		<input id="bundleUpload" type="text" ng-model="form.imageName"   value="" maxlength="20" name="customerId" readonly="readonly"></input>
+                    		<a class="btn btn-inline" onclick="document.getElementById('uploadedFile').click();" style="margin-top: 0px;" >Browse</a>
+							
+<!-- 							<input type="file" id="uploadedFile" ng-model="form.imageFile" style="display: none;" accept="image/gif,image/jpeg" onchange="angular.element(this).scope().setFiles(this)" fileUpload/> -->
+<!-- 	                 		<input id="manageContent_imageName" type="text" ng-model="form.imageName"   value="" maxlength="20" name="customerId" readonly="readonly"></input> -->
+<!-- 							<a ng-click='imageNameFunction()'><img src="resources/images/hp/arrow_blue.gif" border=0 hspace=0 vspace=0></a> -->
+						</div>
+						<div class="generals">
+							 <span>XML Link:</span>
+             				 <input type="text" class="" value="" id="manageContent_xmlLink" ng-model="manageContent_xmlLink" size="20" maxlength="255"></input>
+						</div>
+      		  		</div>
+      		  		<div class="four columns">
+						<div class="generals">
+							 <span>Marketing Text:</span>
+							 <textarea id="manageContent_marketingText" ng-model="form.marketText" cols="15" rows="5" style="height:40px;"> </textarea>
+						</div>
+						<div class="generals">
+							 <span>Long Description:</span>
+							 <textarea id="manageContent_longDescription" ng-model="form.longDesc" cols="15" rows="5" style="height:40px;"> </textarea>
+						</div>
+						
+					</div>
+					<div class="four columns">
+						<div class="generals">
+			               <img src="{{form.imageName}}" border="0" width="100" height="100" style="height:85px !important;"/>
+			            </div>
+					</div>
+			  	</div>
+				<div class="customer_rows"  id="showOnlyIfCatalogIdNotNull">
+					<div class="customer_rows">
+				    	<h1 class="h1Underline" style="height:0px;"></h1>
+				  	</div>
+					<div class="customer_rows">
+			           	 <div class="four columns">
+			                <div class="generals">
+			                	 <span>No Lock:</span>
+			                	 <input type="radio" id="noLockId" ng-model="noLockId" name='type' value='0' checked="checked"></input>
+							</div>
+							<div class="generals" >						
+			                	 <span>Category Lock:</span>
+			                  	 <input type="radio" id="categoryLockId" ng-model="categoryLockId" name='type' value='1'></input>
+							</div>
+							<div class="generals">
+			                  	<span>Hierarchy Lock:</span>
+			                  	<input type="radio" id="hierarchyLockId" ng-model="hierarchyLockId" name='type' value='3'></input>
+							</div>
+						</div>
+						<div class="four columns">
+			               <div class="generals">
+			                   <span>Lock Expiration Date:</span>
+			                   <input type="text" class="lockExpiryDate" value="" ng-model="form.expiryDateFrm"></input>
+			               </div>
+			               <div class="generals">
+			               		<input id="makeInactiveId" ng-model="form.makeInactive" type="checkbox" style="margin: 0px 5px 0px 0px;"/>
+			                    <span style="float:none;">Make Inactive:</span>
+			               </div>
+				         </div>
+					</div>
+				  	<div class="customer_rows">
+				    	<h1 class="h1Underline" style="height:0px;"></h1>
+				  	</div>
+				</div>
+				<div class="search" id="cancleButton" style="display:none;">
+					<a class="btn btn-inline" ng-show = "updatable == 'YES'" ng-click="saveProductContent()">Save</a>
+					<a class="btn btn-inline" ng-click="cancelManageContent()" >Cancel</a>
+				</div>
+				<div class="customer_rows">
+		            <div class="twelve columns">
+		                <div class="generals">
+	                 		<span id="showStatusMesage" style="width:100% !important;"></span>
+	   					</div>
+					</div>
+				</div>	
+			</div>
+			<div class="customer_rows" style="display:none">
+		    	<h1 class="h1Underline"  style="height:0px;"></h1>
+		  	</div>
+			<div id="rightManageContentFooterId" style="display:none;">	
+				<div class="customer_rows" style="display:none">
+		            <div class="four columns">
+		                  <div class="generals">
+		                      <span>sku:</span>
+		                      <input type="text" id="sku"  value=""  name="sku" ng-model="sku" ></input>
+		                  </div>
+		                 	                 
+		            </div>
+		            <div class="four columns">
+		                <div class="generals">
+		                     <span>short description:</span>
+		                     <input type="text" id="shortDescription"  value="" maxlength="20" name="shortDescription" ng-model="shortDescription"></input>
+		                </div>
+		            </div>
+		            <div class="two columns">
+		                <div class="generals">
+		                     <input type="checkbox" id="recursiveSearch"  value="" name="recursiveSearch" ng-model="recursiveSearch"></input>
+		                     <span>Recursive Search</span>
+		                </div>
+		            </div>
+		            <div class="search">
+		               	<a class="btn btn-inline" ng-click="searchManageContent()">Search</a>
+		            </div>
+		      	</div>
+				<div class="customer_rows">
+			    	<h1 class="h1Underline"  style="height:0px;">				
+					</h1>
+			  	</div>
+				<div class="customer_rows">
+					<div class="twelve columns">
+		   				<div id="manageContentDiv" style="display:none;width:100%;">
+							<table id="search_result" class="TableBackground search_result">
+								<thead>
+									<tr class="TableHeaderRow">
+										<th>Hidden</th> 
+										<th class="center">SKU</th>
+										<th class="center">Short Description</th>
+										<th class="center">Edit</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+									
+						<div id="manageContentDiv_Category" style="display:none;width:100% !important;">
+							<table id="search_result_category" class="TableBackground search_result">
+								<thead>
+									<tr class="TableHeaderRow">
+										<th>Hidden</th> 
+										<th class="center">SKU</th>
+										<th class="center">Short Description</th>
+										<th class="center">Category</th>
+										<th class="center">Edit</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+				</div>					
+			</div>
+   		</div>
+  	</div>
+  </div>

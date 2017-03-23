@@ -1,0 +1,38 @@
+<div class="row" ng-controller="EditOptionalCrtl" ng-init="getEditOption();">
+    <div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+    <div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Edit Option</span>
+		</h1>
+	</div>                
+	<div class="customer_rows form-border">
+		<div class="four columns">
+           	<div class="generals">
+              	<span>Product Number:</span>
+              	<div id="CustomerDUN" class="div_input" ng-bind="form.prodNumber"></div>
+           	</div>
+           	<div class="generals">
+	            <span>Description:</span>
+                <input  type="text" maxlength ="35" ng-model="form.desc"></input>
+           	</div>
+        </div>
+	    <div class="four columns">
+	       	<div class="generals">
+	           	<span>Option:</span>
+	           	<div class="div_input" ng-bind="form.prodOption"></div>
+	       	</div>
+	    </div>
+		<div class="four columns">
+		    <div class="generals">
+               	<span>Option Type:</span>
+               	<select id="selectedOptType" ng-model="optionType" ng-options="item.id as item.value for item in optionTypeList"></select>
+       		</div>
+		</div>
+        <div class="search">
+             <a class="btn btn-inline" ng-click="saveEditOption();">Save</a>
+             <a class="btn btn-inline" ng-click="resetValues();">Reset</a>
+             <a class="btn btn-inline" ng-click="cancelNewOption();">Cancel</a>
+		</div>
+	</div>
+</div>

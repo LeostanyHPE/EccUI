@@ -1,0 +1,37 @@
+<div class="row" ng-controller="manageOffersCtrl" ng-init="init()" id="myOffer">
+	<div class="alert success" ng-show="successMessage!=''"><span>{{successMessage}}</span></div>
+	<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Manage Offer</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="four columns">
+			<div class="generals">
+				<span>Customer Name:</span>
+				<div class="div_input" ng-bind="custName" />
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Customer ID:</span>
+				<div class="div_input" ng-bind="custId" />
+			</div>
+		</div>
+		<div class="search">
+			<a class="btn btn-inline" ng-click="addOffers()" >Create</a>
+		</div>
+	</div>
+	<div class="customer_rows id-body" ng-show="dataLoad">
+	    <div class="twelve columns">
+      		<div id="ecc_hpegrid1" hpe-grid
+		         grd-data="grid.data"
+		         grd-header="grid.header"
+		         grd-col-defs="grid.colDefs"
+		         grd-sort="grid.sort"
+		         grd-col-view-by="grid.colViewBy">
+		     </div>
+	    </div>
+	</div>
+</div>

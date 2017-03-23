@@ -1,0 +1,86 @@
+/*
+ * <Donot modifiy this CVS Token>
+ *
+ * $RCSfile$
+ * Last added CVS $Log$
+ *
+ * Copyright (c) Hewlett Packard Company
+ * Palo Alto, California, U.S.A.
+ * All rights reserved.
+ */
+
+package com.hp.ecc.ui.biz.csog;
+
+import java.util.ArrayList;
+
+/**
+ * @author     sadiqsad
+ * @version    $Revision$
+ * @see        <other class>
+ */
+public class SogCountryAndPriceDescBean {
+
+  String countryName;
+  String countryCode;
+  ArrayList countryAndPriceDescList;
+
+
+  public SogCountryAndPriceDescBean () {
+    init ();
+  }
+
+
+  public void init () {
+    countryName = null;
+    countryCode = null;
+    countryAndPriceDescList = null;
+
+  }
+
+  public void reset () {
+    init ();
+  }
+
+  /**
+   * @return
+   */
+  public ArrayList getCountryAndPriceDescList () {
+    return countryAndPriceDescList;
+  }
+
+  /**
+   * @return
+   */
+  public String getCountryCode () {
+    return countryCode;
+  }
+
+  /**
+   * @return
+   */
+  public String getCountryName () {
+    return countryName;
+  }
+
+  /**
+   * @param list
+   */
+  public void setCountryAndPriceDescList ( ArrayList countryAndPriceDescList ) {
+    this.countryAndPriceDescList = countryAndPriceDescList;
+  }
+
+  /**
+   * @param string
+   */
+  public void setCountryCode ( String countryCode ) {
+    this.countryCode = countryCode;
+  }
+
+  /**
+   * @param string
+   */
+  public void setCountryName ( String countryName ) {
+    this.countryName = countryName;
+  }
+
+}

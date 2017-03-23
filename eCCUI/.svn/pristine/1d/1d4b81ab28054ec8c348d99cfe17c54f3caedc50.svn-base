@@ -1,0 +1,113 @@
+<div class="row" ng-controller="EditProductCtrl" ng-init="loadProductData()" id="editProductPage">
+	<div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Product Information</span>
+		</h1>
+	</div>
+   	<div class="customer_rows form-border">
+   		<div class="customer_rows">
+   			<div class="four columns">
+	             <div class="generals">
+	                 <span>Product Number:</span>
+	                 <div class="div_input" id="accountAttribute" ng-bind="editProductData.cit_base_model"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Language:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.lang_name"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Tx Currency Code:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.cip_tx_curr_cd"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>SLA:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.cip_sla"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Fulfillment Site:</span>
+	                  <div class="div_input" id="accountAttribute" ng-show="priceTier=='false'"><a ng-click="redirectToFulfillmentSite(editProductData.ffs_name, editProductData.ffs_id)">{{editProductData.ffs_name}}</a></div>    
+	                  <div class="div_input" id="accountAttribute" ng-show="priceTier=='true'">{{editProductData.ffs_name}}</div>                
+	             </div>
+	             <div class="generals">
+	                  <span>Program Name:</span>
+	                  <div class="div_input" style="width: 30%;font-weight: bold;" id="accountAttribute"><a ng-click="programDetails(editProductData.cit_pgm_key,editProductData.program_name)">{{editProductData.program_name}}</a></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Image URL:</span>
+	                  <div class="div_input" id="accountAttribute"><a ng-click="openImage(editProductData.image_name)">{{editProductData.image_name}}</a></div>
+	             </div>
+	         </div>
+	         <div class="four columns">
+	             <div class="generals">
+	                  <span>Options:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.options"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Manufacturer:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.mfg_name"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Manufacturer Part ID:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.mfg_part_id"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Short Description:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.short_desc"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Provider Emails:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.cit_cpm_svc_prov_emails"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Supplier URL:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.supplier_url"></div>
+	             </div>
+	         </div>
+	         <div class="four columns">
+	             <div class="generals">
+	                  <span>Source:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.cit_source"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>SRT/Lead Time:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.srt"></div>
+	             </div>
+	             <div class="generals">
+	                  <span>Long Description:</span>                  
+	                  <textarea rows="20" cols="50" id="comment" class="" name="comment" ng-bind="editProductData.long_desc" disabled></textarea>
+	             </div>
+	             <div class="generals">
+	                  <div class="div_input" style="width: 30%; font-weight: bold;" id="accountAttribute"><a ng-click="morePrductAttributes()">More Product Attributes...</a></div>
+	             </div>
+	         </div>
+   		</div>
+        <div class="customer_rows">
+			<h1 class="h1Underline" style="height:0px;"></h1>
+   		</div>
+   		<div class="customer_rows">
+	 		<div class="four columns">
+	            <div class="generals">
+	                  <span>Price:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.cip_net_price"></div>
+	          	</div>
+	        </div>
+	        <div class="four columns">
+	             <div class="generals">
+	                  <span>Price Change Reason:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="editProductData.price_change_reason"></div>
+	        	</div>
+	        </div>
+	        <div class="four columns">
+	             <div class="generals">
+	                  <span>Validity:</span>
+	                  <div class="div_input" id="accountAttribute" ng-bind="changeDate(editProductData.cip_price_end_date)"></div>
+	          	</div>
+	       </div>
+   		</div>
+        <div class="search">
+	         <a class="btn btn-inline" ng-click="customizeProduct()" ng-show="catalogFlag != 'PCAT' && editProductData.EditProductAttributeEnabled">Customize</a>
+	         <a class="btn btn-inline" ng-show="editProductData.PriceEnabled" ng-click="editProduct()">Edit</a>
+	         <a class="btn btn-inline" ng-click="returnToProductList()">Cancel</a>
+	    </div>  
+     </div>
+ </div>

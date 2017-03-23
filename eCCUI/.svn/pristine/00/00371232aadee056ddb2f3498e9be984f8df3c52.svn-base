@@ -1,0 +1,37 @@
+<div class="row" ng-controller="UploadInfoCrtl" id="viewPropogation" ng-init="init()">		
+	<div class="alert success" ng-show="successMessage!=''"><span>{{successMessage}}</span></div>
+	<div class="alert error" ng-show="errorMessage!=''"><span>{{errorMessage}}</span></div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Upload Status</span>
+		</h1>
+	</div>	
+    <div class="customer_rows form-border" id="viewStatus">
+          <div class="four columns">
+              <div class="generals">
+                  <span>Keyword:</span>
+                  <input type="text" id="keyword"  name="keyword" ng-model="keyword" ng-enter="searchUploadInfo()" size="32" maxlength="64"></input>
+              </div>
+       	</div>           
+        <div class="search">
+                <a class="btn btn-inline" ng-click="searchUploadInfo()">Search</a>
+        </div>
+        <span style="font-family: Arial,Helvetica,sans-serif;font-size: 11px;font-style: normal;font-weight: normal;color: #000099;">
+        (Enter a keyword or phrase to match <b>Upload ID</b>, 
+         <b>Upload Type Description</b>,<br>
+         <b>Upload Status</b> or <b>Upload Status Description</b>. 
+         Empty value matches all.)  
+        </span>  
+    </div>	   
+	<div class="customer_rows id-body" ng-show="dataLoad">
+	    <div class="twelve columns">
+      		<div id="ecc_hpegrid1" hpe-grid
+		         grd-data="grid.data"
+		         grd-header="grid.header"
+		         grd-col-defs="grid.colDefs"
+		         grd-sort="grid.sort"
+		         grd-col-view-by="grid.colViewBy">
+		     </div>
+	    </div>
+	</div>
+</div>

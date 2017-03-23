@@ -1,0 +1,36 @@
+package com.hp.ecc.ui.view.beans;
+
+import java.util.ArrayList;
+
+public class TreeBean {
+	
+	public String getTreeId() {
+		return TreeId;
+	}
+
+	public void setTreeId(String treeId) {
+		TreeId = treeId;
+	}
+
+	public String getNodeId() {
+		return nodeId;
+	}
+
+	public void setNodeId(String nodeId) {
+		this.nodeId = nodeId;
+	}
+
+	public ArrayList<TreeNode> getTreeNodes() {
+		return treeNodes;
+	}
+
+	public void setTreeNodes(ArrayList<TreeNode> treeNodes) {
+		this.treeNodes = treeNodes;
+	}
+
+	String TreeId;
+	String nodeId;
+	
+	ArrayList<TreeNode> treeNodes; 
+
+}

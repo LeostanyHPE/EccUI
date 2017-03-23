@@ -1,0 +1,117 @@
+package com.hp.ecc.ui.biz.alert;
+
+import java.util.Date;
+
+import com.hp.ecc.ui.biz.product.GeneralProductMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.FormatUtil;
+
+
+/**
+ * @author Andy Li
+ * @version 1.0
+ *
+ */
+
+public class AlertSrcProduct extends AlertSrc {
+  public AlertSrcProduct ( String key, Date timestamp ) {
+    this ( key, timestamp, false );
+  }
+
+
+  public AlertSrcProduct ( String key, Date timestamp, boolean enforced ) {
+    if ( enforced ) {
+      if ( StrUtil.isEmpty ( key ) ) {
+        throw new IllegalArgumentException (
+            "product key cannot be null or empty" );
+      }
+      if ( timestamp == null ) {
+        throw new IllegalArgumentException (
+            "alert source timestamp cannot be null" );
+      }
+    }
+    this.fKey = key;
+    this.setTimestamp ( timestamp );
+  }
+
+
+  /**
+   * Get Key
+   */
+  public String getKey () {
+    return this.fKey;
+  }
+
+
+  public String getKeyAsStr () {
+    return this.getKey ();
+  }
+
+  public String getTitle () {
+    return "Product";
+  }
+
+  public Product getProduct () {
+    if ( this.fBizObject != null ) {
+      return ( Product )this.fBizObject;
+    }
+
+    this.fBizObject = this.getBizObjFromCache ();
+    if ( this.fBizObject != null ) {
+      return ( Product )this.fBizObject;
+    }
+
+    String key = this.getKey ();
+    if ( StrUtil.isEmpty ( key ) ) {
+      return ( Product )this.handleGetByNullKey ();
+    }
+
+    GeneralProductMgr mgr = new GeneralProductMgr ();
+    this.fBizObject = mgr.getItem ( key );
+    this.putBizObjToCache ( this.fBizObject );
+    return ( Product )this.fBizObject;
+  }
+
+  public StringBuffer getNotification ( int indent, StringBuffer sb ) {
+    if ( sb == null ) {
+      sb = new StringBuffer ();
+    }
+    Product prod = this.getProduct ();
+    if ( prod == null ) {
+      return sb;
+    }
+
+    FormatUtil.repeat ( sb, AlertFormat.INDENT_STR, indent );
+    sb.append ( "Product: " ).append ( prod.getProdId () );
+    sb.append ( "     " ).append ( prod.getShortDesc () );
+    sb.append ( '\n' );
+    return sb;
+  }
+
+  public boolean isNotificationEmailEnabled () {
+    return true;
+  }
+
+  String getNotificationEmailAux () {
+    Product prod = this.getProduct ();
+    String code = "US"; //TODO: get region from product
+    String email = this.getAlertMgr ().getAlertEmailForRegion ( code );
+    return email;
+  }
+
+  String getSrcType () {
+    return this.sSrcType;
+  }
+
+  String getHashCodeAux () {
+    return this.getKey ();
+  }
+
+  private AlertSrcProduct () {
+  }
+
+
+  private String fKey;
+  final static String sSrcType = "product";
+}

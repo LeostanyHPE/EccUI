@@ -1,0 +1,683 @@
+package com.hp.ecc.ui.view.controller;
+
+import com.hp.ecc.ui.biz.format.CatalogFormatMgr;
+import com.hp.ecc.ui.biz.catalog.CatalogPriceSourceLocaleMgr;
+import com.hp.ecc.ui.biz.misc.CatalogPriceSourceMgr;
+import com.hp.ecc.ui.biz.customer.CustomerReport;
+import com.hp.ecc.ui.biz.misc.GlCustPDBean;
+import com.hp.ecc.ui.biz.misc.GlobalCustPDMgr;
+import com.hp.ecc.ui.biz.pricelogic.PriceLogicBean;
+import com.hp.ecc.ui.biz.pricelogic.PriceLogicMgr;
+import com.hp.ecc.ui.biz.admin.Target;
+import com.hp.ecc.ui.biz.admin.TargetMgr;
+import com.hp.ecc.ui.biz.admin.AutoUploadTarget;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.CustomerProfileAutoUploadEditForm;
+import com.hp.ecc.ui.view.beans.CustomerProfileEditForm;
+import com.hp.ecc.ui.common.util.FeConfig;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Category;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.CustomerAccountMgr;
+import com.hp.ecc.ui.biz.customer.CustomerConfigMaster;
+import com.hp.ecc.ui.biz.customer.CustomerMgr;
+import com.hp.ecc.ui.biz.pricing.rate.CustSpecRateManager;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.FeCTX;
+import com.hp.ecc.ui.view.beans.CustomerProfileDetailForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Controller
+public class CustomerProfileDetailsController {
+	
+	@RequestMapping(value = "/admin/customerProfileDetails/processRetrieval.htm", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public @ResponseBody
+	String customerProfileDetailsProcessRetrieval(Model model,
+			CustomerProfileDetailForm form, HttpServletRequest request) {
+
+		Category log = FeCTX.getCTX().getLog();
+
+		// Dispatches based on task
+		
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+		// Added for plc reports
+		String regionCode = ses.getUserRegionCode();
+		CustomerMgr customerMgr = new CustomerMgr();
+		String regionAccForPlc = customerMgr.getCustReportDefAccess(regionCode,PagesUtil.getDbRegionToConnect(request));
+		form.setRegionDef(regionAccForPlc);
+		// Ended for plc reports
+
+		form.setRoleId(PagesUtil.getLoginUserRole(request));
+		// 4.2
+		if (ses.isAuthorized(PermissionCode.COPY_CUST_PROFILE)) {
+			form.setIsCopyCustProfileEnabled("true");
+		} else {
+			form.setIsCopyCustProfileEnabled("false");
+		}
+		if (ses.isAuthorized(PermissionCode.EDIT_CUST_PROFILE)) {
+			form.setIsEditCustProfileEnabled("true");
+		} else {
+			form.setIsEditCustProfileEnabled("false");
+		}
+		// 4.2
+
+		if (ses.isAuthorized(PermissionCode.CREATE_EDIT_TARGET)) {
+
+			form.setIsEditUploadSettingsEnabled("true");
+		}
+
+		else {
+
+			form.setIsEditUploadSettingsEnabled("false");
+		}
+
+		if (ses.isAuthorized(PermissionCode.EDIT_FORMATS)) {
+
+			form.setIsEditFormatsEnabled("true");
+		}
+
+		else {
+
+			form.setIsEditFormatsEnabled("false");
+		}
+
+		// Changed as per ezilla request 20594. for US region also
+		/*
+		 * Changed as per genesis requirement to extend the customer sla
+		 * functionality to US region
+		 */
+		if (PagesUtil.getRegionCode(request).equals("EU")) {
+
+			form.setIsRegionCodeEU("true");
+		} else {
+			form.setIsRegionCodeEU("false");
+		}
+
+		CustSpecRateManager custMgr = new CustSpecRateManager();
+
+		if (custMgr.isCustomerRateExist(getCustID(form, request), PagesUtil.getDbRegionToConnect(request))) {
+			form.setIsCustSpecRate("true");
+		} else {
+			form.setIsCustSpecRate("false");
+		}
+
+		String task = form.getTask();
+
+		if (task == null)
+
+		{
+
+			processPopulate(form, request);
+
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			mapper.writeValue(baos, form);
+			
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return baos.toString();
+		
+/*		Gson gsonObj = new GsonBuilder().create();
+		return gsonObj.toJson(form);*/
+	}
+	
+	private void processPopulate(CustomerProfileDetailForm form,HttpServletRequest request) {
+
+		String regionCode = PagesUtil.getRegionCode(request);
+		String custKey = (String) request.getParameter("customer_key");
+		// get detail for this Customer
+		CustomerMgr customerMgr = new CustomerMgr();
+		Customer customer = customerMgr.getCustomer(custKey,PagesUtil.getDbRegionToConnect(request));
+
+		if (regionCode.equals("AP")) {
+			boolean fusionFlag = customer.getFusionOrderableFlag().equals("Y") ? true
+					: false;
+			form.setFusionOrderabilityCheck(fusionFlag);
+		}
+		if (regionCode.equals("GL")) {
+			boolean fusionFlag = customer.getFusionOrderableFlag().equals("Y") ? true
+					: false;
+			form.setFusionOrderabilityCheck(fusionFlag);
+		}
+		// 4.2
+		// get the vision, stockCode, activityCode and authcode array
+		List visionFlagList = customerMgr.getFilterListByType(custKey,
+				CustomerMgr.CONST_VISION_FLAG,PagesUtil.getDbRegionToConnect(request));
+		List visionFlagDisplayList = customerMgr
+				.convertFilterCodeListToDisplayList(visionFlagList,
+						CustomerMgr.CONST_VISION_FLAG);
+/*		request.setAttribute("CustomerProfile.visionFlagList",
+				visionFlagDisplayList);*/
+		form.setVisionFlagListDL(visionFlagDisplayList);
+
+		List stockCodeList = customerMgr.getFilterListByType(custKey,
+				CustomerMgr.CONST_STOCK_CODE,PagesUtil.getDbRegionToConnect(request));
+		List stockCodeDisplayList = customerMgr
+				.convertFilterCodeListToDisplayList(stockCodeList,
+						CustomerMgr.CONST_STOCK_CODE);
+/*		request.setAttribute("CustomerProfile.stockCodeList",
+				stockCodeDisplayList);*/
+		form.setStockCodeListDL(stockCodeDisplayList);
+
+		List activityCodeList = customerMgr.getFilterListByType(custKey,
+				CustomerMgr.CONST_ACTIVITY_CODE,PagesUtil.getDbRegionToConnect(request));
+		List activityCodeDisplayList = customerMgr
+				.convertFilterCodeListToDisplayList(activityCodeList,
+						CustomerMgr.CONST_ACTIVITY_CODE);
+/*		request.setAttribute("CustomerProfile.activityCodeList",
+				activityCodeDisplayList);*/
+		form.setActivityCodeListDL(activityCodeDisplayList);
+		String AuthCodesStr = customerMgr.getAuthCodeStrForGrp(
+				customer.getCustID(), customer.getCustSegment(),PagesUtil.getDbRegionToConnect(request));
+		customer.setAuthCodesStr(AuthCodesStr);
+		form.setCustomer(customer);
+
+		form.setAuthCheckFlag(customer.getAuthCheckFlag());
+		// 4.2
+		// get upload settings for this customer
+		List uploadSettings = getUploadSettings(custKey, regionCode,PagesUtil.getDbRegionToConnect(request));
+
+		// get output formats for this customer
+		List outputFormats = getOutputFormats(custKey, regionCode);
+
+		// for cabernet 3831 by Ravi n
+		// populate fields
+		form.setGenesisCustomer(customer.getGenesisCustomer());
+		form.setGlpAccountFlag(customer.getGlpAccountFlag());
+		form.setCustomerName(customer.getCustName());
+		form.setCustomerID(customer.getCustID());
+		form.setDun(customer.getCustDUN());
+		form.setLocation(customer.getCustLoc());
+		form.setSupplier(customer.getSupplierID());
+		form.setCatalogManager(customer.getManager());
+		form.setBackupCatalogManager(customer.getBackupManager());
+		form.setPurchaseAgreement(customer.getPaNo());
+		form.setReleasePoint(customer.getReleasePoint());
+		form.setRegion(customer.getRegionCode(),PagesUtil.getDbRegionToConnect(request));
+		form.setRegionCode(customer.getRegionCode());
+		form.setorderPhoneNo(customer.getorderPhoneNo());
+		form.setorderFAXNo(customer.getorderFAXNo());
+		form.setorderEmail(customer.getorderEmail());
+		form.setsupportURL(customer.getsupportURL());
+		form.setcrManagerName(customer.getcrManagerName());
+		form.setcrManagerPhoneNo(customer.getcrManagerPhoneNo());
+		form.setcrManagerFAXNo(customer.getcrManagerFAXNo());
+		form.setcrManagerEmail(customer.getcrManagerEmail());
+		form.setsinNo1(customer.getsinNo1());
+		form.setsinNo2(customer.getsinNo2());
+		form.setCustType(customer.getCustType());
+		form.setChannelTypesArray(customer.getChannelTypesArray());
+		form.setPriceDescriptor(customer.getPriceDescriptor());
+		form.setCharacterEncoding(customer.getISOEncoding());
+
+		// 4.2 form.setEprimeCustDUN(customer.getEprimeCustDUN());
+		form.setEprimeCustID(customer.getEprimeCustID());
+		form.setEprimeCustType(customer.getEprimeCustType());
+		form.setOutputFormat(customer.getOutPutFormat());
+
+		// formats permission by ly
+		if (PagesUtil.isAuthManageFormat(request, "CUSTOMER")) {
+			form.setAllowCustomerFormat(true);
+		} else {
+			form.setAllowCustomerFormat(false);
+		}
+
+		if (PagesUtil.isAuthManageFormat(request, "REGION")) {
+			form.setAllowRegionFormat(true);
+		} else {
+			form.setAllowRegionFormat(false);
+		}
+		// accounting rate
+
+		form.setAccRate(customer.getAccRateFlag());
+		form.setCustomerType(customer.getCustType());
+		form.setCustomerTypeDesc(Customer.customerTypeToLable(customer
+				.getCustType()));
+		CatalogPriceSourceLocaleMgr mgr = CatalogPriceSourceLocaleMgr
+				.getCatalogPriceSourceLocaleMgr();
+		// form.setLocale(mgr.getCountryByLocale(customer.getLocale()));
+		form.setLocale(customer.getLocale());
+		// form.setDefaultCategorySource(Customer.categoryTypeToLable(customer.getDefaultCategoryType()));
+		// String cateType = customer.getDefaultCategoryType();
+		// String cateName = customer.getCategoryName();
+		String cateID = customer.getCategorizationID();
+		String cateName = PagesUtil.getDisplayCategory(cateID,PagesUtil.getDbRegionToConnect(request));
+		// form.setDefaultCategorySource(PagesUtil.composeCategoryValue(cateType,
+		// cateName, cateID));
+		form.setDefaultCategorySource(cateName);
+
+		CatalogPriceSourceMgr sMgr = CatalogPriceSourceMgr
+				.getCatalogPriceSourceMgr();
+		form.setPriceSource(sMgr.getSourceDescription(
+				CatalogPriceSourceLocaleMgr.PRICE_SOURCE_NAME,
+				customer.getPriceSource()));
+		form.setPrimaryCatalogSource(sMgr.getSourceDescription(
+				CatalogPriceSourceLocaleMgr.CATALOG_SOURCE_NAME,
+				customer.getCatalogSource()));
+		// form.setPrimaryCatalogSource(customer.getDefaultCategoryType());
+
+		form.setBuyerTPName(customer.getBuyTPName());
+		form.setBuyerTPShortName(customer.getBuyTPShortName());
+		form.setSupplierTPShortName(customer.getSupTPShortName());
+
+		if (customer.getDefaultApprovalReqFlag().equalsIgnoreCase("Y")) {
+			form.setApprovalEnableFlag(true);
+		} else {
+			form.setApprovalEnableFlag(false);
+		}
+
+		if (uploadSettings != null) {
+			/*request.setAttribute(
+					"CustomerProfileDetailAction.upload_settings_list",
+					uploadSettings);*/
+			form.setUpload_settings_list(uploadSettings);
+		}
+		if (outputFormats != null) {
+			/*request.setAttribute(
+					"CustomerProfileDetailAction.output_formats_list",
+					outputFormats);*/
+			form.setOutput_formats_list(outputFormats);
+		}
+/*		request.setAttribute("CustomerProfileDetailAction.customer_key",
+				customer);*/
+		form.setCustomer(customer);
+
+		// set the casual buy/cross sell flags
+
+		/*
+		 * if (customer.getCBIncludeFlag().equalsIgnoreCase("Y") )
+		 * form.setCBIncludeFlag(true); else form.setCBIncludeFlag(false);
+		 */
+
+		if (customer.getCSIncludeFlag().equalsIgnoreCase("Y")) {
+			form.setCSIncludeFlag(true);
+		} else {
+			form.setCSIncludeFlag(false);
+		}
+
+		/*
+		 * if (customer.getNDIncludeFlag().equalsIgnoreCase("Y") ) /* if
+		 * (customer.getNDIncludeFlag().equalsIgnoreCase("Y") )
+		 * 
+		 * form.setNDIncludeFlag(true);
+		 * 
+		 * else
+		 * 
+		 * form.setNDIncludeFlag(false);
+		 */
+		// for 4.1
+
+		System.out.println("getPriceRuleID=  " + customer.getPriceRuleID());
+
+		form.setIncludeFlagText(CustomerConfigMaster
+				.getIncludeFlagText(customer.getCBIncludeFlag()));
+
+		if (!customer.getPriceRuleID().equals(""))
+
+		{
+
+			PriceLogicMgr pricelogicmgr = PriceLogicMgr.getPriceLogicMgr();
+
+			List pricelogicbeanlist = pricelogicmgr
+					.getPriceLogicListByID(customer.getPriceRuleID());
+
+			form.setPriceLogicText(((PriceLogicBean) pricelogicbeanlist.get(0))
+					.getRuleDesc());
+
+		}
+
+		else {
+
+			PriceLogicMgr pricelogicmgr = PriceLogicMgr.getPriceLogicMgr();
+
+			List priceLogicList = pricelogicmgr.getPriceLogicList(PagesUtil.getDbRegionToConnect(request));
+
+			PriceLogicBean priceLogicByRegion = pricelogicmgr
+					.getPriceLogicByRegion(regionCode,PagesUtil.getDbRegionToConnect(request));
+
+			form.setPriceLogicText(priceLogicByRegion.getRuleDesc());
+
+		}
+
+		form.setProdAuthCodeText(customer.getProdAuthCodeText(PagesUtil.getDbRegionToConnect(request)));
+
+		form.setVisionFlagText(CustomerConfigMaster.getVisionFlagText(customer
+				.getVisionFlagList(PagesUtil.getDbRegionToConnect(request))));
+
+		form.setActivityCodeText(CustomerConfigMaster
+				.getActivityCodeText(customer.getActivityCodeList(PagesUtil.getDbRegionToConnect(request))));
+
+		form.setStockCodeText(CustomerConfigMaster.getStockCodeText(customer
+				.getStockCodeList(PagesUtil.getDbRegionToConnect(request))));
+
+		form.setCustSegment(customer.getCustSegment());
+
+		form.setOrderCheckFlag(customer.getOrderCheckFlag().equals("Y") ? true
+				: false);
+
+		form.setOfferAllOrdFlag(customer.getOfferAllOrdFlag().equals("Y") ? true
+				: false);
+
+		form.setOfferEquivFlag(customer.getOfferEquivFlag().equals("Y") ? true
+				: false);
+		// Added for March CPE 2006 - Vinod Mathew
+		form.setExcludeProds(customer.getExcludeProdFlag().equals("Y") ? true
+				: false);
+		// END
+		// for 4.1
+
+		// for 4.3.1 TBA -- Quest ticket (ASP000006315413)
+		form.setApplyElc(customer.getApplyElcFlag().equals("Y") ? true : false);
+		// for Lava TBA
+		form.setApplyTba(customer.getApplyTbaFlag().equals("Y") ? true : false);
+
+		// Added for Chianti -Bundle Management -
+		// Set Auto Create Sales Bundle Flag value in form from customer bean
+		form.setAutoCreateSalesBdlFlag("Y".equalsIgnoreCase(customer
+				.getAutoCreateSalesBdlFlag()) ? true : false);
+
+		// If the customer type is Global, get the global pricedescriptor
+
+		String custType = customer.getCustType();
+
+		if (custType != null && custType.equals(Customer.CUSTOMER_TYPE_GLOBAL)) {
+
+			GlobalCustPDMgr pdmgr = GlobalCustPDMgr.getGlobalCustPDMgr();
+
+			List list = pdmgr.getGlCustPDList(custKey,PagesUtil.getDbRegionToConnect(request));
+
+			if (list.size() > 0) {
+
+				StringBuffer pdBuffer = new StringBuffer();
+
+				Iterator itr = list.iterator();
+
+				while (itr.hasNext())
+
+				{
+
+					GlCustPDBean pdBean = (GlCustPDBean) itr.next();
+
+					// System.out.println("PD " + pdBean.getPriceDescp());
+
+					pdBuffer.append(pdBean.getPriceDescp() + "\n");
+
+				}
+
+				form.setAvailPriceDescps(pdBuffer.toString());
+
+			}
+
+		}
+
+		// for Lava focus changes
+		form.setPresalesCustId(customer.getPresalesCustId());
+		form.setPresalesSource(customer.getPresalesSource());
+		form.setEucIndustryNm(customer.getEucIndustryNm());
+		// form.setCustSatFl(customer.getCustSatFl());
+		// form.setPromotionCd(customer.getPromotionCd());
+		// form.setCustSegment(customer.getCustSegment());
+		form.setIndustrySegment(customer.getIndustrySegment());
+		form.setSapId(customer.getSapId());
+		// form.setLastSaveDt(customer.getLastSaveDate());
+		// form.setLastSaveDateGmt(customer.getLastSaveDateGmt());
+
+		/*
+		 * For SLA ID in cabrenet globals
+		 */
+		form.setSlaId(customer.getSlaId());
+
+		// Added for plc reports
+
+		CustomerReport customerReport = customerMgr.getCustomerReport(custKey,PagesUtil.getDbRegionToConnect(request));
+		if (customerReport != null) {
+			form.setCustRep(customerReport.getCustNameRep().equals("Y") ? true
+					: false);
+			form.setEolRep(customerReport.getEolProdRep().equals("Y") ? true
+					: false);
+			form.setStdcatRep(customerReport.getStdCatRep().equals("Y") ? true
+					: false);
+			form.setPrtierRep(customerReport.getPtDealsRep().equals("Y") ? true
+					: false);
+		}
+		// Ended for plc reports
+		
+		form.setTenant(customer.getTenantCode());
+
+	}
+	
+	private List getUploadSettings(String custKey, String regionCode,String adbRegionToConnect)
+
+	{
+
+		TargetMgr targetMgr = new TargetMgr();
+
+		List targets = targetMgr.getAutoUploadTargetList(custKey, regionCode,adbRegionToConnect);
+
+		if (targets.size() == 0)
+
+		{
+
+			return null;
+
+		}
+
+		return targets;
+
+	}
+
+	private List getOutputFormats(String custKey, String regionCode)
+
+	{
+
+		CatalogFormatMgr catalogformatMgr = CatalogFormatMgr
+				.getCatalogFormatMgr();
+
+		List formatListDisplay = catalogformatMgr
+				.getAvaliableCatalogFormatInfosForCustomer(regionCode, custKey);
+
+		// hp.comcat.biz.format.FormatMgr mgr = new
+		// hp.comcat.biz.format.FormatMgr();
+
+		// List formats = mgr.getCustomerFileFormats(custKey);
+
+		if (formatListDisplay.size() == 0)
+
+		{
+
+			return null;
+
+		}
+
+		return formatListDisplay;
+
+	}
+	
+	
+	private String getCustID(CustomerProfileDetailForm form,
+			HttpServletRequest request) {
+		String id = (String) request.getAttribute("customer_key");
+
+		if (id == null) {
+			id = request.getParameter("customer_key");
+		}
+		if (id == null) {
+			id = form.getCustomer_key();
+		}
+
+		CustomerMgr cMgr = new CustomerMgr();
+		Customer cust = cMgr.getCustomer(id,PagesUtil.getDbRegionToConnect(request));
+
+		return cust.getCustID();
+
+	}
+	
+	@RequestMapping(value = "/admin/customerProfile/accountAttributes.htm", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public @ResponseBody
+	String customerProfileAccountAttributes(Model model,
+			HttpServletRequest request) {
+		String customerKey = (String) request.getParameter("customerkey");
+		String customerId = (String) request.getParameter("customerId");
+		String customerSegment = (String) request
+				.getParameter("customerSegment");
+
+		CustomerAccountMgr custAccMgr = new CustomerAccountMgr();
+
+		JSONArray retList = custAccMgr.getCustomerAccountListWithFiltersDetail(
+				customerId, customerKey, customerSegment,
+				PagesUtil.getDbRegionToConnect(request));
+
+		return retList.toJSONString();
+
+	}
+	
+	@RequestMapping(value = "/admin/customerProfile/uploadSettings.htm", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	public @ResponseBody
+	String cpUploadSettingsPopulate(Model model,
+			CustomerProfileAutoUploadEditForm form, HttpServletRequest request) {
+
+		// get Auto Upload settings for this customer or region
+		String targetId = (String) request.getParameter("targetId");
+		String customerKey = (String) request.getParameter("customerkey");
+
+		if (!StrUtil.isEmpty(targetId)) {
+			TargetMgr targetMgr = new TargetMgr();
+			AutoUploadTarget target = (AutoUploadTarget) targetMgr
+					.getTarget(targetId,PagesUtil.getDbRegionToConnect(request));
+			form.setUploadTarget(target.getTargetName());
+			form.setNetworkId(target.getNetworkId());
+			form.setAccountId(target.getAccountId());
+			form.setShareSecret(target.getShareSecret());
+		} else {
+			CustomerMgr customerMgr = new CustomerMgr();
+			Customer customer = customerMgr.getCustomer(customerKey,
+					PagesUtil.getDbRegionToConnect(request));
+			form.setAccountId(customer.getSupplierID());
+			// the network id is forced to be AN01000000001
+			form.setNetworkId("AN01000000001");
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			mapper.writeValue(baos, form);
+			
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return baos.toString();
+
+	}
+	
+	@RequestMapping(value = "/admin/customerProfile/processUpload.htm", headers = "Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody
+	String customerProcessor(Model model, HttpServletRequest request,
+			@RequestBody String formStr) {
+
+		JSONObject retObj = new JSONObject();
+
+		ObjectMapper mapper = new ObjectMapper();
+		CustomerProfileAutoUploadEditForm form = null;
+		try {
+			form = mapper.readValue(formStr,
+					CustomerProfileAutoUploadEditForm.class);
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+		String regionCode = ses.getUserRegionCode();
+		String customerKey = request.getParameter("customer_key");
+
+		// remove this after testing (begin)
+		/*
+		 * String currentAccountId = form.getAccountId(); if
+		 * (!currentAccountId.endsWith("-T")) {
+		 * form.setAccountId(currentAccountId + "-T"); }
+		 * form.setNetworkId("AN01000000001"); form.setShareSecret("bernie01");
+		 */
+		// remove this after testing (end)
+
+		// Get data
+		TargetMgr targetMgr = new TargetMgr();
+		AutoUploadTarget target = new AutoUploadTarget();
+		target.setCustKey(form.getCustomerKey());
+		target.setRegionCode(regionCode);
+		target.setTargetName(form.getUploadTarget());
+		target.setNetworkId(form.getNetworkId());
+		target.setAccountId(form.getAccountId());
+		target.setShareSecret(form.getShareSecret());
+		target.setMethod(Target.AUTOUPLOAD_METHOD);
+		target.setEmail("");
+		target.setFtpServer("");
+		target.setFtpAccount("");
+		target.setFtpDirectory("");
+		target.setFtpPassword("");
+
+		FeConfig cfg = FeCTX.getFeCTX().getFeConfig();
+		String uploadUrl = cfg.getString("comcat-config/uploadUrlAriba");
+		target.setUploadUrl(uploadUrl);
+
+		List added = null;
+		String targetId = form.getTargetId();
+
+		if (StrUtil.isEmpty(targetId)) {
+			// create target
+			added = targetMgr.add(target,PagesUtil.getDbRegionToConnect(request));
+		} else {
+			// update target
+			target.setTargetId(targetId);
+			added = targetMgr.update(target,PagesUtil.getDbRegionToConnect(request));
+		}
+
+	    if ( added.size () > 0 ) {
+	        retObj.put("successMsg", "The upload target settings have been saved.");
+	      }
+	      else {
+	        retObj.put("errorMsg", "The upload target settings failed to be saved.");	        
+	      }
+		
+		retObj.put("cust_key", customerKey);
+		return retObj.toJSONString();
+
+	}
+
+}

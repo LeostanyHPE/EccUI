@@ -1,0 +1,77 @@
+package com.hp.ecc.ui.biz.publish;
+
+import hp.comcat.dax.fwk.common.util.FileUtil;
+
+import java.io.File;
+import java.io.FileInputStream;
+import org.apache.log4j.Category;
+
+import com.hp.ecc.ui.biz.archive.CatalogArchive;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.common.util.CTX;
+
+
+/**
+ * Publisher is used to publish catalogs via ftp, email, auto uploading to external url.
+ *
+ * @author 
+ * @version 1.0
+ */
+public class HpsbPublisher implements Publisher {
+
+  private HpsbTarget target = null;
+  private com.hp.ecc.ui.biz.archive.CatalogArchive archive = null;
+  private Catalog catalog = null;
+  private Category log = null;
+
+  public static HpsbPublisher getPublisher (CatalogArchive archive,
+                                            HpsbTarget target ) {
+    return new HpsbPublisher ( archive, target ); 
+  }
+
+  private HpsbPublisher ( com.hp.ecc.ui.biz.archive.CatalogArchive archive, HpsbTarget target ) {
+    this.archive = archive; 
+    this.target = target;
+    //catalog = archive.getCatalog();
+    CTX ctx = CTX.getCTX ();
+    log = ctx.getLog ( "SFTPPublisher" );
+  }
+
+  /**
+   * publish files
+   *
+   * @exception hp.comcat.biz.publish.PublishException
+   */
+  public void publish ( java.io.File file ) throws PublishException {
+    String server = target.getFtpServer ();
+    String account = target.getFtpAccount ();
+    String password = target.getFtpPassword ();
+    String targetDir = target.getFtpDirectory ();
+    String name = file.getName ();
+    String remote = targetDir + "/" + name;
+    
+    try
+    {
+    	String fileName = file.getName();
+		    System.out.println( "copying file " + file );
+         //copying file to output/hpsb folder form output folder
+         String hpsbTempFileName = fileName + ".tmp"; //temporary file in HpsbOutPut folder
+         File targetFile = new File(targetDir + File.separatorChar + hpsbTempFileName);
+         //copy
+         System.out.println("copy function is: copy(" + file + "," + targetFile + ")");
+         FileUtil.copy(file,targetFile);
+         System.out.println("File " + file + " is copied as " + targetFile);
+         //Rname
+         File renameToFile = new File(targetDir + File.separatorChar + file.getName()); 
+         System.out.println("rename function is: " + targetFile + ".rnameTo(" + renameToFile + ")");
+         targetFile.renameTo(renameToFile);
+    }
+    catch(Exception e)
+    {
+    	System.out.println("Error in HPSB");    	
+    	e.printStackTrace();
+    	throw new PublishException ( "Error in Storing HPSB File " );
+    }   
+  }
+
+}

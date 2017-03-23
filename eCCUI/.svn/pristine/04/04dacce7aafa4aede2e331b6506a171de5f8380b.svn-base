@@ -1,0 +1,14 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.validator;
+
+/**
+ * @author kn
+ *
+ */
+public interface ViewValidator {
+	
+	public boolean validate();
+
+}//class

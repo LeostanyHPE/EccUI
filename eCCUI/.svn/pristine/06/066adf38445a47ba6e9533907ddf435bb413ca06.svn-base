@@ -1,0 +1,260 @@
+package com.hp.ecc.ui.biz.catalog;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDataCollector;
+import hp.comcat.dax.fwk.common.db.dax.DaxResultSetToBeanConvertor;
+
+import java.sql.ResultSet;
+import java.util.*;
+
+import com.hp.ecc.ui.util.StrUtil;
+
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) </p>
+ * <p>Company: </p>
+ * @author 
+ * @version 1.0
+ */
+
+public class CatalogDaxDataCollector implements DaxDataCollector {
+
+  private HashMap catalogs = new HashMap ();
+  private List cidList = new ArrayList ();
+  private List cntCidList = new ArrayList ();
+  private Map cntryCdList = new HashMap ();
+  private Map pdList = new HashMap ();
+  private Map stdCatList = new HashMap ();
+  private String zoneDescriptor = null;
+  private String chargeFlag = null;
+  private String epPriceDescriptor = null;
+
+
+  private CatalogDaxDataCollector () {
+
+  }
+
+
+  public static CatalogDaxDataCollector getCatalogDaxDataCollector () {
+    return new CatalogDaxDataCollector ();
+  }
+
+  /**
+   * @return Returns true if the result set represents a new object, return false otherwise
+   */
+  public boolean isNewBean ( ResultSet row ) {
+    String catalogID = getDBValue ( row, CatalogFields.ID );
+    boolean isNewFlag = isNew ( cntCidList, catalogID );
+    if ( isNewFlag ) {
+      cntCidList.add ( catalogID );
+    }
+    // System.out.println("in new bean0000000000000000000000000000 000000 #################### catalog id:" + catalogID + ",NEW:" + isNew);
+    return isNewFlag;
+  }
+
+  /**
+   * Add bean to the collector
+   *
+   * @param bean Data bean
+   */
+  public void addBean ( ResultSet row, DaxResultSetToBeanConvertor cvt ) {
+    Catalog catalog = ( Catalog ) cvt.resultSetRecordToBeanByClass ( Catalog.class
+        , row );
+    // Modified by Sivakumar on 18-10-2007
+    String catalogID = catalog.getId ();
+    boolean isNewFlag = isNew ( cidList, catalogID );
+    if ( isNewFlag ) {
+      //    System.out.println("in addbean 0000000000000000000000000000000000#################### catalog id:" + catalogID + " is new catalog");
+      catalogs.put ( catalogID, catalog );
+      cidList.add ( catalogID );
+    }
+
+    updCntryList ( catalog );
+    updPdList ( catalog );
+    updStdCatList ( catalog );
+    updateEprimePD ( catalog );
+    updateZoneDescriptor ( catalog );
+  }
+
+  /**
+   * @return the data list
+   */
+  public List getDataList () {
+    List dataList = getAllRecords ();
+    return dataList;
+  }
+
+
+  private void updateEprimePD ( Catalog catalog ) {
+    String eprimePD = catalog.getEprimePriceDescriptor ();
+    if ( !StrUtil.isEmpty ( eprimePD ) ) {
+      epPriceDescriptor = eprimePD;
+    }
+  }
+
+  private void updateZoneDescriptor ( Catalog catalog ) {
+    String zoneDes = catalog.getZoneDescriptor ();
+    String chargeF = catalog.getChargeFlag ();
+
+    if ( !StrUtil.isEmpty ( zoneDes ) ) {
+      zoneDescriptor = zoneDes;
+    }
+    if ( !StrUtil.isEmpty ( chargeF ) ) {
+      chargeFlag = chargeF;
+    }
+
+  }
+
+  private List getAllRecords () {
+    List retList = new ArrayList ();
+    Catalog catalog = null;
+    String catalogID = null;
+    List cntryList = null;
+    List pds = null;
+    List sCats = null;
+    String[] cntryArray = null;
+    String[] pdArray = null;
+    String[] sCatArray = null;
+
+    for ( int ii = 0; ii < cidList.size (); ii++ ) {
+      catalogID = ( String ) cidList.get ( ii );
+      catalog = ( Catalog ) catalogs.get ( catalogID );
+      // System.out.println("#in get all record ################### catalog id:" + catalogID);
+
+      cntryList = ( List ) cntryCdList.get ( catalogID );
+      if ( !StrUtil.isListEmpty ( cntryList ) ) {
+        cntryArray = StrUtil.listToStrArray ( cntryList );
+        catalog.setCntryList ( cntryArray );
+      }
+      else {
+        cntryArray = new String[0];
+      }
+
+      pds = ( List ) pdList.get ( catalogID );
+      if ( !StrUtil.isListEmpty ( pds ) ) {
+        pdArray = StrUtil.listToStrArray ( pds );
+        catalog.setPriceDescritproList ( pdArray );
+      }
+      else {
+        pdArray = new String[0];
+      }
+
+      sCats = ( List ) stdCatList.get ( catalogID );
+      if ( !StrUtil.isListEmpty ( sCats ) ) {
+        sCatArray = StrUtil.listToStrArray ( sCats );
+        catalog.setSelectedStdCatalogs ( sCatArray );
+      }
+      else {
+        sCatArray = new String[0];
+      }
+
+      catalog.setZoneDescriptor ( zoneDescriptor );
+      catalog.setChargeFlag ( chargeFlag );
+      catalog.setEprimePriceDescriptor ( epPriceDescriptor );
+      retList.add ( catalog );
+
+    }
+    return retList;
+
+  }
+
+  /*
+      private void addToCatalogList(Catalog catalog, String ID){
+           catalogs.put(ID,catalog);
+
+      }
+      private boolean isNew(Map target, String value){
+          //Catalog catalog = null;
+          boolean isNew = true;
+
+          if(target.size() > 0 ){
+               if(target.containsKey (value)){
+                   //catalog = (Catalog)target.get(value);
+                   isNew = false;
+               }
+           }
+           return isNew;
+      }*/
+
+
+  private void updList ( String catalogID,
+                         Map targetMap,
+                         String dbValue ) {
+
+    List list = ( List ) targetMap.get ( catalogID );
+    if ( StrUtil.isListEmpty ( list ) ) {
+      list = new ArrayList ();
+    }
+    addToList ( list, dbValue );
+    targetMap.put ( catalogID, list );
+  }
+
+
+  private void updCntryList ( Catalog catalog ) {
+    String cntry = catalog.getCntryCode ();
+    // Modified by Sivakumar on 18-10-2007
+    String id = catalog.getId ();
+    if ( cntry != null ) {
+      updList ( id, cntryCdList, cntry );
+    }
+  }
+
+  private void updPdList ( Catalog catalog ) {
+    String pd = catalog.getPriceDescriptor ();
+    // Modified by Sivakumar on 18-10-2007
+    String catalogId = catalog.getId ();
+    if ( pd != null ) {
+      updList ( catalogId, pdList, pd );
+    }
+
+  }
+
+
+  private void updStdCatList ( Catalog catalog ) {
+    String stdCatID = catalog.getSelectedStdCatalog ();
+    // Modified by Sivakumar on 18-10-2007
+    String catalogId = catalog.getId ();
+    if ( stdCatID != null ) {
+      updList ( catalogId, stdCatList, stdCatID );
+    }
+  }
+
+  private boolean isNew ( List target, String value ) {
+    boolean isNewFlag = true;
+
+    if ( !StrUtil.isListEmpty ( target ) ) {
+      if ( target.contains ( value ) ) {
+        isNewFlag = false;
+      }
+    }
+    return isNewFlag;
+  }
+
+
+  private void addToList ( List targetList, String value ) {
+
+    if ( isNew ( targetList, value ) ) {
+      targetList.add ( value );
+
+    }
+  }
+
+
+  private String getDBValue ( ResultSet row, String fName ) {
+    String dbValue = null;
+
+    try {
+      dbValue = row.getString ( fName );
+
+    }
+    catch ( Exception e ) {
+      System.out.println ( "field name:" + fName );
+      e.printStackTrace ();
+
+    }
+    return dbValue;
+  }
+
+
+}

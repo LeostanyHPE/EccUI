@@ -1,0 +1,118 @@
+package com.hp.ecc.ui.biz.processor.bundle;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.bundle.BundleException;
+import com.hp.ecc.ui.biz.bundle.BundleQueryMgr;
+import com.hp.ecc.ui.biz.bundle.BundleSearchCriteria;
+import com.hp.ecc.ui.biz.bundle.CatalogBundle;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.view.beans.BundleInstanceListForm;
+import com.hp.ecc.ui.view.controller.MasterCatalogController;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Service
+public class BundleListInstanceProcessor {
+	private static final Logger logger = LoggerFactory.getLogger(BundleListInstanceProcessor.class);
+	
+	public void serachBundleListInstance (BundleInstanceListForm form, JSONObject returnObject, String regionCode, String dbRegionToConnect, String tenantCode) {
+		
+		BundleSearchCriteria criteria = new BundleSearchCriteria ();
+	    criteria.setRegionCode ( regionCode );
+	    //criteria.setCustID(form.getCustId());
+	    //criteria.setCustName(form.getCustName());
+	    criteria.setCustKey ( form.getCustKey () );
+	    criteria.setEndDateFrom ( form.getEndDateFrom () );
+	    criteria.setEndDateTo ( form.getEndDateTo () );
+	    criteria.setIncludedProd ( form.getPart () );
+	    criteria.setPriceDescriptor ( form.getPriceDesc () );
+	    criteria.setStartDateFrom ( form.getStartDateFrom () );
+	    criteria.setStartDateTo ( form.getStartDateTo () );
+	    criteria.setStatus ( form.getStatus () );
+	    //added for Chianti
+	    criteria.setStdCatalogId(form.getStdCatalogId());
+	    criteria.setStdCatalogName(form.getStdCatalogName());
+	    
+	    if (form.getCustKey()!=null && !form.getCustKey().isEmpty())
+	    	criteria.setTenantCode(TenantConstants.getNoSharedTenant(PagesUtil.getTenantCodeFromCustKey(form.getCustKey())));
+	    else
+	    	criteria.setTenantCode(TenantConstants.getNoSharedTenant(tenantCode));
+	    
+	    BundleQueryMgr mgr = BundleQueryMgr.newBundleQueryMgrType ();
+	    try {
+	    	
+	      List list = mgr.findBundles ( criteria, dbRegionToConnect );
+	      //fLog.debug( "no. of bundle instances selected : " + ( list!=null ? 0 : list.size() ) );
+	      /* for eZilla # 57208
+	       * Price Profile column is displayed in bundle instance list page only for US region
+	       * the attribute set using the following code is used check the region code
+	       * */
+	      //request.setAttribute( "BundleInstanceListAction.regionCode", PagesUtil.getRegionCode( request ) );
+	     // System.out.println("List size = "+list.size());
+	      returnObject.put("BundleInstanceList_searchList", list);
+	      //form.setBundleInstanceList ( list );
+		
+	    } catch(Exception e) {
+	    	
+	    }
+	}
+	
+	public void deleteBundleListInstance(BundleInstanceListForm form, JSONObject returnObject, String regionCode, String dbRegionToConnect, String loginUser) {
+		String[] del = form.getSelectedBundleInstanceList ();
+	    StringBuffer DeletedBundleList = new StringBuffer ();
+	    StringBuffer ErrorBundleList = new StringBuffer ();
+	    if ( del != null ) {
+	      if ( del.length > 0 ) {
+	        CatalogBundle instance = new CatalogBundle ();
+
+	        boolean Status = true;
+	        for ( int i = 0; i < del.length; i++ ) {
+	          String[] Ids = this.Split ( del[i] );
+	          instance.setBundleID ( Ids[0] );
+	          instance.setCatalogID ( Ids[1] );
+	          try {
+	            instance.remove ( loginUser, dbRegionToConnect );
+	        	  instance.getChildGroups(dbRegionToConnect);
+	            DeletedBundleList.append ( del[i] ).append ( " , " );
+	          }
+	          catch ( BundleException e ) {
+	            ErrorBundleList.append ( del[i] ).append ( " , " );
+	            Status = false;
+	            e.printStackTrace ();
+	          }
+	        }
+	      }
+	    }
+	    form.setTask ( "search" );
+	    if ( DeletedBundleList.length () > 0 ) {
+	    	returnObject.put("successMsg", "Bundle Instances deleted : "+ DeletedBundleList.substring ( 0, DeletedBundleList.length () - 2 ) );
+	      
+	    	logger.info(loginUser+"-"+regionCode+"--> deleteBundleListInstance() : Bundle Instances "+ DeletedBundleList.substring ( 0, DeletedBundleList.length () - 2 ) + " are deleteb successfully by "+loginUser);
+	    	
+	    }
+	    if ( ErrorBundleList.length () > 0 ) {
+	    	returnObject.put("successMsg", "\nBundle instances not able to delete : " +ErrorBundleList );
+	      	    	
+	    	logger.info(loginUser+"-"+regionCode+"--> deleteBundleListInstance() : Bundle instances not able to delete "+ ErrorBundleList + " by "+loginUser);
+	    }
+	}
+	
+	private String[] Split ( String Id ) {
+	    String[] Ids = new String[2];
+	    StringTokenizer st = new StringTokenizer ( Id, "^" );
+	    int i = 0;
+	    while ( st.hasMoreTokens () ) {
+	      Ids[i] = st.nextToken ();
+	      i++;
+	    }
+	    return Ids;
+	  }
+
+
+}

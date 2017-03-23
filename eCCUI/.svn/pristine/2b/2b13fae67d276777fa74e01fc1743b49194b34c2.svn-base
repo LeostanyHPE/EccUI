@@ -1,0 +1,93 @@
+<div class="row" ng-controller="productDetailAttributesCtrl" ng-init="loadProductDetailAttributes()">
+		
+	<div class="customer_rows form-border">
+		<div class="four columns">
+			<div class="generals">
+				<span>Product Expiry Date:</span>
+				<div class="div_input" ng-bind="form.expiredDate"></div>
+			</div>
+		</div>
+		<div class="four columns" >
+			<div class="generals">
+				<span style="width: 45%">Third Party Product flag:</span>
+				<div class="div_input" ng-bind="form.thirdPartyFlag"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Bundle Flag:</span>
+				<div class="div_input" ng-bind="form.bundleFlag"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Bundle Type:</span>
+				<div class="div_input" ng-bind="form.bundleType"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Authorization Model:</span>
+				<div class="div_input" ng-bind="form.authorizationModel"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Level Price Flag:</span>
+				<div class="div_input" ng-bind="form.levelPriceFlag"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Stock Code:</span>
+				<div class="div_input" ng-bind="form.stockCode"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Cost Base:</span>
+				<div class="div_input" ng-bind="form.costBase"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Activity Code:</span>
+				<div class="div_input" ng-bind="form.activityCode"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Recyclable Flag:</span>
+				<div class="div_input" ng-bind="form.recyclableFlag"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Vision Code:</span>
+				<div class="div_input" ng-bind="form.visionFlag"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>Tangible Flag:</span>
+				<div class="div_input" ng-bind="form.intangibleFlag"></div>
+			</div>
+		</div>
+		<div class="four columns">
+			<div class="generals">
+				<span>CarePack Flag:</span>
+				<div class="div_input" ng-bind="form.carepackFlag"></div>
+			</div>
+		</div>
+		
+				
+	</div>	
+	
+	<div class="search">
+            <div class="generals">
+				<a class="btn btn-inline" ng-click="close(false)" style="margin: 10px 0px 0px 0px;">Close</a>
+			</div>
+	</div>
+	
+		
+</div>

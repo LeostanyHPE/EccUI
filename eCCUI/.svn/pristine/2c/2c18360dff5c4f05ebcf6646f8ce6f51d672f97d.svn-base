@@ -1,0 +1,85 @@
+eccApp.controller('copySogCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams',
+  function ($scope, $http, $timeout, webStorage, $routeParams) {
+        $scope.successMessage='';
+        $scope.errorMessage='';
+        
+        $scope.sog_id = $routeParams.sog_id;
+        $scope.form = {};
+        $scope.form.copySogId = $scope.sog_id;
+        $scope.loadCopySog = function(){
+        	$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+    		console.log($scope.custLoginDetails+" \"SOG Copy Task\"");
+    		
+        	$("#loadTime").html("");
+    		$scope.loadTime = new Date().getTime();                             
+            $http({
+            	url: 'csog/sogLandingCopy.htm?task=copy&sogId='+$scope.sog_id+'',
+                method:"GET",
+                headers: {
+                	"Accept": "application/json; charset=utf-8",
+                    "Cache-Control" : "no-cache",
+                    "Pragma" : "no-cache",
+                    "If-Modified-Since" : "0"
+                }
+            }).success(function(data,status,header,config) {
+            	$scope.form = JSON.parse(data.sogInfo);
+            }).error(function(data, status, headers, config) {
+                ///        console.log("Session Expired please try to relogin.");
+            });
+        };
+        
+        $scope.copySog = function(){
+        	$("#loadTime").html("");
+    		$scope.loadTime = new Date().getTime();
+        	if(!$scope.form.sogName){
+        		 $scope.hideMsg();
+                 $scope.showMsg('','Please enter alphanumeric characters for SOG Name:   Required field');
+                 return false;
+        	}
+        	
+        	$http({
+        		url: 'csog/sogLandingCopySave.htm?task=save&form='+encodeURIComponent(angular.toJson($scope.form)),
+                method:"GET",
+                headers: {
+                			"Accept": "application/json; charset=utf-8",
+                            "Cache-Control" : "no-cache",
+                            "Pragma" : "no-cache",
+                            "If-Modified-Since" : "0"
+                		}
+            }).success(function(data,status,header,config) {
+            	if(data.msg == "Fail to Copy the Sog header" || data.msg == "Name is not unique. Please enter another name for the sog"){
+                $scope.hideMsg();
+                $scope.showMsg('',data.msg);
+                }else{
+                	$scope.hideMsg();
+                	$scope.sogData = JSON.parse(data.sogInfo);
+                	var storageData = {};
+                	storageData.csog_id = $scope.sogData.sogId;
+                	storageData.csog_name = $scope.sogData.sogName;
+                	storageData.csog_description = $scope.sogData.sogDescription;
+                	storageData.creation_date = $scope.sogData.creationDate;
+                	storageData.last_modified_date = $scope.sogData.lastModifiedDate;
+                	webStorage.session.add('sogHeaderData', storageData);
+                	document.location.href="#/sogHome?sogID="+$scope.sogData.sogId;
+                }
+            	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");                                                
+            }).error(function(data, status, headers, config) {
+                ///        console.log("Session Expired please try to relogin.");
+                                            
+            });
+        };
+        
+        $scope.cancelCopySog = function(){
+        	document.location.href="#/ManageOfferingGroups";           
+        };
+        
+        $scope.showMsg=function(success, error){
+            $scope.successMessage=success;
+            $scope.errorMessage=error;
+        };
+                        
+        $scope.hideMsg=function(){
+            $scope.successMessage='';
+            $scope.errorMessage='';
+        };
+}]);

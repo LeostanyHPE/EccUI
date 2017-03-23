@@ -1,0 +1,138 @@
+eccApp.controller('ViewOnlyCatalogCtrl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','changeDateParserNew', '$window', 'dialog', 
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,changeDateParserNew, $window, dialog) {
+	$scope.successMessage	=	'';
+	$scope.errorMessage		=	'';
+	$scope.changeDateParserNew=changeDateParserNew;
+	$scope.priceDescriptor = [];
+	$scope.countries = [];
+	$scope.stdProdListData = [];
+	$scope.isUpdate = false;
+	$scope.isLinkToAlertsEnabled= 'false';	
+	$scope.form = [];
+	$scope.catId = $routeParams.catalogId;
+	$scope.roleId = webStorage.local.get('userRoleId');
+	$scope.statusValue = '';
+	$scope.catalogId = $routeParams.catalogId;
+	$scope.dataLoad = false;
+	$scope.checkingCatalogTable=false;
+	$scope.attribute = '';
+	$scope.loadFlag = true;
+	
+	$scope.searchByAttribute 	= [{ id: '1', name: "id", value: "Product SKU" }, { id: '2', name: "shortDesc", value: "Short Description" }, { id: '3', name: "productLine", value: "Product Line" }];
+	
+		
+	$scope.catalogId=$routeParams.catalogId;
+	$scope.loadCatalogData=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"View Standard Catalog Task\"");
+
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.attribute = $scope.searchByAttribute[0].name;
+		
+		$scope.messageAfterSaveCatalog=webStorage.session.get('messageAfterSaveCatalog');
+		if(!$scope.messageAfterSaveCatalog){
+			$scope.messageAfterSaveCatalog="";
+			webStorage.session.add('messageAfterSaveCatalog', "");
+		}
+		$http({
+				url: "catalog/viewOnlyCatalog.htm?catalogId="+$routeParams.catalogId,
+				method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+				data : {}
+			 }).
+		  success(function(data, status, headers, config) {
+			  $scope.hideMsg();
+				$scope.showMsg($scope.messageAfterSaveCatalog,'','');
+				webStorage.session.add('messageAfterSaveCatalog', "");
+			  	$scope.regionCode = data.regionCode;			  	 
+				$scope.saleCntryCode = data.saleCntryCode;
+			  	if($scope.regionCode == "US" || $scope.regionCode == "EU" || $scope.regionCode == "CA"  || $scope.regionCode == "LA"){
+			  		$("#purchTerm").css({"display":"none"});
+			  	}
+			  	if($scope.regionCode == "EU" || $scope.regionCode == "CA"  || $scope.regionCode == "LA"){			  	
+			  		$("#priceprofile").css({"display":"none"});
+			  	}
+			  	
+			  	if($scope.regionCode == "GL"){
+				  	if($scope.saleCntryCode != 'AP'){
+				  		$("#purchTerm").css({"display":"none"});
+				  	}
+				  	else{
+				  		$("#purchTerm").css({"display":"block"});
+				  	}
+			  	}
+			  	$scope.displayCatalogData = data.catalog_Info[0];			  	 
+			  	$scope.displaySupplierData = data.supplier_Info[0];
+			  	$scope.displayCategorizationval = data.categorization_Info[0];		
+			  	$scope.displayCountriesData = data.countries_Info[0];
+			  	$scope.displayLocOptionCategoryData = data.locoptioncategory_Info[0];	
+			    $scope.displayCatalogData.cat_expire_date = changeDateParserNew.changeDateFormat($scope.displayCatalogData.cat_expire_date);
+			  				  	
+			  	if($scope.regionCode == "EU"){
+			  		$("#selSegPrice").css({"display":"block"});
+			  	}
+			  	else{
+			  		$("#selSegPrice").css({"display":"none"});
+			  	}
+			  	  			  	 
+			  	$scope.priceDescriptor = data.priceDescriptor_Info;
+			  	$scope.priceDescriptorval = data.priceDescriptor_Info[0];
+			  				  
+			  				  	
+			  	$scope.countries = data.countries_Info;
+			  	$scope.countriesval = data.countries_Info[0];
+			  	
+			  	
+			  	$scope.optioncategory = data.locoptioncategory_Info;
+			  	$scope.optioncategoryval = data.locoptioncategory_Info[0];
+			  				  				  				  	
+			  	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		  }).
+		  error(function(data, status, headers, config) {
+			  	console.log("Error in service");
+		  });
+	};
+
+	$scope.cancel=function(){		
+		document.location.href = "#/PublishStandardCatalogList";		
+	};
+
+	$scope.clearCacheFromUI = function(){
+		$http({
+			url: 'clearCacheInUI.htm',
+			method:"GET",
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+			}
+		 }).success(function(data,status,header,config) {
+			//To Clear Cache in UI...
+		});
+	};
+	
+	$scope.showMsg=function(success, error, message){
+		$window.scrollTo(0, 0);
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    	$scope.validateCatalogMessage=message;    	
+    };
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    	$scope.validateCatalogMessage ='';    	
+    };
+    
+    $scope.showValidateMsg=function(success, error, warning){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    	$scope.validateCatalogMessage=warning;    	
+    };
+}]);

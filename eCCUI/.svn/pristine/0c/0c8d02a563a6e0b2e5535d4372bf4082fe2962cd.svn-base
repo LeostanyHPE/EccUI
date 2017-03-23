@@ -1,0 +1,886 @@
+package com.hp.ecc.ui.biz.pricetier;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.Master;
+import com.hp.ecc.ui.biz.catalog.OptionCategory;
+import com.hp.ecc.ui.biz.misc.PriceDescriptor;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.FeCTX;
+import com.hp.ecc.ui.common.web.catalog.master.MasterWebUtil;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.FormatUtil;
+import com.hp.ecc.ui.view.beans.PriceMasterForm;
+import com.hp.ecc.ui.web.util.LabelValueBean;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * Created
+ * <p>
+ * Copyright: Copyright (c)
+ * </p>
+ * <p>
+ * Company: HP
+ * </p>
+ * 
+ * @author
+ * @version 1.0
+ * 
+ *          @ {Description: Utility class used across all price tier mgmt.
+ *          related UI action classes. }
+ * 
+ */
+
+public class PriceTierUtil {
+	public static final String US_REGION = "US";
+	public static final String AP_REGION = "AP";
+	public static final String GL_REGION = "GL";
+	public static final String US_COUNTRY = "US";
+	public static final String LA_REGION = "LA";
+
+	public static final String OPTIONS = "options";
+	public static final String COUNTRIES = "countries";
+
+	public static final String UNQ_NAME_MSG = "Price Tier Name should be Unique and A Price Tier with this Name already Exists.";
+	public static final String REQ_INV_MSG = "Unable to process your Request, Insufficient parameter list Found in Request.";
+	public static final String REQ_ERR_MSG = "Unable to process your Request, Insufficient information Found in Request.";
+
+	public static final String ERR_MSG_PAGE_LOAD_1 = "An internal error occurred while loading Page";
+	public static final String ERR_MSG_PAGE_LOAD_2 = ERR_MSG_PAGE_LOAD_1
+			+ ", Please contact Support.";
+
+	public static final String ERR_MSG_1 = "An internal error occurred while trying to save changes";
+	public static final String ERR_MSG_2 = ERR_MSG_1
+			+ ", Please contact Support.";
+	public static final String ERR_MSG_3 = ERR_MSG_2 + " Error code is ";
+
+	/**
+	 * Checks whether Request is authorized or not based on the permission code
+	 * defined for an user role.
+	 * 
+	 * @param HttpServletRequest
+	 *            input request.
+	 * @return CatForward returns null when request is authorized, otherwise a
+	 *         forward object contains error message.
+	 */
+	/*public static CatForward isAuthorized(HttpServletRequest request) {
+		CatForward vw = null;
+
+		Session ses = SessionMgr.getSessionMgr().getSession(request, true);
+		String roleName = PagesUtil.getLoginUserRoleName(request);
+		String regionCode = PagesUtil.getRegionCode(request);
+
+		boolean isAuthorized = ses
+				.isAuthorized(PermissionCode.MANAGE_PRICE_TIER);
+		if (!isAuthorized) {
+			vw = new CatForwardAction("/selectAccess", true);
+			vw.getErrs().add(
+					"Price Tier Functionality is not available for " + roleName
+							+ " role, in " + regionCode + " Region.");
+			vw.getErrs().add("Please choose access role as Std. Catalog Mgr.");
+		}
+		return vw;
+	}*/
+
+	/**
+	 * Returns generic program customer key from regional_default_attributes
+	 * table, for given region code.
+	 * 
+	 * @param String
+	 *            region code.
+	 * @return String customer key.
+	 */
+	public static String getGenericProgramCustomer(String regionCode, String adbRegionToConnect, String tenantCode) {
+		Map<String, String> customers = FeCTX.getFeCTX().getFeConfig().getGenericProgramCustomers(adbRegionToConnect);
+		String key= null;
+		  if(tenantCode.equalsIgnoreCase("HPQ"))
+		  {
+			  key = regionCode+"-"+"GEN_PROGRAM_CUST_KEY";
+		  }
+		  else
+		  {
+			  key = regionCode+"-"+"GEN_PROGRAM_CUST_KEY_"+tenantCode;
+		  }
+		  
+		return (String) customers.get( key );
+	}
+
+	
+	/**
+	 * Extracts price tier ID from either form or request object.
+	 * 
+	 * @param PriceMasterForm
+	 *            form bean.
+	 * @param HttpServletRequest
+	 *            input request.
+	 * @return String price tier ID.
+	 */
+	public static String getPriceTierID(HttpServletRequest request) {
+		Session ses = SessionMgr.getSessionMgr().getSession(request, true);
+		String priceTierID = (String) request.getAttribute("priceTierID");
+		if (priceTierID == null)
+			priceTierID = request.getParameter("priceTierID");
+		if (priceTierID == null)
+			priceTierID = ses.getAttribute("priceTierTD").toString();
+
+		return priceTierID;
+	}
+
+	/**
+	 * Checks whether a bean exists with the given country code in the list of
+	 * Price Descriptor beans.
+	 * 
+	 * @param List
+	 *            list of Price Descriptor beans.
+	 * @param String
+	 *            country code.
+	 * @return boolean if exists returns true, otherwise false.
+	 */
+	public boolean isCntryExistsInList(List pricedescList,
+			String selectedPriceOBDesc) {
+		JSONObject prcDescTemp = null;
+		String hpCntryCdTemp = null;
+		boolean isCnryCdExists = false;
+		if (pricedescList != null && !StrUtil.isListEmpty(pricedescList)) {
+			for (int i = 0; i < pricedescList.size(); i++) {
+				prcDescTemp = (JSONObject) pricedescList.get(i);
+				if (prcDescTemp != null) {
+					hpCntryCdTemp = (String)prcDescTemp.get("cntry_cd");
+					if (hpCntryCdTemp != null
+							&& hpCntryCdTemp
+									.equalsIgnoreCase(selectedPriceOBDesc)) {
+						isCnryCdExists = true;
+						break;
+					}
+				}
+			}
+		}
+		return isCnryCdExists;
+	}
+
+	/**
+	 * Checks whether a bean exists with the given price descriptor in the list
+	 * of Price Descriptor beans.
+	 * 
+	 * @param List
+	 *            list of Price Descriptor beans.
+	 * @param String
+	 *            price descriptor.
+	 * @return boolean if exists returns true, otherwise false.
+	 */
+	public boolean isPriceDescExists(List priceDescList,
+			String selectedPriceDesc) {
+		JSONObject priceDescBean = null;
+		boolean flag = false;
+		String priceDesc = null;
+		for (int i = 0; priceDescList != null && priceDescList.size() > i; i++) {
+			priceDescBean = (JSONObject) priceDescList.get(i);
+			priceDesc = (String)priceDescBean.get("price_descriptor");
+			if (priceDesc != null
+					&& priceDesc.equalsIgnoreCase(selectedPriceDesc)) {
+				flag = true;
+				break;
+			}
+		}
+		return flag;
+	}
+
+	/**
+	 * Converts a list of Catalog Objects into a list of Master Objects.
+	 * 
+	 * @param List
+	 *            a list of Catalog Objects.
+	 * @return List a list of Master Objects.
+	 */
+	public static List convertCatalogListToMasterList(List catalogs) {
+		ArrayList<Master> mstList = new ArrayList<Master>();
+		Catalog c = new Catalog();
+		String prsModBy;
+		String ipcsModBy;
+		if (!StrUtil.isListEmpty(catalogs)) {
+			for (Iterator it = catalogs.iterator(); it.hasNext();) {
+				c = (Catalog) it.next();
+				prsModBy = c.getPrsLastModifiedBy();
+				ipcsModBy = c.getIpcsLastModifiedBy();
+				if (prsModBy == null || prsModBy.startsWith("PE")) {
+					c.setPrsLastModifiedDate("NA");
+					c.setPrsLastModifiedBy("NA");
+				}
+				if (ipcsModBy == null || ipcsModBy.startsWith("PE")) {
+					c.setIpcsLastModifiedDate("NA");
+					c.setIpcsLastModifiedBy("NA");
+				}
+				Master m = new Master();
+				m.setCatalog(c);
+				mstList.add(m);
+			}
+		}
+		return mstList;
+	}
+
+	/**
+	 * Reads a UI Field value from Master object and dumps it into form bean.
+	 * 
+	 * @param Master
+	 *            catalog master object.
+	 * @param PriceMasterForm
+	 *            form bean.
+	 */
+	public void dumpMasterFieldsInToForm ( Master master, PriceMasterForm form, String aDBRegionToConnect ) {
+		form.setPriceTierName ( master.getPriceTierName () );
+		form.setPrcDescriptor ( master.getPriceDescriptor () );
+		form.setPriceOBDesc ( master.getOBPriceDescriptor () != null ? 
+				master.getOBPriceDescriptor ().substring ( 0, 2 ) : master.getOBPriceDescriptor () );
+
+		String casual = master.getCasualBuyIncluded ();
+		boolean isCasualBuyIncluded = false;
+		if ( !"N".equals ( casual ) ) {
+			isCasualBuyIncluded = true;
+			casual = "C";
+		}
+		form.setCasualBugFlag ( isCasualBuyIncluded );
+
+		form.setFulFSID ( master.getFFSID () );
+		form.setFulFSName ( MasterWebUtil.getFulFillMentSiteName ( master.getFFSID (), aDBRegionToConnect ) );
+
+		form.setConfigExcludeFlag ( FormatUtil.CharToBoolean ( master.getConfigExcluded () ) );
+		form.setCSIncludeFlag ( FormatUtil.CharToBoolean ( master.getCrossSellIncluded () ) );
+		//This will populate the form with the value of the exclude product flag from the master
+		form.setExcludeProdFlag( FormatUtil.CharToBoolean( master.getExcludeProduct() ) );
+		form.setExcludeHStockCodeFlag ( FormatUtil.CharToBoolean( master.getHstockCodeFlag() ) );
+		
+		form.setPlcCheck( FormatUtil.CharToBoolean( master.getPlcCheck() ) );	
+		form.setOfferEquivFlag ( FormatUtil.CharToBoolean( master.getOfferEquivFlag() ) );
+		form.setOrderCheckFlag ( FormatUtil.CharToBoolean( master.getOrderCheckFlag() ) );
+		form.setFusionOrderabilityCheck ( FormatUtil.CharToBoolean( master.getFusionOrderabilityCheck() ) );
+		form.setFusionCheck(form.isFusionOrderabilityCheck());
+		
+		form.setNDIncludeFlag ( FormatUtil.CharToBoolean ( master.getNonDealProd () ) );
+		
+		form.setIncludeFlag ( casual );
+		form.setStdCatalogSelected ( master.getSelectedStdCatalogs () );
+		form.setfApplyStdPricing ( FormatUtil.CharToBoolean ( master.getTierPricingFlag () ) );
+		form.setPriceMerge ( master.getPriceMerge () );
+		form.setComment ( master.getComment () );
+		//Added for Brazil Tax Project
+		form.setExchangeRateType ( master.getExchangeRateType () );
+		//End : Brazil Tax Project
+
+		String[] dealList = master.getSelectedDeals ();
+		//String[] applyPricing = master.getPricingFlagforDeals ();
+		String sDeal = "";
+		if ( dealList != null ) {
+			for ( int i = 0; i < dealList.length; i++ ) {
+				if ( "".equals( sDeal ) )
+					sDeal = dealList[i];
+				else
+					sDeal = sDeal + "," + dealList[i];
+			}
+		}
+		form.setDealList ( sDeal );
+
+		form.setOptions ( master.getOptions () );
+		form.setCountries ( master.getOptCountries () );
+		form.setLocaleSelHidden ( master.getOptionCategory () );
+	}
+
+	/**
+	 * Returns an array of pricing flags for a given list of selected deals extracted from 
+	 * a given array of spl. pricing consists of deals mapped to pricing flags.
+	 * @param  String[] an array of selected deals.
+	 * @param  String[] an array of deals mapped to pricing flags.
+	 * @return String[] an array of pricing flags.
+	 */
+	public String[] getSpecialPricingArray ( String[] dealList, String[] splPricing ) {
+		if ( dealList != null && dealList.length > 0 ) {
+			String[] finalArray = new String[dealList.length];
+			for ( int i = 0; i < dealList.length; i++ ) {
+				boolean flag = false;
+				if ( splPricing != null && splPricing.length > 0 ) {
+					for ( int j = 0; j < splPricing.length; j++ ) {
+						if ( dealList[i].equals ( splPricing[j] ) ) {
+							flag = true;
+							break;
+						}
+					}
+				}
+				if ( flag ) finalArray[i] = "P";
+				else finalArray[i] = "A";
+			}
+			return finalArray;
+		}
+		return null;
+	}
+
+	/**
+	 * Splits a delimited string into tokens and puts it in map object.
+	 * 
+	 * @param String
+	 *            source string.
+	 * @param String
+	 *            delimiter.
+	 * @return Map contains keys as number starting from 1 and value as split
+	 *         token.
+	 */
+	public static Map<String, String> split(String source, String delimiter) {
+		Map<String, String> map = new HashMap<String, String>();
+		int id = 1, i = 0;
+		if ((source != null && source.trim().length() > 0)
+				&& (delimiter != null && delimiter.trim().length() > 0)) {
+			for (i = 0; i < source.length(); i++) {
+				int l = source.indexOf(delimiter, i);
+				if (l != -1) {
+					String piece = source.substring(i, l);
+					map.put(String.valueOf(id++), (piece != null) ? piece : "");
+					i = l;
+				} else {
+					if (i < source.length()) {
+						String piece = source.substring(i, source.length());
+						map.put(String.valueOf(id), (piece != null) ? piece
+								: "");
+					}
+					break;
+				}
+			}
+		}
+		if (i == source.length())
+			map.put(String.valueOf(id), "");
+		if (map.size() > 0)
+			return map;
+		return null;
+	}
+
+	/**
+	 * A wrapper which converts an Option category string contains options codes
+	 * delimted by comma, into a string array of option codes, and calls
+	 * respective overloaded method to perform the desired objective.
+	 * 
+	 * @param List
+	 *            a list contains all OptionCategory Objects.
+	 * @param String
+	 *            a string contains option codes delimited with comma.
+	 * @param List
+	 *            a list contains only selected OptionCategory Objects..
+	 * @return Map contains selected std. catalog optioncodes and countries.
+	 */
+	public Map<String, String> getSelectedOptions(List allOpts, String strOpts,
+			List<OptionCategory> selOpts) {
+		if (!StrUtil.isListEmpty(allOpts) && !StrUtil.isEmpty(strOpts)) {
+			StringTokenizer st = new StringTokenizer(strOpts, ",");
+			int optCount = st.countTokens();
+			String[] optCats = new String[optCount];
+			for (int i = 0; i < optCount; i++) {
+				optCats[i] = st.nextToken();
+			}
+			return getSelectedOptions(allOpts, optCats, selOpts);
+		}
+		return null;
+	}
+
+	/**
+	 * Extracts a list of selected option category objects and an array consists
+	 * of option codes and countries, derived from the list of all option
+	 * category objects compared with an array of selected option codes.
+	 * 
+	 * @param List
+	 *            a list contains all OptionCategory Objects.
+	 * @param String
+	 *            [] an array of selected option codes.
+	 * @param List
+	 *            a list contains only selected OptionCategory Objects..
+	 * @return Map contains selected std. catalog optioncodes and countries.
+	 */
+	public Map<String, String> getSelectedOptions(List allOpts,
+			String[] strOpts, List<OptionCategory> selOpts) {
+		StringBuffer options = new StringBuffer();
+		StringBuffer countries = new StringBuffer();
+
+		if (!StrUtil.isListEmpty(allOpts)
+				&& (strOpts != null && strOpts.length > 0)) {
+			boolean isOptnStart = true;
+			boolean isCntrStart = true;
+			for (int j = 0; j < strOpts.length; j++) {
+				Map<String, String> map = split(strOpts[j], "~");
+				if (map != null && map.size() == 3) {
+					String optCode = map.get(String.valueOf(1));
+					if (optCode != null) {
+						for (int i = 0; i < allOpts.size(); i++) {
+							OptionCategory optCat = (OptionCategory) allOpts
+									.get(i);
+							if (optCode.equalsIgnoreCase(optCat.getID())) {
+								selOpts.add(optCat);
+								String optn = map.get(String.valueOf(2));
+								String cntr = map.get(String.valueOf(3));
+								if (optn != null && optn.trim().length() > 0) {
+									if (!isOptnStart)
+										options.append(",");
+									options.append(optn);
+									isOptnStart = false;
+								}
+								if (cntr != null && cntr.trim().length() > 0) {
+									if (!isCntrStart)
+										countries.append(",");
+									countries.append(cntr);
+									isCntrStart = false;
+								}
+								allOpts.remove(i);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		Map<String, String> map = new HashMap<String, String>();
+		if (options.length() == 0)
+			map.put(PriceTierUtil.OPTIONS, null);
+		else
+			map.put(PriceTierUtil.OPTIONS, options.toString());
+		if (countries.length() == 0)
+			map.put(PriceTierUtil.COUNTRIES, null);
+		else
+			map.put(PriceTierUtil.COUNTRIES, countries.toString());
+		return map;
+	}
+
+	/**
+	 * Converts a list of OptionCategory Objects into a list of LabelValueBean
+	 * Objects.
+	 * 
+	 * @param List
+	 *            a list of OptionCategory Objects.
+	 * @return List a list of LabelValueBean Objects.
+	 */
+	public List makeLabelValueBeanListForOptionCategory(Collection ll) {
+		Iterator iterator = ll.iterator();
+		List<LabelValueBean> newList = new ArrayList<LabelValueBean>();
+
+		while (iterator.hasNext()) {
+			OptionCategory oo = (OptionCategory) (iterator.next());
+			String name = oo.getCategoryName();
+			String id = oo.getID();
+			String options = oo.getOptions();
+			if (options == null) {
+				options = "";
+			}
+			String countries = oo.getCountries();
+			if (countries == null) {
+				countries = "";
+			}
+			LabelValueBean label = new LabelValueBean(name, id + "~" + options
+					+ "~" + countries);
+			newList.add(label);
+		}
+
+		return newList;
+	}
+
+	/**
+	 * Fetches a list of available std. catalogs based on region code and price
+	 * desc and converts it to UI specific display format.
+	 * 
+	 * @param Master
+	 *            used to fetch std catalog associated to master.
+	 * @param String
+	 *            region code.
+	 * @param String
+	 *            price descriptor.
+	 * @param boolean when true, return id and name combination, other wise only
+	 *        id.
+	 * @return String return comma delimited selected std. catalog mappings.
+	 */
+	public String getAssociateStdCatalogList(Master master, String regionCd,
+			String priceDesc, boolean isName, String adbRegionToConnect,String tenantCode) {
+		PriceTierMgr mgr = new PriceTierMgr();
+		List stdCatalogList = mgr.getStdCatalogList(regionCd, priceDesc, adbRegionToConnect,tenantCode);
+		String catList = "";
+
+		if (master != null && master.getStdCatalogMapping() != null
+				&& master.getStdCatalogMapping().size() > 0) {
+			for (int i = 0; i < stdCatalogList.size(); i++) {
+				Catalog stdCat = (Catalog) stdCatalogList.get(i);
+				String stdCatID = stdCat.getId();
+				if (master.getStdCatalogMapping().containsKey(stdCatID)) {
+					String stdCatName = stdCat.getCatalogName();
+					String inclFlag = (String) master.getStdCatalogMapping()
+							.get(stdCatID);
+					if (isName) {
+						if (catList.equals(""))
+							catList = stdCatName;
+						else
+							catList = catList + ", " + stdCatName;
+						if (inclFlag.equalsIgnoreCase("C"))
+							catList = catList + "(GEN)";
+						else if (inclFlag.equalsIgnoreCase("G"))
+							catList = catList + "(GEN+GP)";
+						else if (inclFlag.equalsIgnoreCase("A"))
+							catList = catList + "(GEN-CUST)";
+					} else {
+						if (catList.equals(""))
+							catList = stdCatID;
+						else
+							catList = catList + ", " + stdCatID;
+					}
+				}
+			}
+		}
+		return catList;
+	}
+
+	/**
+	 * Converts an array of selected std. catalogs(catalogid~includeflag) into a
+	 * Map object consists of key as std. catalog id and value as include flag.
+	 * 
+	 * @param String
+	 *            [] an array of selected std. catalogs(catalogid~includeflag).
+	 * @return Map a Map Object consists of key as std. catalog id and value as
+	 *         include flag.
+	 */
+	public Map getSelectedStdCatalogMap(String[] selectedCatalogs) {
+		Map<Object, Object> stdCatalogMap = new HashMap<Object, Object>();
+		if (selectedCatalogs != null) {
+			for (int i = 0; i < selectedCatalogs.length; i++) {
+				String selectedCatalog = selectedCatalogs[i];
+				List tokens = StrUtil.split(selectedCatalog, "~");
+				stdCatalogMap.put(tokens.get(0), tokens.get(tokens.size() - 1));
+			}
+		}
+		return stdCatalogMap;
+	}
+
+	/**
+	 * A wrapper which converts an array of selected catalogs in to Map object
+	 * consists of key as std. catalog id and value as include flag, and calls
+	 * respective overloaded method to perform the desired objective.
+	 * 
+	 * @param String
+	 *            [] an array of selected std. catalogs.
+	 * @param JSONArray
+	 *            a list of available std. catalogs.
+	 * @return List a list of selected std. catalogs in the form of
+	 *         LabelValueBean objects.
+	 */
+	public JSONArray getSelectedStdCatalogList(String[] selectedCatalogs,
+			JSONArray stdCatalogs) {
+		Map stdCatalogMap = getSelectedStdCatalogMap(selectedCatalogs);
+		return getSelectedStdCatalogList(stdCatalogMap, stdCatalogs);
+	}
+
+	/**
+	 * A wrapper which gets a list of std. catalogs mapped to master in the form
+	 * of Map object consists of key as std. catalog id and value as include
+	 * flag, and calls respective overloaded method to perform the desired
+	 * objective.
+	 * 
+	 * @param String
+	 *            [] an array of selected std. catalogs.
+	 * @param List
+	 *            a list of available std. catalogs.
+	 * @return List a list of selected std. catalogs in the form of
+	 *         LabelValueBean objects.
+	 */
+	public JSONArray getSelectedStdCatalogList(Master master, List stdCatalogs) {
+		Map stdCatalogMap = null;
+		if (master != null)
+			stdCatalogMap = master.getStdCatalogMapping();
+		return getSelectedStdCatalogList(stdCatalogMap, stdCatalogs);
+	}
+
+	/**
+	 * Returns a list of selected std. catalogs in the form of LabelValueBean
+	 * objects.
+	 * 
+	 * @param Map
+	 *            contains std. catalogs mapped to master.
+	 * @param List
+	 *            list of available std. catalogs.
+	 * @return List a list of selected std. catalogs.
+	 */
+	public JSONArray getSelectedStdCatalogList(Map stdCatalogMap, List stdCatalogs) {
+		//List<LabelValueBean> selectedStdCatalogs = new ArrayList<LabelValueBean>();	
+		JSONArray selectedStdCatalogs = new JSONArray();
+		String catalogName = "";
+		String catalogId= "";
+		if ((stdCatalogMap != null) && (stdCatalogMap.size() > 0)) {
+			for (int i = 0; i < stdCatalogs.size(); i++) {
+				JSONObject currStdCat = (JSONObject) stdCatalogs.get(i);
+				System.out.println("currstdCatalog:"+currStdCat.toString());
+				String currStdCatID = (String)currStdCat.get("cat_catalog_id");
+
+				if (stdCatalogMap.containsKey(currStdCatID)) {
+					String currStdCatName = (String)currStdCat.get("cat_catalog_name");
+					String inclFlag = (String) stdCatalogMap.get(currStdCatID);
+					JSONObject bean = new JSONObject();
+					if ("C".equals(inclFlag)){
+						//bean = new LabelValueBean(currStdCatName + "(General)",currStdCatID + "~C");
+						bean.put("cat_catalog_name",currStdCatName + "(General)");
+						bean.put("cat_catalog_id",currStdCatID + "~C");
+					}
+					else if ("G".equals(inclFlag)){
+						//bean = new LabelValueBean(currStdCatName+ "(General+Generic Price)", currStdCatID+ "~G");	
+						bean.put("cat_catalog_name",currStdCatName+ "(General+Generic Price)");
+						bean.put("cat_catalog_id", currStdCatID+ "~G");
+					}
+					else if ("A".equals(inclFlag)){
+						//bean = new LabelValueBean(currStdCatName+ "(General+Customer's Authorized Products)",currStdCatID + "~A");
+						bean.put("cat_catalog_name",currStdCatName+ "(General+Customer's Authorized Products)");
+						bean.put("cat_catalog_id", currStdCatID + "~A");
+					}
+					selectedStdCatalogs.add(bean);					 
+					stdCatalogs.remove(i);
+					i--;
+				}
+			}
+		}
+		return selectedStdCatalogs;
+	}
+
+	/**
+	 * A wrapper which converts an array of selected catalogs in to Map object
+	 * consists of key as std. catalog id and value as include flag, and calls
+	 * respective overloaded method to perform the desired objective.
+	 * 
+	 * @param String
+	 *            [] an array of selected std. catalogs.
+	 * @param List
+	 *            a list of available std. catalogs.
+	 * @return String[] an array of selected std. catalogs.
+	 */
+	public String[] getSelectedStdCatalogs(String[] selectedCatalogs,
+			List stdCatalogs) {
+		Map stdCatalogMap = getSelectedStdCatalogMap(selectedCatalogs);
+		return getSelectedStdCatalogs(stdCatalogMap, stdCatalogs);
+	}
+
+	/**
+	 * A wrapper which gets a list of std. catalogs mapped to master in the form
+	 * of Map object consists of key as std. catalog id and value as include
+	 * flag, and calls respective overloaded method to perform the desired
+	 * objective.
+	 * 
+	 * @param String
+	 *            [] an array of selected std. catalogs.
+	 * @param List
+	 *            a list of available std. catalogs.
+	 * @return String[] an array of selected std. catalogs.
+	 */
+	public String[] getSelectedStdCatalogs(Master master, List stdCatalogs) {
+		Map stdCatalogMap = null;
+		if (master != null)
+			stdCatalogMap = master.getStdCatalogMapping();
+		return getSelectedStdCatalogs(stdCatalogMap, stdCatalogs);
+	}
+
+	/**
+	 * Returns an array of selected std. catalogs in the form of String
+	 * objects(std.catalogid~includeflag).
+	 * 
+	 * @param Map
+	 *            contains std. catalogs mapped to master.
+	 * @param List
+	 *            list of available std. catalogs.
+	 * @return String[] an array of selected std. catalogs.
+	 */
+	public String[] getSelectedStdCatalogs(Map stdCatalogMap, List stdCatalogs) {
+		List<String> selectedStdCatalogs = new ArrayList<String>();
+		if ((stdCatalogMap != null) && (stdCatalogMap.size() > 0)) {
+			for (int i = 0; i < stdCatalogs.size(); i++) {
+				JSONObject currStdCat = (JSONObject) stdCatalogs.get(i);
+				String currStdCatID = (String)currStdCat.get("cat_catalog_id");
+
+				if (stdCatalogMap.containsKey(currStdCatID)) {
+					String inclFlag = (String) stdCatalogMap.get(currStdCatID);
+					if ("C".equals(inclFlag))
+						selectedStdCatalogs.add(currStdCatID + "~C");
+					else if ("G".equals(inclFlag))
+						selectedStdCatalogs.add(currStdCatID + "~G");				
+					else if ("A".equals(inclFlag))
+						selectedStdCatalogs.add(currStdCatID + "~A");
+				}
+			}
+		}
+		if (!StrUtil.isListEmpty(selectedStdCatalogs))
+			return selectedStdCatalogs.toArray(new String[selectedStdCatalogs
+					.size()]);
+		return null;
+	}
+
+	/**
+	 * Returns a comma delimited std. catalog string derived from an array of
+	 * std. catalogs.
+	 * 
+	 * @param String
+	 *            [] an array of std. catalogs.
+	 * @return String a comma delimited std. catalogs.
+	 */
+	public static String getStdCatalogListString(String[] stdCatalogs) {
+		String stdCats = "";
+		for (int i = 0; i < stdCatalogs.length; i++) {
+			if (stdCats.equals(""))
+				stdCats = stdCatalogs[i];
+			else
+				stdCats = stdCats + ", " + stdCatalogs[i];
+		}
+		return stdCats;
+	}
+
+	/**
+	 * Resolves Oracle Error code for an Exception message received from dax
+	 * framework.
+	 * 
+	 * @param CatRuntimeException
+	 *            an exption object received from dax framework.
+	 * @return String an oracle error code.
+	 */
+	public String resolveErrorCode(CatRuntimeException e) {
+		String message = e.getThrowable().getMessage();
+		if (message == null || message.trim().length() == 0)
+			return null;
+
+		String line = null, errCode = null;
+		BufferedReader reader = null;
+
+		try { // picks 1st line in error message.
+			reader = new BufferedReader(new StringReader(message));
+			while ((line = reader.readLine()) != null) {
+				if (line.length() > 0)
+					break;
+			}
+		} catch (IOException ie) {
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException ie) {
+			}
+		}
+
+		if (line != null && line.length() > 0) {
+			int i1 = line.lastIndexOf("PLS-");
+			if (i1 == -1)
+				i1 = line.lastIndexOf("ORA-");
+			if (i1 != -1) {
+				int i2 = line.indexOf(":", i1);
+				if (i2 != -1)
+					errCode = line.substring(i1, i2);
+			}
+		}
+		return errCode;
+	}
+
+	/**
+	 * A wrapper which calls overloaded method to redirect the request to Price
+	 * Tier List page.
+	 * 
+	 * @return CatForward redirect object.
+	 */
+	/*public static CatForward forwardToPriceTierList() {
+		return forwardToPriceTierList(null, null, null);
+	}*/
+
+	/**
+	 * Redirects the request to Price Tier List page.
+	 * 
+	 * @param String
+	 *            menu item.
+	 * @param String
+	 *            error message.
+	 * @param String
+	 *            message.
+	 * @return CatForward redirect object.
+	 */
+	/*public static CatForward forwardToPriceTierList(String fromMenu,
+			String errMsg, String msg) {
+		String prmStr = null;
+
+		if (!StrUtil.isEmpty(fromMenu))
+			prmStr = "/pricetier/PriceTierList?menu=" + fromMenu;
+		else
+			prmStr = "/pricetier/PriceTierList?menu=maintain";
+		CatForward vw = new CatForwardAction(prmStr, true);
+
+		if (!StrUtil.isEmpty(errMsg))
+			vw.getErrs().add(errMsg);
+		if (!StrUtil.isEmpty(msg))
+			vw.getMsgs().add(msg);
+
+		return vw;
+	}*/
+
+	/**
+	 * Redirects the request to Price Tier Product List page.
+	 * 
+	 * @param String
+	 *            price tier ID.
+	 * @param String
+	 *            menu item.
+	 * @return CatForward redirect object.
+	 */
+	/*public static CatForward forwardToPriceTierProductList(String priceTierID,
+			String fromMenu) {
+
+		String prmStr = null;
+		if (!StrUtil.isEmpty(priceTierID))
+			prmStr = "/pricetier/PriceTierProductList?priceTierID="
+					+ priceTierID + "&menu=maintain";
+		else
+			prmStr = "/pricetier/PriceTierList?menu=maintain";
+
+		CatForward vw = new CatForwardAction(prmStr, true);
+
+		return vw;
+	}*/
+
+	/**
+	 * THis method is used to get the price merge id of the catalog
+	 * 
+	 * @param catalogId
+	 * @return priceMergeId
+	 */
+	public static String getPriceMergeId(String catalogId, String adbRegionToConnect) {
+		String priceId = null;
+
+		DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+		bean.setString1(catalogId);
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = null;
+
+		pstmt = mgr.makeParsedStmt("price_detail", "getPriceMergeId", bean,
+				null, null);
+		DaxDataBeanGeneral priceTierId = (DaxDataBeanGeneral) db.doGet(pstmt,
+				DaxDataBeanGeneral.class, bean);
+		if (null == priceTierId) {
+			priceId = "";
+		} else {
+			priceId = priceTierId.getString2();
+			if (null == priceId) {
+				priceId = "";
+			}
+		}
+
+		return priceId;
+	}
+}

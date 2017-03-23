@@ -1,0 +1,127 @@
+eccApp.controller('searchCustomersCrtl',['$scope', '$http', '$timeout','shareddata','webStorage','$routeParams',
+  function ($scope, $http, $timeout,shareddata,webStorage,$routeParams) {
+	$scope.customerName="";
+	$scope.customerId="";
+	
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	
+	$scope.dataLoad=false;
+	
+	$scope.searchCustList=[];
+	$scope.addDataToTable=[];
+	$scope.shareddata=shareddata;
+	
+	$scope.initSearch = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Search Customer Task\"");
+
+		if($scope.param && ($scope.param.custId || $scope.param.custName) ){
+			$scope.customerName = $scope.param.custName==undefined?"":$scope.param.custName;
+			$scope.customerId = $scope.param.custId==undefined?"":$scope.param.custId;
+			$scope.searchCustomers();
+		}
+	};
+		
+	$scope.searchCustomers = function() {
+		$("#loadTime").html("");
+		if($scope.customerName == "" && $scope.customerId == ""){
+			$scope.hideMsg();
+			$scope.showMsg('','Please fill at least one of the Customer Name or Customer ID fields');
+			return false;
+		}
+		else{			
+			$scope.hideMsg();
+			$scope.loadTime = new Date().getTime();
+			
+			$http({
+				url: "customer/search.htm?customerName="+$scope.customerName+"&customerId="+$scope.customerId,
+				method:"GET",
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+	                "Accept-Charset": "charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            }
+			 }).
+			  success(function(data, status, headers, config) {
+				  	$scope.searchCustList = [];
+				  	//$scope.addDataToTable=[];
+				  	$scope.searchCustList = data;
+				  	$scope.addDataToTable.length=0;
+				  	angular.forEach($scope.searchCustList, function(item){	
+			        	$scope.addDataToTable.push([
+				        	"<a id="+item.cust_id+" onClick=angular.element(document.getElementById('searchCustomer')).scope().selectCustomer('"+item.cust_key+"')>Select</a>",
+				        	item.cust_name,
+							item.cust_id,
+							item.cust_key
+						]);  
+				    });
+			        if ($scope.addDataToTable.length >0){
+			        	$scope.dataLoad=true;
+					}
+			        else{
+						 $scope.hideMsg();
+						 $scope.showMsg('','No Customers Found! ');
+					}
+			    	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			  }).
+			  error(function(data, status, headers, config) {
+					$scope.hideMsg();
+					$scope.showMsg('','Error in Search Customer Service');
+			  });
+		}
+		
+    };
+    
+    $scope.selectCustomer = function(id){
+    	$scope.customer = {};
+    	angular.forEach($scope.searchCustList, function(item){
+    		if(item.cust_key == id){
+		    	$scope.customer.custName = item.cust_name;
+		    	$scope.customer.custId = item.cust_key;
+		    	$scope.customer.customerId = item.cust_id;
+    		}
+    	});
+    	$scope.close($scope.customer);
+    };
+   
+    $scope.grid = {
+    		header: ["Select", "Customer Name", "Customer ID","Customer Key"],
+    		data: $scope.addDataToTable,
+    		sort: [[1, "asc"]],
+    		colDefs: [
+    		       { "sClass": "left", "aTargets": [1] },
+    			/*{ "sClass": "center", "aTargets": [2, 3] },
+    			{ "sClass": "center unsortable", "aTargets": [0] },
+    			{ "sClass": "left", "aTargets": [1, 5] },
+    			//{ "sClass": "left unsortable", "aTargets": [6] },
+    			// For the colunms that bSortable is false, set its sClass as unsortable, this is required if you includes ColReorderWithResize.js for your datatable
+    			{ "sClass": "right", "aTargets": [4] },
+    			{ "bSortable": false, "aTargets": [0] }*/
+    		],
+    		colViewBy: { // define view by function styleif sDom has C, this is required
+    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+    			//"aiExclude": [0],//define the column don>t need to display in view by
+    			"bShowAll": true,
+    			"sShowAll": "Show All",
+    			"sAlign": "left"
+    		}
+    };
+   	   
+    
+    $scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+    
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    };    
+    
+}]);
+
+
+

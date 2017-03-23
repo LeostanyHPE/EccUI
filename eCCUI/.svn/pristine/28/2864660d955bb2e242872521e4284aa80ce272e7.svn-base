@@ -1,0 +1,22 @@
+package com.hp.ecc.ui.biz.misc;
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) 2002</p>
+ * <p>Company: </p>
+ * @author unascribed
+ * @version 1.0
+ */
+
+public class EuRDDFields {
+  public static final String PA_NUMBER = "pa_number";
+  public static final String CUSTNAME = "custname";
+  public static final String COUNTRY_CODE = "country_code";
+  public static final String COUNTRYNAME = "countryname";
+  public static final String PDTFAMILY = "pdtfamily";
+  public static final String TAT = "TAT";
+  public static final String CALCMODE = "calcmode";
+  public static final String DDMCONTACT = "ddmcontact";
+
+}

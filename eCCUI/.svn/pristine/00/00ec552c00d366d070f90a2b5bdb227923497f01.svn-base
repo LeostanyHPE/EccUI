@@ -1,0 +1,510 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.controller;
+
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.fulfillmentsite.FFSTransType;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSite;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSiteMgr;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSiteProd;
+import com.hp.ecc.ui.biz.processor.admin.FulfillmentSiteProcessor;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.upload.UploadMessenger;
+import com.hp.ecc.ui.upload.common.UploadObject;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.FulfillmentSiteDetailForm;
+import com.hp.ecc.ui.view.beans.FulfillmentSiteListForm;
+import com.hp.ecc.ui.view.beans.FulfillmentSiteProdListForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author duvvurso
+ *
+ */
+
+@Controller
+public class FulfillmentSiteController {
+	
+	@Autowired
+	FulfillmentSiteProcessor ffsProcessor;
+	
+	private static final Logger logger = LoggerFactory.getLogger(ConfigController.class);
+	private static final String UPLOAD_SUCCESS_MSG =
+		      " The file processing has been initiated, upload id is.";
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/admin/fulfillmentSiteList.htm",  headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String fulfillmentSiteList(Locale locale, Model model,	HttpServletRequest request) {
+		logger.info("Inside Fulfillment Site service " + locale.toString());
+		JSONObject ffsListData = new JSONObject();
+		Gson gson = new Gson();
+		FulfillmentSiteListForm form = new FulfillmentSiteListForm();
+		
+	    String isPriceTier = request.getParameter( "pricetier");
+	    if( !StrUtil.isEmpty( isPriceTier ) && isPriceTier.equalsIgnoreCase( "true" ) || form.getIsPriceTier() ) {
+	    	form.setCanUpdateFfs ( "false" );
+	    	form.setIsPriceTier(true );
+	    	form.setPriceTierID(request.getParameter("priceTierID") );
+	    } else {
+			Session session = SessionMgr.getSessionMgr ().getSession (request, false);
+			
+	        FulfillmentSiteMgr fulfillmentSiteMgr = new FulfillmentSiteMgr ();
+	        int permission = fulfillmentSiteMgr.canViewUpdateFulfillmentSite ( session );
+	        if ( permission == 2 ) {
+	        	form.setCanUpdateFfs ( "true" );
+	        }
+	        else if ( permission == 1 ) {
+	        	form.setCanUpdateFfs ( "false" );
+	        }
+	        else {
+	        	form.setCanUpdateFfs ( "false" );
+	         
+	        	ffsListData.put("Message", "View permission is not available to access Fulfillment Site.");          
+	       	}
+	    }
+        
+		
+        // Dispatches based on task
+        String task = request.getParameter("task");
+        String tenantCode = TenantConstants.getAllSharedTenant(PagesUtil.getTenantCode(request));
+        if ( task == null || task.equals ( "search" )) {
+        	String ffsName = request.getParameter("ffsName");
+        	
+        	JSONArray ffsList = ffsProcessor.getFfsList(ffsName, PagesUtil.getDbRegionToConnect(request), tenantCode);
+        	ffsListData.put("fulfillmentSiteList",ffsList);
+
+        }       
+        else if ( task.equals ( "create" ) ) {
+        	//need to implement
+        }
+        
+        ffsListData.put("canUpdateFFS", form.getCanUpdateFfs());
+        ffsListData.put("isPriceTier", String.valueOf(form.getIsPriceTier()));
+        
+    	return ffsListData.toJSONString();		
+	}//fulfillmentSiteList
+	
+	@SuppressWarnings({ "unchecked", "unused" })
+	@RequestMapping(value = "/admin/fulfillmentSiteDetail.htm",  headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String fulfillmentSiteDetail(Locale locale, Model model,	HttpServletRequest request) {
+		logger.info("Inside Fulfillment Site service " + locale.toString());
+		Date date = new Date();
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG,	DateFormat.LONG, locale);
+		String formattedDate = dateFormat.format(date);
+		model.addAttribute("serverTime", formattedDate);
+		JSONObject ffsDetailData = new JSONObject();
+		Gson gson = new Gson();
+		
+		FulfillmentSiteDetailForm form = new FulfillmentSiteDetailForm();
+		String regionCode = PagesUtil.getRegionCode ( request );		
+		
+		String isPriceTier = request.getParameter( "pricetier");
+	    if( !StrUtil.isEmpty( isPriceTier ) && isPriceTier.equalsIgnoreCase( "true" ) || form.getIsPriceTier()) {
+	    	form.setCanUpdateFfs ( "false" );
+	        form.setCanUpdateRm ( "false" );
+	        form.setIsPriceTier(true);
+	        form.setPriceTierID(request.getParameter("priceTierID"));
+	    } else {
+	        // determine if user can edit/update the Fulfillment Site
+	        Session ses = SessionMgr.getSessionMgr ().getSession ( request, false );
+	        FulfillmentSiteMgr fulfillmentSiteMgr = new FulfillmentSiteMgr ();
+	        int permission = fulfillmentSiteMgr.canViewUpdateFulfillmentSite ( ses );
+	        if ( permission == 2 ) {
+	          form.setCanUpdateFfs ( "true" );
+	        }
+	        else if ( permission == 1 ) {
+	          form.setCanUpdateFfs ( "false" );
+	        }
+	        else {
+	          form.setCanUpdateFfs ( "false" );	          
+	             // "View permission is not available to access Fulfillment Site.";	          
+	        }
+
+	        int permission1 = fulfillmentSiteMgr.canViewUpdateResellerMargin ( ses );
+	        if ( permission1 == 2 ) {
+	          form.setCanUpdateRm ( "true" );
+	        }
+	        else if ( permission1 == 1 ) {
+	          form.setCanUpdateRm ( "false" );
+	        }
+	        else {
+	          form.setCanUpdateRm ( "false" );
+	        }
+	    }
+
+	    String ffsId = ( String ) request.getParameter ( "ffsId" );
+	    if(ffsId != null && !ffsId.equals("") && !ffsId.equals("undefined")){
+	    	ffsDetailData.put("FFSDetail",  ffsProcessor.getFFSDetail(ffsId, PagesUtil.getDbRegionToConnect(request)));
+	    }
+    	List<FFSTransType> ffsTypeList = ffsProcessor.getFFSTypeList(PagesUtil.getDbRegionToConnect(request));
+    	ffsDetailData.put("FFSTypeList",  ffsTypeList);
+    	
+    	ffsDetailData.put("canUpdateFFS", form.getCanUpdateFfs());
+    	ffsDetailData.put("canUpdateRM", form.getCanUpdateRm());
+    	ffsDetailData.put("isPriceTier", String.valueOf(form.getIsPriceTier()));
+    	ffsDetailData.put("priceTierID", form.getPriceTierID());
+	
+	//    ffsDetailData.put("formData", gson.toJson(form));
+	    
+		return ffsDetailData.toJSONString();
+	}//fulfillmentSiteDetail
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/admin/saveEditFFSDetails.htm",  headers = "Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody String fulfillmentSiteDetailInsertUpdate(Locale locale, Model model,	HttpServletRequest request) {
+		logger.info("Inside Fulfillment Site service " + locale.toString());
+		Date date = new Date();
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG,	DateFormat.LONG, locale);
+		String formattedDate = dateFormat.format(date);
+		model.addAttribute("serverTime", formattedDate);
+		JSONObject ffsDetailUpdateData = new JSONObject();
+		int records = 0;
+		// Dispatches based on task
+        String task = request.getParameter("task");
+        String ffsName = request.getParameter("ffsName");
+        String ffsId = request.getParameter("ffsId");
+        String tenantCode = PagesUtil.getTenantCode(request);
+       
+    	FulfillmentSite ffsBean = new FulfillmentSite();
+    	ffsBean.setFfs_Id(ffsId);
+    	ffsBean.setFfs_Name(ffsName);
+    	ffsBean.setFfs_Type(request.getParameter("ffsType"));
+    	ffsBean.setFfs_Desc(request.getParameter("ffsDesc"));
+    	ffsBean.setFfs_Direct_Flag(request.getParameter("ffsDirectFlag"));
+        ffsBean.setTenantCode(tenantCode);
+    	boolean valid = validate(ffsDetailUpdateData,ffsBean, task, request);
+    	
+    	if(valid){
+	        if ( task != null && task.equals ( "update" )) {
+	        	records = ffsProcessor.updateFulfillmentSiteById(ffsBean,PagesUtil.getDbRegionToConnect(request));
+	        }         
+	        else if ( task != null && task.equals ( "create" )) {
+	        	records = ffsProcessor.insertFulfillmentSite(ffsBean,PagesUtil.getDbRegionToConnect(request));
+	        }      
+	        ffsDetailUpdateData.put("records",String.valueOf(records));
+	        ffsDetailUpdateData.put("ffsId",ffsId);
+	        if(records > 0){
+	        	ffsDetailUpdateData.put("successMsg", task +" FFS Detail '" + request.getParameter("ffsName") + "' successful.");
+	        }else{
+	        	ffsDetailUpdateData.put("errorMsg", task + " " + ffsName + " Failed");
+	        }
+		}
+	    
+		return ffsDetailUpdateData.toString();
+	}//fulfillmentSiteDetailInsertUpdate
+	
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/admin/fulfillmentSiteProdMapping.htm",  headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody String fulfillmentSiteProdList(Locale locale, Model model,	HttpServletRequest request) {
+		logger.info("Inside fulfillmentSiteProdMapping " + locale.toString());
+		JSONObject ffsListData = new JSONObject();
+		Gson gson = new Gson();
+		
+		Session session = SessionMgr.getSessionMgr ().getSession (request, false);
+		FulfillmentSiteProdListForm form = new FulfillmentSiteProdListForm();
+		 String tenantCode = TenantConstants.getAllSharedTenant(PagesUtil.getTenantCode(request));	
+		
+        FulfillmentSiteMgr fulfillmentSiteMgr = new FulfillmentSiteMgr ();
+	    String isPriceTier = request.getParameter( "pricetier");
+	    if( !StrUtil.isEmpty( isPriceTier ) && isPriceTier.equalsIgnoreCase( "true" ) || form.getIsPriceTier() ) {
+	    	form.setCanUpdateFfs ( "false" );
+	    	form.setIsPriceTier(true );
+	    	form.setPriceTierID(request.getParameter("priceTierID") );
+	    } else {
+	        int permission = fulfillmentSiteMgr.canViewUpdateFulfillmentSite ( session );
+	        if ( permission == 2 ) {
+	        	form.setCanUpdateFfs ( "true" );
+	        }
+	        else if ( permission == 1 ) {
+	        	form.setCanUpdateFfs ( "false" );
+	        }
+	        else {
+	        	form.setCanUpdateFfs ( "false" );
+	         
+	        	ffsListData.put("errorMsg", "View permission is not available to access Fulfillment Site.");          
+	       	}
+	        form.setIsPriceTier(false);
+	    }
+        
+		// Dispatches based on task
+        String task = request.getParameter("task");
+        if ( task == null || task.equals ( "search" )) {
+        	String ffsIdSearch = request.getParameter("ffsIdSearch");
+        	String ffsNameId = request.getParameter("ffsNameId");
+        	String localProdIdSearch = request.getParameter("localProdIdSearch");
+        	String fromFFSDetails = request.getParameter("fromFFSDetails");
+        	if(fromFFSDetails != null && fromFFSDetails.equals("true")){
+	        	JSONArray ffsList = ffsProcessor.getFfsProdMappingList(ffsIdSearch, ffsNameId, localProdIdSearch,PagesUtil.getDbRegionToConnect(request),tenantCode);
+	        	ffsListData.put("fulfillmentSiteProdList",ffsList);
+        	}
+        }       
+        ffsListData.put("canUpdateFFS", form.getCanUpdateFfs());
+        ffsListData.put("isPriceTier", String.valueOf(form.getIsPriceTier()));
+        
+    	return ffsListData.toJSONString();		
+	}//fulfillmentSiteProdList
+	
+	@RequestMapping(value = "/admin/deleteFFSProdMapping.htm",  headers = "Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody String fulfillmentSiteProdDelete(Locale locale, Model model,	HttpServletRequest request) {
+		logger.info("Inside fulfillmentSiteProdDelete " + locale.toString());
+		
+		JSONObject ffsProdDeleteData = new JSONObject();
+		String ffsDelIds = request.getParameter("ffsDelIds");
+		String[] ffsIds = null;
+		if(ffsDelIds != null){
+			ffsIds = ffsDelIds.split(",");
+		
+			int count = ffsProcessor.deleteFulfillmentSiteProd(ffsIds,PagesUtil.getDbRegionToConnect(request));
+			
+		    if ( count != ffsIds.length ) {
+		    	ffsProdDeleteData.put("errorMsg", "Error in deleting Fulfillment Site Product Mapping") ;
+		      }
+		      else {
+		    	  ffsProdDeleteData.put("successMsg", "Fulfillment Site Product Mapping successfully deleted.");
+		      }
+		}
+		return ffsProdDeleteData.toString();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/admin/addFFSProdMapping.htm",  headers = "Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody String addFulfillmentSiteProdMaping(Locale locale, Model model,	HttpServletRequest request) {
+		logger.info("Inside Fulfillment Site service " + locale.toString());
+		Date date = new Date();
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG,	DateFormat.LONG, locale);
+		String formattedDate = dateFormat.format(date);
+		model.addAttribute("serverTime", formattedDate);
+		JSONObject ffsDetailUpdateData = new JSONObject();
+		int records = 0;
+		
+		String ffsId = request.getParameter("ffsId");
+		String localProd = request.getParameter("localProd");
+
+        FulfillmentSiteProd ffsProd = new  FulfillmentSiteProd();
+        ffsProd.setFfs_Id(ffsId);
+        ffsProd.setLocal_Prod(localProd);
+        ffsProd.setFfs_Prod(request.getParameter("ffsProd"));		
+        boolean valid = validateAddProductMapping(ffsDetailUpdateData,ffsProd,  request);
+        
+		if(valid){
+        records = ffsProcessor.insertFulfillmentSiteProd(ffsProd,PagesUtil.getDbRegionToConnect(request));
+    	
+        ffsDetailUpdateData.put("records",String.valueOf(records));
+        ffsDetailUpdateData.put("ffsId",ffsId);
+        ffsDetailUpdateData.put("localProd",localProd);
+        if(records > 0){
+        	ffsDetailUpdateData.put("successMsg", "Add FFS Prod Mapping '" + request.getParameter("ffsId") + "' successful.");
+        }else{
+        	ffsDetailUpdateData.put("errorMsg", "Add FFS Prod Mapping '" + request.getParameter("ffsId") + "' Failed");
+        }
+	    }
+		return ffsDetailUpdateData.toString();
+	}//fulfillmentSiteDetailInsertUpdate
+	
+	@SuppressWarnings("unchecked")
+	@RequestMapping(value = "/admin/uploadFufillmentSite.htm",  headers="Accept=*/*", method = RequestMethod.POST)
+	public @ResponseBody
+	String uploadFFS(@RequestParam("file") MultipartFile file, Locale locale,
+			Model model, HttpServletRequest request) {
+
+		JSONObject ffsDetailUploadData = new JSONObject();
+
+		// determine if user can edit/update the Fulfillment Site
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+		FulfillmentSiteMgr fulfillmentSiteMgr = new FulfillmentSiteMgr();
+		int permission = fulfillmentSiteMgr.canViewUpdateFulfillmentSite(ses);
+		if (permission == 2) {
+			ffsDetailUploadData.put("canUpdateFfs", "true");
+		} else if (permission == 1) {
+			ffsDetailUploadData.put("canUpdateFfs", "false");
+			ffsDetailUploadData
+					.put("errorMsg",
+							"Required permission is not available to access Fulfillment Site.");
+			return ffsDetailUploadData.toString();
+		} else {
+			ffsDetailUploadData.put("canUpdateFfs", "false");
+			ffsDetailUploadData
+					.put("errorMsg",
+							"Required permission is not available to access Fulfillment Site.");
+			return ffsDetailUploadData.toString();
+		}
+
+		if (!file.isEmpty()) {
+			String fileName = file.getOriginalFilename();
+			if (StrUtil.isEmpty(fileName) || !(fileName.endsWith(".xls") || fileName.endsWith(".xlsx"))) {
+				ffsDetailUploadData.put("errorMsg",
+						"Please Upload .xls file");
+				return ffsDetailUploadData.toString();
+			}
+			try {
+
+				UploadMessenger upldMsgr = new UploadMessenger();
+				UploadObject upldObj = new UploadObject();
+				HashMap<String, byte[]> fileMap = new HashMap<String, byte[]>();
+				// upldObj.setLoginId(PagesUtil.getLoginUserID(request));
+				upldObj.setLoginId(ses.getUserID());
+				upldObj.setDbRegionToConnect(PagesUtil
+						.getDbRegionToConnect(request));
+				List uploadHandle = null;
+				fileMap.put("FFS", file.getBytes());
+				upldObj.setUploadFileMap(fileMap);
+				upldObj.setUploadType("FFS");
+
+				uploadHandle = upldMsgr.processUpload(upldObj);
+				ffsDetailUploadData.put("successMsg", UPLOAD_SUCCESS_MSG
+						+ uploadHandle.get(0).toString());
+			} catch (Exception e) {
+				ffsDetailUploadData.put("errorMsg",
+						"Upload aborted ERROR MESSAGE: " + e.getMessage());
+				return ffsDetailUploadData.toString();
+			}
+		}
+		return ffsDetailUploadData.toString();
+	}
+	
+	
+	private boolean validateAddProductMapping(JSONObject ffsDetailUpdateData,
+			FulfillmentSiteProd ffsProd, HttpServletRequest request) {
+		System.out.println("validation");
+
+		String error = null;
+		FulfillmentSiteMgr ffsMgr = new FulfillmentSiteMgr();
+		String tenantCode = TenantConstants.getAllSharedTenant(PagesUtil
+				.getTenantCode(request));
+
+		// Check Fulfillment Site Id is empty
+		if (StrUtil.isEmpty(ffsProd.getFfs_Id())) {
+			ffsDetailUpdateData.put("errorMsg",
+					"Fulfilment Site ID cannot be empty ");
+			return false;
+		}
+
+		// Check whether Fulfillment Site Id is already defined.
+		if (!StrUtil.isEmpty(ffsProd.getFfs_Id())) {
+			List fulfillmentSiteList = ffsMgr.getFulfillmentSiteByIdTenant(
+					ffsProd.getFfs_Id(), tenantCode);
+			if (fulfillmentSiteList.size() == 0) {
+				ffsDetailUpdateData.put("errorMsg",
+						"Fulfillment Site Id entered is not a valid Fulfillment Site");
+				return false;
+			}
+			FulfillmentSite ffs = (FulfillmentSite) fulfillmentSiteList.get(0);
+			if (ffs.getFfs_Direct_Flag().equalsIgnoreCase("Y")) {
+				ffsDetailUpdateData.put("errorMsg",
+						"Fulfillment Site cannot be Direct Fulfillment Site.");
+				return false;
+			}
+		}
+
+		// Check Local prod is empty
+		if (StrUtil.isEmpty(ffsProd.getLocal_Prod())) {
+			ffsDetailUpdateData.put("errorMsg",
+					"Local Product cannot be empty.");
+			return false;
+		}
+
+		// Check whether Local prod is already defined
+		if (!StrUtil.isEmpty(ffsProd.getLocal_Prod())) {
+
+			List productList = ffsMgr.getProductCompare(
+					ffsProd.getLocal_Prod(), tenantCode);
+			if (productList.size() == 0) {
+				ffsDetailUpdateData.put("errorMsg",
+						"Local Product entered is not a valid Product");
+				return false;
+			}
+		}
+
+		// Check Ffs prod is empty
+			if (StrUtil.isEmpty(ffsProd.getFfs_Prod())) {
+				ffsDetailUpdateData.put("errorMsg",
+						"Fulfillment Site Product ID cannot be empty");
+				return false;
+			}
+
+			List lst = ffsMgr.getFulfillmentSiteProdByFfsIdProdId(ffsProd.getFfs_Id(),ffsProd.getLocal_Prod(),tenantCode);
+
+			if (lst.size() != 0) {
+				ffsDetailUpdateData.put("errorMsg",
+						"Fulfillment Site and Product mapping is already defined. The mapping cannot be duplicated");				
+				return false;
+			}		
+
+		return true;
+}
+	
+	private boolean validate(JSONObject ffsDetailUpdateData, FulfillmentSite form, String action,
+			HttpServletRequest request) {
+
+		String error = null;
+
+		FulfillmentSiteMgr ffsMgr = new FulfillmentSiteMgr();
+		if (StrUtil.isEmpty(form.getFfs_Id())) {
+			ffsDetailUpdateData.put("errorMsg", "Fulfilment Site ID cannot be empty ");
+			return false;
+		}
+
+		// Check whether Fulfillment Site Id is already defined.
+		if (!StrUtil.isEmpty(form.getFfs_Id()) && action.equals("create")) {
+			List fulfillmentSiteList = ffsMgr.getFulfillmentSiteById(
+					form.getFfs_Id(), PagesUtil.getDbRegionToConnect(request));
+			if (fulfillmentSiteList.size() != 0) {
+				ffsDetailUpdateData.put("errorMsg", "Fulfillment Site Id is already defined");
+				return false;
+			}
+		}
+
+		// Special check defined for making sure that following fulfillment
+		// sites cannot be changed to indirect ones.
+		// AP_DIRECT, EU_DIRECT, US_DIRECT, CA_DIRECT, LA_DIRECT
+		if (!StrUtil.isEmpty(form.getFfs_Id())
+				&& action.equals("update")
+				&& (form.getFfs_Id().equalsIgnoreCase("AP_DIRECT")
+						|| form.getFfs_Id().equalsIgnoreCase("EU_DIRECT")
+						|| form.getFfs_Id().equalsIgnoreCase("US_DIRECT")
+						|| form.getFfs_Id().equalsIgnoreCase("CA_DIRECT") 
+						|| form.getFfs_Id().equalsIgnoreCase("LA_DIRECT")
+						&& !form.getFfs_Direct_Flag().equals("Y"))) {
+
+			ffsDetailUpdateData.put("errorMsg", "Regional Default Fulfillment Site '" + form.getFfs_Id()
+					+ "' is not allowed to be modified.");
+			return false;
+		}
+
+		if (StrUtil.isEmpty(form.getFfs_Name())) {
+			ffsDetailUpdateData.put("errorMsg", "Fulfilment Site Name cannot be empty ");
+			return false;
+		}
+		if (StrUtil.isEmpty(form.getFfs_Type())) {
+			ffsDetailUpdateData.put("errorMsg", "Fulfilment Site Type cannot be empty ");
+			return false;
+		}
+
+		return true;
+	}
+}//class

@@ -1,0 +1,25 @@
+/* From Version 4.1*/
+package com.hp.ecc.ui.biz.customer;
+
+
+public class CustCatFormatBean {
+
+  public String custKey;
+  public String catFormatKey;
+
+  public void setCustKey ( String in ) {
+    this.custKey = in;
+  }
+
+  public String getCustKey () {
+    return this.custKey;
+  }
+
+  public void setCatFormatKey ( String in ) {
+    this.catFormatKey = in;
+  }
+
+  public String getCatFormatKey () {
+    return this.catFormatKey;
+  }
+}

@@ -1,0 +1,573 @@
+/*
+ * Copyright (c) Hewlett Packard Company
+ * Palo Alto, California, U.S.A.
+ * All rights reserved.
+ */
+
+package com.hp.ecc.ui.biz.bundle;
+
+import java.util.Collections;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+
+/**
+ * This class models bundle option group templates (currently limited to two
+ * type: component option group and option pack). Property BundleCompType
+ * differentiates between different types of group templates.
+ * 
+ * @author Susheel Aroskar
+ * @version 5.0
+ */
+
+public class OptionGroupTemplate extends BundleComponent {
+	/*
+	 * Minimum number of components which must be selected within this
+	 * component. Strore-front rule
+	 */
+	private int fMin;
+	/*
+	 * Maximum number of components which can be selected within this component.
+	 * Strore-front rule
+	 */
+	private int fMax;
+	/* Is this option group delta-priced */
+	private String fDeltaPriceFlag;
+
+	/**
+	 * Required flag, preselected flag, hide product flag, and hide price flag
+	 * are added because of option pack enhancement change request. These four
+	 * properties will be used by option packs. Date: 6/22/04 Developer: Jane
+	 * Chen
+	 */
+	/* Whether this product shoule be marked as required in a store-front */
+	private String fRequiredFlag;
+	/* Whether this product shoule be marked as pre-selected in a store-front */
+	private String fPreselectFlag;
+	/* Whether to hide this product. Soft delete functionality */
+	private String fHideFlag;
+	/* Whether to hide price of this product */
+	private String fPriceHideFlag;
+	/* Price of the Option pack */
+	private double fPrice;
+	private String fPriceAsStr;
+	private String dealValue;
+	private int promoCount;
+	private int message;
+	public static final String CREATE_BDL_GROUP_TEMPLATE = "CREATE_BDL_GROUP_TEMPLATE";
+	public static final String GET_OPTION_GROUP_TEMPLATE = "GET_OPTION_GROUP_TEMPLATE";
+	public static final String GET_OPTION_GROUP_TEMPLATE_CONTENT = "GET_OPTION_GROUP_TEMPLATE_CONTENT";
+	public static final String GET_CHILD_PROD_TEMPLATES = "GET_CHILD_PROD_TEMPLATES";
+	public static final String GET_CHILD_GROUP_TEMPLATES = "GET_CHILD_GROUP_TEMPLATES";
+	public static final String SAVE_BDL_GROUP_TEMPLATE = "SAVE_BDL_GROUP_TEMPLATE";
+	public static final String COPY_BDL_GROUP_TEMPLATE = "COPY_BDL_GROUP_TEMPLATE";
+	public static final String SAVE_BDL_GROUP_TEMPLATE_CONTENT = "SAVE_BDL_GROUP_TEMPLATE_CONTENT";
+	public static final String SAVE_OPTION_GROUP_RANK = "SAVE_OPTION_GROUP_RANK";
+	public static final String DELETE_BDL_GROUP_TEMPLATE = "DELETE_BDL_GROUP_TEMPLATE";
+	public static final String UPDATE_PRESELECTED_FLAG = "UPDATE_PRESELECTED_FLAG";
+	public static final String GET_OPTION_PACK_TEMPLATE_PRICE = "GET_OPTION_PACK_TEMPLATE_PRICE";
+
+	public static final String GET_PROMO_COUNT = "GET_PROMO_COUNT";
+
+	public static final String MESSAGE_101 = "PRODUCT(S) WITH NO DEALS EXIST";
+	public static final String MESSAGE_102 = "MORE THAN ONE PRICE DESCRIPTOR CHOSEN";
+	public static final String MESSAGE_103 = "VALID PACK";
+
+	public OptionGroupTemplate() {
+		super();
+		fBundleCompType = TYPE_COMP_OPTION_GROUP;
+		fMin = 0;
+		fDeltaPriceFlag = "N";
+	}
+
+	public void setMessage(int msg) {
+		this.message = msg;
+	}
+
+	public int getMessage() {
+		return this.message;
+	}
+
+	public String getMessageAsStr() {
+		switch (message) {
+		case (101):
+			return MESSAGE_101;
+		case (102):
+			return MESSAGE_102;
+		case (103):
+			return "";
+		default:
+			return "";
+		}
+	}
+
+	public void setPrice(double price) {
+		this.fPrice = price;
+	}
+
+	public double getPrice() {
+		return this.fPrice;
+	}
+
+	public String getPriceAsStr() {
+		if (fPrice == 0.0) {
+			fPriceAsStr =  "0.0";
+		} else {
+			fPriceAsStr = "" + fPrice;
+		}
+		return fPriceAsStr;
+	}
+
+	public void setDealValue(String value) {
+		this.dealValue = value;
+	}
+
+	public String getDealValue() {
+		return this.dealValue;
+	}
+
+	public void setMin(int min) {
+		this.fMin = min;
+	}
+
+	public int getMin() {
+		return fMin;
+	}
+
+	public void setMax(int max) {
+		this.fMax = max;
+	}
+
+	public int getMax() {
+		return fMax;
+	}
+
+	public int getPromoCount() {
+		return this.promoCount;
+	}
+
+	public void setPromoCount(int count) {
+		this.promoCount = count;
+	}
+
+	public String getMinAndMaxForReport() {
+		String ret = "";
+		String compType = getBundleCompType();
+		if (TYPE_COMP_OPTION_GROUP.equals(compType)) {
+			ret = new StringBuffer().append("[").append(fMin).append(" to ")
+					.append(fMax).append("]").toString();
+		}
+		return ret;
+	}
+
+	public void setDeltaPriceFlag(String delta_price_flag) {
+		this.fDeltaPriceFlag = delta_price_flag;
+	}
+
+	public String getDeltaPriceFlag() {
+		return fDeltaPriceFlag;
+	}
+
+	/**
+	 * Getter and Setter methods are added for required flag, preselected flag,
+	 * hide product flag, and hide price flag, because of option pack
+	 * enhancement change request. These four properties will be used by option
+	 * packs. Date: 6/22/04 Developer: Jane Chen
+	 */
+
+	/**
+	 * Set required flag
+	 * 
+	 * @param required_flag
+	 */
+	public void setRequiredFlag(String required_flag) {
+		this.fRequiredFlag = required_flag;
+	}
+
+	/**
+	 * Get required flag
+	 * 
+	 * @return required flag
+	 */
+	public String getRequiredFlag() {
+		return fRequiredFlag;
+	}
+
+	/**
+	 * This API is used to get the required flag to be used in the report.
+	 */
+	public String getRequiredFlagForReport() {
+		String ret = "";
+		String compType = getBundleCompType();
+		if (TYPE_COMP_OPTION_GROUP.equals(compType)) {
+			if (getOptType().equals(IBundleConstants.REQD)) {
+				ret = IBundleConstants.REQD;
+			}
+		} else {
+			if (fRequiredFlag.equals(IBundleConstants.TRUE)) {
+				ret = IBundleConstants.REQD;
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * This API is used to get the optionType based on the GUI logic. Follwoing
+	 * logic is used to obtain the optionType for an option group. if(min
+	 * component value ="1" and max component value = "1") then option type is
+	 * set to "Required"
+	 * 
+	 * 
+	 * else if(min component value ="0" && max component value = "1") then
+	 * option type is set to "Optional"
+	 * 
+	 * 
+	 * 
+	 * else option type is set to "Min/Max"
+	 * 
+	 * The optionType for option group is not stored directly in the DB and GUi
+	 * uses the above logic in an javascript to set the optionType for option
+	 * group.
+	 * 
+	 */
+
+	public String getOptType() {
+		int minComp = getMin();
+		int maxComp = getMax();
+		String reqd = null;
+		if (minComp == 1 && maxComp == 1) {
+			reqd = IBundleConstants.REQD;
+		} else if (minComp == 0 && maxComp == 1) {
+			reqd = IBundleConstants.OPTIONAL;
+		} else {
+			reqd = IBundleConstants.MINMAX;
+		}
+		return reqd;
+	}
+
+	/**
+	 * Set preselected flag
+	 * 
+	 * @param preselect_flag
+	 */
+	public void setPreselectFlag(String preselect_flag) {
+		this.fPreselectFlag = preselect_flag;
+	}
+
+	/**
+	 * Get preselected flag
+	 * 
+	 * @return preselected flag
+	 */
+	public String getPreselectFlag() {
+		return fPreselectFlag;
+	}
+
+	public String getPreselectFlagForReport() {
+		String ret = "";
+		if (fPreselectFlag.equals(IBundleConstants.TRUE)) {
+			ret = IBundleConstants.PRESEL;
+		}
+		return ret;
+	}
+
+	/**
+	 * set hide product flag
+	 * 
+	 * @param hide_flag
+	 */
+	public void setHideFlag(String hide_flag) {
+		this.fHideFlag = hide_flag;
+	}
+
+	/**
+	 * get hide product flag
+	 * 
+	 * @return hide product flag
+	 */
+	public String getHideFlag() {
+		return fHideFlag;
+	}
+
+	public String getHideFlagForReport() {
+		String ret = "";
+		if (fHideFlag.equals(IBundleConstants.HIDE)) {
+			ret = IBundleConstants.HIDEPROD;
+		}
+		return ret;
+	}
+
+	/**
+	 * set hide price flag
+	 * 
+	 * @param price_hide_flag
+	 */
+	public void setPriceHideFlag(String price_hide_flag) {
+		this.fPriceHideFlag = price_hide_flag;
+	}
+
+	/**
+	 * get hide price flag
+	 * 
+	 * @return hide price flag
+	 */
+	public String getPriceHideFlag() {
+		return fPriceHideFlag;
+	}
+
+	public String getPriceHideFlagForReport() {
+		String ret = "";
+		if (fPriceHideFlag.equals(IBundleConstants.HIDE)) {
+			ret = IBundleConstants.HIDEPRC;
+		}
+		return ret;
+	}
+
+	/**
+	 * Retrieves all immediate children (option packs and stand-alone products)
+	 * of this option group template.
+	 * 
+	 * @return List of immediate children. throws BundleException
+	 */
+	public final List getChildBundleComps(String dbRegionToConnect) throws BundleException {
+		List children = getChildProds( dbRegionToConnect);
+
+		if (TYPE_COMP_OPTION_GROUP.equals(fBundleCompType)) {
+			children.addAll(getChildOptionPacks( dbRegionToConnect));
+		}
+		return children;
+	}	
+
+	/**
+	 * Retrieves all immediate (i.e. root level) children (option groups, option
+	 * packs and stand-alone products) of this option group template by rank
+	 * order.
+	 * 
+	 * @return List of root level bundle components ordered by their rank.
+	 *         throws BundleException
+	 */
+	public final List getChildBundleCompsByRank(String dbRegionToConnect) throws BundleException {
+		List children = getChildBundleComps(dbRegionToConnect);
+		Collections.sort(children);
+		return children;
+	}
+
+	/**
+	 * Retrieves immediate child option pack templates of this option group
+	 * template.
+	 * 
+	 * @param si
+	 *            Sort info
+	 * @param pg
+	 *            Pagination info
+	 * @return List of immediate child option packs. throws BundleException
+	 */
+	public List getChildOptionPacks(String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleTemplateID, "Bundle Template ID",
+				"get child option packs of an option group template.");
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"get child option packs of an option group template.");
+		return executeQuery(GROUP_BDL_QUERY, GET_CHILD_GROUP_TEMPLATES, this,
+				OptionGroupTemplate.class, dbRegionToConnect);
+	}
+	
+	/**
+	 * Retrieves immediate child stand alone product templates of this option
+	 * group template.
+	 * 
+	 * @param si
+	 *            Sort info
+	 * @param pg
+	 *            Pagination info
+	 * @return List of immediate child stand alone products.
+	 * @throws BundleException
+	 */
+	public List getChildProds(String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleTemplateID, "Bundle Template ID",
+				"get root level bundle prods of bundle template");
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"child products of an option group template.");
+		return executeQuery(GROUP_BDL_QUERY, GET_CHILD_PROD_TEMPLATES, this,
+				BundleProdTemplate.class, dbRegionToConnect);
+	}
+	/**
+	 * Adds bundle component (option pack or stand-alone product) template as an
+	 * immediate child of this option group template.
+	 * 
+	 * @param bdl_comp
+	 *            Bundle component to be added.
+	 * @param user_id
+	 *            User performing this operation. Used for logging.
+	 * @return ID generated by the system for the added bundle component.
+	 * @throws BundleException
+	 */
+	public String addBundleComponent(BundleComponent bdl_comp, String user_id, String dbRegionToConnect)
+			throws BundleException {
+		String bdl_comp_type = bdl_comp.getBundleCompType();
+		if (TYPE_COMP_OPTION_GROUP.equals(bdl_comp_type)) {
+			throw new BundleException(
+					"Component Option Groups may not be nested within another option group/option pack.");
+		} else if (TYPE_OPTION_PACK.equals(fBundleCompType)) {
+			if (!TYPE_STAND_ALONE.equals(bdl_comp_type)) {
+				throw new BundleException(
+						"Only stand alone products can be added to Option pack. Nesting"
+								+ " option groups/option packs within an option pack is not permitted");
+			}
+		}
+		bdl_comp.setBundleTemplateID(fBundleTemplateID);
+		bdl_comp.setBundleID(fBundleID);
+		bdl_comp.setParentBundleCompID(fBundleCompID);
+		bdl_comp.create(user_id, dbRegionToConnect);
+		return bdl_comp.getBundleCompID();
+	}
+
+	/**
+	 * Loads corresponding option group template record's data from the DB.
+	 * 
+	 * @returns true if matching row is found in the database
+	 * @throws BundleException
+	 */
+	public boolean load(String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"retrieve option group template");
+		return executeFetch(GROUP_BDL_QUERY, GET_OPTION_GROUP_TEMPLATE, this, dbRegionToConnect);
+	}
+
+	/**
+	 * Loads corresponding bundle component's content from the DB.
+	 * 
+	 * @returns true if matching row is found in the database
+	 * @throws BundleException
+	 */
+	public boolean loadContent(String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"retrieve option group template content");
+		assertNotNull(fHPLangCode, "HP lang code ", "retrieve content");
+		return executeFetch(GROUP_BDL_QUERY, GET_OPTION_GROUP_TEMPLATE_CONTENT,
+				this, dbRegionToConnect);
+	}
+
+	/**
+	 * Creates corresponding record in the DB.
+	 * 
+	 * @return Bundle Component ID generated by the system.
+	 * @throws BundleException
+	 */
+	public String create(String user_id, String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleTemplateID, "Bundle Template ID",
+				"create option group template");
+		assertIsNull(fBundleCompID, "Bundle Component ID",
+				"create option group template");
+		assertNotNull(fShortDesc, "Name", "create option group template");
+		fModificationFlag = ADDED;
+		doCall(GROUP_BDL_UPDATE, CREATE_BDL_GROUP_TEMPLATE, this, this, user_id, dbRegionToConnect);
+		return fBundleCompID;
+	}
+
+	/**
+	 * Saves changes made to the DB.
+	 * 
+	 * @throws BundleException
+	 */
+	public void save(String user_id, String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"save option group template");
+		assertNotNull(fShortDesc, "Name", "save option group template");
+		fModificationFlag = UPDATED;
+		doCall(GROUP_BDL_UPDATE, SAVE_BDL_GROUP_TEMPLATE, this, this, user_id, dbRegionToConnect);
+	}
+
+	/**
+	 * Copy the option pack at template level
+	 * 
+	 * @throws BundleException
+	 */
+	public void copy(String user_id, String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"copy option group template");
+		assertNotNull(fShortDesc, "Name", "copy option group template");
+		fModificationFlag = ADDED;
+		doCall(GROUP_BDL_UPDATE, COPY_BDL_GROUP_TEMPLATE, this, this, user_id, dbRegionToConnect);
+	}
+
+	/**
+	 * Saves content changes to the DB.
+	 * 
+	 * @param user_id
+	 *            application user which is performing this operation. Used for
+	 *            logging purposes.
+	 * @throws BundleException
+	 */
+	public void saveContent(String user_id, String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"save option group template content");
+		assertNotNull(fHPLangCode, "HP lang code ",
+				"save option group template content");
+		assertNotNull(fShortDesc, "Name", "save option group template content");
+		fModificationFlag = UPDATED;
+		doCall(GROUP_BDL_UPDATE, SAVE_BDL_GROUP_TEMPLATE_CONTENT, this, this,
+				user_id, dbRegionToConnect);
+	}
+
+	/**
+	 * Saves rank of this bundle group.
+	 * 
+	 * @param user_id
+	 *            application user which is performing this operation. Used for
+	 *            logging purposes.
+	 * @throws BundleException
+	 */
+	public void saveRank(String user_id, String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"save bundle group rank");
+		doUpdate(GROUP_BDL_UPDATE, SAVE_OPTION_GROUP_RANK, this, user_id, dbRegionToConnect);
+	}
+
+	/**
+	 * Deletes corresponding bundle option group template record from the DB.
+	 * 
+	 * @return Number of records affected.
+	 * @throws BundleException
+	 */
+	public int remove(String user_id, String dbRegionToConnect) throws BundleException {
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"delete option group template");
+		fModificationFlag = DELETED;
+		return doUpdate(GROUP_BDL_UPDATE, DELETE_BDL_GROUP_TEMPLATE, this,
+				user_id,dbRegionToConnect);
+	}
+
+	public void updatePreselectFlag(String flag, String user_id, String dbRegionToConnect)
+			throws BundleException {
+		assertNotNull(flag, "Preselected flag", "update preselected flag");
+		assertNotNull(fBundleCompID, "Bundle Component ID",
+				"save bundle group rank");
+		this.fPreselectFlag = flag;
+		doUpdate(GROUP_BDL_UPDATE, UPDATE_PRESELECTED_FLAG, this, user_id,dbRegionToConnect);
+
+	}
+
+	/**
+	 * Added by Parthiban Srinivasan for March 05 CPE release Gets the price of
+	 * the option pack.
+	 * 
+	 * @throws BundleException
+	 */
+	public void getOptionPackPrice(String dbRegionToConnect) throws BundleException {
+		doCall(GROUP_BDL_QUERY, GET_OPTION_PACK_TEMPLATE_PRICE, this, this, null, dbRegionToConnect);
+	}
+
+	/**
+	 * This method will return the number of promo components (components with
+	 * context ID)
+	 * 
+	 * @return int Number of context ID products in this option group
+	 * @throws BundleException
+	 * @author Parthiban
+	 * @since Chianti Aug 2006
+	 */
+	public int getPromoComponentCount(String dbRegionToConnect) throws BundleException {
+		executeFetch(GROUP_BDL_QUERY, GET_PROMO_COUNT, this, dbRegionToConnect);
+		return this.getPromoCount();
+	}
+}

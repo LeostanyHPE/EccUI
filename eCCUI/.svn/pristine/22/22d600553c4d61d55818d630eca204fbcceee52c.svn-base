@@ -1,0 +1,62 @@
+package com.hp.ecc.ui.biz.processor.deals;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.customer.CustomerAccountMgr;
+import com.hp.ecc.ui.biz.deal.Deal;
+import com.hp.ecc.ui.biz.deal.DealMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.db.dao.DealDao;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.ProductOfferingForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Service
+public class DealProductOfferingProcessor {
+	
+	private DealDao dealDao = null;
+	
+	public DealProductOfferingProcessor(){
+		dealDao = new DealDao();
+	}
+	
+	public String getOfferings(ProductOfferingForm form, String dealId , Deal dealSel , String dbRegionToConnect ){
+		JSONObject returnObj = new JSONObject();
+		JSONArray productList = null;
+		Gson gson = new Gson();
+		 String priceDescriptor = dealSel.getPriceDescriptor ();
+		 String currency_code = "";
+		 
+		 if ( priceDescriptor != null && priceDescriptor.length () == 6 ) {
+		      currency_code = priceDescriptor.substring ( 2, 5 );
+		  }
+		returnObj.put("dealId", dealId);
+		returnObj.put("customerName", dealSel.getCustName());
+		returnObj.put("priceDescriptor", priceDescriptor);
+		returnObj.put("currencyCode",currency_code);
+		returnObj.put("customerId", dealSel.getCustID());
+		returnObj.put("vistaAccountId", dealSel.getCustAccountIDs());
+		
+		 String encDealID = StrUtil.escapeProd ( dealId );
+		 productList = dealDao.retrieveItem ( encDealID ,form.getSearchField(), form.getSearchValue(), dbRegionToConnect );
+	     returnObj.put("productList", productList);
+		 return returnObj.toJSONString();
+	}
+	
+	public Deal getSelDeal ( String dealID , String dbRegionToConnect ) {
+	    DealMgr dealMgr = new DealMgr ();
+	    return dealMgr.getGeneralInfo ( dealID , dbRegionToConnect);
+	  }
+	
+	
+}

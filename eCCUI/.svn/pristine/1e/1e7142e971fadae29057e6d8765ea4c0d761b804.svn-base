@@ -1,0 +1,64 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.offer;
+
+import org.json.simple.JSONArray;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.db.dao.PromotionDao;
+import com.hp.ecc.ui.util.StrUtil;
+
+/**
+ * @author 
+ *
+ */
+@Service
+public class ViewPromotionProcessor {
+	
+	PromotionDao promotionDao = null;
+	
+	public ViewPromotionProcessor(){
+		promotionDao = new PromotionDao();
+	}
+	
+	public JSONArray getCatalogPromoBundles(String masterCatID, String promoBundleId, String stdCatalogId, String adbRegionToConnect) {
+		System.out.println("SEARCH CONDITIONS FOR PROMO INSTANCES IN MASTER CAT ID"	+ masterCatID);
+		System.out.println("1 )STD CATALOG ID" + stdCatalogId + " AND 2) PROMO BUNDLE ID - " + promoBundleId);
+		
+		String searchStatement = buildPromoBundleSearch(masterCatID,stdCatalogId, promoBundleId);
+		
+		JSONArray promoBundles = promotionDao.getCatalogPromoBundles(searchStatement, adbRegionToConnect);
+		
+		return promoBundles;
+	}//getCatalogPromoBundles
+	
+	
+	/**
+	 * Return the where condition depending on search parameter entered by user
+	 * 
+	 * @param masterCatID
+	 *            Master catalog Id to display promo instances
+	 * @param promoBundleId
+	 *            Bundle instance ID search parameter
+	 * @param stdCatalogId
+	 *            Standard Catalog ID search parameter
+	 * @return String Where condition for querying promo bundle instances
+	 * @version 
+	 */
+	private String buildPromoBundleSearch(String masterCatID, String stdCatalogId, String promoBundleId) {
+		StringBuffer whereClause = new StringBuffer();
+		if (!StrUtil.isEmpty(masterCatID)) {
+			whereClause.append("and cat_stdcat_mapping.CAT_CATALOG_ID = '").append(masterCatID.trim().toUpperCase()).append("' ");
+		}
+		if (!StrUtil.isEmpty(stdCatalogId)) {
+			whereClause.append("and upper(cat_stdcat_mapping.STD_CATALOG_ID) LIKE '%").append(stdCatalogId.trim().toUpperCase()).append("%' ");
+		}
+		if (!StrUtil.isEmpty(promoBundleId)) {
+			whereClause.append("and upper(cat_item_options.COP_LOCALIZE_PROD) LIKE '%").append(promoBundleId.trim().toUpperCase()).append("%' ");
+		}
+		
+		return whereClause.toString();
+	}//buildPromoBundleSearch
+
+}//class

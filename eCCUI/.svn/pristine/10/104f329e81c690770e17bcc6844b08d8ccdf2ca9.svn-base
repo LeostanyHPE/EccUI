@@ -1,0 +1,38 @@
+package com.hp.ecc.ui.common;
+
+public class TenantConstants {
+     private final static String ALL_TENANT = "in ('HPQ', 'HPI', 'HPE')";
+     private final static String SHARED_HPI_TENANT = "in ('HPQ', 'HPI')";
+     private final static String SHARED_HPE_TENANT = "in ('HPQ', 'HPE')";
+     private final static String HPQ_TENANT = "= 'HPQ'";
+     public  final static String HPI_TENANT = "= 'HPI'";
+     private final static String HPE_TENANT = "= 'HPE'";
+     
+     public static String getAllSharedTenant(String tenantCode){
+    	 if ("HPI".equals(tenantCode)){
+    		 return SHARED_HPI_TENANT;
+    	 }else if ("HPE".equals(tenantCode)){
+    		 return SHARED_HPE_TENANT;
+    	 }
+    	 return ALL_TENANT;
+     }
+     
+     public static String getMixedSharedTenant(String tenantCode){
+    	 if ("HPI".equals(tenantCode)){
+    		 return HPI_TENANT;
+    	 }else if ("HPE".equals(tenantCode)){
+    		 return HPE_TENANT;
+    	 }
+    	 return ALL_TENANT;
+     }
+     
+     public static String getNoSharedTenant(String tenantCode){
+    	 if ("HPI".equals(tenantCode)){
+    		 return HPI_TENANT;
+    	 }else if ("HPE".equals(tenantCode)){
+    		 return HPE_TENANT;
+    	 }    	 
+    	 return HPQ_TENANT;
+     }
+     
+}

@@ -1,0 +1,109 @@
+/*
+	@license Angular Treeview version 0.1.6
+	ⓒ 2013 AHN JAE-HA http://github.com/eu81273/angular.treeview
+	License: MIT
+
+
+	[TREE attribute]
+	angular-treeview: the treeview directive
+	tree-id : each tree's unique id.
+	tree-model : the tree model on $scope.
+	node-id : each node's id
+	node-label : each node's label
+	node-children: each node's children
+
+	<div
+		data-angular-treeview="true"
+		data-tree-id="tree"
+		data-tree-model="roleList"
+		data-node-id="roleId"
+		data-node-label="roleName"
+		data-node-children="children" >
+	</div>
+*/
+
+(function ( angular ) {
+	'use strict';
+
+	angular.module( 'angularTreeviewwinhk', [] ).directive( 'treeModelwinhk', ['$compile', function( $compile ) {
+		return {
+			restrict: 'A',
+			link: function ( scope, element, attrs ) {
+				//tree id
+				var treeId = attrs.treeIdwinhk;
+			
+				//tree model
+				var treeModel = attrs.treeModelwinhk;
+
+				//node id
+				var nodeId = attrs.nodeIdwinhk || 'id';
+
+				//node label
+				var nodeLabel = attrs.nodeLabelwinhk || 'label';
+
+				//children
+				var nodeChildren = attrs.nodeChildrenwinhk || 'children';
+
+				//tree template
+				var template =
+					'<ul>' +
+					'<li data-ng-repeat="node in ' + treeModel + ' | orderBy:\'text\'" on-finish-render>' +
+						'<i class="collapsed" data-ng-show="node.childrenCount!=0 && node.collapsed" data-ng-click="' + treeId + '.selectNodeHead(node);loadChildNodesData(node);"></i>' +
+						'<i class="expanded" data-ng-show="node.childrenCount!=0 && !node.collapsed" data-ng-click="' + treeId + '.selectNodeHead(node)"></i>' +
+						'<i class="normal" data-ng-hide="node.childrenCount!=0"></i>' +
+						'<a class="dropDown" data-ng-hide="node.chkFlag" data-ng-click="selectedNode(node)"><i class="unchk"></i></a>'+
+						'<a class="dropDown" data-ng-show="node.chkFlag" data-ng-click="selectedNode(node)"><i class="chk"></i></a>'+
+						'<i class="exclImg" data-ng-show="node.dirtyFlag" ></i>' +
+						'<span data-ng-class="node.selected" data-ng-click="' + treeId + '.selectNodeLabel(node);loadFilteredProducts(\'NodeProd\')">{{node.' + nodeLabel + '}}</span>' +
+						'<div data-ng-hide="node.collapsed" data-tree-idwinhk="' + treeId + '" data-tree-modelwinhk="node.' + nodeChildren + '" data-node-idwinhk=' + nodeId + ' data-node-labelwinhk=' + nodeLabel + ' data-node-childrenwinhk=' + nodeChildren + '></div>' +
+					'</li>' +
+				'</ul>';
+
+
+				//check tree id, tree model
+				if( treeId && treeModel ) {
+
+					//root node
+					if( attrs.angularTreeviewwinhk ) {
+					
+						//create tree object if not exists
+						scope[treeId] = scope[treeId] || {};
+
+						//if node head clicks,
+						scope[treeId].selectNodeHead = scope[treeId].selectNodeHead || function( selectedNode ){
+
+							//Collapse or Expand
+							selectedNode.collapsed = !selectedNode.collapsed;
+							/*var data = JSON.stringify(selectedNode);
+							angular.element(document.getElementById('manageContentId')).scope().viewRightViewOfManageContentRoot(+"'"+data.ctgId+"','"+
+									data.updatable+"','"+data.hpLangCode+"','"+data.ctgId+"','"+data.ctgId+"','"+data.root+"'");*/
+							///console.log("Win---1---"+JSON.stringify(selectedNode));
+						};
+
+						//if node label clicks,
+						scope[treeId].selectNodeLabel = scope[treeId].selectNodeLabel || function( selectedNode ){
+
+							//remove highlight from previous node
+							if( scope[treeId].currentNode && scope[treeId].currentNode.selected ) {
+								scope[treeId].currentNode.selected = undefined;
+							}
+
+							//set highlight to selected node
+							selectedNode.selected = 'selected';
+
+							//set currentNode
+							scope[treeId].currentNode = selectedNode;
+							/*var data = JSON.stringify(selectedNode);
+							angular.element(document.getElementById('manageContentId')).scope().viewRightViewOfManageContentRoot(+"'"+data.ctgId+"','"+
+									data.updatable+"','"+data.hpLangCode+"','"+data.ctgId+"','"+data.ctgId+"','"+data.root+"'");*/
+						///	console.log("Win---2---"+JSON.stringify(selectedNode));
+						};
+					}
+
+					//Rendering template.
+					element.html('').append( $compile( template )( scope ) );
+				}
+			}
+		};
+	}]);
+})( angular );

@@ -1,0 +1,54 @@
+package com.hp.ecc.ui.upload.validation;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.hp.ecc.ui.util.StrUtil;
+
+public class DealProductTypeValidator implements ICellValidator {
+
+  /** Private for holding **/
+  private String valType = null;
+
+  /**
+   * Sets validation type.
+   */
+  public void setValidationType ( String valTyp ) {
+    this.valType = valTyp;
+  }
+
+  /**
+   * Returns the id of the validation
+   */
+  public String getValidationType () {
+    return valType;
+  }
+
+
+  /**
+   * This method validates the cell.
+   * The return value will be true if the cell is valid.
+   */
+  public boolean isValidCell ( String[] rowData, int columnNo, ArrayList param
+                               , String valData, String dbRegionToConnect ) {
+
+    boolean retVal = true;
+    List res = null;
+    if ( !( rowData.length >= columnNo && rowData[columnNo - 1] != null ) ) {
+      return retVal;
+    }
+    String currProductType = rowData[columnNo - 1];
+    if ( !( StrUtil.isEmpty ( currProductType ) ) ) {
+      if ( currProductType.equals ( "CISCO" ) ||
+           currProductType.equals ( "CISCO-HIDDEN" ) ||
+           currProductType.equals ( "EC-CISCO-CONFIG" ) ) {
+        retVal = true;
+      }
+      else {
+        retVal = false;
+      }
+    }
+    return retVal;
+  }
+
+
+}

@@ -1,0 +1,41 @@
+package com.hp.ecc.ui.db.dao;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import org.json.simple.JSONArray;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.propagation.PropagationInfo;
+import com.hp.ecc.ui.view.beans.PriceHistoryBean;
+
+public class PriceHistoryDao {
+	
+
+	public JSONArray fetchPriceDescriptors(String genCat, String pdList,Object parameter, Object bindBean, String adbRegionToConnect) {
+		
+		DaxMgr daxMgr = DaxMgr.getInstance ();
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt ( genCat,pdList, bindBean, null ,null);
+		
+		JSONArray list = daxDB.doSelectJson(stmt, Catalog.class, bindBean);
+		
+		return list;
+	}
+
+
+	public JSONArray fetchPriceList(String phqueryGroup,String phqueryPricelist, Object parameter, Object bindBean, String adbRegionToConnect) {
+		
+		DaxMgr daxMgr = DaxMgr.getInstance ();
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt ( phqueryGroup,phqueryPricelist, bindBean, null ,null);
+		
+		JSONArray list = daxDB.doSelectJson(stmt, Catalog.class, bindBean);
+		
+		return list;
+	}
+
+}

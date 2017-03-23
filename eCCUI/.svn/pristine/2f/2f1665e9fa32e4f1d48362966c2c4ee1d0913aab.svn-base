@@ -1,0 +1,253 @@
+package com.hp.ecc.ui.biz.catalog.crosssale;
+
+import com.hp.ecc.ui.common.PrintfFormat;
+
+public class CrossSaleBean {
+
+	private String prod;
+	private String shortDesc;
+	private float netPrice;
+	private String fNetPrice;
+	private String priceDescriptor;
+	private String currencyCode;
+	private String classification;
+	private String diffFlag;
+	private String defaultFlag;
+	private String key;
+	private String statusFlag;
+	private String id;
+	private String productNo;
+	private String catalogId;
+	private String csHwProd;
+	private String citItemKey;
+	private String source;
+	private String classificationId;
+	private String csiRank;
+
+	/**
+   *
+   */
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	/**
+   *
+   */
+	public String getKey() {
+		return this.key;
+	}
+
+	/**
+   *
+   */
+	public void setProd(String prod) {
+		this.prod = prod;
+	}
+
+	/**
+   *
+   */
+	public String getProd() {
+		return this.prod;
+	}
+
+	/**
+   *
+   */
+	public void setShortDesc(String shortDesc) {
+		this.shortDesc = shortDesc;
+	}
+
+	/**
+   *
+   */
+	public String getShortDesc() {
+		return this.shortDesc;
+	}
+
+	/**
+   *
+   */
+	public void setNetPrice(float netPr) {
+		this.netPrice = netPr;
+		this.setFormatNetPrice(new PrintfFormat("%10.2f")
+				.sprintf(this.netPrice));
+	}
+
+	public void setFormatNetPrice(String pr) {
+		this.fNetPrice = pr;
+	}
+
+	public String getFormatNetPrice() {
+		return this.fNetPrice;
+	}
+
+	/**
+   *
+   */
+	public float getNetPrice() {
+		return this.netPrice;
+	}
+
+	/**
+   *
+   */
+	public String getCurrencyCode() {
+		return this.currencyCode;
+	}
+
+	/**
+   *
+   */
+	public void setPriceDescriptor(String priceDescriptor) {
+		this.priceDescriptor = priceDescriptor;
+		if (priceDescriptor != null) {
+			this.currencyCode = priceDescriptor.substring(2, 5);
+		}
+	}
+
+	/**
+   *
+   */
+	public String getPriceDescriptor() {
+		return this.priceDescriptor;
+	}
+
+	/**
+   *
+   */
+	public void setClassification(String classification) {
+
+		// hard coded
+		if (classification == null) {
+			this.classification = "UNKNOWN";
+		} else if (classification.equalsIgnoreCase("A")) {
+			this.classification = "ACCESSORIES";
+		} else if (classification.equalsIgnoreCase("S")) {
+			this.classification = "SUPPLIES";
+		} else if (classification.equalsIgnoreCase("P")) {
+			this.classification = "SUPPORT PACK";
+		}
+		if (classification == null) {
+			setClassificationId("U");
+		} else {
+			setClassificationId(classification);
+		}
+	}
+
+	/**
+   *
+   */
+	public String getClassification() {
+		return this.classification;
+	}
+
+	/**
+   *
+   */
+	public void setDiffFlag(String diffFlag) {
+		this.diffFlag = diffFlag;
+		this.setStatusFlag(diffFlag);
+	}
+
+	/**
+   *
+   */
+	public String getDiffFlag() {
+		return this.diffFlag;
+	}
+
+	public String getStatusFlag() {
+		return this.statusFlag;
+
+	}
+
+	public void setStatusFlag(String diff) {
+		if (this.diffFlag.equalsIgnoreCase("Y")) {
+			this.statusFlag = "true";
+		} else if (this.diffFlag.equalsIgnoreCase("N")) {
+			this.statusFlag = "false";
+		}
+
+	}
+
+	/**
+   *
+   */
+	public void setDefaultFlag(String def) {
+		this.defaultFlag = def;
+	}
+
+	/**
+   *
+   */
+	public String getDefaultFlag() {
+		return this.defaultFlag;
+	}
+
+	public void setId(String key) {
+		this.id = key;
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setProductNo(String prodNo) {
+		this.productNo = prodNo;
+	}
+
+	public String getProductNo() {
+		return this.productNo;
+	}
+
+	public void setCsHwProd(String csHwProd) {
+		this.csHwProd = csHwProd;
+	}
+
+	public String getCsHwProd() {
+		return this.csHwProd;
+	}
+
+	public void setCatalogId(String catalogId) {
+		this.catalogId = catalogId;
+	}
+
+	public String getCatalogId() {
+		return this.catalogId;
+	}
+
+	public void setCitItemKey(String citItemKey) {
+		this.citItemKey = citItemKey;
+	}
+
+	public String getCitItemKey() {
+		return this.citItemKey;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	public String getSource() {
+		return this.source;
+	}
+
+	public void setClassificationId(String classificationId) {
+		this.classificationId = classificationId;
+	}
+
+	public String getClassificationId() {
+		return this.classificationId;
+	}
+
+	public void setCsiRank(String csiRank) {
+		this.csiRank = csiRank;
+	}
+
+	public String getCsiRank() {
+		return this.csiRank;
+	}
+
+}// class

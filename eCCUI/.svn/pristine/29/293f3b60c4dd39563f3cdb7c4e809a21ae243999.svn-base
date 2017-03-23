@@ -1,0 +1,222 @@
+/*
+ *
+ * Copyright (c) Hewlett Packard Company
+ * Palo Alto, California, U.S.A.
+ * All rights reserved.
+ */
+
+package com.hp.ecc.ui.view.beans;
+
+import java.util.List;
+
+
+/**
+ * @author Prada
+ *
+ * Action Form for the assign Bundle templates to SOG
+ * Page.Action class corresponding to this form  is SogAssignBundleTemplateAction
+ */
+public class SogAssignBundleTemplateForm {
+
+  private String fSogId;
+  private String fSogName;
+  private String fTemplateID;
+  private String fTemplateName;
+  private String fPart;
+  private String fStatus;
+  private String fStartDateFrom;
+  private String fStartDateTo;
+  private String fEndDateFrom;
+  private String fEndDateTo;
+  private String fCustRegionCode;
+  private List fBundleTemplateList;
+  private String fTask;
+  private String[] fSelectedBundleTemplates;
+  private boolean fIsSearchAssignedOnly;
+  private boolean fIsGeneric;
+  private String[] allBundleTemplateIds;
+  private String fPropagateFlag;
+
+
+  public SogAssignBundleTemplateForm () {
+    this.init ();
+  }
+
+  public void reset () {
+    this.init ();
+  }
+
+  private void init () {
+    this.fSogId = null;
+    this.fSogName = null;
+    this.fTask = null;
+    this.fBundleTemplateList = null;
+    this.fEndDateFrom = null;
+    this.fEndDateTo = null;
+    this.fPart = null;
+    this.fStartDateFrom = null;
+    this.fStartDateTo = null;
+    this.fStatus = null;
+    this.fTemplateName = null;
+    this.fCustRegionCode = null;
+    this.fTemplateID = null;
+    this.fIsGeneric = true;
+    this.fPropagateFlag = "N";
+  }
+
+  /** Start of setter/getter section **/
+
+  public void setSogName ( String sogName ) {
+    this.fSogName = sogName;
+  }
+
+  public String getSogName () {
+    return this.fSogName;
+  }
+
+  public void setSogId ( String sogId ) {
+    this.fSogId = sogId;
+  }
+
+  public String getSogId () {
+    return this.fSogId;
+  }
+
+
+  public void setCustRegionCode ( String custRegionCode ) {
+    this.fCustRegionCode = custRegionCode;
+  }
+
+  public String getCustRegionCode () {
+    return this.fCustRegionCode;
+  }
+
+  public void setTemplateName ( String TemplateName ) {
+    this.fTemplateName = TemplateName;
+  }
+
+  public String getTemplateName () {
+    return this.fTemplateName;
+  }
+
+  public void setTemplateID ( String template_id ) {this.fTemplateID =
+      template_id;
+  }
+
+  public String getTemplateID () {return fTemplateID;
+  }
+
+  public void setPart ( String Part ) {
+    this.fPart = Part;
+  }
+
+  public String getPart () {
+    return this.fPart;
+  }
+
+
+  public void setStartDateFrom ( String StartDateFrom ) {
+    this.fStartDateFrom = StartDateFrom;
+  }
+
+  public String getStartDateFrom () {
+    return this.fStartDateFrom;
+  }
+
+
+  public void setStartDateTo ( String StartDateTo ) {
+    this.fStartDateTo = StartDateTo;
+  }
+
+  public String getStartDateTo () {
+    return this.fStartDateTo;
+  }
+
+
+  public void setEndDateFrom ( String EndDateFrom ) {
+    this.fEndDateFrom = EndDateFrom;
+  }
+
+  public String getEndDateFrom () {
+    return this.fEndDateFrom;
+  }
+
+
+  public void setEndDateTo ( String EndDateTo ) {
+    this.fEndDateTo = EndDateTo;
+  }
+
+  public String getEndDateTo () {
+    return this.fEndDateTo;
+  }
+
+
+  public void setTask ( String Task ) {
+    this.fTask = Task;
+  }
+
+  public String getTask () {
+    return this.fTask;
+  }
+
+
+  public void setBundleTemplateList ( List BundleList ) {
+    this.fBundleTemplateList = BundleList;
+  }
+
+  public List getBundleTemplateList () {
+    return this.fBundleTemplateList;
+  }
+
+
+  public void setStatus ( String status ) {
+    this.fStatus = status;
+  }
+
+  public String getStatus () {
+    return this.fStatus;
+  }
+
+  public boolean getIsGeneric () {
+    return this.fIsGeneric;
+  }
+
+  public void setIsGeneric ( boolean isGeneric ) {
+    this.fIsGeneric = isGeneric;
+  }
+
+
+  public boolean getIsSearchAssignedOnly () {
+    return this.fIsSearchAssignedOnly;
+  }
+
+  public void setIsSearchAssignedOnly ( boolean isSearchAssignedOnly ) {
+    this.fIsSearchAssignedOnly = isSearchAssignedOnly;
+  }
+
+  public String[] getSelectedBundleTemplates () {
+    return this.fSelectedBundleTemplates;
+  }
+
+  public void setSelectedBundleTemplates ( String[] selectedBundleTemplates ) {
+    this.fSelectedBundleTemplates = selectedBundleTemplates;
+  }
+
+  public String[] getAllBundleTemplateIds () {
+    return this.allBundleTemplateIds;
+  }
+
+  public void setAllBundleTemplateIds ( String[] allBundleTemplateIds ) {
+    this.allBundleTemplateIds = allBundleTemplateIds;
+  }
+
+
+  public void setPropagateFlag ( String propagate_flag ) {this.fPropagateFlag =
+      propagate_flag;
+  }
+
+  public String getPropagateFlag () {return fPropagateFlag;
+  }
+
+
+}

@@ -1,0 +1,1644 @@
+package com.hp.ecc.ui.view.beans;
+
+import com.hp.ecc.ui.biz.customer.CustSegmentBean;
+import com.hp.ecc.ui.biz.customer.Customer;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CustomerProfileForm implements Serializable{
+
+	  /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	/**
+	   * Get CustomerName
+
+	   */
+
+	  public String getCustomerName ()
+
+	  {
+
+	    return this.fCustomerName;
+
+	  }
+
+
+	  /**
+	   * Set CustomerName
+
+	   */
+
+	  public void setCustomerName ( String customerName )
+
+	  {
+
+	    this.fCustomerName = customerName;
+
+	  }
+
+
+	  /**
+	   * Get CustomerType
+
+	   */
+
+	  public String getCustomerType ()
+
+	  {
+
+	    return this.fCustomerType;
+
+	  }
+
+
+	  /**
+	   * Set CustomerType
+
+	   */
+
+	  public void setCustomerType ( String customerType )
+
+	  {
+
+	    this.fCustomerType = customerType;
+
+	  }
+
+
+	  /**
+	   * Get CustomerID
+
+	   */
+
+	  public String getCustomerID ()
+
+	  {
+		  
+	    return this.fCustomerID;
+
+	  }
+
+
+	  /**
+	   * Set CustomerID
+
+	   */
+
+	  public void setCustomerID ( String customerID )
+
+	  {
+	    this.fCustomerID = customerID;
+
+	  }
+
+
+	  /**
+	   * Get CustomerTypeDesc
+
+	   */
+
+	  public String getCustomerTypeDesc ()
+
+	  {
+
+	    return this.fCustomerTypeDesc;
+
+	  }
+
+
+	  /**
+	   * Set CustomerTypeDesc
+
+	   */
+
+	  public void setCustomerTypeDesc ( String desc )
+
+	  {
+
+	    this.fCustomerTypeDesc = desc;
+
+	  }
+
+
+	  /**
+	   * Get Dun
+
+	   */
+
+	  public String getDun ()
+
+	  {
+
+	    return this.fDun;
+
+	  }
+
+
+	  /**
+	   * Set Dun
+
+	   */
+
+	  public void setDun ( String dun )
+
+	  {
+
+	    this.fDun = dun;
+
+	  }
+
+
+	  /**
+	   * Get Location
+
+	   */
+
+	  public String getLocation ()
+
+	  {
+
+	    return this.fLocation;
+
+	  }
+
+
+	  /**
+	   * Set Location
+
+	   */
+
+	  public void setLocation ( String location )
+
+	  {
+
+	    this.fLocation = location;
+
+	  }
+
+
+	  /**
+	   * Get Supplier
+
+	   */
+
+	  public String getSupplier ()
+
+	  {
+
+	    return this.fSupplier;
+
+	  }
+
+
+	  /**
+	   * Set Supplier
+
+	   */
+
+	  public void setSupplier ( String supplier )
+
+	  {
+
+	    this.fSupplier = supplier;
+
+	  }
+
+
+	  /**
+	   * Get SupplierTPShortName
+
+	   */
+
+	  public String getSupplierTPShortName ()
+
+	  {
+
+	    return this.fSupplierTPShortName;
+
+	  }
+
+
+	  /**
+	   * Set SupplierTPShortName
+
+	   */
+
+	  public void setSupplierTPShortName ( String name )
+
+	  {
+
+	    this.fSupplierTPShortName = name;
+
+	  }
+
+
+	  /**
+	   * Get CatalogManager
+
+	   */
+
+	  public String getCatalogManager ()
+
+	  {
+
+	    return this.fCatalogManager;
+
+	  }
+
+
+	  /**
+	   * Set CatalogManager
+
+	   */
+
+	  public void setCatalogManager ( String catalogManager )
+
+	  {
+
+	    this.fCatalogManager = catalogManager;
+
+	  }
+
+
+	  public String getCatalogManagerId ()
+
+	  {
+
+	    return this.fCatalogManagerId;
+
+	  }
+
+
+	  /**
+	   * Set CatalogManagerId
+
+	   */
+
+	  public void setCatalogManagerId ( String catalogManagerId )
+
+	  {
+
+	    this.fCatalogManagerId = catalogManagerId;
+
+	  }
+	  
+	  
+	  
+	  
+	  
+	  /**
+	   * Get BackupCatalogManager
+
+	   */
+
+	  public String getBackupCatalogManager ()
+
+	  {
+
+	    return this.fBackupCatalogManager;
+
+	  }
+
+
+	  /**
+	   * Set BackupCatalogManager
+
+	   */
+
+	  public void setBackupCatalogManager ( String backupCatalogManager )
+
+	  {
+
+	    this.fBackupCatalogManager = backupCatalogManager;
+
+	  }
+
+
+	  /**
+	   * Get BackupCatalogManager
+
+	   */
+
+	  public String[] getBackupCatalogManagerList ()
+
+	  {
+
+	    return this.fBackupCatalogManagerList;
+
+	  }
+
+
+	  /**
+	   * Set BackupCatalogManager
+
+	   */
+
+	  public void setBackupCatalogManagerList ( String[] backupCatalogManagerList )
+
+	  {
+
+	    this.fBackupCatalogManagerList = backupCatalogManagerList;
+
+	  }
+
+
+	  /**
+	   * Get PurchaseAgreement
+
+	   */
+
+	  public String getPurchaseAgreement ()
+
+	  {
+
+	    return this.fPurchaseAgreement;
+
+	  }
+
+
+	  /**
+	   * Set PurchaseAgreement
+
+	   */
+
+	  public void setPurchaseAgreement ( String purchaseAgreement )
+
+	  {
+
+	    this.fPurchaseAgreement = purchaseAgreement;
+
+	  }
+
+
+	  /**
+	   * Get ReleasePoint
+
+	   */
+
+	  public String getReleasePoint ()
+
+	  {
+
+	    return this.fReleasePoint;
+
+	  }
+
+
+	  /**
+	   * Set ReleasePoint
+
+	   */
+
+	  public void setReleasePoint ( String releasePoint )
+
+	  {
+
+	    this.fReleasePoint = releasePoint;
+
+	  }
+
+
+	  /**
+	   * Get ChannelTypes
+
+	   */
+
+	  public String[] getChannelTypesArray ()
+
+	  {
+
+	    return this.fChannelTypes;
+
+	  }
+
+
+	  /**
+	   * Set ChannelTypes
+
+	   */
+
+	  public void setChannelTypesArray ( String[] channelTypes )
+
+	  {
+
+	    this.fChannelTypes = channelTypes;
+
+	  }
+
+
+	  /**
+	   * Get CustomerKey
+
+	   */
+
+	  public String getCustomer_key ()
+
+	  {
+	    return this.fCustomerKey;
+
+	  }
+
+
+	  /**
+	   * Set CustomerKey
+
+	   */
+
+	  public void setCustomer_key ( String customerKey )
+
+	  {
+	    this.fCustomerKey = customerKey;
+
+	  }
+
+
+	  /**
+	   * Get CharacterEncoding
+
+	   */
+
+	  public String getCharacterEncoding ()
+
+	  {
+
+	    return this.fCharacterEncoding;
+
+	  }
+
+
+	  /**
+	   * Set CharacterEncoding
+
+	   */
+
+	  public void setCharacterEncoding ( String characterEncoding )
+
+	  {
+
+	    this.fCharacterEncoding = characterEncoding;
+
+	  }
+
+
+	  public void setEprimeCustDUN ( String eprimeCustDUN )
+
+	  {
+
+	    this.fEprimeCustomerDUN = eprimeCustDUN;
+
+	  }
+
+
+	  public String getEprimeCustDUN ()
+
+	  {
+
+	    return this.fEprimeCustomerDUN;
+
+	  }
+
+
+	  public void setEprimeCustType ( String eprimeCustType )
+
+	  {
+
+	    this.fEprimeCustomerType = eprimeCustType;
+
+	  }
+
+
+	  public String getEprimeCustType ()
+
+	  {
+
+	    return this.fEprimeCustomerType;
+
+	  }
+
+
+	  /*  public void setAtCostPlusCustDun(String dun)
+	      {
+
+	        this.fAtCostPlusCustDun = dun;
+
+	      }
+
+
+
+	      public String getAtCostPlusCustDun()
+
+	      {
+
+	        return this.fAtCostPlusCustDun;
+
+	      }
+
+	   */
+
+	  public void setLocale ( String locale )
+
+	  {
+
+	    this.fLocale = locale;
+
+	  }
+
+
+	  public String getLocale ()
+
+	  {
+
+	    return this.fLocale;
+
+	  }
+
+
+	  public void setPrimaryCatalogSource ( String source )
+
+	  {
+
+	    this.fPrimaryCatalogSource = source;
+
+	  }
+
+
+	  public String getPrimaryCatalogSource ()
+
+	  {
+
+	    return this.fPrimaryCatalogSource;
+
+	  }
+
+
+	  public void setPriceSource ( String source )
+
+	  {
+
+	    this.fPriceSource = source;
+
+	  }
+
+
+	  public String getPriceSource ()
+
+	  {
+
+	    return this.fPriceSource;
+
+	  }
+
+
+	  public void setDefaultCategorySource ( String source )
+
+	  {
+
+	    this.fDefaultCategorySource = source;
+
+	  }
+
+
+	  public String getDefaultCategorySource ()
+
+	  {
+
+	    return this.fDefaultCategorySource;
+
+	  }
+
+
+	  public void setApprovalEnableFlag ( boolean flag )
+
+	  {
+
+	    this.fApprovalEnableFlag = flag;
+
+	  }
+
+
+	  public boolean isApprovalEnableFlag ()
+
+	  {
+
+	    return this.fApprovalEnableFlag;
+
+	  }
+
+
+	  public void setFallBackFlag ( String flag )
+
+	  {
+
+	    this.fFallBackFlag = flag;
+
+	  }
+
+
+	  public String getFallBackFlag ()
+
+	  {
+
+	    return this.fFallBackFlag;
+
+	  }
+
+
+	  public void setBuyerTPName ( String name )
+
+	  {
+
+	    this.fBuyerTPName = name;
+
+	  }
+
+
+	  public String getBuyerTPName ()
+
+	  {
+
+	    return this.fBuyerTPName;
+
+	  }
+
+
+	  public void setBuyerTPShortName ( String name )
+
+	  {
+
+	    this.fBuyerTPShortName = name;
+
+	  }
+
+
+	  public String getBuyerTPShortName ()
+
+	  {
+
+	    return this.fBuyerTPShortName;
+
+	  }
+
+
+	  public void setOutputFormat ( String format )
+
+	  {
+
+	    this.fOutputFormat = format;
+
+	  }
+
+
+	  public String getOutputFormat ()
+
+	  {
+
+	    return this.fOutputFormat;
+
+	  }
+
+
+	  public void setOutputFormatKeyList ( String[] list )
+
+	  {
+
+	    this.fOutputFormatKeyList = list;
+
+	  }
+
+
+	  public String[] getOutputFormatKeyList ()
+
+	  {
+
+	    return this.fOutputFormatKeyList;
+
+	  }
+
+
+	// added by nmbk
+
+	  public void setProdAuthCodeText ( String authcode )
+
+	  {
+
+	    this.fProdAuthCodeText = authcode;
+
+	  }
+
+	  public String getProdAuthCodeText ()
+
+	  {
+
+	    return this.fProdAuthCodeText;
+
+	  }
+
+	  public void setProdAuthCodeValue ( String authcode )
+
+	  {
+
+	    this.fProdAuthCodeValue = authcode;
+
+	  }
+
+	  public String getProdAuthCodeValue ()
+
+	  {
+
+	    return this.fProdAuthCodeValue;
+
+	  }
+
+	  public void setProdAuthCodeList ( String[] list )
+
+	  {
+
+	    this.fProdAuthCodeList = list;
+
+	  }
+
+	  public String[] getProdAuthCodeList ()
+
+	  {
+
+	    return this.fProdAuthCodeList;
+
+	  }
+
+
+	  public void setPriceLogic ( String pricelogic )
+
+	  {
+
+	    this.fPriceLogic = pricelogic;
+
+	  }
+
+	  public String getPriceLogic ()
+
+	  {
+
+	    return this.fPriceLogic;
+
+	  }
+
+
+	  public void setPriceLogicText ( String pricelogic )
+
+	  {
+
+	    this.fPriceLogicText = pricelogic;
+
+	  }
+
+	  public String getPriceLogicText ()
+
+	  {
+
+	    return this.fPriceLogicText;
+
+	  }
+
+
+	  public void setVisionFlag ( String visionflag )
+
+	  {
+
+	    this.fVisionFlag = visionflag;
+
+	  }
+
+	  public String getVisionFlagText ()
+
+	  {
+
+	    return this.fVisionFlagText;
+
+	  }
+
+	  public void setVisionFlagText ( String visionflag )
+
+	  {
+
+	    this.fVisionFlagText = visionflag;
+
+	  }
+
+	  public String getVisionFlag ()
+
+	  {
+
+	    return this.fVisionFlag;
+
+	  }
+
+	  public void setVisionFlagList ( String[] list )
+
+	  {
+
+	    this.fVisionFlagList = list;
+
+	  }
+
+	  public String[] getVisionFlagList ()
+
+	  {
+
+	    return this.fVisionFlagList;
+
+	  }
+
+
+	  public void setActivityCode ( String activitycode )
+
+	  {
+
+	    this.fActivityCode = activitycode;
+
+	  }
+
+	  public String getActivityCode ()
+
+	  {
+
+	    return this.fActivityCode;
+
+	  }
+
+	  public void setActivityCodeText ( String activitycode )
+
+	  {
+
+	    this.fActivityCodeText = activitycode;
+
+	  }
+
+	  public String getActivityCodeText ()
+
+	  {
+
+	    return this.fActivityCodeText;
+
+	  }
+
+	  public void setActivityCodeList ( String[] list )
+
+	  {
+
+	    this.fActivityCodeList = list;
+
+	  }
+
+	  public String[] getActivityCodeList ()
+
+	  {
+
+	    return this.fActivityCodeList;
+
+	  }
+
+
+	  public void setStockCode ( String StockCode )
+
+	  {
+
+	    this.fStockCode = StockCode;
+
+	  }
+
+	  public String getStockCode ()
+
+	  {
+
+	    return this.fStockCode;
+
+	  }
+
+	  public void setStockCodeText ( String StockCode )
+
+	  {
+
+	    this.fStockCodeText = StockCode;
+
+	  }
+
+	  public String getStockCodeText ()
+
+	  {
+
+	    return this.fStockCodeText;
+
+	  }
+
+	  public void setStockCodeList ( String[] list )
+
+	  {
+
+	    this.fStockCodeList = list;
+
+	  }
+
+	  public String[] getStockCodeList ()
+
+	  {
+
+	    return this.fStockCodeList;
+
+	  }
+
+	  public void setCustSegment ( String custseg ) {
+	    this.fCustSegment = custseg;
+	  }
+
+	  public String getCustSegment () {
+	    return this.fCustSegment;
+	  }
+
+	  public void setOrderCheckFlag ( boolean flag ) {
+	    this.fPartnumOrdcheckFlag = flag;
+	  }
+
+	  public boolean getOrderCheckFlag () {
+	    return this.fPartnumOrdcheckFlag;
+	  }
+
+	  public void setOfferAllOrdFlag ( boolean flag ) {
+	    this.fPartnumOfferAllordFlag = flag;
+	  }
+
+	  public boolean getOfferAllOrdFlag () {
+	    return this.fPartnumOfferAllordFlag;
+	  }
+
+	  public void setOfferEquivFlag ( boolean flag ) {
+	    this.fPartnumOfferEquivFflag = flag;
+	  }
+
+	  public boolean getOfferEquivFlag () {
+	    return this.fPartnumOfferEquivFflag;
+	  }
+
+	// end of addition for 4.1
+	  public void setLanguageCode ( String code ) {
+	    this.fLanguageCode = code;
+	  }
+
+	  public String getLanguageCode () {
+	    return this.fLanguageCode;
+	  }
+
+	  public String getCbIncludeFlag () {
+	    return this.fCBIncludeFlag;
+	  }
+
+	  public void setCbIncludeFlag ( String flag ) {
+	    this.fCBIncludeFlag = flag;
+	  }
+
+	  public String getIncludeFlagText () {
+	    return this.fIncludeFlagText;
+	  }
+
+	  public void setIncludeFlagText ( String flag ) {
+	    this.fIncludeFlagText = flag;
+	  }
+
+	  public boolean isCSIncludeFlag () {
+	    return this.fCSIncludeFlag;
+	  }
+
+	  public void setCSIncludeFlag ( boolean flag ) {
+	    this.fCSIncludeFlag = flag;
+	  }
+
+	  public boolean isNDIncludeFlag () {
+	    return this.fNDIncludeFlag;
+	  }
+
+	  public void setNDIncludeFlag ( boolean flag ) {
+	    this.fNDIncludeFlag = flag;
+	  }
+
+	  public void setExchangeRate ( String rate ) {
+	    this.fExchangeRate = rate;
+	  }
+
+	  public String getExchangeRate () {
+	    return this.fExchangeRate;
+	  }
+
+	  // 4.2 customer
+	  public Customer getCustomer () {
+	    return this.fCustomer;
+	  }
+
+	  public void setCustomer ( Customer in ) {
+	    this.fCustomer = in;
+	  }
+
+	  // 4.2 authCheckFlag
+	  public String getAuthCheckFlag () {
+	    return this.fAuthCheckFlag;
+	  }
+
+	  public void setAuthCheckFlag ( String in ) {
+	    this.fAuthCheckFlag = in;
+	  }
+
+	  public String getRegionCode () {
+	    return fRegionCode;
+	  }
+
+	  public void setRegionCode ( String in ) {
+	    this.fRegionCode = in;
+	  }
+
+	//for 4.3.1 TBA  -- Quest ticket (ASP000006315413)
+
+
+	  public void setApplyElc ( boolean flag ) {
+
+	    this.fApplyElc = flag;
+
+	  }
+
+	  public boolean getApplyElc () {
+
+	    return this.fApplyElc;
+
+	  }
+	  
+
+	//for Lava -- focus changes
+	  public String getPresalesCustId () {
+	    return presalesCustId;
+	  }
+
+	  public void setPresalesCustId ( String presalesCustId ) {
+	    this.presalesCustId = presalesCustId;
+	  }
+
+	  public String getPresalesSource () {
+	    return presalesSource;
+	  }
+
+	  public void setPresalesSource ( String presalesSource ) {
+	    this.presalesSource = presalesSource;
+	  }
+
+	  public String getPromotionCd () {
+	    return promotionCd;
+	  }
+
+	  public void setPromotionCd ( String promotionCd ) {
+	    this.promotionCd = promotionCd;
+	  }
+
+	  public String getCustSatFl () {
+	    return custSatFl;
+	  }
+
+	  public void setCustSatFl ( String custSatFl ) {
+	    this.custSatFl = custSatFl;
+	  }
+
+	  public String getLastSaveDt () {
+	    return lastSaveDt;
+	  }
+
+	  public String getLastSaveDateGmt () {
+	    return lastSaveDateGmt;
+	  }
+
+	  public void setLastSaveDateGmt ( String lastSaveDateGmt ) {
+	    this.lastSaveDateGmt = lastSaveDateGmt;
+	  }
+
+	  public void setLastSaveDt ( String lastSaveDt ) {
+	    this.lastSaveDt = lastSaveDt;
+	  }
+
+	  public String getEucIndustryNm () {
+	    return eucIndustryNm;
+	  }
+
+	  public void setEucIndustryNm ( String eucIndustryNm ) {
+	    this.eucIndustryNm = eucIndustryNm;
+	  }
+
+	  public String getSapId () {
+	    return sapId;
+	  }
+
+	  public void setSapId ( String sapId ) {
+	    this.sapId = sapId;
+	  }
+	  
+	  public String getIndustrySegment () {
+	    return industrySegment;
+	  }
+
+	  public void setIndustrySegment ( String industrySegment ) {
+	    this.industrySegment = industrySegment;
+	  }
+
+	//TBA changes
+	  public void setApplyTba ( boolean flag ) {
+	    this.fApplyTba = flag;
+	  }
+
+	  public boolean getApplyTba () {
+	    return this.fApplyTba;
+	  }
+	  
+	  
+
+	  public String getCustSegmentOptionDesc () {
+	    List custSegmentList = getCustSegmentList();
+
+	    for ( int i = 0; i < custSegmentList.size (); i++ ) {
+	      String segCode = ( ( CustSegmentBean ) custSegmentList.get ( i ) ).
+	                       getSegCode ();
+	      if ( segCode.equals ( getCustSegment () ) ) {
+	    	  custSegmentOptionDesc = ( ( CustSegmentBean ) custSegmentList.get ( i ) ).getSegDesc (); 
+	        return custSegmentOptionDesc;
+	      }
+	    }
+
+	    return null;
+	  }
+	  
+	  public void setCustSegmentOptionDesc(String custSegOptDesc){
+		  custSegmentOptionDesc = custSegOptDesc;
+	  }
+
+	  public boolean isFusionOrderabilityCheck () {
+	    return fFusionFlag;
+	  }
+
+	  public void setFusionOrderabilityCheck ( boolean flag ) {
+	    this.fFusionFlag = flag;
+	  }
+	  /* Added for March CPE 2006 - Vinod Mathew*/
+	  public boolean isExcludeProds () {
+		return fExcludeProd;
+	  }
+
+	  public void setExcludeProds ( boolean flag ) {
+		this.fExcludeProd = flag;
+	  }
+
+	  //END	
+
+
+	  // #36087 Code Changes Start			
+
+	  /**
+	   * Set Order Phone Number
+	   */
+	  public void setorderPhoneNo ( String orderPhoneNo ) {
+	    this.forderPhoneNo = orderPhoneNo;
+	  }
+
+	  /**
+	   * Set Order Phone Number
+	   */
+	  public void setorderFAXNo ( String orderFAXNo ) {
+	    this.forderFAXNo = orderFAXNo;
+	  }
+
+	  /**
+	   * Get Order Phone Number
+	   */
+	  public String getorderPhoneNo () {
+	    return this.forderPhoneNo;
+	  }
+
+	  /**
+	   * Get Order FAX Number
+	   */
+	  public String getorderFAXNo () {
+	    return this.forderFAXNo;
+	  }
+
+	  /**
+	   * Get Order Email
+	   */
+	  public String getorderEmail () {
+	    return forderEmail;
+	  }
+
+	  /**
+	   * Set Order Email
+	   */
+	  public void setorderEmail ( String orderEmail ) {
+	    this.forderEmail = orderEmail;
+	  }
+
+	  /**
+	   * Get Support URL
+	   */
+	  public String getsupportURL () {
+	    return fsupportURL;
+	  }
+
+	  /**
+	   * Set Support URL
+	   */
+	  public void setsupportURL ( String supportURL ) {
+	    this.fsupportURL = supportURL;
+	  }
+
+	  /**
+	   * Get Custom Relation Manager Name
+	   */
+	  public String getcrManagerName () {
+	    return fcrManagerName;
+	  }
+
+	  /**
+	   * Set Custom Relation Manager Name
+	   */
+	  public void setcrManagerName ( String crManagerName ) {
+	    this.fcrManagerName = crManagerName;
+	  }
+
+	  /**
+	   * Get Custom Relation Manager Phone Number
+	   */
+	  public String getcrManagerPhoneNo () {
+	    return fcrManagerPhoneNo;
+	  }
+
+	  /**
+	   * Set Custom Relation Manager Phone Number
+	   */
+	  public void setcrManagerPhoneNo ( String crManagerPhoneNo ) {
+	    this.fcrManagerPhoneNo = crManagerPhoneNo;
+	  }
+
+	  /**
+	   * Get Custom Relation Manager Fax Number
+	   */
+	  public String getcrManagerFAXNo () {
+	    return fcrManagerFAXNo;
+	  }
+
+
+	  /**
+	   * Set Custom Relation Manager Fax Number
+	   */
+	  public void setcrManagerFAXNo ( String crManagerFAXNo ) {
+	    this.fcrManagerFAXNo = crManagerFAXNo;
+	  }
+
+	  /**
+	   * Get Custom Relation Manager Email
+	   */
+	  public String getcrManagerEmail () {
+	    return fcrManagerEmail;
+	  }
+
+	  /**
+	   * Set Custom Relation Manager Email
+	   */
+	  public void setcrManagerEmail ( String crManagerEmail ) {
+	    this.fcrManagerEmail = crManagerEmail;
+	  }
+
+	  /**
+	   * Get SIN No 1
+	   */
+	  public String getsinNo1 () {
+	    return fsinNo1;
+	  }
+
+	  /**
+	   * Set SIN No 1
+	   */
+	  public void setsinNo1 ( String sinNo1 ) {
+	    this.fsinNo1 = sinNo1;
+	  }
+
+	  /**
+	   * Get SIN No 2
+	   */
+	  public String getsinNo2 () {
+	    return fsinNo2;
+	  }
+
+	  /**
+	   * Set SIN No 2
+	   */
+	  public void setsinNo2 ( String sinNo2 ) {
+	    this.fsinNo2 = sinNo2;
+	  }
+
+	  /**
+	   * Get the flag to indicate if system has to auto-create sales bundle
+	   * templates and instances for new Eclipse bundles.
+	   * @param auto create sales Bundle Flag (true/false)
+	   * @since Chianti - Bundle Management
+	  */
+	  public boolean getAutoCreateSalesBdlFlag () {
+	    return fAutoCreateSalesBdlFlag;
+	  }
+
+	 /**
+	  * Set the flag to indicate if system has to auto-create sales bundle
+	  * templates and instances for new Eclipse bundles.
+	  * @param auto create sales Bundle Flag (true/false)
+	  * @since Chianti - Bundle Management
+	 */
+	  public void setAutoCreateSalesBdlFlag ( boolean autoCreateFlag ) {
+	   this.fAutoCreateSalesBdlFlag = autoCreateFlag;
+	  }
+	  
+	  
+
+	// #36087 Code Changes End
+
+	  private String fCustomerName;
+	  private String fDun;
+	  private String fCustomerID;
+	  private String fLocation;
+	  private String fSupplier;
+	  private String fSupplierTPShortName;
+	  private String fPurchaseAgreement;
+	  private String fReleasePoint;
+	  private String[] fChannelTypes;
+
+	  private String fCatalogManager;
+	  
+	  private String fCatalogManagerId;
+
+	  private String fBackupCatalogManager;
+
+	  private String[] fBackupCatalogManagerList;
+
+	  private String fCustomerKey;
+
+	  private String fCustomerType;
+
+	  private String fCustomerTypeDesc;
+
+	  private String fCharacterEncoding;
+
+	  private String fEprimeCustomerDUN;
+
+	  private String fEprimeCustomerType;
+
+	  //    private String                          fAtCostPlusCustDun;
+
+	  private String fLocale;
+
+	  private String fLanguageCode;
+
+	  private String fPrimaryCatalogSource;
+
+	  private String fPriceSource;
+
+	  private String fDefaultCategorySource;
+
+	  private String fExchangeRate;
+
+	  private boolean fApprovalEnableFlag;
+
+	  private String fFallBackFlag;
+
+	  private String fBuyerTPName;
+
+	  private String fBuyerTPShortName;
+
+	  private String fOutputFormat;
+
+	  //for 4.1
+
+	  private String[] fOutputFormatKeyList;
+
+	  private String fPriceLogic;
+
+	  private String fPriceLogicText;
+
+	  private String fProdAuthCodeText;
+
+	  private String fProdAuthCodeValue;
+
+	  private String[] fProdAuthCodeList;
+
+	  private String fVisionFlagText;
+
+	  private String fVisionFlag;
+
+	  private String[] fVisionFlagList;
+
+	  private String fActivityCodeText;
+
+	  private String fActivityCode;
+
+	  private String[] fActivityCodeList;
+
+	  private String fStockCodeText;
+
+	  private String fStockCode;
+
+	  private String[] fStockCodeList;
+
+	  private String fCBIncludeFlag;
+
+	  private String fIncludeFlagText;
+
+	  private String fCustSegment;
+
+	  private boolean fPartnumOrdcheckFlag;
+
+	  private boolean fPartnumOfferAllordFlag;
+
+	  private boolean fPartnumOfferEquivFflag;
+
+	  //end of 4.1
+
+	  private boolean fCSIncludeFlag;
+
+	  private boolean fNDIncludeFlag;
+
+	  // 4.2
+	  private Customer fCustomer;
+	  private String fAuthCheckFlag;
+	  private String fRegionCode;
+	  //	for 4.3.1 TBA  -- Quest ticket (ASP000006315413)
+	  private boolean fApplyElc;
+	  
+	  //Added by Lalitha
+	  private boolean fCustRep;
+	 
+
+	private boolean fEolRep;
+	  private boolean fStdcatRep;
+	  private boolean fPrtierRep;
+	  private String  fRegionDef;
+	  /**
+	   * Set RegionDef
+	   */
+	  public void setRegionDef ( String regionDef ) {
+	    this.fRegionDef = regionDef;
+	  }
+
+	  /**
+	   * Get RegionDef
+	   */
+	  public String getRegionDef () {
+	    return this.fRegionDef;
+	  }
+
+	  
+	// Added by Lalitha
+	public void setCustRep(boolean flag) {
+
+		this.fCustRep = flag;
+
+	}
+
+	public boolean getCustRep() {
+
+		return this.fCustRep;
+
+	}
+
+	public void setEolRep(boolean flag) {
+
+		this.fEolRep = flag;
+
+	}
+
+	public boolean getEolRep() {
+
+		return this.fEolRep;
+
+	}
+
+	public void setStdcatRep(boolean flag) {
+
+		this.fStdcatRep = flag;
+
+	}
+
+	public boolean getStdcatRep() {
+
+		return this.fStdcatRep;
+
+	}
+
+	public void setPrtierRep(boolean flag) {
+
+		this.fPrtierRep = flag;
+
+	}
+
+	public boolean getPrtierRep() {
+
+		return this.fPrtierRep;
+
+	}
+
+	// Ended by Lalitha
+
+	  //Lava Changes for Focus
+	  private String presalesCustId;
+	  private String presalesSource;
+	  private String eucIndustryNm;
+	  private String custSatFl;
+	  private String promotionCd;
+	  private String lastSaveDt;
+	  private String lastSaveDateGmt;
+	  // focus part 2
+	  private String sapId;
+	  private String industrySegment;
+	  //tba changes
+	  // #36087 Code Changes Start 	
+	  private boolean fApplyTba;
+	  private boolean fFusionFlag;
+	  private String forderPhoneNo;
+	  private String forderFAXNo;
+	  private String forderEmail;
+	  private String fsupportURL;
+	  private String fcrManagerName;
+	  private String fcrManagerPhoneNo;
+	  private String fcrManagerFAXNo;
+	  private String fcrManagerEmail;
+	  private String fsinNo1;
+	  private String fsinNo2;
+	  private List custSegmentList = new ArrayList();
+	  private String custSegmentOptionDesc;
+	  private String tenant;
+	  private String loginTenant;
+
+	  //	#36087 Code Changes End
+
+	//for Cabernet 3831. by Ravi N
+	  private boolean genesisCustomer;
+	  private boolean glpAccountFlag;
+	  /*Added for March CPE 2006 - Vinod Mathew*/
+	  private boolean fExcludeProd;
+	   //Added for Chianti - Auto Create Sales Bdl Flag for Bundle Mgmt
+	  private boolean fAutoCreateSalesBdlFlag;
+	  //END	
+	 
+	  /**
+	   * @return boolean genesisCustomer.
+	   */
+	  public boolean getGenesisCustomer () {
+	    return genesisCustomer;
+	  }
+
+	  /**
+	   * @param genesisCustomer The genesisCustomer to set.
+	   */
+	  public void setGenesisCustomer ( boolean genesisCustomer ) {
+	    this.genesisCustomer = genesisCustomer;
+	  }
+	  
+	  public boolean getGlpAccountFlag () {
+		return glpAccountFlag;
+	  }
+
+	  public void setGlpAccountFlag ( boolean glpAccountFlag ) {
+	    this.glpAccountFlag = glpAccountFlag;
+	  }
+
+
+	public List getCustSegmentList() {
+		return custSegmentList;
+	}
+
+
+	public void setCustSegmentList(List custSegmentList) {
+		this.custSegmentList = custSegmentList;
+	}
+
+
+	public String getTenant() {
+		return tenant;
+	}
+
+
+	public void setTenant(String tenant) {
+		this.tenant = tenant;
+	}
+
+
+	public String getLoginTenant() {
+		return loginTenant;
+	}
+
+
+	public void setLoginTenant(String loginTenant) {
+		this.loginTenant = loginTenant;
+	}
+
+	
+}

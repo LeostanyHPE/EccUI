@@ -1,0 +1,287 @@
+package com.hp.ecc.ui.biz.archive.eprime;
+
+import hp.comcat.dax.fwk.common.util.CatRuntimeException;
+import hp.comcat.dax.fwk.common.util.PersistentMap;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+import org.apache.log4j.Category;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.ext.LexicalHandler;
+import org.xml.sax.helpers.DefaultHandler;
+
+import com.sun.org.apache.xerces.internal.parsers.SAXParser;
+
+/**
+ * SAX parser implementation to read catalog XML data and construct DOM-like tree
+ * of XML elements.
+ * <p>Copyright: Copyright (c) 2014</p>
+ * <p>Company: Hewlett-Packard</p>
+ * @author 
+ * @version 1.0
+ */
+
+public class CatalogReader extends DefaultHandler implements LexicalHandler {
+  private String catalogFileName;
+  private boolean readingCDATASection;
+
+  private XMLReader parser;
+
+  private StringBuffer errorBuffer;
+  private boolean hasErrors = false;
+  private CatalogXMLElement fRoot;
+
+  private Category fLog;
+  private Stack tags;
+  private Map fProducts;
+  private BundlesXMLElement fBundles;
+
+  private boolean fInsideProductsTag;
+  public static final String PRODUCTS_TAG_NAME = "products";
+
+  public CatalogReader ( String catalogFileName ) {
+    this.catalogFileName = catalogFileName;
+    this.parser = null;
+    this.readingCDATASection = false;
+
+    errorBuffer = new StringBuffer ();
+    fLog = Category.getInstance ( this.getClass () );
+
+    fBundles = null;
+    fRoot = null;
+    tags = new Stack ();
+
+    fInsideProductsTag = false;
+  }
+
+  public CatalogXMLElement getRoot () {
+    return fRoot;
+  }
+
+  public Map getProducts () {
+    return fProducts;
+  }
+
+  public BundlesXMLElement getBundlesElement () {return fBundles;
+  }
+
+  public void readCatalog () throws CatRuntimeException {
+    //check if catalog file exists
+    File catalogFile = new File ( catalogFileName );
+    if ( !catalogFile.exists () ) {
+      fLog.error ( "Catalog file doesn't exist" );
+      throw new CatRuntimeException ( "Can't find catalog file " + catalogFileName );
+    }
+
+    try {
+      //use in-memory hashmap for files less than 5Mb
+      if ( catalogFile.length () < 5 * 1024 * 1024 ) {
+        fProducts = new HashMap ();
+      }
+      else {
+        fProducts = new PersistentMap ( ProductXMLElement.class );
+      }
+
+      parser = new SAXParser ();
+      parser.setContentHandler ( this );
+      parser.setErrorHandler ( this );
+
+      parser.setProperty ( "http://xml.org/sax/properties/lexical-handler", this );
+
+      parser.setFeature ( "http://xml.org/sax/features/validation", false );
+      parser.setFeature ( "http://xml.org/sax/features/namespaces", false );
+      parser.setFeature ( "http://apache.org/xml/features/validation/schema", false );
+      parser.setFeature (
+          "http://apache.org/xml/features/validation/schema-full-checking", false );
+      parser.parse ( catalogFileName );
+    }
+    catch ( Exception error ) {
+      throw new CatRuntimeException ( error );
+    }
+    if ( hasErrors ) {
+      throw new CatRuntimeException ( "Errors during parsing: "
+                               + this.getErrorBuffer ().toString () );
+    }
+  }
+
+  //
+  // DocumentHandler methods
+  //
+  public void endCDATA () throws SAXException {
+    //will reset this flag in endElement event
+    //readingCDATASection = false;
+
+  }
+
+  public void startCDATA () throws SAXException {
+    readingCDATASection = true;
+  }
+
+  /** Start document. */
+  public void startDocument () {}
+
+  public void startDTD ( String name, String publicId, String systemId ) {}
+
+  public void endDTD () {}
+
+  public void startEntity ( String name ) {}
+
+  public void endEntity ( String name ) {}
+
+  public void comment ( char[] ch, int start, int length ) {}
+
+
+  /** Start element. */
+  public void startElement ( String uri, String local, String raw
+                             , Attributes attrs ) {
+    CatalogXMLElement topElement = null, newElement;
+
+    if ( !tags.isEmpty () ) {
+      topElement = ( CatalogXMLElement ) tags.peek ();
+
+    }
+    if ( raw.equals ( PRODUCTS_TAG_NAME ) ) {
+      fInsideProductsTag = true;
+
+      //need to check if <product> tag is actually inside <products>,
+      //otherwise we can mistakenly grab <products> from <csproducts> (cross-sell).
+      //If that happens then regular and xsell products will get mixed in the output delta file
+    }
+    if ( raw.equals ( ProductXMLElement.PRODUCT_TAG_NAME )
+         && fInsideProductsTag ) {
+      newElement = new ProductXMLElement ( topElement );
+      //memory saving: do not store products in parent tag's list (we use "map"
+      //to store them anyway)
+    }
+    else {
+      if ( raw.equals ( ProductXMLElement.BUNDLE_LINK_TAG ) ) {
+        newElement = new CatalogXMLElement ( raw, topElement );
+        String explodeFlag = attrs.getValue ( ProductXMLElement.
+                                              BUNDLE_EXPLODE_FLAG );
+        if ( explodeFlag != null && explodeFlag.equals ( "Y" ) ) {
+          //find product parent
+          ProductXMLElement prodElement = ( ProductXMLElement ) topElement.
+                                          getParent ();
+          prodElement.setBundleHeaderFlag ( true );
+          prodElement.setBundleKey ( attrs.getValue ( ProductXMLElement.
+              BUNDLE_KEY ) );
+        }
+
+      }
+      else if ( raw.equals ( BundlesXMLElement.BUNDLES_TAG_NAME ) ) {
+        newElement = fBundles = new BundlesXMLElement ( topElement );
+      }
+      else {
+        newElement = new CatalogXMLElement ( raw, topElement );
+
+      }
+      if ( topElement != null ) {
+        topElement.addChildElement ( newElement );
+      }
+    }
+
+    tags.push ( newElement );
+    if ( fRoot == null ) {
+      fRoot = newElement;
+
+    }
+    int attrCount = attrs.getLength ();
+    for ( int i = 0; i < attrCount; i++ ) {
+      newElement.setAttributeValue ( attrs.getQName ( i ), attrs.getValue ( i ) );
+    }
+  }
+
+  /**
+   * End element
+   * @param uri
+   * @param localName
+   * @param qName
+   * @throws SAXException
+   */
+  public void endElement ( String uri, String localName, String qName ) throws
+      SAXException {
+    CatalogXMLElement element = ( CatalogXMLElement ) tags.pop ();
+    if ( element instanceof ProductXMLElement ) {
+      fProducts.put ( ( ( ProductXMLElement ) element ).getCombinedKey ()
+                      , element );
+    }
+
+    if ( qName.equals ( PRODUCTS_TAG_NAME ) ) {
+      fInsideProductsTag = false;
+    }
+  }
+
+  /** Characters. */
+  public void characters ( char ch[], int start, int length ) {
+    if ( !tags.isEmpty () ) {
+      CatalogXMLElement currentElement = ( CatalogXMLElement ) tags.peek ();
+
+      currentElement.setText ( new String ( ch, start, length ) );
+      currentElement.setCDATAFlag ( readingCDATASection );
+      readingCDATASection = false;
+    }
+  }
+
+  /** Ignorable whitespace. */
+  public void ignorableWhitespace ( char ch[], int start, int length ) {
+  }
+
+  //
+  // ErrorHandler methods
+  //
+
+  /** Warning. */
+  public void warning ( SAXParseException ex ) {
+    fLog.warn ( "[Warning] " +
+                getLocationString ( ex ) + ": " +
+                ex.getMessage () );
+  }
+
+  /** Error. */
+  public void error ( SAXParseException ex ) {
+    errorBuffer.append ( "[XML Error] " );
+    errorBuffer.append ( getLocationString ( ex ) );
+    errorBuffer.append ( ": " );
+    errorBuffer.append ( ex.getMessage () + "\n" );
+    hasErrors = true;
+  }
+
+  /** Fatal error. */
+  public void fatalError ( SAXParseException ex ) throws SAXException {
+    fLog.fatal ( "[Fatal Error] " +
+                 getLocationString ( ex ) + ": " +
+                 ex.getMessage () );
+    hasErrors = true;
+    throw ex;
+  }
+
+  /** Returns a string of the location. */
+  private String getLocationString ( SAXParseException ex ) {
+    StringBuffer str = new StringBuffer ();
+
+    String systemId = ex.getSystemId ();
+    if ( systemId != null ) {
+      int index = systemId.lastIndexOf ( '/' );
+      if ( index != -1 ) {
+        systemId = systemId.substring ( index + 1 );
+      }
+      str.append ( systemId );
+    }
+    str.append ( ':' );
+    str.append ( ex.getLineNumber () );
+    str.append ( ':' );
+    str.append ( ex.getColumnNumber () );
+
+    return str.toString ();
+  }
+
+  public StringBuffer getErrorBuffer () {
+    return errorBuffer;
+  }
+}

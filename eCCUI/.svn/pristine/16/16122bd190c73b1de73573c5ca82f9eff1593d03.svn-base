@@ -1,0 +1,29 @@
+/**
+ * This Interface defines the methods of cell validator.
+ * The cell validators are designed to validate the cell data of XL sheets.
+ */
+
+package com.hp.ecc.ui.upload.validation;
+
+import java.util.ArrayList;
+
+
+public interface ICellValidator {
+  /**
+   * Returns the id of the validation
+   */
+  public void setValidationType ( String valType );
+
+  /**
+   * Returns the id of the validation
+   */
+  public String getValidationType ();
+
+  /**
+   * This method validates the cell.
+   * The return value will be true if the cell is valid.
+   *
+   */
+  public boolean isValidCell ( String[] rowData, int columnNo, ArrayList param
+                               , String valData, String dbRegionToConnect ) ;
+}

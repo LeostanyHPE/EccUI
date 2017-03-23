@@ -1,0 +1,238 @@
+package com.hp.ecc.ui.biz.admin;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+
+public class PurchaseAgreement extends BizObject {
+
+	  private String is_checked = "";
+	  private String cpm_pa_no="";
+	  private String cpm_prc_term_cd = "";
+	  private String cpm_disc_geo = "";
+	  private String cpm_cac_code = "";
+	  private String custKey;
+	  private String lastModifiedDate;
+	  
+	  static final String priceTerm = "";
+	  private String fInUseByCatalog;
+	  private String purchaseAgreementName;
+	  private String cpmPaNo;
+	  private String cpmPrcTermCd;
+	  private String cpmDiscGeo;
+	  private String cpmCacCode;
+	  private String cacCodeOld;
+	  private String geoCodeOld;
+	  private String priceTermOld;
+	  private String operationTypeFlag;
+	  
+	  
+	 
+	
+	public String getOperationTypeFlag() {
+		return operationTypeFlag;
+	}
+	public void setOperationTypeFlag(String operationTypeFlag) {
+		this.operationTypeFlag = operationTypeFlag;
+	}
+	public String getValueToBeDeleted() {
+		return is_checked;
+	}
+	public void setValueToBeDeleted(String valueToBeDeleted) {
+		this.is_checked = valueToBeDeleted;
+	}
+	public String getCpmPrcTermCd() {
+		return cpm_prc_term_cd;
+	}
+	public void setCpmPrcTermCd(String cpmPrcTermCd) {
+		this.cpm_prc_term_cd = cpmPrcTermCd;
+	}
+	public String getCpmDiscGeo() {
+		return cpm_disc_geo;
+	}
+	public void setCpmDiscGeo(String cpmDiscGeo) {
+		this.cpm_disc_geo = cpmDiscGeo;
+	}
+	public String getCpmCacCode() {
+		return cpm_cac_code;
+	}
+	public void setCpmCacCode(String cpmCacCode) {
+		this.cpm_cac_code = cpmCacCode;
+	}
+	public String getCpmPaNo() {
+		return cpm_pa_no;
+	}
+	public void setCpmPaNo(String cpmPaNo) {
+		this.cpm_pa_no = cpmPaNo;
+	}
+
+	public PurchaseAgreement () {
+	    super ();
+	  }
+	  
+	  public void setIsChecked ( java.lang.String is_checked ) {
+	    setValue ( PAFields.IS_CHECKED, is_checked );
+	  }
+	  public String getIsChecked () {
+	    return ( String ) getValue ( PAFields.IS_CHECKED);
+	  }
+	  public void setPurchaseAgreementName ( java.lang.String cpm_pa_no ) {
+	    setValue ( PAFields.CPM_PA_NO, cpm_pa_no );
+	  }
+	  public String getPurchaseAgreementName () {
+	    return ( String ) getValue ( PAFields.CPM_PA_NO );
+	  }
+	  public void setPriceTerm ( java.lang.String cpm_prc_term_cd ) {
+	    setValue ( PAFields.CPM_PRC_TERM_CD, cpm_prc_term_cd );
+	  }
+	  public String getPriceTerm () {
+	    return ( String ) getValue ( PAFields.CPM_PRC_TERM_CD );
+	  }	 
+	  public void setGeoCode ( java.lang.String cpm_disc_geo ) {
+	    setValue ( PAFields.CPM_DISC_GEO, cpm_disc_geo );
+	  }
+	  public String getGeoCode () {
+	    return ( String ) getValue ( PAFields.CPM_DISC_GEO );
+	  }
+	  public void setCacCode ( java.lang.String cpm_cac_code ) {
+	    setValue ( PAFields.CPM_DISC_GEO, cpm_cac_code );
+	  }
+
+	  public String getCacCode () {
+	    return ( String ) getValue ( PAFields.CPM_DISC_GEO );
+	  }
+
+	public String getCustKey() {
+		return custKey;
+	}
+
+	public void setCustKey(String custKey) {
+		this.custKey = custKey;
+	}
+
+	public String getLastModifiedDate() {
+		return lastModifiedDate;
+	}
+
+	public void setLastModifiedDate(String lastModifiedDate) {
+		this.lastModifiedDate = lastModifiedDate;
+	}
+	
+	/**
+	 * @return
+	 */
+	public String getInUseByCatalog() {
+		return fInUseByCatalog;
+	}
+
+	/**
+	 * @param string
+	 */
+	public void setInUseByCatalog(String isUsed) {
+		System.out.println("Inside InUserByCatalog" + isUsed);
+		fInUseByCatalog = isUsed;
+	}
+
+	public String toString() {
+		return "PAName " + getPurchaseAgreementName() + " " + "CAC Code "
+				+ getCacCode() + " " + "GEO Code " + getCacCode() + " "
+				+ "PriceTerm " + getPriceTerm();
+	}
+	public String getCacCodeOld() {
+		return cacCodeOld;
+	}
+	public void setCacCodeOld(String cacCodeOld) {
+		this.cacCodeOld = cacCodeOld;
+	}
+	public String getGeoCodeOld() {
+		return geoCodeOld;
+	}
+	public void setGeoCodeOld(String geoCodeOld) {
+		this.geoCodeOld = geoCodeOld;
+	}
+	public String getPriceTermOld() {
+		return priceTermOld;
+	}
+	public void setPriceTermOld(String priceTermOld) {
+		this.priceTermOld = priceTermOld;
+	}
+	
+	
+//	/**
+//	   * @return
+//	   */
+//	  public String getCacCodeOld ( int index ) {
+//	    String cacCodeOld = "";
+//	    PurchaseAgreementBean paBean = findElement ( index, false );
+//	    if ( paBean != null ) {
+//	      cacCodeOld = paBean.getCacCodeOld ();
+//	    }
+//	    return cacCodeOld;
+//
+//	  }
+//
+//	  /**
+//	   * @param string
+//	   */
+//	  public void setCacCodeOld ( int index, String cacCodeOld ) {
+//	    PurchaseAgreementBean paBean = findElement ( index, true );
+//	    if ( paBean != null ) {
+//	      paBean.setCacCodeOld ( cacCodeOld );
+//	    }
+//	  }
+//
+//	  /**
+//	   * @param string
+//	   */
+//	  public void setGeoCodeOld ( int index, String geoCodeOld ) {
+//	    PurchaseAgreementBean paBean = findElement ( index, true );
+//	    if ( paBean != null ) {
+//	      paBean.setGeoCodeOld ( geoCodeOld );
+//	    }
+//	  }/**
+//	   * @return
+//	   */
+//	  public String getGeoCodeOld ( int index ) {
+//	    String geoCodeOld = "";
+//	    PurchaseAgreementBean paBean = findElement ( index, false );
+//	    if ( paBean != null ) {
+//	      geoCodeOld = paBean.getGeoCodeOld ();
+//	    }
+//	    return geoCodeOld;
+//
+//	  }
+//	  
+//	  /**
+//	   * This method finds the PurchaseAgreement row for a given index. If
+//	   * not found creates a new PurchaseAgreement row and returns it else
+//	   * returns the reference
+//	   * @param index
+//	   * @param createNew
+//	   * @return PurchaseAgreementBean
+//	   */
+//	  private PurchaseAgreementBean findElement ( int index, boolean createNew ) {
+//	    PurchaseAgreementBean paRow = null;
+//
+//	    if ( fPAList == null ) {
+//	      fPAList = new ArrayList ();
+//	    }
+//
+//	    if ( fPAList.size () <= index && createNew ) {
+//	      PurchaseAgreementBean purchaseAgreement = null;
+//
+//	      while ( fPAList.size () <= index ) {
+//	        purchaseAgreement = new PurchaseAgreementBean ();
+//	        fPAList.add ( purchaseAgreement );
+//
+//	      }
+//	    }
+//
+//	    if ( index < fPAList.size () ) {
+//	      Object obj = fPAList.get ( index );
+//	      paRow = ( PurchaseAgreementBean ) obj;
+//
+//	    }
+//
+//	    return paRow;
+//	  }
+
+	 
+}

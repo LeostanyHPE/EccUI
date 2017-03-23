@@ -1,0 +1,699 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.util;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.text.DateFormat;
+import java.text.Format;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+
+/**
+ * @author kn
+ * 
+ */
+public class StrUtil {
+	private static final int MAX_NO_OF_DATA = 999;
+
+	/**
+	 * if a input# contains a ', change it to ''; used for sql statement
+	 * 
+	 * @param input
+	 * @return
+	 */
+	public static String escapeProd(String data) {
+		int i, from = 0;
+		StringBuffer sb;
+		while ((i = data.indexOf("'", from)) > -1) {
+			sb = new StringBuffer(data);
+			sb.replace(i, i + 1, "''");
+			data = sb.toString();
+			from = i + 2;
+		}
+
+		return data;
+	}// escapeProd
+
+	/**
+	 * Check if a string is empty or null
+	 */
+	static public boolean isEmpty(String s) {
+		if (s == null || s.trim().length() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}// isEmpty
+	
+	static public boolean isNotEmptyOrNull(String reqParam){
+		boolean flag = false;
+		if(reqParam !=null && !"".equalsIgnoreCase(reqParam))
+			flag = true;
+		return flag;
+	}
+
+	/**
+	 * Check if a list is empty or null
+	 */
+	static public boolean isListEmpty(Collection s) {
+		if (s == null || s.size() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}// isListEmpty
+
+	/**
+	 * Split an string by separator
+	 */
+	static public ArrayList split(String s, String sep) {
+		if (StrUtil.isEmpty(s)) {
+			return new ArrayList();
+		}
+
+		if (StrUtil.isEmpty(sep)) {
+			ArrayList list1 = new ArrayList();
+			list1.add(s);
+			return list1;
+		}
+
+		ArrayList list = new ArrayList();
+		int len = sep.length();
+		int i = 0;
+		int n = 0;
+		while (true) {
+			int j = s.indexOf(sep, i);
+			if (j < 0) {
+				String t = s.substring(i);
+				if (t != null) {
+					t = t.trim();
+				}
+				if (t != null && t.length() > 0) {
+					list.add(t);
+				}
+				break;
+			} else {
+				String t = s.substring(i, j);
+				if (t != null) {
+					t = t.trim();
+				}
+				if (t != null && t.length() > 0) {
+					list.add(t);
+				}
+				i = j + len;
+				n++;
+			}
+		}
+
+		return list;
+	}// split
+
+	static public String replace(String string, String oldSubstring,
+			String newSubstring) {
+		if (oldSubstring == null || newSubstring == null) {
+			return string;
+		}
+		if (string == null) {
+			return string;
+		}
+		if (string.indexOf(oldSubstring) < 0) {
+			return string;
+		}
+		StringBuffer value = new StringBuffer("");
+		int length = string.length();
+		for (int i = 0; i < length; i++) {
+			if (string.startsWith(oldSubstring, i)) {
+				value.append(newSubstring);
+				i += oldSubstring.length() - 1;
+			} else {
+				value.append(string.charAt(i));
+			}
+		}
+		return value.toString();
+	}// replace
+
+	static public String objectToString(Format format, Object object) {
+		if (object == null) {
+			return null;
+		}
+
+		if (format == null) {
+			return object.toString();
+		} else {
+			return format.format(object);
+		}
+	}// objectToString
+
+	static public Date strToDate(DateFormat dateFormat, String str) {
+		if (str == null || str.trim().length() == 0) {
+			return null;
+		}
+		try {
+			Date date = dateFormat.parse(str);
+			return date;
+		} catch (java.text.ParseException e) {
+			return null;
+		}
+	}// strToDate
+
+	static public String[] listToStrArray(List list) {
+		if (StrUtil.isListEmpty(list)) {
+			return null;
+		}
+		int size = list.size();
+		String[] results = new String[size];
+		for (int i = 0; i < size; i++) {
+			results[i] = (String) list.get(i);
+		}
+		return results;
+	}// listToStrArray
+
+	static public List strArrayToList(String[] strArray) {
+		if (strArray == null || strArray.length == 0) {
+			return null;
+		}
+
+		List list = new ArrayList();
+		for (int i = 0; i < strArray.length; i++) {
+			list.add(strArray[i]);
+		}
+		return list;
+	}// strArrayToList
+
+	/* No seperator at the end. Such as join a,b and c by | will be a|b|c */
+	static public String joinEndFree(String[] ss, String join_by) {
+		if (ss != null && ss.length > 0) {
+			StringBuffer sb = new StringBuffer();
+
+			for (int i = 0; i < ss.length; i++) {
+				sb.append(ss[i]);
+				if (i < ss.length - 1) {
+					sb.append(join_by);
+				}
+			}
+			return sb.toString();
+		}
+		return null;
+	}// joinEndFree
+
+	/*
+	 * The methods was added for the Vista special pricing module. Given the
+	 * deal list and the pricing list, this method will return a string that can
+	 * be displayed in the GUI.
+	 */
+	public static String getDealDisplayList(String[] dealList,
+			String[] pricingList) {
+
+		StringBuffer retDealList = new StringBuffer();
+
+		if (dealList != null && dealList.length > 0) {
+			for (int i = 0; i < dealList.length; i++) {
+				retDealList.append(dealList[i]);
+				if (pricingList[i].equalsIgnoreCase("P")) {
+					retDealList.append("(Price Only)");
+				}
+
+				if (i < dealList.length - 1) {
+					/*
+					 * The bland space btwn each catalog is required for HTML
+					 * multi line display.
+					 */
+					retDealList.append(", ");
+				}
+			}
+			return retDealList.toString();
+		}
+		return null;
+
+	}// getDealDisplayList
+
+	/**
+	 * Split an string by separator
+	 */
+	static public String join(Object[] objects, String join_by) {
+		if (objects != null && objects.length > 0) {
+			StringBuffer sb = new StringBuffer();
+
+			for (int i = 0; i < objects.length; i++) {
+				sb.append(objects[i]);
+				if (i < objects.length) {
+					sb.append(join_by);
+				}
+			}
+
+			return sb.toString();
+		}
+		return null;
+	}// join
+
+	/* No seperator at the end. Used to prepare in clause with quote */
+	static public String joinEndFreeIn(String[] ss, String join_by) {
+
+		if (ss != null && ss.length > 0) {
+			StringBuffer sb = new StringBuffer();
+
+			for (int i = 0; i < ss.length; i++) {
+				sb.append("'");
+				sb.append(ss[i]);
+				sb.append("'");
+				if (i < ss.length - 1) {
+					sb.append(join_by);
+				}
+			}
+			return sb.toString();
+		}
+		return null;
+	}// joinEndFreeIn
+
+	public static String unescape(String s) {
+		if (s != null && !StrUtil.isEmpty(s)) {
+			String out = StrUtil.replace(s, "&amp;", "&");
+			out = StrUtil.replace(out, "&gt;", ">");
+			out = StrUtil.replace(out, "&lt;", "<");
+
+			return out;
+		} else {
+			return null;
+		}
+	}// unescape
+
+	public static String correctUrl(String url) {
+		if (!isEmpty(url)) {
+			if ((url.length() > 4 && url.substring(0, 4).equalsIgnoreCase(
+					"http"))
+					|| (url.length() > 5 && url.substring(0, 5)
+							.equalsIgnoreCase("https"))) {
+				return url;
+			} else {
+				return "http://" + url;
+			}
+		} else {
+			return null;
+		}
+
+	}// correctUrl
+
+	static public Double strToDouble(String str) {
+		if (str == null || str.trim().length() == 0) {
+			return null;
+		}
+		try {
+			Double data = new Double(str);
+			return data;
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}// strToDouble
+
+	/**
+	 * Check if a map is empty or null
+	 */
+	static public boolean isMapEmpty(Map s) {
+		if (s == null || s.size() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}// isMapEmpty
+
+	public static boolean isEmpty(String[] arr) {
+		if (arr != null && arr.length > 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}// isEmpty
+
+	static public boolean isEmpty4Tab(String s) {
+		if (s == null || s.length() == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Split an string by separator
+	 */
+	static public ArrayList split4Tab(String s, String sep) {
+		if (StrUtil.isEmpty(s)) {
+			return new ArrayList();
+		}
+
+		if (StrUtil.isEmpty4Tab(sep)) {
+			ArrayList list1 = new ArrayList();
+			list1.add(s);
+			return list1;
+		}
+
+		ArrayList list = new ArrayList();
+		int len = sep.length();
+		int i = 0;
+		int n = 0;
+		while (true) {
+			int j = s.indexOf(sep, i);
+			if (j < 0) {
+				String t = s.substring(i);
+				if (t == null) {
+					t = " ";
+				}
+				list.add(t);
+				break;
+			} else {
+				String t = s.substring(i, j);
+				if (t == null) {
+					t = " ";
+				}
+				list.add(t);
+				i = j + len;
+				n++;
+			}
+		}
+
+		return list;
+	}//
+
+	/**
+	 * converts double value to String. This can be directly done but, when the
+	 * price value is too long it is getting displayed in exponential form. fix
+	 * for Quest Ticket ASP000008226406 - Raghavendra
+	 * 
+	 * @param price
+	 * @return String
+	 */
+	public static String priceToStr(double price) {
+		NumberFormat nf = NumberFormat.getInstance();
+		nf.setMinimumFractionDigits(2);
+		String priceAsStr = nf.format(price);
+		return priceAsStr;
+	}
+
+	public static boolean isStrArrayContains(String[] strArray, String str) {
+		String temp = null;
+
+		for (int i = 0; i < strArray.length; i++) {
+			temp = strArray[i];
+			if (str != null && str.equalsIgnoreCase(temp)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static String[] strToStrArray(String str) {
+		if (isEmpty(str)) {
+			return null;
+		}
+		String[] strArr = new String[1];
+		strArr[0] = str;
+		return strArr;
+	}
+
+	/**
+	 * This block of logic is to execute the getContent on chunk of data,
+	 * because maximum size of IN clause takes 999 record.
+	 */
+	public static void getLocalizedContentData(List<String> mList,
+			List<Product> result, String[] catalogID, DaxMgr mgr, DaxDB db) {
+
+		int noOfTx = -1;
+		int recordPointer = -1;
+		int remainderNum = -1;
+		int arrayDim = -1;
+
+		int noOfMList = mList.size();
+		if (noOfMList <= MAX_NO_OF_DATA) {
+			noOfTx = 1;
+			recordPointer = noOfMList;
+		} else if (noOfMList > MAX_NO_OF_DATA) {
+			noOfTx = (noOfMList / MAX_NO_OF_DATA);
+			remainderNum = (noOfMList % MAX_NO_OF_DATA);
+			if (remainderNum > 0) {
+				noOfTx += 1;
+			}
+			recordPointer = MAX_NO_OF_DATA;
+		}
+
+		arrayDim = recordPointer;
+		List mstData = new ArrayList();
+		for (int m = 0; m < noOfTx; m++) {
+			int n = m * MAX_NO_OF_DATA;
+			String[] prodStr = new String[arrayDim];
+
+			for (int l = 0; n < recordPointer; n++, l++) {
+				prodStr[l] = mList.get(n);
+			} // n
+
+			String prods = StrUtil.joinEndFreeIn(prodStr, ",");
+			DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+			bean.setStrArray1(catalogID);
+			// bean.setString1( catalogID );
+			bean.setString2(prods);
+			DaxParsedStmt pstmt = mgr.makeParsedStmt("catalogProd",
+					"getContent", bean, null, null);
+
+			List rData = db.doSelect(pstmt, Product.class, bean);
+			if (rData != null && rData.size() > 0) {
+				mstData.addAll(rData);
+			}
+
+			if (m == (noOfTx - 2) && remainderNum > 0) {
+				recordPointer += remainderNum;
+				arrayDim = remainderNum;
+			} else {
+				recordPointer += MAX_NO_OF_DATA;
+				arrayDim = MAX_NO_OF_DATA;
+			}
+		}// m
+
+		int lenOfData = mstData.size();
+		if (lenOfData > 0) {
+			for (int j = 0; j < lenOfData; j++) {
+				Product p1 = (Product) mstData.get(j);
+				String prod = p1.getOptLocalizeProd();
+				for (int k = 0; k < result.size(); k++) {
+					Product p2 = (Product) result.get(k);
+					if (isStrArrayContains(catalogID, p2.getCatalogID())
+							&& prod != null
+							&& prod.equalsIgnoreCase(p2.getOptLocalizeProd())) {
+						p2.setDescription(p1.getShortDesc());
+					}
+				}
+			}
+		}
+
+	}// getLocalizedContentData
+
+	static public String stripWhitespace(String string) {
+		if (containsWhitespace(string)) {
+			char c;
+			string = string.trim();
+			int length = string.length();
+			StringBuffer outString = new StringBuffer("");
+			for (int i = 0; i < length; i++) {
+				c = string.charAt(i);
+				if (!Character.isWhitespace(c)) {
+					outString.append(c);
+				}
+			}
+			return outString.toString();
+		} else {
+			return string;
+		}
+	}
+
+	static public boolean containsWhitespace(String string) {
+		int length = string.length();
+		for (int i = 0; i < length; i++) {
+			if (Character.isWhitespace(string.charAt(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/* No seperator at the end. Such as join a,b and c by | will be a|b|c */
+	static public String joinListEndFree(List ss, String join_by) {
+		if (ss != null && ss.size() > 0) {
+			StringBuffer sb = new StringBuffer();
+
+			for (int i = 0; i < ss.size(); i++) {
+				sb.append((String) ss.get(i));
+				if (i < ss.size() - 1) {
+					sb.append(join_by);
+				}
+			}
+			return sb.toString();
+		}
+		return null;
+	}
+
+	/*
+	 * The following two methods were added for the Vista special pricing
+	 * module. Given the deal list and the pricing list, this method will return
+	 * a string that can be displayed in the GUI. The pricing list array will
+	 * consist of the deals which have the pricing flag set to true.
+	 */
+	public static String getDealList(String[] dealList, String[] pricingList) {
+		StringBuffer retDealList = new StringBuffer();
+		if (dealList != null && dealList.length > 0) {
+			for (int i = 0; i < dealList.length; i++) {
+				retDealList.append(dealList[i]);
+				if (pricingList != null && pricingList.length > 0) {
+					for (int j = 0; j < pricingList.length; j++) {
+						if (dealList[i].equals(pricingList[j])) {
+							retDealList.append("(Price Only)");
+							break;
+						}
+					}
+				}
+				if (i < dealList.length - 1) {
+					retDealList.append(",");
+				}
+			}
+			return retDealList.toString();
+		}
+		return null;
+	}// getDealList
+
+	/**
+	 * Check if a list only have one item
+	 */
+	static public boolean isOne(List s) {
+		if (s != null && s.size() == 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}//isOne
+
+	public static boolean containsChar(String temp, char c) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	
+	  /**
+	   * Split an string by separator
+	   */
+	  static public ArrayList splitWithEmptyInList ( String s, String sep ) {
+	    if ( StrUtil.isEmpty ( s ) ) {
+	      return new ArrayList ();
+	    }
+
+	    if ( StrUtil.isEmpty ( sep ) ) {
+	      ArrayList list1 = new ArrayList ();
+	      list1.add ( s );
+	      return list1;
+	    }
+
+	    ArrayList list = new ArrayList ();
+	    int len = sep.length ();
+	    int i = 0;
+	    int n = 0;
+	    while ( true ) {
+	      int j = s.indexOf ( sep, i );
+	      if ( j < 0 ) {
+	        String t = s.substring ( i );
+	        if ( t != null ) {
+	          t = t.trim ();
+	        }
+	        if ( t != null && t.length () > 0 ) {
+	          list.add ( t );
+	        }
+	        break;
+	      }
+	      else {
+	        String t = s.substring ( i, j );
+	        if ( t != null ) {
+	          t = t.trim ();
+
+	        }
+	        list.add ( t );
+	        /*
+	                         if (t != null && t.length() > 0)
+	            list.add(t);
+	         */
+	        i = j + len;
+	        n++;
+	      }
+	    }
+
+	    return list;
+	  }///splitWithEmptyInList
+	  
+  /**
+   * @param str  the String to be trimmed, may be null
+   * @return the trimmed string, <code>null</code> if null String input
+   */
+   //Added for APJ-PLC
+  public static String trim(String str) {
+      return str == null ? null : str.trim();
+  }
+
+  static public String duplicateStr ( String str, int times ) {
+		    StringBuffer sb = new StringBuffer ();
+		    for ( int i = 0; i < times; i++ ) {
+		      sb.append ( str );
+		    }
+		    return sb.toString ();
+		  }
+  
+  public static HashMap getStrTokenizerMap(String str, String delimiters, char skipSeqChar) {
+      HashMap strTokenMap = new HashMap();
+      int position=0, startPos=0, maxPosition;
+      boolean skipDelim = false;
+
+      if (str==null) return strTokenMap;
+      else {
+         maxPosition=str.length();
+         if(maxPosition <= 0) return strTokenMap;
+      }
+      if (delimiters==null || delimiters.length()==0) delimiters=" \t\n\r\f";
+      while (position < maxPosition) {
+        char c = str.charAt(position);
+        if (skipDelim ) {
+          if (c == skipSeqChar) {
+            skipDelim = false;
+            String subStr = str.substring(startPos, position);
+            if (subStr.length() > 0) strTokenMap.put(subStr, new Integer ( 0 ));
+            if (position < (maxPosition-1)) {
+              if ( delimiters.indexOf(str.charAt(position+1)) >= 0) position++;
+              startPos = position + 1;
+            }
+          }
+        } else {
+          if (c == skipSeqChar) {
+            startPos = position + 1;
+            skipDelim = true;
+          } else if (delimiters.indexOf(c) >= 0) {
+             String subStr = str.substring(startPos, position);
+             if (subStr.length() > 0) strTokenMap.put(subStr, new Integer ( 0 ));
+             if (position < (maxPosition-1)) {
+               if ( delimiters.indexOf(str.charAt(position+1)) > 0) position++;
+               startPos = position + 1;
+             }
+          }
+          if ( position == (maxPosition-1) ) {
+            String subStr = str.substring(startPos, maxPosition);
+            if (subStr.length() > 0) strTokenMap.put(subStr, new Integer ( 0 ));
+          }
+        }
+        position++;
+      }
+      return strTokenMap;
+    }
+
+  
+}// class

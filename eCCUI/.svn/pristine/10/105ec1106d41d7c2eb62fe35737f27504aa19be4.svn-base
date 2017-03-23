@@ -1,0 +1,681 @@
+/**
+ * This is the class for form "PublishScheduleForm". It is a java bean which contains
+ * all the the field values for a form. Each action must have a form bean
+ * associated with it.
+ *
+ * @author Jing Wei
+ * @version 1.0
+ */
+
+
+package com.hp.ecc.ui.view.beans;
+
+//import hp.comcat.dax.fwk.common.web.util.pagination.Pagination;
+import hp.comcat.dax.fwk.common.web.util.sort.SortInfo;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.util.StrUtil;
+
+public class PublishScheduleForm
+
+{
+
+  public PublishScheduleForm () {
+    this.init ();
+  }
+
+
+  /**
+   * Reset all properties to their default values.
+   *
+   * @param mapping The mapping used to select this instance
+   * @param request The servlet request we are processing
+   */
+/*  public void reset ( ActionMapping mapping, HttpServletRequest request ) {
+    super.reset ( mapping, request );
+    this.init ();
+  }*/
+
+
+  private void init () {
+    this.sendVia = null;
+    this.catalogID = null;
+    this.email = null;
+    this.incremental = false;
+    this.emptyFlag= false;
+    //added for DIIP-Merlot
+    this.reasonCode = false;
+    this.eventBased = false;
+    this.pubValidItemsOnly = false;
+    this.taskID = null;
+    this.customerName = null;
+    //this.catFormatName = null;
+    this.formatName = "";
+    this.notifyEmail = null;
+    this.notifyFlag = false;
+    this.taskName = null;
+    this.catalogName = null;
+    this.comment = null;
+
+    this.catWarning = false;
+    this.priority = null;
+
+    this.scheduleList = null;
+    this.scheduleListHidden = null;
+
+    this.startDate = null;
+    this.endDate = null;
+
+    this.sch_list = null;
+
+    this.task = null;
+    this.action = null;
+//    this.f_Pagination = new Pagination ();
+//    this.f_SortInfo = new SortInfo ();
+    this.publishMode = "S";
+    this.publishModeTitle = "Publish Customer Catalog";
+    this.batchNum = 1;
+    this.catalogList = null;
+    this.concatFlag = false;
+    this.catFormatList = null;
+    this.catalogType = null;
+    this.catalogListInfo = "No catalog";
+    this.backUrl = null;
+    this.useBackendPublisher = false;
+    this.isPriceTier = false;    
+    //Sales Rep Read only access 
+      this.fRoleId = null;
+      
+    
+  }
+
+  public void setComment ( java.lang.String comment ) {
+    this.comment = comment;
+  }
+
+  public java.lang.String getComment () {
+    return this.comment;
+  }
+
+
+  public void setTaskID ( java.lang.String taskID ) {
+    this.taskID = taskID;
+  }
+
+  public java.lang.String getTaskID () {
+    return this.taskID;
+  }
+
+  public void setTaskName ( java.lang.String taskName ) {
+    this.taskName = taskName;
+  }
+
+  public java.lang.String getTaskName () {
+    return this.taskName;
+  }
+
+  public void setCatalogID ( java.lang.String catalogID ) {
+    this.catalogID = catalogID;
+  }
+
+  public java.lang.String getCatalogID () {
+    return this.catalogID;
+  }
+
+
+  // catalogname
+  public void setCatalogName ( java.lang.String catalogName ) {
+    this.catalogName = catalogName;
+  }
+
+  public java.lang.String getCatalogName () {
+    return this.catalogName;
+  }
+
+  // customer name
+  public void setCustomerName ( java.lang.String customerName ) {
+    this.customerName = customerName;
+  }
+
+  public java.lang.String getCustomerName () {
+    return this.customerName;
+  }
+
+  // format
+  public void setFormatName ( String format ) {
+    this.formatName = format;
+  }
+
+  public String getFormatName () {
+    return this.formatName;
+  }
+
+  // email
+  public void setEmail ( java.lang.String email ) {
+    this.email = email;
+  }
+
+  public java.lang.String getEmail () {
+    return this.email;
+  }
+
+  // notifyEmail
+  public void setNotifyEmail ( java.lang.String notifyEmail ) {
+    this.notifyEmail = notifyEmail;
+  }
+
+  public java.lang.String getNotifyEmail () {
+    return this.notifyEmail;
+  }
+
+  // sendVia
+  public void setSendVia ( java.lang.String sendVia ) {
+    this.sendVia = sendVia;
+  }
+
+  public java.lang.String getSendVia () {
+    return this.sendVia;
+  }
+
+
+  // incremental
+  public void setIncremental ( boolean incremental ) {
+    this.incremental = incremental;
+  }
+
+  public boolean isIncremental () {
+    return this.incremental;
+  }
+
+  //added for DIIP-Merlot
+  public boolean isReasonCode () {
+    return reasonCode;
+  }
+
+  public void setReasonCode ( boolean reasonCode ) {
+    this.reasonCode = reasonCode;
+  }
+
+  //added for DIIP-Merlot
+  public boolean isEventBased () {
+    return eventBased;
+  }
+
+  public void setEventBased ( boolean eventBased ) {
+    this.eventBased = eventBased;
+  }
+
+
+  public void setPubValidItemsOnly ( boolean pubValidItemsOnly ) {
+    this.pubValidItemsOnly = pubValidItemsOnly;
+  }
+
+  public boolean getPubValidItemsOnly () {
+    return this.pubValidItemsOnly;
+  }
+
+  // notifyFlag
+  public void setNotifyFlag ( boolean notifyFlag ) {
+    this.notifyFlag = notifyFlag;
+  }
+
+  public boolean isNotifyFlag () {
+    return this.notifyFlag;
+  }
+
+  // catWarning
+  public void setCatWarning ( boolean catWarning ) {
+    this.catWarning = catWarning;
+  }
+
+  public boolean isCatWarning () {
+    return this.catWarning;
+  }
+
+
+  // priority
+  public void setPriority ( String priority ) {
+    this.priority = priority;
+  }
+
+  public String getPriority () {
+    return this.priority;
+  }
+
+
+  /**
+   * Get scheduleList
+   */
+  public List getScheduleList () {
+    return this.scheduleList;
+  }
+
+
+  /**
+   * Set scheduleList
+   */
+  public void setScheduleList ( List scheduleList ) {
+    this.scheduleList = scheduleList;
+  }
+
+
+  /**
+   * Get scheduleListHidden
+   */
+  public String getScheduleListHidden () {
+    return this.scheduleListHidden;
+  }
+
+
+  /**
+   * Set scheduleList
+   */
+  public void setScheduleListHidden ( String scheduleListHidden ) {
+    this.scheduleListHidden = scheduleListHidden;
+  }
+
+
+  /**
+   * Get StartDate
+   */
+  public String getStartDate () {
+    return this.startDate;
+  }
+
+
+  /**
+   * Set StartDate
+   */
+  public void setStartDate ( String startdate ) {
+    this.startDate = startdate;
+  }
+
+
+  /**
+   * Get EndDate
+   */
+  public String getEndDate () {
+    return this.endDate;
+  }
+
+
+  /**
+   * Set EndDate
+   */
+  public void setEndDate ( String enddate ) {
+    this.endDate = enddate;
+  }
+
+
+  /**
+   * Get sch_list
+   */
+  public String getSch_list () {
+    return this.sch_list;
+  }
+
+
+  /**
+   * Set sch_list
+   */
+  public void setSch_list ( String sch_list ) {
+    this.sch_list = sch_list;
+  }
+
+
+  /**
+   * Get _Pagination
+   */
+//  public Pagination get_Pagination () {
+//    return this.f_Pagination;
+//  }
+
+
+  /**
+   * Set _Pagination
+   */
+//  public void set_Pagination ( Pagination _pagination ) {
+//    this.f_Pagination = _pagination;
+//  }
+
+
+  /**
+   * Get _SortInfo
+   */
+//  public SortInfo get_SortInfo () {
+//    return this.f_SortInfo;
+//  }
+//
+//
+//  /**
+//   * Set _SortInfo
+//   */
+//  public void set_SortInfo ( SortInfo _sortinfo ) {
+//    this.f_SortInfo = _sortinfo;
+//  }
+
+
+  /**
+   * Get Task
+   */
+  public String getTask () {
+    return this.task;
+  }
+
+
+  /**
+   * Set Task
+   */
+  public void setTask ( String task ) {
+    this.task = task;
+  }
+
+  // action
+  public String getAction () {
+    return this.action;
+  }
+
+
+  public void setAction ( String action ) {
+    this.action = action;
+  }
+
+  public String getPublishType () {
+    return publishType;
+  }
+
+  public void setPublishType ( String value ) {
+    publishType = value;
+  }
+
+  public String getPublishMode () {
+    return this.publishMode;
+  }
+
+  public void setPublishMode ( String publishMode ) {
+    this.publishMode = publishMode;
+  }
+
+  public String getPublishModeTitle () {
+    return this.publishModeTitle;
+  }
+
+  public boolean isBatchPublish () {
+    if ( StrUtil.isEmpty ( publishMode ) ) {
+      return false;
+    }
+    else if ( publishMode.equalsIgnoreCase ( "B" ) ) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
+  public void setPublishModeTitle ( String publishModeTitle ) {
+    this.publishModeTitle = publishModeTitle;
+  }
+
+  public int getBatchNum () {
+    return this.batchNum;
+  }
+
+  public void setBatchNum ( int batchNum ) {
+    this.batchNum = batchNum;
+  }
+
+  public int getMykey () {
+    return this.mykey;
+  }
+
+  public void setMykey ( int mykey ) {
+    this.mykey = mykey;
+  }
+
+
+  public List getCatalogList () {
+    return this.catalogList;
+  }
+
+  public void setCatalogList ( List<String> catalogList ) {
+    this.catalogList = catalogList;
+    String tempCat []= new String[2];
+    if ( !StrUtil.isListEmpty ( this.catalogList ) ) {
+      this.catalogListInfo = "";
+      for(String i: catalogList) {
+    	  //tempCat=i.split("\\|");
+    	  tempCat=i.split("\\|CATNAME:");
+        catalogListInfo += "Catalog ID:" + tempCat[0] + "  Catalog Name:"
+            + tempCat[1] + "\n";
+      }
+    }
+  }
+  
+ /* public void setCatalogListJson ( List<JSONObject> catalogList ) {
+	    this.catalogList = catalogList;
+	    String tempCat []= new String[2];
+	    if ( !StrUtil.isListEmpty ( this.catalogList ) ) {
+	      this.catalogListInfo = "";
+	      for(JSONObject cat: catalogList) {
+	    	  //tempCat=i.split("\\|");
+	        catalogListInfo += "Catalog ID:" + cat.get("cat_catalog_id") + "  Catalog Name:"
+	            +cat.get("cat_catalog_name") + "\n";
+	      }
+	    }
+ }
+  */
+  public void setCatalogListJson ( JSONArray catalogList ) {
+	    this.catalogList = catalogList;
+	    String tempCat []= new String[2];
+	    JSONObject cat = null;
+	    if ( !StrUtil.isListEmpty ( this.catalogList ) ) {
+	      this.catalogListInfo = "";
+	      for( int i =0; i < catalogList.size(); i++) {
+	    	  //tempCat=i.split("\\|");
+	    	  cat = (JSONObject) catalogList.get ( i );
+	    	  catalogListInfo += "Catalog ID:" + cat.get("cat_catalog_id") + "  Catalog Name:"
+	            +cat.get("cat_catalog_name") + "\n";
+	      }
+	    }
+	    else
+	    {
+	    	this.catalogListInfo =  "No catalog";
+	    }
+}
+  
+  public void setCatalogObjectList ( List<Catalog> catalogList ) {
+	    this.catalogList = catalogList;
+	    String tempCat []= new String[2];
+	    if ( !StrUtil.isListEmpty ( this.catalogList ) ) {
+	      this.catalogListInfo = "";
+	      for(Catalog cat: catalogList) {
+	    	  //tempCat=i.split("\\|");
+	        catalogListInfo += "Catalog ID:" + cat.getId() + "  Catalog Name:"
+	            + cat.getCatalogName() + "\n";
+	      }
+	    }
+	  }
+  
+ 
+
+  public boolean getConcatFlag () {
+    return this.concatFlag;
+  }
+
+  public void setConcatFlag ( boolean concatFlag ) {
+    this.concatFlag = concatFlag;
+  }
+
+  public String getCatFormatKey () {
+    return this.catFormatKey;
+  }
+
+  public void setCatFormatKey ( String catFormatKey ) {
+    this.catFormatKey = catFormatKey;
+  }
+
+  public List getCatFormatList () {
+
+    return this.catFormatList;
+  }
+
+  public void setCatFormatList ( List catFormatList ) {
+    this.catFormatList = catFormatList;
+  }
+
+  public String getCatalogType () {
+    return this.catalogType;
+  }
+
+  public void setCatalogType ( String catalogType ) {
+    this.catalogType = catalogType;
+  }
+
+  public String getCatalogListInfo () {
+    return this.catalogListInfo;
+  }
+
+  public void setCatalogListInfo ( String catalogListInfo ) {
+    this.catalogListInfo = catalogListInfo;
+  }
+
+  public String getBackUrl () {
+    return this.backUrl;
+  }
+
+  public boolean isSwitchModeAllowedFlag () {
+    return switchModeAllowedFlag;
+  }
+
+  public void setBackUrl ( String url ) {
+    this.backUrl = url;
+  }
+
+  public void setSwitchModeAllowedFlag ( boolean switchModeAllowedFlag ) {
+    this.switchModeAllowedFlag = switchModeAllowedFlag;
+  }
+
+  public boolean getUseBackendPublisher () {
+    return this.useBackendPublisher;
+  }
+
+  public void setUseBackendPublisher ( boolean value ) {
+    this.useBackendPublisher = value;
+  }
+
+  public boolean getEnabled () {
+    return this.enabled;
+  }
+
+  public void setEnabled ( boolean enabled ) {
+    this.enabled = enabled;
+  }
+
+  public boolean getIsPriceTier() {
+
+      return isPriceTier;
+
+  }
+
+  public void setIsPriceTier(boolean isPriceTier) {
+
+      this.isPriceTier = isPriceTier;
+
+  }
+  
+//Added for Sales Rep Read only access
+  public String getRoleId()
+  {
+  	  return this.fRoleId;
+  }
+
+  public void setRoleId(String id)
+  {
+  	  this.fRoleId = id;
+  }
+  //End
+
+  private boolean enabled;
+  private String sendVia;
+  private String catalogID;
+  private String email;
+  private boolean incremental;
+  //added for DIIP-Merlot
+  private boolean reasonCode;
+  private boolean eventBased;
+
+
+  private boolean pubValidItemsOnly;
+  private String taskID;
+  private String customerName;
+  private String formatName;
+
+  //private String 							catFormatName;
+  private String catFormatKey;
+  private String notifyEmail;
+  private boolean notifyFlag;
+  private String taskName;
+  private String catalogName;
+  private String comment;
+
+  private boolean catWarning;
+  private String priority;
+
+  private List scheduleList;
+  private String scheduleListHidden;
+
+  private String startDate;
+  private String endDate;
+
+  private String sch_list;
+
+  private String task;
+  private String action;
+//  private Pagination f_Pagination;
+//  private SortInfo f_SortInfo;
+
+  private String publishType;
+  private String publishMode;
+  private String publishModeTitle;
+  private List catalogList;
+  private int batchNum;
+  private int mykey;
+  private boolean concatFlag;
+  private List catFormatList;
+  private String catalogType;
+  private String catalogListInfo;
+  private String backUrl;
+  private boolean useBackendPublisher;
+  private boolean switchModeAllowedFlag;
+  private boolean isPriceTier ;
+  private boolean emptyFlag;
+
+  /* Added in GCCM - Hemachandra */
+  private boolean toFormatList ;
+
+  public boolean getToFormatList() {
+	return toFormatList;
+  }
+  public void setToFormatList(boolean emptyFlag) {
+	this.toFormatList = toFormatList;
+  }
+  public boolean getEmptyFlag() {
+	return emptyFlag;
+  }
+  public void setEmptyFlag(boolean emptyFlag) {
+	this.emptyFlag = emptyFlag;
+  }
+  /* End GCCM */
+  
+//Sales Rep Read only access 
+  private String fRoleId;
+}

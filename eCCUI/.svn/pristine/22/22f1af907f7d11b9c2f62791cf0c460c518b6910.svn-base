@@ -1,0 +1,958 @@
+//Define an angular module for our app
+var eccApp = angular.module('eccApp', ['ngRoute','angular.filter','webStorageModule','ui.bootstrap','hpe.directive','hpe.service','angularFileUpload','angularTreeview','angularTreeviewwin',
+                                       'angularTreeviewrank','angularTreeviewwinhk', 'angularTreeviewquickmanage','ngCsv']);
+//Define Routing for app
+eccApp.config(['$routeProvider',function($routeProvider) {
+    $routeProvider
+    .when('/Logout', 		    			{templateUrl: 'resources/html/home/logout.html',							activetab: 'home'		}) 
+    .when('/Login', 						{templateUrl: 'resources/html/home/login.html',				    			activetab: 'home'		})
+    .when('/Home', 							{templateUrl: 'resources/html/home/home.html',								activetab: 'home'		})  
+    .when('/404', 							{templateUrl: 'resources/html/home/404.html',								activetab: 'home'		})
+    .when('/Roles', 			        	{templateUrl: 'resources/html/home/roles.html',		            			activetab: 'home'	    })
+    .when('/SelectCustomer', 				{templateUrl: 'resources/html/customer/selectCustomer.html',				activetab: 'customer'	})
+    .when('/ViewCustomer', 					{templateUrl: 'resources/html/customer/viewCustomer.html',					activetab: 'customer'	})
+    .when('/CreateMasterCatalog', 			{templateUrl: 'resources/html/catalog/createMasterCatalog.html',			activetab: 'catalogs'	})
+    .when('/EditMasterCatalog', 			{templateUrl: 'resources/html/catalog/editMasterCatalog.html',				activetab: 'catalogs'	})
+    .when('/EditPriceMaster', 				{templateUrl: 'resources/html/catalog/editMasterCatalog.html',				activetab: 'catalogs'	})
+    .when('/ListMasterCatalog', 			{templateUrl: 'resources/html/catalog/listMasterCatalog.html',				activetab: 'catalogs'	})
+	.when('/ViewCustOfferPopUp', 			{templateUrl: 'resources/html/offer/viewCustomerOfferPopUp.html',			activetab: 'catalogs'	})
+	.when('/ViewPromotions',				{templateUrl: 'resources/html/offer/viewPromotions.html',					activetab: 'catalogs'	})
+    .when('/ViewMasterCatalog', 			{templateUrl: 'resources/html/catalog/viewMasterCatalog.html',				activetab: 'catalogs'	})
+	.when('/ViewOnlyChild',					{templateUrl: 'resources/html/catalog/viewOnlyCatalog.html',				activetab: 'catalogs'	})
+    .when('/EditProduct', 					{templateUrl: 'resources/html/product/editProduct.html',					activetab: 'catalogs'	})
+    .when('/EditProductBundle', 			{templateUrl: 'resources/html/product/editProductBundle.html',				activetab: 'catalogs'	})
+    .when('/CatalogProductOptions',			{templateUrl: 'resources/html/product/catalogProductOptions.html',			activetab: 'catalogs'	})
+    .when('/ManageQuote', 					{templateUrl: 'resources/html/quote/manageQuote.html',						activetab: 'catalogs'	})
+    .when('/ManageConfig', 					{templateUrl: 'resources/html/config/manageConfig.html',					activetab: 'catalogs'	})
+	.when('/ManageQuoteDetail', 			{templateUrl: 'resources/html/quote/manageQuoteDetail.html',				activetab: 'catalogs'	})
+	.when('/ViewQuote', 					{templateUrl: 'resources/html/quote/viewQuote.html',						activetab: 'catalogs'	})
+	.when('/UpdateMasterProducts',			{templateUrl: 'resources/html/product/updateMultipleMasterProducts.html',	activetab: 'catalogs'   }) 
+    .when('/ListChildCatalog', 		    	{templateUrl: 'resources/html/catalog/listChildCatalog.html',				activetab: 'catalogs'	})
+    .when('/MCATProductOptions',			{templateUrl: 'resources/html/product/masterCatalogProductOptions.html',	activetab: 'catalogs'	})
+	.when('/CreateStandardCatalog', 		{templateUrl: 'resources/html/catalog/createStandardCatalog.html',			activetab: 'catalogs'	})
+	.when('/EditStandardCatalog', 			{templateUrl: 'resources/html/catalog/editStandardCatalog.html',			activetab: 'catalogs'	})
+	.when('/DisplayCatalog', 				{templateUrl: 'resources/html/catalog/displayCatalog.html',					activetab: 'catalogs'	})
+	.when('/PriceHistoryList', 				{templateUrl: 'resources/html/catalog/priceHistoryList.html',				activetab: 'catalogs'	})
+	.when('/StdCatalogList', 				{templateUrl: 'resources/html/catalog/stdCatalogList.html',					activetab: 'catalogs'	})
+	.when('/QuickManageList', 				{templateUrl: 'resources/html/catalog/quickManageList.html',				activetab: 'catalogs'	})
+	.when('/QuickManage', 					{templateUrl: 'resources/html/catalog/quickManage.html',					activetab: 'catalogs'	})
+	.when('/CreatePriceTier', 				{templateUrl: 'resources/html/catalog/createPriceTier.html',				activetab: 'catalogs'	})
+	.when('/ViewChildCatalog', 				{templateUrl: 'resources/html/catalog/viewChildCatalog.html',				activetab: 'catalogs'	})
+	.when('/CreateChildCatalog',            {templateUrl: 'resources/html/catalog/createChildCatalog.html', 			activetab: 'catalogs'   })
+	.when('/PriceTierProductListHeader',    {templateUrl: 'resources/html/catalog/priceTierProductListHeader.html', 	activetab: 'catalogs'   })
+	.when('/PublishCatalogList',        	{templateUrl: 'resources/html/catalog/publishCatalogList.html',				activetab: 'catalogs'	})
+	.when('/PublishSchedule',        		{templateUrl: 'resources/html/catalog/publishSchedule.html',				activetab: 'catalogs'	})
+	.when('/BatchPublish',	        		{templateUrl: 'resources/html/catalog/batchPublishCatalogList.html',		activetab: 'catalogs'	})
+	.when('/EclipseSearchAndAdd',      		{templateUrl: 'resources/html/bundle/eclipseSearchAndAdd.html',				activetab: 'bundleAdmin'})
+    .when('/PublishStandardCatalogList', 	{templateUrl: 'resources/html/catalog/publishCatalogList.html',				activetab: 'catalogs'	})
+    .when('/PublishPTCatalogList', 			{templateUrl: 'resources/html/catalog/publishCatalogList.html',				activetab: 'catalogs'	})
+    .when('/ViewOnlyStdCatalog',			{templateUrl: 'resources/html/catalog/ViewOnlyStdCatalog.html',				activetab: 'catalogs'	})
+    .when('/PriceTierList', 				{templateUrl: 'resources/html/catalog/priceTierList.html',					activetab: 'catalogs'	})
+    .when('/EditChildCatalog',  			{templateUrl: 'resources/html/catalog/editChildCatalog.html',        		activetab: 'catalogs'	})
+    .when('/UpdatePriceTierListMultiProds', {templateUrl: 'resources/html/catalog/updatePriceTierMultiProds.html',		activetab: 'catalogs'	})
+    .when('/GenericProgramSelect', 			{templateUrl: 'resources/html/catalog/genericProgramSelect.html',			activetab: 'catalogs'	})
+    .when('/PriceTierPgmUpdate', 			{templateUrl: 'resources/html/catalog/priceTierPgmUpdate.html',				activetab: 'catalogs'	})
+    .when('/PriceTierPgmProdList', 			{templateUrl: 'resources/html/programs/priceTierPgmProdList.html',			activetab: 'bundleAdmin'})
+    .when('/PriceTierAssociatesPgmProdList',{templateUrl: 'resources/html/programs/priceTierAssociatesPgmProdList.html',activetab: 'bundleAdmin'})
+	.when('/EditPriceTier', 				{templateUrl: 'resources/html/catalog/editPriceTier.html',					activetab: 'catalogs'	})
+    .when('/ViewCombinedOffering',			{templateUrl: 'resources/html/offer/viewCombinedOffering.html',				activetab: 'catalogs'	})
+    .when('/PullPriceTierProductOffering',	{templateUrl: 'resources/html/offer/pullPriceTierProductOffering.html',		activetab: 'catalogs'	})
+    .when('/pullProductList',				{templateUrl: 'resources/html/offer/pullProductList.html',					activetab: 'catalogs'	})
+    .when('/ThirdPOUpload',                 {templateUrl: 'resources/html/catalog/UploadProduct3rdParty.html',          activetab: 'catalogs'   })	
+    .when('/ProdDescUpload',                {templateUrl: 'resources/html/catalog/UploadProductDescription.html',       activetab: 'catalogs'   })	
+    .when('/ProductUpload',                 {templateUrl: 'resources/html/catalog/productUpload.html',                  activetab: 'catalogs'   })
+    .when('/BundleUpload',                  {templateUrl: 'resources/html/bundle/bundleUpload.html',                    activetab: 'catalogs'   })
+    .when('/ArchiveList',					{templateUrl: 'resources/html/archive/archiveList.html',		 	 		activetab: 'catalogs'	})
+	.when('/ViewArchive',					{templateUrl: 'resources/html/archive/viewArchive.html',		 	 		activetab: 'catalogs'	})
+	.when('/EditArchive',					{templateUrl: 'resources/html/archive/editArchive.html',		 			activetab: 'catalogs'	})
+	.when('/ManageFederalAttributes',		{templateUrl: 'resources/html/product/manageFedAttributes.html',			activetab: 'catalogs'	})
+	.when('/ViewDeals', 					{templateUrl: 'resources/html/deal/viewDeals.html',							activetab: 'deals'		})
+    .when('/DisplayDeal', 					{templateUrl: 'resources/html/deal/displayDeal.html',						activetab: 'deals'		})
+    .when('/DealProductOfferings', 			{templateUrl: 'resources/html/deal/dealProductOfferings.html',				activetab: 'deals'		})
+    .when('/PublishDeal', 					{templateUrl: 'resources/html/admin/publishDeal.html',						activetab: 'admin'		})
+    .when('/PropQueue', 					{templateUrl: 'resources/html/admin/propQueue.html',						activetab: 'admin'		})
+    .when('/EprimeFTPQueue', 				{templateUrl: 'resources/html/admin/eprimeFTPQueue.html',					activetab: 'admin'	    })
+    .when('/DailyLoad', 					{templateUrl: 'resources/html/admin/dailyLoadStatus.html',					activetab: 'admin'	    })
+    .when('/JobStatus', 					{templateUrl: 'resources/html/admin/viewJobStatus.html',					activetab: 'admin'	    })
+    .when('/ListManufacturers', 			{templateUrl: 'resources/html/admin/manufacturerList.html',					activetab: 'admin'	    })
+    .when('/createManufacturers', 			{templateUrl: 'resources/html/admin/createManufacturer.html',				activetab: 'admin'	    })
+    .when('/updateManufacturers',			{templateUrl: 'resources/html/admin/updateManufacturer.html',				activetab: 'admin'	    })
+    .when('/PadFileSearch', 				{templateUrl: 'resources/html/admin/padFileSearch.html',					activetab: 'admin'	    })
+    .when('/viewIndivJob', 					{templateUrl: 'resources/html/admin/viewIndivJob.html',						activetab: 'admin'	    })   
+    .when('/selectLanguage', 				{templateUrl: 'resources/html/admin/selectLanguage.html',					activetab: 'admin'	    })
+    .when('/AutoPublish', 					{templateUrl: 'resources/html/admin/autoPublish.html',						activetab: 'admin'	    })
+    .when('/MasterCatalogTracker', 			{templateUrl: 'resources/html/admin/masterCatalog.html',	    			activetab: 'admin'	    })
+    .when('/UploadInfo', 			    	{templateUrl: 'resources/html/admin/uploadInfo.html',	        			activetab: 'admin'	    })
+    .when('/viewMyUpload', 			    	{templateUrl: 'resources/html/admin/viewMyUpload.html',	        			activetab: 'admin'	    })
+    .when('/showPropStatus', 			    {templateUrl: 'resources/html/admin/showPropStatus.html',	        		activetab: 'admin'	    })
+    .when('/EclipseDeal', 			    	{templateUrl: 'resources/html/admin/eclipseDeal.html',	        			activetab: 'admin'	    })
+    .when('/CheckPropStatus', 				{templateUrl: 'resources/html/admin/viewCheckProp.html',	    			activetab: 'admin'	    })
+    .when('/EditMyProfile', 				{templateUrl: 'resources/html/admin/editMyProfile.html',					activetab: 'admin'		})
+    .when('/EditUserProfile', 				{templateUrl: 'resources/html/admin/editUserProfile.html',					activetab: 'admin'		})
+    .when('/RegisterConfig', 				{templateUrl: 'resources/html/admin/registerConfig.html',					activetab: 'admin'		})
+    .when('/RegisterConfigGateway',			{templateUrl: 'resources/html/admin/registerConfigGateway.html',			activetab: 'admin'		})
+    .when('/RegisterConfigPriceTier',		{templateUrl: 'resources/html/admin/registerConfigPriceTier.html',			activetab: 'admin'		})
+    .when('/RegisterOffer', 				{templateUrl: 'resources/html/admin/registerOffer.html',					activetab: 'admin'		})
+    .when('/SelectLanguage', 				{templateUrl: 'resources/html/admin/selectLanguage.html',					activetab: 'admin'		})
+    .when('/FulfillmentSiteList', 			{templateUrl: 'resources/html/admin/fulfillmentSiteList.html',				activetab: 'admin'		})
+    .when('/FulfillmentSiteDetail', 		{templateUrl: 'resources/html/admin/fulfillmentSiteDetail.html',			activetab: 'admin'		})
+    .when('/FulfillmentSiteDetailAdd', 		{templateUrl: 'resources/html/admin/fulfillmentSiteDetailAdd.html',			activetab: 'admin'		})     
+    .when('/FulfillmentSiteDetailUpdate', 	{templateUrl: 'resources/html/admin/fulfillmentSiteDetailUpdate.html',		activetab: 'admin'		})
+    .when('/FulfillmentSiteProdMapping', 	{templateUrl: 'resources/html/admin/fulfillmentSiteProdMapping.html',		activetab: 'admin'		})
+    .when('/FulfillmentSiteUpload', 		{templateUrl: 'resources/html/admin/fulfillmentSiteUpload.html',			activetab: 'admin'		})
+    .when('/UploadDeals', 			    	{templateUrl: 'resources/html/admin/uploadDeals.html',						activetab: 'admin'		})
+    .when('/ProdFamilyCodes', 			    {templateUrl: 'resources/html/admin/prodFamilyCodes.html',					activetab: 'admin'		})
+	.when('/ManagePublishTargets', 			{templateUrl: 'resources/html/admin/managePublishTargets.html',				activetab: 'admin'	    })
+    .when('/DisplayPublishTarget',	    	{templateUrl: 'resources/html/admin/displayPublishTargets.html',			activetab: 'admin'	    })
+    .when('/ManageUserProfiles', 			{templateUrl: 'resources/html/admin/manageUserProfiles.html',				activetab: 'admin'		})
+    .when('/NewUserProfile', 				{templateUrl: 'resources/html/admin/newUserProfile.html',					activetab: 'admin'		})
+    .when('/CreatePublishTargets',    		{templateUrl: 'resources/html/admin/createPublishTargets.html', 			activetab: 'admin'	    })
+    .when('/EditPublishTargets',      		{templateUrl: 'resources/html/admin/updatePublishTargets.html',				activetab: 'admin'	    })
+    .when('/QuickView',               		{templateUrl: 'resources/html/admin/quickView.html',	            		activetab: 'admin'	    })
+    .when('/PropagationControl',            {templateUrl: 'resources/html/admin/propControl.html',	            		activetab: 'admin'	    })
+    .when('/CustomerProf',                  {templateUrl: 'resources/html/admin/customerProfile.html',	            	activetab: 'admin'	    })
+    .when('/CustomerProfileCopy',           {templateUrl: 'resources/html/admin/customerDetails.html',	            	activetab: 'admin'	    })
+    .when('/Mdcp',                  		{templateUrl: 'resources/html/admin/mdcp.html',	            				activetab: 'admin'	    })
+    .when('/Ranking',                  		{templateUrl: 'resources/html/admin/ranking.html',	            			activetab: 'admin'	    })
+    .when('/CPSearchCustomer',     	        {templateUrl: 'resources/html/admin/cpSearchCustomer.html',            		activetab: 'admin'	    })
+    .when('/CustomerProfileEdit',      	    {templateUrl: 'resources/html/admin/customerProfileAddEdit.html',      		activetab: 'admin'	    })
+    .when('/CustDetails',                  	{templateUrl: 'resources/html/admin/customerDetails.html',	            	activetab: 'admin'	    })
+    .when('/Paacc',                  		{templateUrl: 'resources/html/admin/purchaseAgreement.html',	            activetab: 'admin'	    })
+    .when('/Mdcp',                  		{templateUrl: 'resources/html/admin/mdcp.html',	            				activetab: 'admin'	    })
+    .when('/Ranking',         	         	{templateUrl: 'resources/html/admin/ranking.html',	            			activetab: 'admin'	    })
+    .when('/CPAccountAttributes',  	        {templateUrl: 'resources/html/admin/accountAttributes.html',         		activetab: 'admin'	    })
+    .when('/CPUploadSettings',  	        {templateUrl: 'resources/html/admin/uploadSettings.html',   	      		activetab: 'admin'	    }) 
+    .when('/UploadPLRules',  	        	{templateUrl: 'resources/html/admin/uploadPLRules.html',  	 	      		activetab: 'admin'	    })
+    .when('/UploadProdExclusion',  	       	{templateUrl: 'resources/html/admin/uploadProdExclusion.html', 	      		activetab: 'admin'	    })    
+    .when('/ProductContentSearch',      	{templateUrl: 'resources/html/content/productContentSearch.html',    		activetab: 'manage'		})
+    .when('/RefreshVistaDeals',  	        {templateUrl: 'resources/html/admin/refreshVistaDeal.html',					activetab: 'admin'	    })
+    .when('/ManageDeals',  	        		{templateUrl: 'resources/html/admin/manageDeals.html',						activetab: 'admin'	    }) 
+    .when('/SearchDeals',  	        		{templateUrl: 'resources/html/admin/addDeals.html',							activetab: 'admin'	    }) 
+    .when('/ManageOffers',  	        	{templateUrl: 'resources/html/admin/manageOffers.html',						activetab: 'admin'	    }) 
+    .when('/ViewOffers',  	            	{templateUrl: 'resources/html/admin/viewOffers.html',						activetab: 'admin'	    }) 
+    .when('/CreateCustOffer',  	            {templateUrl: 'resources/html/admin/createCustOffer.html',					activetab: 'admin'	    }) 
+    .when('/FetchDeal',  	            	{templateUrl: 'resources/html/admin/fetchDeal.html',						activetab: 'admin'	    })
+    .when('/ProductContentEdit',        	{templateUrl: 'resources/html/content/prodContentEdit.html',          		activetab: 'manage'		})
+    .when('/FileFormatList',                {templateUrl: 'resources/html/format/fileFormatList.html',          		activetab: 'manage'		})
+    .when('/CreateCatalogFormat',			{templateUrl: 'resources/html/format/createCatalogFormat.html',				activetab: 'manage'		})
+    .when('/CatalogFormatList',				{templateUrl: 'resources/html/format/catalogFormatList.html',				activetab: 'manage'		})
+     .when('/CustomizeHeaderInfo',           {templateUrl: 'resources/html/format/customizeHeader.html',	   			activetab: 'manage'	    })
+    .when('/CustomizeBodyInfo',             {templateUrl: 'resources/html/format/customizeBody.html',	    			activetab: 'manage'	    })
+    .when('/EditFileFormatItemInfo',        {templateUrl: 'resources/html/format/editFileFormatHeaderItem.html',	    activetab: 'manage'	    })
+    .when('/EditFileFormatBodyItemInfo',    {templateUrl: 'resources/html/format/editFileFormatBodyItem.html',	     	activetab: 'manage'	    })
+    .when('/Hierarchies', 			    	{templateUrl: 'resources/html/categories/manageCategories.html',			activetab: 'manage'		})
+    .when('/ManageOfferingGroups', 			{templateUrl: 'resources/html/sog/offeringGroupList.html',					activetab: 'manage'		})
+    .when('/CopyOffering', 					{templateUrl: 'resources/html/sog/sogCopy.html',							activetab: 'manage'		})
+    .when('/sogHome', 						{templateUrl: 'resources/html/sog/SogHome.html',							activetab: 'manage'		})
+    .when('/sogHeader', 					{templateUrl: 'resources/html/sog/SogHeader.html',							activetab: 'manage'		})
+    .when('/editSog', 						{templateUrl: 'resources/html/sog/editSog.html',							activetab: 'manage'		})
+    .when('/createSog', 					{templateUrl: 'resources/html/sog/createSog.html',							activetab: 'manage'		})
+    .when('/sogMetrics', 					{templateUrl: 'resources/html/sog/sogMetrics.html',							activetab: 'manage'		})
+    .when('/sogAssignCustomer', 			{templateUrl: 'resources/html/sog/SogAssignCustomer.html',					activetab: 'manage'		})
+    .when('/sogAssignBundleTemplates', 		{templateUrl: 'resources/html/sog/SogAssignBundleTemplates.html',			activetab: 'manage'		})
+    .when('/sogStandardCatalog', 			{templateUrl: 'resources/html/sog/sogStandardCatalog.html',					activetab: 'manage'		})
+    .when('/sogStandardCatalogException', 	{templateUrl: 'resources/html/sog/SogStandardCatalogException.html',		activetab: 'manage'		})
+    .when('/sogCreateException', 			{templateUrl: 'resources/html/sog/SogCreateException.html',					activetab: 'manage'		})
+    .when('/sogAssignLocalizationOption', 	{templateUrl: 'resources/html/sog/SogAssignLocalizationOption.html',		activetab: 'manage'		})
+    .when('/SogLocOptionCatManageException',{templateUrl: 'resources/html/sog/SogLocOptionCatManageException.html',		activetab: 'manage'		})
+    .when('/sogPrePopulated', 				{templateUrl: 'resources/html/sog/sogPrePopulate.html',						activetab: 'manage'		})
+    .when('/manageLocalizationOption', 		{templateUrl: 'resources/html/sog/SogCustomLocalizationOption.html',		activetab: 'manage'		})
+    .when('/createCustomLocOption', 		{templateUrl: 'resources/html/sog/createCustomLocOption.html',				activetab: 'manage'		})
+    .when('/editCustomLocOption', 			{templateUrl: 'resources/html/sog/editCustomLocOption.html',				activetab: 'manage'		})
+	.when('/CategorizationEdit', 			{templateUrl: 'resources/html/categories/categorizationEdit.html',			activetab: 'manage'		})
+	.when('/ManageProductList',   			{templateUrl: 'resources/html/manage/manageProductList.html', 				activetab: 'manage'		})
+	.when('/LocalProductList',   			{templateUrl: 'resources/html/product/localProductList.html', 				activetab: 'manage'		})
+	.when('/LocalProductEdit',   			{templateUrl: 'resources/html/product/localProductEdit.html', 				activetab: 'manage'		})
+	.when('/ManualProductOptionView',   	{templateUrl: 'resources/html/product/manualProductOptionView.html',		activetab: 'manage'		})
+	.when('/ManualProductOptionNew',    	{templateUrl: 'resources/html/product/manualProductOptionNew.html',  		activetab: 'manage'		})
+	.when('/ManualProductOptionEdit',   	{templateUrl: 'resources/html/product/manualProductOptionEdit.html', 		activetab: 'manage'		})
+	.when('/AddProductManually',			{templateUrl: 'resources/html/product/addProductManually.html',		 		activetab: 'manage'		})
+	.when('/ManualProductOptionList',		{templateUrl: 'resources/html/product/manualProductOptionList.html', 		activetab: 'manage'		})
+	.when('/ManualProductDetail',	    	{templateUrl: 'resources/html/product/manualProductDetail.html', 	 		activetab: 'manage'		})
+	.when('/ManageContent',            	    {templateUrl: 'resources/html/content/manageContent.html', 		            activetab: 'manage'     })
+	.when('/nonComcatBundle',            	{templateUrl: 'resources/html/bundle/NonComcatBundle.html', 		        activetab: 'bundleAdmin'})
+	.when('/bundleTemplateList',            {templateUrl: 'resources/html/bundle/bundleTemplateList.html', 		        activetab: 'bundleAdmin'})
+	.when('/createCopyBundleTemplate',      {templateUrl: 'resources/html/bundle/createBundleTemplate.html', 			activetab: 'bundleAdmin'})
+	.when('/quickManageBundleTemplate',     {templateUrl: 'resources/html/bundle/quickManageBundleTemplate.html', 		activetab: 'bundleAdmin'})
+	.when('/ProductLine', 					{templateUrl: 'resources/html/references/productLineRef.html',				activetab: 'reference'	})
+	.when('/PricingDescriptor', 			{templateUrl: 'resources/html/references/pricingDescriptorDynamic.htm',		activetab: 'reference'	})
+	.when('/MakeupPricing', 				{templateUrl: 'resources/html/references/markupPricingDynamic.htm',			activetab: 'reference'	})
+	.when('/TbaReferences', 				{templateUrl: 'resources/html/references/tbaRefDynamic.htm',				activetab: 'reference'	})
+	.when('/CurrencyConversions', 			{templateUrl: 'resources/html/references/rateConversionDynamic.htm',		activetab: 'reference'	})
+	.when('/CustomerExchangeRate', 			{templateUrl: 'resources/html/references/customerExchangeRateDynamic.htm',	activetab: 'reference'	})
+	.when('/CustSpecRateDetails', 			{templateUrl: 'resources/html/references/custSpecRatesDetail.html',			activetab: 'reference'	})
+	.when('/HPProductCategories', 			{templateUrl: 'resources/html/references/hpProductCategoriesDynamic.htm',	activetab: 'reference'	})
+	.when('/UNSPSCCategories', 				{templateUrl: 'resources/html/references/unspscCategoriesDynamic.htm',		activetab: 'reference'	})
+	.when('/Links', 						{templateUrl: 'resources/html/references/linksDynamic.htm',					activetab: 'reference'	})
+	.when('/ItemStatusInquiry', 			{templateUrl: 'resources/html/references/itemStatusInquiry.html',			activetab: 'reference'	})	
+	.when('/CategoryDefinition', 			{templateUrl: 'resources/html/categories/categorizationDefination.html',	activetab: 'manage'		})
+	.when('/BundleExport',					{templateUrl: 'resources/html/bundle/bundleExport.html',		 			activetab: 'catalog'	})
+	.when('/ViewCatalogFormat', 			{templateUrl: 'resources/html/format/viewCatalogFormat.html',				activetab: 'manage'		})
+	.when('/AddProduct',					{templateUrl: 'resources/html/product/addProduct.html',		 				activetab: 'catalog'	})
+	.when('/FulfillmentSiteSelect',			{templateUrl: 'resources/html/admin/fulfillmentSiteSelect.html',		 	activetab: 'catalog'	})
+	.when('/ViewFileFormat',				{templateUrl: 'resources/html/format/viewFileFormat.html',		 			activetab: 'manage'		})
+	.when('/EditFileFormatGeneralInfo',		{templateUrl: 'resources/html/format/editFileFormatGeneralInfo.html',		activetab: 'manage'		})
+	.when('/EditRules',						{templateUrl: 'resources/html/admin/editRules.html',		 				activetab: 'admin'		})
+	.when('/CustomerSla',					{templateUrl: 'resources/html/admin/customerSla.html',		 				activetab: 'admin'		})
+	.when('/CustomerSlaGl',					{templateUrl: 'resources/html/admin/customerSlaGl.html',		 			activetab: 'admin'		})
+	.when('/PlPdimMapping',					{templateUrl: 'resources/html/admin/plPdimMapping.html',		 			activetab: 'admin'		})
+	.when('/ResellerMargin',				{templateUrl: 'resources/html/admin/resellerMargin.html',		 			activetab: 'admin'		})
+	.when('/CategoryRanking', 				{templateUrl: 'resources/html/categories/categoryRanking.html',				activetab: 'manage'		})
+	.when('/ListBundleInstance', 			{templateUrl: 'resources/html/bundle/listBundleInstance.html',				activetab: 'bundleAdmin'})
+	.when('/CatalogBundleList', 			{templateUrl: 'resources/html/bundle/catalogBundleList.html',				activetab: 'bundleAdmin'})
+	.when('/ProgramList',					{templateUrl: 'resources/html/programs/programsList.html',		 			activetab: 'bundleAdmin'})
+	.when('/ProgramDetail',					{templateUrl: 'resources/html/programs/programDetail.html',		 			activetab: 'bundleAdmin'})
+	.when('/BundleCatMasterProgramList',	{templateUrl: 'resources/html/programs/bundleCatMasterProgramList.html',	activetab: 'bundleAdmin'})
+	.when('/BundleViewTemplate',			{templateUrl: 'resources/html/bundle/bundleViewTemplate.html',				activetab: 'bundleAdmin'})
+	.when('/EditBundleHeader', 				{templateUrl: 'resources/html/bundle/editBundleHeader.html',        		activetab: 'bundleAdmin'})
+	.when('/CustomizeBundleHeader', 		{templateUrl: 'resources/html/bundle/customizeBundleHeader.html',   		activetab: 'bundleAdmin'})
+	.when('/CustomizeBundleOptionGroup',	{templateUrl: 'resources/html/bundle/customizeBundleContent.html',		 	activetab: 'bundleAdmin'})
+	.when('/CustomizeBundleInstanceContent',{templateUrl: 'resources/html/bundle/customizeBundleInstanceContent.html',	activetab: 'bundleAdmin'})
+	.when('/ManageContextualPromotions',	{templateUrl: 'resources/html/bundle/manageContextualPromotions.html',		activetab: 'bundleAdmin'})
+	.when('/PriceDetail', 					{templateUrl: 'resources/html/product/priceDetail.html',					activetab: 'catalogs'	})
+	.when('/CatBdlPriceDetail', 			{templateUrl: 'resources/html/product/catBdlPriceDetail.html',				activetab: 'catalogs'	})
+	.when('/ComponentOptionSelection', 		{templateUrl: 'resources/html/bundle/componentOptionSelection.html',		activetab: 'bundleAdmin'})
+	.when('/PriceTierAssociatesList', 		{templateUrl: 'resources/html/catalog/priceTierAssociatesList.html',		activetab: 'catalogs'	})
+	.when('/WarningsByDeal',              	{templateUrl: 'resources/html/warnings/warningsByDeal.html',               	activetab: 'warnings'	})	
+	.when('/WarningsByCatalog',             {templateUrl: 'resources/html/warnings/warningsByCatalog.html',             activetab: 'warnings'	})	
+	.when('/WarningsByProduct',             {templateUrl: 'resources/html/warnings/warningsByProduct.html',             activetab: 'warnings'	})	
+	.when('/WarningsByCustomer',            {templateUrl: 'resources/html/warnings/warningsByCustomer.html',            activetab: 'warnings'	})	
+    .when('/ProductFilter',					{templateUrl: 'resources/html/product/productFilter.html',		 			activetab: 'catalog'	})
+    .when('/BundleOptionPack',            	{templateUrl: 'resources/html/bundle/bundleOptionPacks.html', 		        activetab: 'bundleAdmin'})
+    .when('/CustomizeBundleInstanceHeader', {templateUrl: 'resources/html/bundle/customizeBundleInstanceHeader.html',   activetab: 'bundleAdmin'})
+    .when('/aboutPage',						{templateUrl: 'resources/html/home/aboutPage.html',		 					activetab: 'about'		})
+    .when('/supfedback',					{templateUrl: 'resources/html/help/Sup_Feedback.html',		 				activetab: 'help'		})
+    .when('/guidepage',						{templateUrl: 'resources/html/help/TrainingGuide.html',		 				activetab: 'help'		})
+    .when('/userguidepage',					{templateUrl: 'resources/html/help/UserGuide.html',		 					activetab: 'help'		})
+    .when('/EditBundle',            		{templateUrl: 'resources/html/bundle/editBundle.html', 		        		activetab: 'bundleAdmin'})
+    .when('/StandardCatProductDetail',		{templateUrl: 'resources/html/catalog/standardCatProductDetail.html',		activetab: 'catalogs'	})
+    .when('/ViewCrossSale', 				{templateUrl: 'resources/html/catalog/viewCrossSale.html',					activetab: 'catalogs'	})
+    .when('/StdCatProductDetail_MPO',		{templateUrl: 'resources/html/product/standardCatProductDetail.html',		activetab: 'catalogs'	})
+     .when('/ChildProductOptionList',		{templateUrl: 'resources/html/product/childProductOptionList.html',			activetab: 'catalogs'	})
+     .when('/GeneralInfoDeal', 				{templateUrl: 'resources/html/deal/generalInfoDeal.html',					activetab: 'deals'		})
+     .when('/ChangeTenant', 				{templateUrl: 'resources/html/home/selectTenant.html',						activetab: 'home'		})
+    .otherwise({  redirectTo: '/Home',	activetab: 'home' });
+}]);
+
+eccApp.config(['$provide', '$httpProvider',function ($provide, $httpProvider) {
+	  var $http, $body = $("body"), startTime, endTime ,finalTime=0;
+	  $provide.factory('EccInterceptor',['$q', '$injector', '$rootScope', function ($q, $injector, $rootScope) {
+	    return {
+	      request: function (config) {
+	    	$body.addClass("loading");
+	    	finalTime=0;
+	    	startTime = Date.now();
+	        return config || $q.when(config);
+	      },
+
+	      requestError: function (rejection) {
+	    	$http = $http || $injector.get('$http');
+	        if($http.pendingRequests.length < 1) {
+	          $body.removeClass("loading");
+	          if(finalTime< (Date.now() - startTime)){
+	        	  finalTime = (Date.now() - startTime);
+	          }
+	          $("#loadTime").html("");
+	          $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ finalTime+" milli seconds");
+	        }
+	        return $q.reject(rejection);
+	      },
+
+	      response: function (response) {
+	    	$http = $http || $injector.get('$http');
+	        if($http.pendingRequests.length < 1) {
+	          $body.removeClass("loading");
+	          if(finalTime< (Date.now() - startTime)){
+	        	  finalTime = (Date.now() - startTime);
+	          }
+	          $("#loadTime").html("");
+	          $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ finalTime+" milli seconds");
+	          
+	          //console.log("Time Lapsed (in milli seconds): ", finalTime);
+	        }
+	        return response || $q.when(response);
+	      },
+
+	      responseError: function (rejection) {
+	       	$http = $http || $injector.get('$http');
+	        if($http.pendingRequests.length < 1) {
+	          $body.removeClass("loading");
+	          if(finalTime< (Date.now() - startTime)){
+	        	  finalTime = (Date.now() - startTime);
+	          }
+	          $("#loadTime").html("");
+	          $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ finalTime+" milli seconds");
+	        }
+	        
+	        if(rejection.statusText == 'Forbidden'){
+	        	$rootScope.$broadcast("SessionTimeout");
+	        }
+	        return $q.reject(rejection);
+	      }
+	    };
+	  }]);
+	  $httpProvider.interceptors.push('EccInterceptor');
+}]);
+
+eccApp.factory('shareddata',['$http', '$rootScope', function($http, $rootScope) {
+	var shared = {'customerData':'','productListData':'' };
+	var shareddataservice = {};
+	shareddataservice.setCustomerData = function(_customerData) {
+		$rootScope.customerData = _customerData;
+    };
+    shareddataservice.getCustomerData = function() {
+        return  $rootScope.customerData;
+    };
+   
+    shareddataservice.setProdListData = function(_productListData) {
+    	shared.productListData = _productListData;
+    };
+    shareddataservice.getProdListData = function() {
+        return shared.productListData;
+    };
+    return shareddataservice;
+}]);
+eccApp.factory('dateParser',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var dateFormat = currentDate.split(" ");
+			var arrayOfDateFormat = dateFormat[0].split("-");
+			var dateFormat3 = arrayOfDateFormat[2]+"/"+arrayOfDateFormat[1]+"/"+arrayOfDateFormat[0]; //dd/MM/yyyy
+			return dateFormat3;
+		}
+		
+		
+	};
+	return dateFormat;
+}]);
+
+eccApp.factory('changeDateMMDDYYYYWithAMPM',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate) || currentDate == null || currentDate == ""){
+			return  '';
+		}else{
+			var dateFormat = currentDate.split(" ");
+			var dateFormat2 = dateFormat[0].split("-");
+			var dateFormat3 = dateFormat2[1]+"/"+dateFormat2[2]+"/"+dateFormat2[0];//MM/dd/yyyy
+			
+			var dateFormat4 = dateFormat[1].split(".");
+			var dateForamt5 = dateFormat4[0].split(":");
+			var dateFormat6 ='';
+			if( dateForamt5[0] >= 12 )
+			{
+				if( dateForamt5[0] > 12 )
+				{
+					var newTime = dateForamt5[0]-12;
+					if( newTime < 10 )
+					{
+						newTime = "0"+newTime;
+					}
+					dateFormat6 = dateFormat3 + " " + newTime +":"+dateForamt5[1]+":"+dateForamt5[2]+" PM"; 
+				}
+				else
+				{
+					dateFormat6 = dateFormat3 + " " + dateFormat4[0] + " PM";
+				}
+			}	
+			else
+			{
+				if( dateForamt5[0] == "00" || dateForamt5[0] == "0" )
+				{
+					dateFormat6 = dateFormat3 + " 12:"+dateForamt5[1]+":"+dateForamt5[2] + " AM";
+				}
+				else
+				{
+					dateFormat6 = dateFormat3 + " " + dateFormat4[0] + " AM";
+				}
+			}
+			return dateFormat6;
+		}		
+	};
+	return dateFormat;
+}]);
+
+eccApp.factory('changeDateParser',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(currentDate==null){
+			return  '';
+		}else{
+			var dateFormat = currentDate.split(" ");
+			var dateFormat2 = dateFormat[0].split("-");
+			var dateFormat3 = dateFormat2[1]+"/"+dateFormat2[2]+"/"+dateFormat2[0];//MM/dd/yyyy
+			return dateFormat3;
+		}		
+	};
+	return dateFormat;
+}]);
+
+eccApp.factory('changeDateParserNewForPublish',['$http', '$rootScope',function($http, $rootScope){
+    var dateFormat={};
+    dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+                    if(angular.isUndefined(currentDate)){
+                                    return  '';
+                    }else{
+                                    var monthArray=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                                    var d=new Date(currentDate);
+                                    var day=('0'+d.getDate()).slice(-2);
+                                    var dateFormat=day+"-"+monthArray[d.getMonth()]+"-"+d.getFullYear();
+                                    return dateFormat;
+                    }
+    };
+    return dateFormat;
+}]);
+
+eccApp.factory('changeDateParserNew',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"];
+			currentDate = currentDate.substring(0, currentDate.indexOf(' '));
+			var d=new Date(currentDate);
+			var day=('0'+d.getDate()).slice(-2);
+			var dateFormat=day+"-"+monthArray[d.getMonth()]+"-"+d.getFullYear();
+			return dateFormat;
+		}
+	};
+	return dateFormat;
+}]);
+eccApp.factory('changeDateParserNewForChild',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var dateFormat="";
+			var monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"];
+			
+			var d		=new Date(currentDate);
+			var day		= ('0'+d.getDate()).slice(-2);
+			var hours	= ('0' + d.getUTCHours()).slice(-2) ;
+			var mins	= ('0' + d.getUTCMinutes()).slice(-2) ;
+			var secs	= ('0' + d.getUTCSeconds()).slice(-2) ;
+			if(reqDateFormat == 'dd-M-yy'){
+				dateFormat=day+"-"+monthArray[d.getMonth()]+"-"+d.getFullYear();
+			}
+			if(reqDateFormat == 'fullDate'){
+				dateFormat=monthArray[d.getMonth()]+""+day+","+d.getFullYear()+" "+hours+":"+mins+":"+secs;
+			}
+			
+			return dateFormat;
+		}
+	};
+	return dateFormat;
+}]);
+
+eccApp.factory('changeDateParserForBundle',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var monthArray=["01","02","03","04","05","06","07","08","09","10","11","12"];
+			var d=new Date(currentDate);
+			var day=('0'+d.getDate()).slice(-2);
+			var dateFormat=d.getFullYear()+"-"+monthArray[d.getMonth()]+"-"+day;
+			return dateFormat + '  00:00:00.0';
+		}
+	};
+	return dateFormat;
+}]);
+
+//Convert Date DD-MMM-YYYY 
+eccApp.factory('changeDateDDMMMYYYY',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"];
+			var dateFormat = currentDate.split(" ");
+			var dateFormat2 = dateFormat[0].split("-");
+			var dateFormat3 = dateFormat2[2]+"-"+monthArray[parseInt(dateFormat2[1])-1]+"-"+dateFormat2[0];//MM/dd/yyyy
+			return dateFormat3;
+		}
+	};
+	return dateFormat;
+}]);
+
+eccApp.factory('dateParserForBundleUpdatedTime',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var monthArray=["01","02","03","04","05","06","07","08","09","10","11","12"];
+			var d=new Date(currentDate);
+			var day=('0'+d.getDate()).slice(-2);
+			var hours	= ('0' + d.getHours()).slice(-2) ;
+			var mins	= ('0' + d.getMinutes()).slice(-2) ;
+			var secs	= ('0' + d.getSeconds()).slice(-2) ;
+			var dateFormat=d.getFullYear()+"-"+monthArray[d.getMonth()]+"-"+day+" "+hours+":"+mins+":"+secs;
+			return dateFormat + '.0';
+		}
+	};
+	return dateFormat;
+}]);
+eccApp.factory('editDateDDMMMYYYY',['$http', '$rootScope',function($http, $rootScope){
+	var dateFormat={};
+	dateFormat.changeDateFormat=function(currentDate, reqDateFormat){
+		if(angular.isUndefined(currentDate)){
+			return  '';
+		}else{
+			var monthArray=["Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"];
+			var dateFormat = currentDate.split(" ");
+			var dateFormat2 = dateFormat[0].split("-");
+			var splitValue = dateFormat[1].split(",");
+			var myDate = splitValue[0] + "-" + dateFormat[0] + "-" + dateFormat[2];
+			//var dateFormat3 = dateFormat2[2]+"-"+monthArray[parseInt(dateFormat2[1])-1]+"-"+dateFormat2[0];//MM/dd/yyyy
+			return myDate;
+		}
+	};
+	return dateFormat;
+}]);
+
+
+eccApp.directive('ngEnter', function () {
+    return function (scope, element, attrs) {
+        element.bind("keydown keypress", function (event) {
+            if(event.which === 13) {
+                scope.$apply(function (){
+                    scope.$eval(attrs.ngEnter);
+                });
+
+                event.preventDefault();
+            }
+        });
+    };
+});
+
+eccApp.controller('eccMainCtrl',['$scope', '$http', '$timeout','webStorage', function ($scope, $http, $timeout,webStorage) {
+	$scope.direction = "home";
+	$scope.$on('eccMainMethod', function (event, data) {
+		 if(data=='DisplayCustomer'){
+			 $scope.$broadcast('NavMethod', 'DisplayCustomer');
+		 }
+		 if(data=='ClearSession'){
+			 $scope.$broadcast('NavMethod', 'ClearSession');
+		 }
+		 if(data=='ChangeRegionRole'){
+			 $scope.$broadcast('HeadMethod', 'ChangeRegionRole');
+		 }
+		 if(data=='ChangeMenu'){
+			 $scope.$broadcast('NavMethod', 'ChangeMenu');
+			 $scope.$broadcast('HomeMethod', 'ChangeHomeMenu');			 
+		 }
+		 if(data=='ChangeTenant'){
+			 $scope.$broadcast('HeadMethod', 'ChangeTenant');
+		 }
+		 if(data=='ClearCustomer'){
+			 $scope.$broadcast('NavMethod', 'ClearCustomer');
+		 }
+		 if(data=='CopyRightContent'){
+			 $scope.$broadcast('FooterMethod', 'copyRightContent');
+		 }
+	});
+		
+	$scope.$on('LogoutMethod', function(event, data) {
+        if (data == 'Logout') {        	
+        	 webStorage.local.clear() ;
+        	 webStorage.session.clear() ;
+             $scope.direction = "Logout";
+        }        
+	});
+	
+	$scope.$on('SessionTimeout', function(event, data) {            	
+        webStorage.local.clear() ;
+        webStorage.session.clear() ;
+        $scope.direction = "Session";         
+	});
+}]);
+
+/* -----------Start Pagination Code ------------*/
+eccApp.filter('startFrom', function() {
+    return function(input, start) {
+    	start = +start; //parse to int
+    	if (input) return input.slice(start);
+    	return null;
+    };
+});
+
+eccApp.filter('removeBR', function(){
+    return function(text) {
+    	if (text && text != undefined) {
+            return text.replace("<br>","");
+    	}
+    	return text;
+    };
+});
+eccApp.directive('tabRightClick',['$parse', function($parse) {
+    return function(scope, element, attrs) {
+        var fn = $parse(attrs.tabRightClick);
+        element.bind('contextmenu', function(event) {
+            scope.$apply(function() {
+               event.preventDefault();
+                fn(scope, {$event:event});
+            });
+        });
+    };
+}]);
+
+eccApp.directive("ossPagination",['shareddata', function(shareddata) {
+    return {
+    	restrict:'C',
+    	template:
+    		'<table class="goto"><tr>' +
+    		'<td><input type=text maxlength=7 ng-model="pageNo" class="gotoTextBox"></td>'+
+    		'<td><span ng-click="gotoPage()" class="button slim primary btn_label_slim">GO</span></td>' +
+    		'<td style="width:168px;">Show Per Page<select name=paginationLimit>' +
+    			'<option value="200"> 200 </option>' +	
+    			'<option value="20"> 20 </option>' +
+				'<option value="100"> 100 </option>' +
+				'<option value="500"> 500 </option>' +
+				'<option value="1000"> 1000 </option>' +
+			'</select><span ng-click="changeLimit()" class="button slim primary btn_label_slim">GO</span>  </td>' +
+    		'</tr></table>'+
+    		'<div class="num">' + 
+    			'<span class="font_black">{{recordCount}}</span> Items, ' +
+    			'<span class="font_black">{{noOfPages}}</span> Pages' +
+    		'</div>'+				
+    		'<ul>' +
+   				'<li ng-class="{disabled: currentPage == 0}">' +
+   					'<a href ng-click="prevPage()" class="prevnext"><span class="pag_prev">&nbsp;</span></a>' +
+   				'</li>' +
+   				'<li ng-repeat="n in range(startIndex,endIndex)" ng-class="{active: n == currentPage}" ng-click="setPage()">' +
+   					'<a href ng-bind="n + 1">1</a>' +
+   				'</li>' +
+   				'<li ng-class="{disabled: currentPage == noOfPages - 1}">' +
+   					'<a href ng-click="nextPage()" class="prevnext"><span class="pag_next">&nbsp;</span></a>' +
+   				'</li>' +
+   			'</ul>' ,
+   		link:function ($scope, elm, attrs) {
+               $scope.currentPage = 0;
+               $scope.itemsPerPage = $('table.goto tr td select[name=paginationLimit]').val();
+               $scope.noOfPages= 0;
+               
+               $scope.startIndex = 0;
+               $scope.endIndex = 1;
+               
+               $scope.pageSize = 100;
+               $scope.recordCount = 100;
+               $scope.pageStart = 1;
+               $scope.pageEnd = 100;
+
+               $scope.requireSort = false;
+               $scope.pagedItems = [];
+               
+               $scope.$on('gotPageData', function(events, http, data, list) {
+            	   $scope.http = http;
+            	   
+            	   $scope.pageSize = parseInt(data.recordOnDemand);
+                    $scope.recordCount = parseInt(data.recordCount);
+                   $scope.pageStart = parseInt(data.recordOnHand) + 1;
+                   $scope.pageEnd = parseInt(data.recordOnHand) + parseInt(data.recordOnDemand);
+                   
+                   $scope.items = list;
+                   $scope.initPagination();
+               });
+               
+               $scope.initToStart = function () {
+                   $scope.currentPage = 0;
+                   $scope.startIndex = 0;
+                   $scope.endIndex = 1;
+               };
+   			
+               // init the filtered items
+               $scope.initPagination = function () { 
+                   $scope.noOfPages = Math.ceil($scope.recordCount / $scope.itemsPerPage);
+                   // now group by pages
+                   $scope.pagedItems = [];
+                   
+                   for (var i = 0; i < $scope.items.length; i++) {
+                       if (i % $scope.itemsPerPage === 0) {
+                       $scope.pagedItems[Math.floor(i / $scope.itemsPerPage)] = [ $scope.items[i] ];
+                       } else {
+                       $scope.pagedItems[Math.floor(i / $scope.itemsPerPage)].push($scope.items[i]);
+                       }
+                   }
+
+                   $scope.startItem = 1;	
+                   if($scope.noOfPages === 1){
+                       $scope.endItem = $scope.items.length % $scope.itemsPerPage;
+                   }
+                   else{
+                       $scope.endItem = $scope.itemsPerPage;
+                   }
+                   
+                   if($scope.currentPage == 0)
+                	   $scope.initToStart();
+                   if($scope.noOfPages < 1){
+                       $scope.endIndex = $scope.noOfPages;
+                   }
+               };
+
+               $scope.range = function (start, end) { 
+                   var ret = [];
+                   if (!end) {
+                       end = start;
+                       start = 0;
+                   }
+                   
+                   if($scope.noOfPages < end)
+                	   end = $scope.noOfPages;
+                   for (var i = start; i < end; i++) {
+                       ret.push(i);
+                   }
+                   return ret;
+               };
+
+               function getDataIfRequire() {
+            	   var currentPageEndIndex = ($scope.currentPage+1)* $scope.itemsPerPage;
+            	   if ( currentPageEndIndex < $scope.pageStart || currentPageEndIndex > $scope.pageEnd ) {
+                	   var recordsOnHand = Math.floor( $scope.currentPage / 1 ) * $scope.pageSize;
+                	   if ( $scope.requireSort ) {
+                           $scope.getDataSorted($scope, $scope.http, shareddata, recordsOnHand, $scope.pageSize, 
+                               	$scope.sortBy, $scope.sortOrder, $scope.sortLocale);
+                	   } else {
+                		   $scope.getData($scope, $scope.http, shareddata, recordsOnHand, $scope.pageSize);
+                	   }
+            	   }
+               } 
+
+               $scope.prevPage = function () {
+                   
+                   if (($scope.currentPage === $scope.startIndex) && ($scope.startIndex > 0)) {
+                       $scope.startIndex = $scope.startIndex - 1;
+                       $scope.endIndex =  $scope.endIndex - 1;
+                   }
+                   
+                   if ($scope.currentPage > 0) {
+                       $scope.currentPage--;
+                   }
+                   getDataIfRequire();
+               };
+               
+               $scope.nextPage = function () {
+                   if ($scope.currentPage <$scope.noOfPages - 1) {
+                       $scope.currentPage++;
+                   }
+                   
+                   if ($scope.currentPage === $scope.endIndex) {
+                        $scope.startIndex = 1 + $scope.startIndex;
+                        $scope.endIndex =  1 + $scope.endIndex;
+                   }
+                   getDataIfRequire();
+               };
+               $scope.setPage = function () { 
+                   $scope.currentPage = this.n;
+                   getDataIfRequire();
+               };
+               $scope.gotoPage = function () {
+                   if ($scope.pageNo && $scope.pageNo > 0 && $scope.pageNo <= $scope.noOfPages ) {
+                       $scope.currentPage = $scope.pageNo - 1;
+                       if ($scope.pageNo<$scope.startIndex || $scope.pageNo>$scope.endIndex) {
+                           $scope.startIndex = $scope.currentPage - ( $scope.currentPage % 1 );
+                           $scope.endIndex =  1 + $scope.startIndex;
+                       }
+                       $scope.pageNo = "";
+                       getDataIfRequire();
+                   } else {
+                	   alert("'" + $scope.pageNo + "' Page Not Found !");
+                	   $scope.pageNo = "";
+                   }
+               };
+               $scope.changeLimit = function () {
+            	   $scope.itemsPerPage = $("select[name=paginationLimit]").val();
+            	   
+            	   $scope.noOfPages = Math.ceil($scope.recordCount / $scope.itemsPerPage);
+            	   
+            	   $scope.pageSize = $scope.itemsPerPage * 1;
+            	   
+            	   $scope.currentPage = 0;
+            	   $scope.startIndex = 0;
+            	   
+            	   $scope.startItem = 1;	
+                   if($scope.noOfPages === 1){
+                       $scope.endItem = $scope.items.length % $scope.itemsPerPage;
+                       
+                   }
+                   else{
+                       $scope.endItem = $scope.itemsPerPage;
+                       
+                   }
+            	   
+            	   if($scope.noOfPages < 1){
+            		   
+            		   $scope.endIndex = $scope.noOfPages;
+            		   $scope.getData($scope, $scope.http, shareddata, 0, $scope.pageSize);
+            		   
+            	   }else{
+            		   $scope.endIndex = 1;
+            	   }
+            		   
+            	   var recordsOnHand = Math.floor( $scope.currentPage / 1 ) * $scope.pageSize;
+                   $scope.getData($scope, $scope.http, shareddata,recordsOnHand, $scope.pageSize);
+           		   
+               };
+        }
+    };
+}]);
+
+eccApp.directive("perspective", function() {
+	return {
+        restrict:'A',
+        link: function (scope, element, attrs) {
+        	scope.$watch('perspective', function() {
+        		if( attrs.perspective && (attrs.perspective != scope.perspective) ) {
+    				element.remove();
+            	}
+        	});
+        }
+	};
+}); 
+
+eccApp.directive("ngomAutoFilter", function() {
+    return {
+        restrict:'C',
+		transclude: true,
+		template: 
+			'<th ng-repeat="name in tablecolumns" ng-show="selectedColumns[name.id]" perspective="{{name.perspective}}">' +
+			'<input ng-show="$parent.search[name.id] != undefined && selectedColumns[name.id]" filter-on="{{name.id}}" type=text ng-model="$parent.search[name.id]"></th>'
+    };
+});
+
+eccApp.directive("ngomAutoFilterWithSelectAll", function() {
+    return {
+        restrict:'C',
+		transclude: true,
+		template: 
+			'<th></th>'+
+			'<th ng-repeat="name in tablecolumns" ng-show="selectedColumns[name.id]" perspective="{{name.perspective}}">' +
+			'<input ng-show="$parent.search[name.id] != undefined && selectedColumns[name.id]" filter-on="{{name.id}}" type=text ng-model="$parent.search[name.id]"></th>'
+    };
+});
+
+eccApp.directive("ngomAutoFilterForMaster", function() {
+    return {
+        restrict:'C',
+		transclude: true,
+		template: 
+			'<th></th>'+
+			'<th></th>'+
+			'<th ng-repeat="name in tablecolumns" ng-show="selectedColumns[name.id]" perspective="{{name.perspective}}">' +
+			'<input ng-show="$parent.search[name.id] != undefined && selectedColumns[name.id]" filter-on="{{name.id}}" type=text ng-model="$parent.search[name.id]"></th>'
+    };
+});
+
+eccApp.directive("filterOn",['shareddata', '$rootScope',function(shareddata, $rootScope) {
+    return {
+        restrict:'A',
+		transclude: true,
+        link:function ($scope, elm, attrs) {
+        	elm.bind('keyup', function(event) {
+        	if (event.which === 13) {
+        		angular.forEach($scope.search, function(value, key) {
+    				if(attrs.filterOn != key){
+    					$scope.search[key] = "";
+    				}
+    			});
+        	
+        		$scope.initToStart();
+        		$scope.itemsPerPage = $("select[name=paginationLimit]").val();
+        		$scope.pageSize = $scope.itemsPerPage * 1;
+        		$scope.getData($scope, $scope.http, shareddata, 0, $scope.pageSize, $rootScope);
+        		$scope.pageStart = 1;
+        	}
+        	event.preventDefault ? event.preventDefault() : event.returnValue = false;
+            });
+        }
+    };
+}]);
+
+function toggleAutoFilter(id) {
+	$(id).toggle();	
+}
+
+
+//New code
+jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+		"date-euro-pre": function ( a ) {
+		if ($.trim(a) != '') {
+		var frDatea = $.trim(a).split(' ');
+		///var frTimea = frDatea[1].split(':');
+		var frDatea2 = frDatea[0].split('/');
+		var x = (frDatea2[2] + frDatea2[1] + frDatea2[0]) * 1;
+		} else {
+		var x = 10000000000000; // = l'an 1000 ...
+		}
+		
+		return x;
+		},
+		
+		"date-euro-asc": function ( a, b ) {
+		return a - b;
+		},
+		
+		"date-euro-desc": function ( a, b ) {
+		return b - a;
+		}
+} );
+eccApp.factory("transformRequestAsFormPost", function() {
+    function transformRequest(data, getHeaders) {
+        var headers = getHeaders();
+        headers["Content-type"] =
+            "application/x-www-form-urlencoded; charset=utf-8";
+        return (serializeData(data));
+    }
+    return (transformRequest);
+
+    function serializeData(data) {
+        if (!angular.isObject(data)) {
+            return ((data === null) ? "" : data.toString());
+        }
+        var buffer = [];
+        for (var name in data) {
+            if (!data.hasOwnProperty(name)) {
+                continue;
+            }
+            var value = data[name];
+            buffer.push(encodeURIComponent(name) + "=" + encodeURIComponent((value ===
+                undefined) ? "" : value));
+        }
+        var source = buffer.join("&").replace(/%20/g, "+");
+        return (source);
+    }
+});        
+document.onkeydown = function(){
+      switch (event.keyCode){
+       case 116 : //F5 button  
+       				sessionStorage.removeItem("MCAT_QUERYID");
+             		sessionStorage.removeItem("CAT_QUERYID");
+             		sessionStorage.removeItem("PCAT_QUERYID");
+             		sessionStorage.removeItem("STDCAT_QUERYID");                  
+                   return true;
+       case 82 : //R button
+             if (event.ctrlKey){ 
+              if(event.shiftKey){
+                    sessionStorage.removeItem("MCAT_QUERYID");
+             		sessionStorage.removeItem("CAT_QUERYID");
+             		sessionStorage.removeItem("PCAT_QUERYID");
+             		sessionStorage.removeItem("STDCAT_QUERYID");
+                    return true;
+                }else{
+                    sessionStorage.removeItem("MCAT_QUERYID");
+             		sessionStorage.removeItem("CAT_QUERYID");
+             		sessionStorage.removeItem("PCAT_QUERYID");
+             		sessionStorage.removeItem("STDCAT_QUERYID");
+                          return true;
+                    }
+               }
+       }
+   };
+

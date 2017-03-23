@@ -1,0 +1,242 @@
+package com.hp.ecc.ui.view.beans;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.hp.ecc.ui.biz.bundle.BundlePart;
+import com.hp.ecc.ui.biz.bundle.IBundleConstants;
+import com.hp.ecc.ui.util.StrUtil;
+
+/**
+ * Abstract base form for BundleTemplateForm and CatalogBundleForm
+ * 
+ * @author
+ * @version 5
+ */
+
+public class BundleContentForm implements IBundleConstants {
+	private String fTask;
+	private String fCatalogID;
+	private String fBundleID;
+	private String fBundleTemplateID;
+	private String fBundleCompID;
+	private String fBundleCompType;
+	private String fBaseShortDesc;
+	private String fBaseLongDesc;
+	private String fBaseDataSheetURL;
+	private String fBaseImageURL;
+	private String fShortDesc;
+	private String fLongDesc;
+	private String fDataSheetURL;
+	private MultipartFile fImageFile;
+	private String fImageURL;
+	private String fHPLangCode;
+	private String fPriceDescriptor;
+	private String fViewOnlyFlag;
+	protected boolean fBaseModelImageFlag;
+	protected boolean fPrevBaseModelImageFlag;
+
+	public BundleContentForm() {
+		fHPLangCode = "99";
+		fViewOnlyFlag = "false";
+	}
+
+	public void setTask(String task) {
+		this.fTask = task;
+	}
+
+	public String getTask() {
+		return fTask;
+	}
+
+	public String getID() {
+		if (!StrUtil.isEmpty(fBundleCompID)) {
+			return fBundleCompID;
+		} else if (!StrUtil.isEmpty(fBundleID)) {
+			return fBundleID;
+		} else if (!StrUtil.isEmpty(fBundleTemplateID)) {
+			return fBundleTemplateID;
+		}
+		return null;
+	}
+
+	public void setCatalogID(String catalog_id) {
+		this.fCatalogID = catalog_id;
+	}
+
+	public String getCatalogID() {
+		return fCatalogID;
+	}
+
+	public void setBundleID(String bundle_id) {
+		this.fBundleID = bundle_id;
+	}
+
+	public String getBundleID() {
+		return fBundleID;
+	}
+
+	public void setBundleTemplateID(String bundle_template_id) {
+		this.fBundleTemplateID = bundle_template_id;
+	}
+
+	public String getBundleTemplateID() {
+		return fBundleTemplateID;
+	}
+
+	public void setBundleCompID(String bundle_comp_id) {
+		this.fBundleCompID = bundle_comp_id;
+	}
+
+	public String getBundleCompID() {
+		return fBundleCompID;
+	}
+
+	public void setBundleCompType(String bundle_comp_type) {
+		this.fBundleCompType = bundle_comp_type;
+	}
+
+	public String getBundleCompType() {
+		return fBundleCompType;
+	}
+
+	public void setBaseShortDesc(String base_short_desc) {
+		this.fBaseShortDesc = base_short_desc;
+	}
+
+	public String getBaseShortDesc() {
+		return fBaseShortDesc;
+	}
+
+	public void setBaseLongDesc(String base_long_desc) {
+		this.fBaseLongDesc = base_long_desc;
+	}
+
+	public String getBaseLongDesc() {
+		return fBaseLongDesc;
+	}
+
+	public void setBaseDataSheetURL(String base_datasheet_url) {
+		this.fBaseDataSheetURL = base_datasheet_url;
+	}
+
+	public String getBaseDataSheetURL() {
+		return fBaseDataSheetURL;
+	}
+
+	public void setBaseImageURL(String base_image_url) {
+		this.fBaseImageURL = base_image_url;
+	}
+
+	public String getBaseImageURL() {
+		return fBaseImageURL;
+	}
+
+	public void setShortDesc(String short_desc) {
+		this.fShortDesc = short_desc;
+	}
+
+	public String getShortDesc() {
+		return fShortDesc;
+	}
+
+	public void setLongDesc(String long_desc) {
+		this.fLongDesc = long_desc;
+	}
+
+	public String getLongDesc() {
+		return fLongDesc;
+	}
+
+	public void setDataSheetURL(String datasheet_url) {
+		this.fDataSheetURL = datasheet_url;
+	}
+
+	public String getDataSheetURL() {
+		return fDataSheetURL;
+	}
+
+	public void setImageFile(MultipartFile image_file) {
+		this.fImageFile = image_file;
+	}
+
+	public MultipartFile getImageFile() {
+		return fImageFile;
+	}
+
+	public void setImageURL(String image_url) {
+		this.fImageURL = image_url;
+	}
+
+	public String getImageURL() {
+		return fImageURL;
+	}
+
+	public void setHPLangCode(String hp_lang_code) {
+		this.fHPLangCode = hp_lang_code;
+	}
+
+	public String getHPLangCode() {
+		return fHPLangCode;
+	}
+
+	public void setPriceDescriptor(String price_descriptor) {
+		this.fPriceDescriptor = price_descriptor;
+	}
+
+	public String getPriceDescriptor() {
+		return fPriceDescriptor;
+	}
+
+	public void setViewOnlyFlag(String view_only_flag) {
+		this.fViewOnlyFlag = view_only_flag;
+	}
+
+	public String getViewOnlyFlag() {
+		return fViewOnlyFlag;
+	}
+
+	public void setBaseModelImageFlag(boolean base_model_img_flag) {
+		this.fBaseModelImageFlag = base_model_img_flag;
+	}
+
+	public boolean getBaseModelImageFlag() {
+		return fBaseModelImageFlag;
+	}
+
+	public void setPrevBaseModelImageFlag(boolean base_model_img_flag) {
+		this.fPrevBaseModelImageFlag = base_model_img_flag;
+	}
+
+	public boolean getPrevBaseModelImageFlag() {
+		return fPrevBaseModelImageFlag;
+	}
+
+	public void fillCustomizedBundleContent(BundlePart bdl_part) {
+		bdl_part.setShortDesc(fShortDesc);
+		bdl_part.setLongDesc(fLongDesc);
+		bdl_part.setDatasheet(fDataSheetURL);
+		bdl_part.setImage(fImageURL);
+		bdl_part.setBaseModelImageFlag((fBaseModelImageFlag) ? "Y" : "N");
+		bdl_part.setHpLangCode(fHPLangCode);
+	}
+
+	public void setSourceBundleContent(BundlePart bdl_part) {
+		fBaseShortDesc = bdl_part.getShortDesc();
+		fBaseLongDesc = bdl_part.getLongDesc();
+		fBaseDataSheetURL = bdl_part.getDatasheet();
+		fBaseImageURL = bdl_part.getImage();
+	}
+
+	public void setCustomizedBundleContent(BundlePart bdl_part) {
+		fShortDesc = bdl_part.getShortDesc();
+		fLongDesc = bdl_part.getLongDesc();
+		fDataSheetURL = bdl_part.getDatasheet();
+		fImageURL = bdl_part.getImage();
+		if (IBundleConstants.TRUE.equals(bdl_part.getBaseModelImageFlag())) {
+			fBaseModelImageFlag = true;
+		} else {
+			fBaseModelImageFlag = false;
+		}
+		fPrevBaseModelImageFlag = fBaseModelImageFlag;
+	}
+}

@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) Hewlett Packard Company
+ * Palo Alto, California, U.S.A.
+ * All rights reserved.
+ */
+
+package com.hp.ecc.ui.biz.bundle;
+
+
+/**
+ * Exception for bundle module
+ *
+ * @author     Susheel Aroskar
+ * @version    5.0
+ */
+
+public class BundleException extends Exception {public BundleException ( String
+    mesg ) {super ( mesg );
+}
+}

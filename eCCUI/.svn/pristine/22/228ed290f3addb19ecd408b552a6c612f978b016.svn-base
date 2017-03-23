@@ -1,0 +1,925 @@
+eccApp.controller('createPriceTier',['$scope', '$location', '$http', '$timeout','shareddata','webStorage','$routeParams', '$window','dialog', 
+  function ($scope, $location, $http, $timeout,shareddata,webStorage,$routeParams, $window,dialog) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.errorMessage1='';
+	$scope.errorMessage2='';
+	$scope.errorMessage3='';
+	
+	$scope.statusList = [{name:"COMPLETE"},{name:"INCOMPLETE"}];
+	$scope.includeStandardMode = [{id:"G", name:"General Catalog (including Generic Price Products)"}];
+	$scope.exchangeRateList=["ACCT", "PLPR", "SPOT", "PRCE"];
+	$scope.priceProfileNone=[{profile_id:"NONE", profile_desc:"No Profile Selected"}];
+	$scope.form = [];
+	$scope.form.fDealListSelected=[];
+	$scope.isNewPASelected = false;
+	
+	$scope.selectedCountriesStr = "";
+	$scope.selectedCountriesStrHas = false;
+	$scope.selectedOptCodes = "";
+	
+	$scope.allOptionList = [];
+	$scope.selOptionList=[];
+	
+	$scope.allDealsDisplayed = [];	
+	
+	$scope.availableStdCatalogs=[];
+	$scope.selectedStdCatalogs=[];
+	$scope.dealList=[];
+	$scope.priceProfileList = [];
+	
+	$scope.regionCode = "";
+	
+	$scope.loadPriceTierDetails=function() {
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Create PriceTier Task\"");
+
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.toggleAll();
+		$scope.form = [];
+		$scope.selOptionList=[];
+		$scope.selectedStdCatalogs=[];
+		$http({
+			url: 'createPriceTier/processRetrieval.htm',
+			method:"GET",
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+			},
+			data : {}
+		 }).success(function(data,status,header,config) {
+			 $scope.dealList.length = 0;
+			 $scope.form 				= JSON.parse(data.CreatePriceTier_form);
+			 $scope.form.fOrderCheckFlag = false;
+			 $scope.form.fusionCheck = false;
+			 $scope.localeList			= data.CreatePriceTier_languages;
+			 $scope.saleCountry			= data.CreatePriceTier_prcOBDesList;
+			 $scope.priceDescriptor		= data.CreatePriceTier_prcDesList;
+			 $scope.availableStdCatalogs= data.CreatePriceTier_availableStdCatalogList;
+			 $scope.allOptionList		= data.CreatePriceTier_localeList;
+			 $scope.pa					= data.CreatePriceTier_paList;
+			 $scope.cac					= data.CreatePriceTier_cacList;
+			 $scope.geo					= data.CreatePriceTier_geoList;
+			 $scope.priceTerm			= data.CreatePriceTier_priceTermList;
+			 $scope.dealList			= data.CreatePriceTier_dealList;
+			 $scope.priceProfileList	= data.CreatePriceTier_profileList;
+			 $scope.fulfillmentSiteList = data.CreatePriceTier_ffsList;
+			 
+			 $scope.addDataToTable=[];
+			 $scope.addDataToTable.length = 0;
+			 $scope.regionCode			= $scope.form.regionCode;
+			 
+			 $scope.form.status = $scope.statusList[0].name;
+			 if("LA"==$scope.regionCode || ("GL"==$scope.regionCode && $scope.form.fLARegionSaleCountry)) {
+				 $("#exchange_rate_type_div").css({"display":""});
+			 } else {
+				 $("#exchange_rate_type_div").css({"display":"none"});
+			 }
+			 
+			 if("US"==$scope.regionCode || ("GL"==$scope.regionCode && "US"==$scope.form.countryCode)) {
+				 $("#price_profile_div").css({"display":""});
+				 $("#excludeHStock").css({"display":"block"});
+				 if(!$scope.form.fPriceProfile) {					 
+					 //addDefault($scope.priceProfileList, $scope.priceProfileNone[0]);
+					 $scope.priceProfileList[0].profile_id = "NONE"; 
+					 $scope.form.fPriceProfile = $scope.priceProfileList[0].profile_id;
+				 }
+				 $("#apply_std_cat_pricing_div").css({"display":"none"});
+			 } else {
+				 $("#price_profile_div").css({"display":"none"});
+				 $("#apply_std_cat_pricing_div").css({"display":""});
+				 $("#excludeHStock").css({"display":"none"});
+			 }
+			 
+			 if("GL"==$scope.regionCode && "US"!=$scope.form.countryCode) {
+				 $("#price_procedure_div").css({"display":""});
+			 } else {
+				 $("#price_procedure_div").css({"display":"none"});
+			 }
+			 
+			 if("US"==$scope.regionCode) {
+				 $("#public_sector_div").css({"display":""});
+			 } else {
+				 $("#public_sector_div").css({"display":"none"});
+			 }
+			 
+			 if("AP"==$scope.regionCode || ("GL"==$scope.regionCode && $scope.form.fAPRegionSaleCountry)) {
+				 $("#purchase_agreement_div").css({"display":""});
+			 } else {
+				 $("#purchase_agreement_div").css({"display":"none"});
+			 }
+			 			 
+			 
+			 if(!$scope.form.fPriceOBDesc){
+				 $scope.form.fPriceOBDesc	= $scope.saleCountry[0].cntry_cd;
+			 }
+			 if(!$scope.form.prcDescriptor){
+				 $scope.form.prcDescriptor	= $scope.priceDescriptor[0].price_descriptor;
+			 }
+			 if(!$scope.form.fIncludeFlag) {
+				 $scope.form.fIncludeFlag = $scope.includeStandardMode[0].id;
+			 }
+			 
+			 $scope.form.excludeHStockCodeFlag = data.excludeHStockCodeFlag;
+			 
+			 //$scope.form.fIncludeFlag	= $scope.includeStandCatList[0].id;
+			 if($scope.availableStdCatalogs && $scope.availableStdCatalogs.length>0) {
+				 $scope.stdCatalogsLB	=$scope.availableStdCatalogs[0];
+			 }
+			 //$scope.stdCatalogsRB	=$scope.selectedStdCatalogs[0];
+			 $scope.localizationLBVal	=$scope.allOptionList[0];
+			 
+			 $scope.manageCountries();
+			 
+			 $scope.dealPricingChecked = '';
+			 if ($scope.dealList.length==0) {
+				 $scope.addDataToTable = [];
+				 $scope.addDataToTable.length = 0;
+				 $('#search_result').dataTable().fnClearTable();
+				 $('#search_result').dataTable().fnAddData($scope.addDataToTable);
+				 $('#search_result').dataTable().fnSetColumnVis(11, ($scope.regionCode=="US" && $scope.form.pubSec));
+			 }
+			 
+			 $scope.allDealsDisplayed = [];
+			 for (var index = 0; index < $scope.dealList.length; index++){
+		        	var item = "";
+		        	item = $scope.dealList[index];
+		        	var dealIdIndex = item.deal_id.indexOf('VIS');
+		        	
+		        	if(dealIdIndex==0) {
+		        		$scope.dealPricingChecked = '';
+		        	} else {
+		        		$scope.dealPricingChecked = 'checked';
+		        	}
+		        	
+		        	$scope.allDealsDisplayed.push(item.deal_id);
+		        	
+		        	$scope.addDataToTable.push([
+		        	                            '<input id="selectedDeal" class="selectedDeal" ng-model="form.fDealListSelected" style="width:15px; height:15px; margin-top:15px" value="'+item.deal_id+'" type="checkbox" onchange="enableForVista(this)"></input>',
+		        	                            item.deal_id,
+		        	                            item.price_descriptor,
+		        	                            item.start_date,
+		        	                            item.end_date,
+		        	                            item.control_cntry_cd,
+		        	                            item.deal_type,
+		        	                            item.requestor,
+		        	                            item.approver,
+		        	                            '', //item.last_modified_date,
+		        	                            '<input id="'+item.deal_id+'" class="div_input" ng-model="form.fSpecialPricing" style="width:15px; height:15px; margin-top:15px" value="'+item.deal_id+'" '+$scope.dealPricingChecked+' type="checkbox" disabled></input>',
+		        	                            '<input id="cplt'+item.deal_id+'" class="div_input" ng-model="form.fCpltId" type="text" size = "6" maxlength="6" disabled></input>',
+		        	                            item.original_deal_id
+		        	                            ]);
+			 }
+			 
+			 //if ($scope.addDataToTable.length >0){
+				 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+			 //}
+			 $('#search_result').dataTable().fnSetColumnVis(11, ($scope.regionCode=="US" && $scope.form.pubSec));
+			 $scope.setSelectedCatalogs();
+		 });
+		
+		$scope.hideMsg();
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		
+	};
+	
+	enableForVista=function(e){
+		var dealID = e.value;
+		var isChecked = e.checked;
+		if (dealID.indexOf('VIS')==0) {
+			$("#"+dealID).attr('disabled', !isChecked);
+			$("#cplt"+dealID).attr('disabled', !isChecked);
+		}
+	};
+	
+	$scope.setSelectedCatalogs=function() {
+		angular.forEach($scope.availableStdCatalogs, function(item,index){
+			angular.forEach($scope.selectedStdCatalogs, function(item1,index1){
+				if(item.cat_catalog_id==item1.cat_catalog_id){
+					$scope.availableStdCatalogs.splice(index, 1);
+				}
+			});
+		});
+	};
+	
+	$scope.reloadProfile=function() {
+		if($scope.form.fPriceProfile!="NONE") {
+			$('.selectedDeal').attr('checked', false);
+			$('.selectedDeal').attr('disabled', true);
+			$('#selectAll').attr('checked', false);
+			$('#selectAll').attr('disabled', true);
+		} else {
+			$('.selectedDeal').attr('disabled', false);
+			$('#selectAll').attr('disabled', false);
+		}
+	};
+	
+	$scope.noPriceProfile=function() {
+		$("#priceProfile").attr('disabled', document.getElementById("pubSecDiv").checked);
+		$scope.form.fPriceProfile = "NONE";
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url : 'createPriceTier/getVistaDeals.htm?form='+ encodeURIComponent(angular.toJson($scope.form)),
+			method : "POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		}).success(function(data, status, headers, config) {
+			$scope.form 				= JSON.parse(data.CreatePriceTier_form);
+			$scope.dealList				= data.CreatePriceTier_dealList;
+			$('#search_result').dataTable().fnClearTable();
+			$scope.manageCountries();
+			
+			$scope.addDataToTable=[];
+			
+			$scope.dealPricingChecked = '';
+			
+			for (var index = 0; index < $scope.dealList.length; index++){
+	        	var item = "";
+	        	item = $scope.dealList[index];
+	        	var dealIdIndex = item.deal_id.indexOf('VIS');
+	        	
+	        	if(dealIdIndex==0) {
+	        		$scope.dealPricingChecked = '';
+	        	} else {
+	        		$scope.dealPricingChecked = 'checked';
+	        	}
+	        	
+	        	$scope.addDataToTable.push([
+	        	                            '<input id="selectedDeal" class="selectedDeal" ng-model="form.fDealListSelected" style="width:15px; height:15px; margin-top:15px" value="'+item.deal_id+'" type="checkbox" onchange="enableForVista(this)"></input>',
+	        	                            item.deal_id,
+	        	                            item.price_descriptor,
+	        	                            item.start_date,
+	        	                            item.end_date,
+	        	                            item.control_cntry_cd,
+	        	                            item.deal_type,
+	        	                            item.requestor,
+	        	                            item.approver,
+	        	                            '',//item.last_modified_date,
+	        	                            '<input id="'+item.deal_id+'" class="div_input" ng-model="form.fSpecialPricing" style="width:15px; height:15px; margin-top:15px" value="'+item.deal_id+'" '+$scope.dealPricingChecked+' type="checkbox" disabled></input>',
+	        	                            '<input id="cplt'+item.deal_id+'" class="div_input" ng-model="form.fCpltId" type="text" size = "6" maxlength="6" disabled></input>',
+	        	                            item.original_deal_id
+	        	                            ]);
+		 }
+						
+            //$('#search_result').dataTable().fnAddData($scope.addDataToTable);
+		 if ($scope.addDataToTable.length >0){
+			 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+		 }
+		 $('#search_result').dataTable().fnClearTable();
+		 $('#search_result').dataTable().fnAddData($scope.addDataToTable);
+		 $('#search_result').dataTable().fnSetColumnVis(11, ($scope.regionCode=="US" && $scope.form.pubSec));
+			$scope.setSelectedCatalogs();
+	
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			console.log("Error in All Countries Service");
+		});
+	};
+	
+	$scope.changeSaleCountry=function() {
+		$scope.hideMsg();
+		 $scope.form.prcDescriptor = "";
+		 $scope.changePriceDescriptor();	 
+	};
+	
+	$scope.allSaleCountries=function() {
+		$scope.form.selSaleCntry = !$scope.form.selSaleCntry;
+		$scope.changePriceDescriptor();
+	};
+	
+	$scope.changePriceDescriptor=function() {
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url : 'createPriceTier/changePD.htm?form='+ encodeURIComponent(angular.toJson($scope.form)),
+			method : "POST",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		}).success(function(data, status, headers, config) {
+			$scope.form 				= JSON.parse(data.CreatePriceTier_form);
+			$scope.dealList				= data.CreatePriceTier_dealList;
+			$scope.priceDescriptor		= data.CreatePriceTier_prcDesList;
+			$scope.availableStdCatalogs= data.CreatePriceTier_availableStdCatalogList;
+			$scope.priceProfileList	= data.CreatePriceTier_profileList;
+			$scope.allOptionList		= data.CreatePriceTier_localeList;
+			
+			 if("US"==$scope.regionCode || ("GL"==$scope.regionCode && "US"==$scope.form.countryCode)) {			  
+				 $("#excludeHStock").css({"display":"block"});
+				  
+			 } else {			 
+				 $("#excludeHStock").css({"display":"none"});
+			 }
+			 
+			 if("LA"==$scope.regionCode || ("GL"==$scope.regionCode && $scope.form.fLARegionSaleCountry)) {
+				 $("#exchange_rate_type_div").css({"display":""});
+				 $scope.form.exchRateType = $scope.exchangeRateList[0];  
+			 } else {
+				 $("#exchange_rate_type_div").css({"display":"none"});
+			 }
+			 
+			 
+			 if ($scope.priceProfileList != undefined && $scope.priceProfileList.length > 0) {
+				 if("US"==$scope.regionCode || ("GL"==$scope.regionCode && "US"==$scope.form.countryCode)) {
+					 $("#price_profile_div").css({"display":""});
+					 $("#excludeHStock").css({"display":"block"});
+					 if(!$scope.form.fPriceProfile) {	
+						 $scope.priceProfileList[0].profile_id = "NONE"; 
+						 $scope.form.fPriceProfile = $scope.priceProfileList[0].profile_id;
+						// $scope.form.fPriceProfile = "00000";
+					 }
+					 $("#apply_std_cat_pricing_div").css({"display":"none"});
+				 }
+			 } else {
+				 $("#price_profile_div").css({"display":"none"});
+			 }
+			 
+			 if("AP"==$scope.regionCode || ("GL"==$scope.regionCode && $scope.form.fAPRegionSaleCountry)) {
+				 $("#purchase_agreement_div").css({"display":""});
+			 } else {
+				 $("#purchase_agreement_div").css({"display":"none"});
+			 }
+			 
+			 if("GL"==$scope.regionCode && "US"!=$scope.form.countryCode) {
+				 $("#price_procedure_div").css({"display":""});
+			 } else {
+				 $("#price_procedure_div").css({"display":"none"});
+			 }
+			
+			if(!$scope.form.prcDescriptor){
+				 $scope.form.prcDescriptor	= $scope.priceDescriptor[0].price_descriptor;
+			}
+			$scope.manageCountries();
+			$scope.setSelectedCatalogs();
+			$scope.addDataToTable=[];
+			
+			$scope.dealPricingChecked = '';
+			
+			for (var index = 0; index < $scope.dealList.length; index++){
+	        	var item = "";
+	        	item = $scope.dealList[index];
+	        	
+	        	var dealIdIndex = item.deal_id.indexOf('VIS');
+	        	
+	        	if(dealIdIndex==0) {
+	        		$scope.dealPricingChecked = '';
+	        	} else {
+	        		$scope.dealPricingChecked = 'checked';
+	        	}
+	        	
+	        	$scope.addDataToTable.push([
+	        	                            '<input id="selectedDeal" class="selectedDeal" ng-model="form.fDealListSelected" style="width:15px; height:15px; margin-top:15px" value="'+item.deal_id+'" type="checkbox" onchange="enableForVista(this)"></input>',
+	        	                            item.deal_id,
+	        	                            item.price_descriptor,
+	        	                            item.start_date,
+	        	                            item.end_date,
+	        	                            item.control_cntry_cd,
+	        	                            item.deal_type,
+	        	                            item.requestor,
+	        	                            item.approver,
+	        	                            '',//item.last_modified_date,
+	        	                            '<input id="'+item.deal_id+'" class="div_input" ng-model="form.fSpecialPricing" style="width:15px; height:15px; margin-top:15px" value="'+item.deal_id+'" '+$scope.dealPricingChecked+' type="checkbox" disabled></input>',
+	        	                            '<input id="cplt'+item.deal_id+'" class="div_input" ng-model="form.fCpltId" type="text" size = "6" maxlength="6" disabled></input>',
+	        	                            item.original_deal_id
+	        	                            ]);
+		 }
+			
+			$('#search_result').dataTable().fnClearTable();
+            $('#search_result').dataTable().fnAddData($scope.addDataToTable);
+		 
+		 if ($scope.addDataToTable.length >0){
+			 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+		 }
+		 $('#search_result').dataTable().fnSetColumnVis(11, ($scope.regionCode=="US" && $scope.form.pubSec));
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			console.log("Error in All Countries Service");
+		});
+		
+	};
+	
+	$scope.TogglePaBoxChange=function() {
+		$scope.isNewPaSelected = !$scope.isNewPaSelected;
+		if ($scope.isNewPaSelected) {
+			$('#patext').css({"display":"block"});
+			$('#palist').css({"display":"none"});
+			$scope.form.fPurchaseAgreementNo = "";
+			
+			$scope.form.fCacCode = "";
+			$scope.form.fGeoCode = "";
+			$scope.form.fPriceTerm = "";
+			
+		} else {
+			$('#patext').css({"display":"none"});
+			$('#palist').css({"display":"block"});
+			$scope.reloadPurchaseAgreement();
+		}
+	};
+	
+	$scope.reloadPurchaseAgreement=function() {
+		var pa = $scope.form.fPurchaseAgreementNo;
+		paList = pa.split("~");
+		$("#cacCode").attr('disabled', false);
+		$("#geoCode").attr('disabled', false);
+		$("#priceTerm").attr('disabled', false);
+		
+		$scope.form.fCacCode = paList[1];
+		$scope.form.fGeoCode = paList[2];
+		$scope.form.fPriceTerm = paList[3];
+		
+		if(!$scope.form.fCacCode){
+			for(var i = 0; i<$scope.cac.length; i++){
+				if($scope.cac[i].cac_code==paList[1]) {
+					$scope.form.fCacCode	= $scope.cac[i];
+				}
+			}
+		 }
+		
+		if(!$scope.form.fGeoCode){
+			for(var i = 0; i<$scope.geo.length; i++){
+				if($scope.geo[i].geo_code==paList[2]) {
+					$scope.form.fGeoCode	= $scope.geo[i];
+				}
+			}
+		 }
+		
+		if(!$scope.form.fPriceTerm){
+			for(var i = 0; i<$scope.priceTerm.length; i++){
+				if($scope.priceTerm[i].price_term==paList[3]) {
+					$scope.form.fPriceTerm	= $scope.priceTerm[i];
+				}
+			}
+		 }
+		$("#cacCode").attr('disabled', true);
+		$("#geoCode").attr('disabled', true);
+		$("#priceTerm").attr('disabled', true);
+		/*$scope.form.fGeoCode = paList[2] ;
+		$scope.form.fPriceTerm = paList[3] ;*/
+		
+	};
+	
+	$scope.selectStdCatalog=function() {
+		
+		for(var j=0;j<$scope.stdCatalogsLB.length;j++) {
+			var stdobject = $scope.stdCatalogsLB[j];
+			if(stdobject.cat_catalog_name.indexOf('General+Generic Price') == -1){
+				stdobject.cat_catalog_name = stdobject.cat_catalog_name + "(General+Generic Price)"; 
+			}
+			$scope.selectedStdCatalogs.push(stdobject);
+		}
+		for(var i = 0; i<$scope.stdCatalogsLB.length; i++) {
+			angular.forEach($scope.availableStdCatalogs, function(item,index){
+				if(item.cat_catalog_id==$scope.stdCatalogsLB[i].cat_catalog_id){
+					$scope.availableStdCatalogs.splice(index, 1);
+				}
+			});
+		}
+		if(!$scope.stdCatalogsRB) {
+			$scope.stdCatalogsRB = $scope.selectedStdCatalogs[0];
+		}
+	};
+	
+	$scope.deSelectStdCatalog=function() {
+		for(var j=0;j<$scope.stdCatalogsRB.length;j++) {
+			var stdobject = $scope.stdCatalogsRB[j];
+			if(stdobject.cat_catalog_name.indexOf('General+Generic Price') > -1){
+				stdobject.cat_catalog_name = stdobject.cat_catalog_name.replace("(General+Generic Price)",''); 
+			}
+			$scope.availableStdCatalogs.push(stdobject);
+		}
+		for(var i = 0; i<$scope.stdCatalogsRB.length; i++) {
+			angular.forEach($scope.selectedStdCatalogs, function(item,index){
+				if(item.cat_catalog_id==$scope.stdCatalogsRB[i].cat_catalog_id){
+					$scope.selectedStdCatalogs.splice(index, 1);
+				}
+			});
+		}
+		if(!$scope.stdCatalogsLB) {
+			$scope.stdCatalogsLB = $scope.availableStdCatalogs[0];
+		}
+	};
+	
+	$scope.localizationFromLB=function(){
+		$scope.selOptionList.push($scope.localizationLBVal);
+		checknAddOptCodes($scope.localizationLBVal.options);
+		$scope.manageCountries();
+		if(!$scope.form.localeSelHidden){
+			$scope.form.localeSelHidden		= 	$scope.localizationLBVal.opt_category_id;
+		} else {
+			$scope.form.localeSelHidden		=	$scope.form.localeSelHidden+","+$scope.localizationLBVal.opt_category_id;
+		}
+		
+		angular.forEach($scope.allOptionList, function(item,index){	
+			if(item.opt_category_id==$scope.localizationLBVal.opt_category_id && item.countries==$scope.localizationLBVal.countries ){
+				$scope.allOptionList.splice(index, 1);
+			}
+		});
+		$scope.localizationLBVal	=$scope.allOptionList[0];
+		$scope.localizationRBVal	=$scope.selOptionList[0];
+	};
+	$scope.localizationFromRB=function(){
+		$scope.allOptionList.push($scope.localizationRBVal);
+		angular.forEach($scope.selOptionList, function(item,index){	
+			if(item.opt_category_id==$scope.localizationRBVal.opt_category_id && item.countries==$scope.localizationRBVal.countries ){
+				$scope.selOptionList.splice(index, 1);
+			}
+		});
+		$scope.form.options = "";
+		$scope.form.optCateCountries = "";
+		$scope.form.localeSelHidden = "";
+		angular.forEach($scope.selOptionList, function(item,index){	
+			checknAddOptCodes(item.options);
+			if($scope.form.localeSelHidden!=null) {
+				if(!$scope.form.localeSelHidden){
+					$scope.form.localeSelHidden		= 	item.opt_category_id;
+				} else {
+					$scope.form.localeSelHidden		=	$scope.form.localeSelHidden+","+item.opt_category_id;
+				}
+			}
+		});
+		$scope.manageCountries();
+		$scope.localizationLBVal	=$scope.allOptionList[0];
+		$scope.localizationRBVal	=$scope.selOptionList[0];
+	};
+	
+	$scope.manageCountries=function() {
+    	
+    	$scope.selectedCountriesStr = "";
+
+    	var item = "";
+    	if($scope.form.prcDescriptor) {
+    		item = $scope.form.prcDescriptor.substring(0,2);
+    	}
+    		
+		if ($scope.selectedCountriesStrHas) {
+			checknAddCountries(item);
+			//$scope.selectedCountriesStr = $scope.selectedCountriesStr +","+ item[i];
+		} else {
+			$scope.selectedCountriesStr = item;
+			$scope.selectedCountriesStrHas = true;
+		}
+    		
+    	
+    	item = [];
+    	if ($scope.selOptionList) {
+    		item = $scope.selOptionList;
+    		for(var i=0; i<item.length; i++){
+        		if ($scope.selectedCountriesStrHas) {
+        			checknAddCountries(item[i].countries);
+    				//$scope.selectedCountriesStr = $scope.selectedCountriesStr +","+ item[i];
+    			} else {
+    				$scope.selectedCountriesStr = item[i].countries;
+    				$scope.selectedCountriesStrHas = true;
+    			}
+        	}
+    	}
+    	$scope.form.countries = $scope.selectedCountriesStr;
+    	//modify before this
+    };
+    
+    checknAddCountries=function(countries) {    	
+    	
+    	var arr = [];
+    	if($scope.selectedCountriesStr) {
+    		arr = $scope.selectedCountriesStr.split(',');
+    	} 
+    	
+		var arr1 = [];
+		if (countries) {arr1 = countries.split(',');}
+		var temp = "";
+		
+		for (var i = 0; i<arr1.length; i++) {
+			if(!($scope.contains(arr, arr1[i]))) {
+				if (i == 0) {
+					temp = arr1[i];
+				} else {
+					temp = temp +"," +arr1[i];
+				}
+			}
+		}
+		if( !$scope.selectedCountriesStr) {
+			$scope.selectedCountriesStr = temp;
+		} else if(temp) {
+			$scope.selectedCountriesStr = $scope.selectedCountriesStr+","+temp;
+		}
+
+    };
+    
+    checknAddOptCodes=function(optCodes) {
+    	var arr = [];
+    	var arr1 = [];
+    	if($scope.selectedOptCodes) {
+    		arr = $scope.selectedOptCodes.split(',');
+    	}
+    	if(optCodes) {arr1 = optCodes.split(',');}
+    	var temp = "";
+		
+		for (var i = 0; i<arr1.length; i++) {
+			if(!($scope.contains(arr, arr1[i]))) {
+				if (i == 0) {
+					temp = arr1[i];
+				} else {
+					temp = temp +"," +arr1[i];
+				}
+			}
+		}
+		if( !$scope.selectedOptCodes) {
+			$scope.selectedOptCodes = temp;
+		} else if(temp) {
+			$scope.selectedOptCodes = $scope.selectedOptCodes+","+temp;
+		}
+		$scope.form.options = $scope.selectedOptCodes;
+    };
+    
+    $scope.contains=function(a, obj) {
+		for (var i = 0; i < a.length; i++) {
+			if (a[i] === obj) {
+	            return true;
+	        }
+	    }
+	    return false;		
+	};
+	
+	$scope.globalCodeToGenertaeDataGrid = function(tableId,aaData){
+		$.fn.dataTableExt.oJUIClasses.sSortJUI ="css_right icon-sort";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIAsc ="css_right icon-sort-up";
+		$.fn.dataTableExt.oJUIClasses.sSortJUIDesc ="css_right icon-sort-down";
+		oTable = $("table#"+tableId+"").dataTable({
+			"sEcho": 4,
+				"aaData": aaData,
+				//"sPaginationType" : "",
+				"bPaginate" :false,
+				"bJQueryUI": true,
+				//"bRetrieve": true,
+				"bDestroy": true,
+				"bSortable":false,
+				"processing": false,
+		        "serverSide": true,
+				"sDom": '<"t_body"t>',
+				"bSort": false,
+				"oColReorder": {
+				"iFixedColumns": 2 // Define fixed column and checkbox column can not be dragged.
+				},
+				"oLanguage": {
+				"sLengthMenu": "",
+				"sInfo": "",
+				"sSearch": "",
+				"sInfoFiltered": "",
+				"sInfoEmpty":""
+				},
+				"oColVis": {
+				"buttonText": '',
+				"hidden": true,
+				"aiExclude": [ 0,1, 2, 3, 4,5,6, 7, 8, 9, 10, 11, 12 ],
+				"bShowAll": false,
+				"sShowAll": "",
+				"sAlign":""
+		        }
+			});
+		if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+			$("#"+tableId+"_length select").selecter();
+		}
+	};
+	
+	$scope.saveCreatePriceTier=function() {
+		 $("#loadTime").html("");
+			$scope.loadTime = new Date().getTime();
+			if(!$scope.validateFormFields($scope.regionCode)) {
+				return;
+			}
+			var i=0;
+			var selectedDeals = [];
+			$('#selectedDeal:checked').each(function() {
+				selectedDeals[i] = $(this).val();
+				var index = $scope.allDealsDisplayed.indexOf(document.getElementById(selectedDeals[i]).value);
+				if (index !== -1){
+				   if(document.getElementById(selectedDeals[i]).checked) {
+					  $scope.form.fSpecialPricing[index]=document.getElementById(selectedDeals[i]).value;
+				   }else{
+					  $scope.form.fSpecialPricing[index]=null;
+				   }
+				}
+				if(($scope.regionCode=="US" && $scope.form.pubSec)) {
+					$scope.form.fCpltId[i] = $('#cplt'+selectedDeals[i]).val();
+				}
+				i++;
+			});
+			$scope.form.fDealListSelected = selectedDeals;			
+			var selectedStdCat = [];
+			angular.forEach($scope.selectedStdCatalogs, function(item, index){
+				selectedStdCat[index]=item.cat_catalog_id+"~"+$scope.form.fIncludeFlag;
+			});
+			
+			$scope.form.fstdCatalogSelected = selectedStdCat;
+			
+			
+			if($scope.form.prcDescriptor == "" || $scope.form.prcDescriptor == undefined){		
+				$scope.hideMsg();
+				$scope.showMsg('','Can not create Price Tier as Price Descriptor is not avilable for selected country.');				
+				return false;
+			}
+			
+			if(selectedDeals != null){
+		    	if($scope.regionCode == "US" && $scope.form.pubSec==true){
+		    		for ( var i = 0; i < selectedDeals.length; i++ ) {
+	    				var dealStr = selectedDeals[i];
+	    				var cpltId = $scope.form.fCpltId[i];
+	    				var visDealIndex=dealStr.indexOf("VIS");
+	    				if(visDealIndex==0 && cpltId == ''){ 	    					
+	    					alert( "WARNING : Contract Price List Type Id column value(s) is/are not entered for some of the Vista Deal(s)");	    							    				
+	    				}
+		    		}
+		    	}
+			}
+			
+			$http({
+			url : "createPriceTier/createSavePriceTier.htm?action=create&form="+ encodeURIComponent(angular.toJson($scope.form)),
+			method : "POST",
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+			}
+		}).success(function(data, status, headers, config) {
+			 if(data.successMsg != undefined){
+				 $scope.hideMsg();
+				 $window.scrollTo(0,0);
+				 $scope.showMsg(data.successMsg.toString(),'');
+				 webStorage.session.add('messageAfterSaveCatalog', data.successMsg);
+				 if (data.errorMsg1 != null && data.errorMsg1 != undefined) {
+					 webStorage.session.add('messageAfterSaveCatalogAlertPropagation', data.errorMsg1);
+				 }
+				 if (data.errorMsg2 != null && data.errorMsg2 != undefined) {
+					 webStorage.session.add('messageAfterSaveCatalogAlertStatus', data.errorMsg2);
+				 }
+				 document.location.href="#/PriceTierProductListHeader?priceTierID="+data.id;
+			 }else if(data.errMsg != undefined){
+				 $scope.hideMsg();
+				 $window.scrollTo(0,0);
+				 $scope.showMsg('',data.errMsg.toString());
+				 webStorage.session.add('messageAfterSaveCatalog', data.errMsg);
+			 }
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			 $scope.hideMsg();
+			 $scope.showMsg('',"Error in Create PriceTier Service.");
+		});
+
+	};
+	
+	$scope.cancelCreatePriceTier=function() {
+		document.location.href="#/PriceTierList";
+	};
+	
+	$scope.resetCreatePriceTier=function() {
+		$scope.loadPriceTierDetails();
+	};
+	
+	addDefault=function(item, defaultItem){
+    	for(var count=item.length; count>0; count--) {
+    		item[count] = item[count-1];
+    	}
+    	item[0]=defaultItem;
+    };
+    
+    $scope.toggleAll=function() {
+		$('#selectAll').click(function(e){
+	 	    var table= $(e.target).closest('table');
+	 	    var x = $('td #selectedDeal',table);//.prop('checked',this.checked);
+	 	    x.prop('checked',this.checked);
+	 	    for(var i=0; i<x.length; i++) {
+	 	    	enableForVista(x[i]);
+	 	    }
+	 	});
+	};
+	$scope.validateFormFields=function( regionCd ) {
+	    var name = $scope.form.fPriceTierName?$scope.form.fPriceTierName.trim():null;
+	    var comments = $scope.form.comment?$scope.form.comment.trim():null;
+	    var count = 0;
+
+	    var msg1 = "Please Correct the Following: \n\n";
+	    var msg2 = "Price Tier Name cannot be Blank !\n";
+	    var msg3 = "";
+	    if(comments) {
+	    	"Comments should not exceed 50 characters.  (Size of comment currently entered = " + comments.length + " chars ). \n";
+	    }
+	    var msg4 = null;
+	    var msg5 = "Vista Deal cannot take blank: ";
+
+	    var msg = null;
+	    if ( $scope.regionCode == "AP" ) msg4 = $scope.validatePaSelection();
+
+	    if ( !name ) {
+	      msg = msg1 + "\t1. " + msg2;
+	      count = count + 1;
+	    }
+	    if ( comments && comments.length > 50 ) {
+		  if ( count == 0 ) msg = msg1 + "\t1. " + msg3;
+		  else msg = msg + "\t2. " + msg3;
+		  count = count + 1;
+	    }
+	    if ( msg4 != null ) {
+	    	if ( count == 0 ) msg = msg1 + "\t1. " + msg4;
+	    	else if ( count == 1 ) msg = msg + "\t2. " + msg4;
+	    	else msg = msg + "\t3. " + msg4;
+	    }
+	    
+	    if ( msg != null ) {alert(msg);return false;}
+		else return true;
+	};
+	
+	$scope.validatePaSelection=function() {
+		var message = "Incomplete Pa Selection Found, (Required Fields: ";
+		var paInvMsg = null;
+		var isPriceTermSelected = "false";
+		var count = 0;
+		var pa = $scope.form.fPurchaseAgreementNo;
+		
+		if ( $scope.form.isNewPaSelected.checked ) {
+			
+			for ( var i=0; i < pa.length; i++ ) {
+				var alpha = pa.charAt(i);
+				var code = alpha.charCodeAt(0);
+				if ( (code > 47 && code<58) || (code > 64 && code<91) || (code > 96 && code<123) ) {}
+				else {
+					paInvMsg = "Purchase Agreement No is Invalid, Only A-Z,a-z and 0-9 are Allowed.";
+					break;
+				}
+			}
+		} //else pa = document.forms['PriceMasterForm'].elements['purchaseAgreement'].value;
+			
+		var cac = $scope.form.fCacCode;
+		var geo = $scope.form.fGeoCode;
+		var pt = $scope.form.fPriceTerm;
+		
+		if ( pa != null && pa.trim().length == 0 ) {
+			message = message + "Purchase Agreement #";
+			count = count + 1;
+		}
+		if ( cac != null && cac.trim().length == 0 ) {
+			if ( count == 0 ) message = message + "CAC Code";
+			else message = message + ", CAC Code";
+			count = count + 1;
+		}
+		if ( geo != null && geo.trim().length == 0 ) {
+			if ( count == 0 ) message = message + "GEO Code";
+			else message = message + ", GEO Code";
+			count = count + 1;
+		}
+		if ( pt != null && pt.trim().length > 0 ) isPriceTermSelected = "true";
+		
+		if ( paInvMsg != null )
+			message = paInvMsg + " And " + message + " ).";
+		else
+			message = message + " ).";
+
+		if ( count == 3 && isPriceTermSelected == "false" ) message = null;
+		if ( count == 0 ) {
+			if ( paInvMsg == null ) message = null;
+			else message = paInvMsg;
+		}
+
+		return message;
+	};
+	$scope.showFulfillmentList = function(){
+		$scope.condtionalAlert();
+	};
+	
+	$scope.condtionalAlert = function () {
+	    dialog.show({
+	        	templateUrl: 'resources/html/admin/fulfillmentSiteSelect.html',
+	        controller: 'FulfillmentSiteSelectCrtl',
+	        width: 1150,
+	        height : 600,
+	        param: $scope.param,
+	        draggable: true,
+	        title:''
+	    }).then(function (result) {
+	    	if(result){
+	    		if(result != false){
+	            	$scope.form.fFFSID = result;
+	            }  
+	    	}
+	    });
+	};
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    };
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    };
+	
+}]);

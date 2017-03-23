@@ -1,0 +1,92 @@
+package com.hp.ecc.ui.db.dao;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import org.json.simple.JSONArray;
+
+import com.hp.ecc.ui.biz.bundle.MasterCatProgramGUIObject;
+import com.hp.ecc.ui.biz.catalog.Program;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+
+public class BundleCatMasterPgmDao {
+	
+	/**
+	 * Returns list of bundles for given cust_key, master catalog id and program key.
+	 * @param  String cust_key customer key (id)
+	 * @param  String masterCatKey master catalog id
+	 * @param  String programKey program id
+	 * @return List of bundle objects
+	 */
+	public JSONArray getBundlesByCatMasterAndProgram ( String custKey , String masterCatKey, String programKey, String dbRegionToConnect) {
+		
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		String whereClause = searchBundleListWhereClause ( custKey, masterCatKey, programKey );
+		DaxDataBeanGeneral whereBean = new DaxDataBeanGeneral ();
+		whereBean.setString1 ( whereClause );
+		
+		pstmt = mgr.makeParsedStmt("GROUP_BDL_QUERY", "GET_BDL_BY_MASTER_CAT_AND_PROGRAM",whereBean, null, null);
+		DaxDB db = mgr.getDaxDB(dbRegionToConnect);
+
+		return db.doSelectJson(pstmt, MasterCatProgramGUIObject.class, null);
+	}
+	
+	/**
+	 * Returns a String containing the where clause
+	 * @param  String cust_key customer key (id)
+	 * @param  String masterCatKey master catalog id
+	 * @param  String programKey program id
+	 * @return String containing the where clause
+	 */
+	private String searchBundleListWhereClause ( String custKey
+	                                             , String masterCatKey
+	                                             , String programKey ) {
+	    StringBuffer whereClause = new StringBuffer ();
+
+	whereClause.append ( " cat.cat_catalog_id = " );
+	whereClause.append ( "'" + masterCatKey + "' " );
+	whereClause.append ( " and cit.cat_catAlog_id = cat.cat_catalog_id " );
+	whereClause.append ( " and cpd.cat_catalog_id = cat.cat_catalog_id " );
+	whereClause.append ( " and cit.cit_pgm_key = " );
+	whereClause.append ( "'" + programKey + "' " );
+	whereClause.append ( " and cbd.cat_catalog_id (+) = '" + masterCatKey + "'" );
+	whereClause.append ( " and cit.cit_src_prod = cbd.cbd_id (+) " );
+	whereClause.append ( " and cit.cit_item_key = cop.cat_item_key " );
+	//whereClause.append ( " and ccc.cat_catalog_id = cat.cat_catalog_id " );
+	//whereClause.append ( " and (ccc.ctc_prod = cop.cop_localize_prod or ccc.ctc_prod = cit.cit_src_prod) " );
+	//whereClause.append ( " and ccc.ctc_hp_lang_code = cat.cat_hp_lang_code " );
+	//whereClause.append ( " and ccc.ctc_sku_flag = 1 " );
+	whereClause.append ( " and cit.cit_delete_flag = 'N' " );
+
+	return whereClause.toString ();
+	}
+	
+	/** Returns a list of programs for given customer key.
+	   * When cust_key is null/empty,all the programs are returned.
+	   * When cust_key is not null/empty, programs list for given cust_key is returned.
+	   *
+	   * @param   String cust_key
+	   * @return  Program objects list
+	   */
+
+	  public JSONArray getProgramsForCustomer ( String cust_key, String dbRegionToConnect ) {
+	    Program program = new Program ();
+	    String whichStmt = "";
+	    if ( StrUtil.isEmpty ( cust_key ) ) {
+	      whichStmt = "allPrograms";
+	    }
+	    else {
+	      whichStmt = "getPgmsForCustKey";
+	      program.setProgramCustKey ( cust_key );
+	    }
+
+	    DaxMgr daxMgr = DaxMgr.getInstance ();
+	    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", whichStmt, program, null, null );
+	    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+	    return db.doSelectJson ( stmt, null, program );
+	  }
+}

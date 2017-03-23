@@ -1,0 +1,32 @@
+<div class="row">
+	<div class="customer_rows">
+	   	<h1 class="h1Underline">				
+			<span>Support and Feedback</span>
+		</h1>
+  	</div>
+	<div class="customer_rows form-border">
+		<div class="eight columns">
+			<div class="generals">
+				<span>Technical Support and feedback PDL:</span>
+				<a href="mailto:AO-BGL-GDL-QTC-Team@groups.hp.com">AO-BGL-GDL-QTC-Team</a>
+			</div>			
+		</div>		
+		<div class="eight columns">
+			<div class="generals">
+				<span>Support HPSC Ticket logging:</span>
+			</div>
+			<div class="generals">
+				<span><b>o</b> Direct Link:</span>
+				<div id="tsdl" class="div_input"><a href="http://itsm-hpit.corp.hp.com/sm/index.do?l">http://itsm-hpit.corp.hp.com/sm/index.do?l</a></div>		
+			</div>
+			<span>or</span>	
+			<div class="generals">
+				<a href="http://itsm-support.corp.hp.com/sm-ess/ess.do">http://itsm-support.corp.hp.com/sm-ess/ess.do</a>				
+			</div>		
+			<div class="generals">
+				<span>(ecommerce>pricing and catalogs>ecomcat)</span>
+			</div>
+		</div>								
+		</div>
+	</div>
+</div>

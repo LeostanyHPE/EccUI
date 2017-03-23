@@ -1,0 +1,5 @@
+package com.hp.ecc.ui.util.web;
+
+public class StatusMsgUtil {
+
+}

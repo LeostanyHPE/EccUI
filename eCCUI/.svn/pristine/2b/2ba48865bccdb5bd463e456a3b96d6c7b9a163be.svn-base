@@ -1,0 +1,719 @@
+/*
+ * <CVS Token>
+ *
+ * Copyright (c) Hewlett Packard Company
+ * Palo Alto, California, U.S.A.
+ * All rights reserved.
+ */
+
+package com.hp.ecc.ui.biz.catalog;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+import hp.comcat.dax.fwk.common.web.util.sort.SortInfo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.common.biz.BizObject;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.util.StrUtil;
+
+/**
+ * <p>Title: ProgramMgr</p>
+ * <p>Description: Form Object for Program List page </p>
+ * <p>Copyright: Copyright (c) 2002</p>
+ * <p>Company: Hewlett Packard</p>
+ * @author 
+ * @version 1.0
+ */
+
+
+public class ProgramMgr {
+  private long offset = 0;
+  private int retrievalSize = 0;
+  
+  private int PRG_NAME_CUST_KEY_ERROR = 3;
+
+
+  /**
+   * Document required for public methods
+   *
+   * @param      no parameters
+   * @return     This is a Constructor, does not return anything.
+   */
+  public ProgramMgr () { }
+
+  /**
+   * Adds a program and localized information of the program in CAT_PROGRAM
+   * and CAT_PROGRAM_LOCALIZATION tables.
+   *
+   * @param program
+   * @return A LIST OF RESPONSESTATUS OBJECTS
+   */
+
+  public int addProgram ( Program program, boolean isGeneric, String dbRegionToConnect ) {
+    /* Check to see if the case in-sensitive program name and cust_key combination
+     already exists in the database. If it does then DO NOT CREATE the program.
+         Otherwise create it. */
+
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    
+    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", "checkPrgmNameCustKeyCombo", program, null, null );   
+    java.util.List list = db.doSelect ( stmt, null, program );
+    if ( list.size () != 0 ) {
+      return PRG_NAME_CUST_KEY_ERROR;
+    }
+
+    //Get the next sequence number for the program to insert into CAT_PROGRAM
+    Program program_key_seq = new Program ();
+    DaxParsedStmt prgm_seq_stmt = daxMgr.makeParsedStmt ( "program", "programKeySequence", program_key_seq, null, null );
+    List lst = db.doSelect ( prgm_seq_stmt, null, program_key_seq );
+    int program_key = ( ( Program ) lst.get ( 0 ) ).getProgramKey ();
+
+    program.setProgramKey ( program_key );
+    int statusCode = 0;
+    try {
+      //Now add the program row to CAT_PROGRAM Table
+      DaxParsedStmt add_prgm_stmt = daxMgr.makeParsedStmt ( "program","addProgram", program, null, null );
+      statusCode = db.doUpdate ( add_prgm_stmt, program );
+      //    update the publish components table
+      if (isGeneric)updatePubCompForPrograms(dbRegionToConnect);
+    }
+    catch ( Exception _exception ) {
+      if ( _exception.getMessage ().indexOf ( "ORA-00001" ) != -1 ) {
+        return PRG_NAME_CUST_KEY_ERROR;
+      }
+    }
+    if ( statusCode > 0 ) {
+      //Now insert the above program name and description as en_US locale in
+      //CAT_PROGRAM_LOCALIZATION table also
+      DaxParsedStmt add_prgm_localization_en_US_stmt = daxMgr.makeParsedStmt ("program", "addProgramLocalizationForEN_US", program, null, null );
+      statusCode = db.doUpdate (add_prgm_localization_en_US_stmt, program );
+
+      if ( statusCode > 0 ) {
+        //Insert the localized program name and localized program description for
+        //selected locale into CAT_PROGRAM_LOCALIZATION table also
+        if ( program.getPgmLocale () != null
+             && "NONE".compareTo ( program.getPgmLocale () ) != 0
+             && "".compareTo ( program.getPgmLocale () ) != 0 
+             && "en_US".compareTo(program.getPgmLocale()) !=0 ) {
+
+          DaxParsedStmt add_prgm_localization_stmt = daxMgr.makeParsedStmt ("program", "addProgramLocalization", program, null, null );
+          statusCode = db.doUpdate (add_prgm_localization_stmt, program );
+        }
+      }
+    }
+    return statusCode;
+  }
+
+  /**
+   * update program
+   * @param obj - can be list or biz object
+   * @return list OF REPONSESTATUS OBJECTS
+   */
+  public int editProgram ( Program program, String dateChanged , boolean isGeneric, String dbRegionToConnect) {
+    DaxMgr daxMgr1 = DaxMgr.getInstance ();
+    DaxParsedStmt updateStmt = daxMgr1.makeParsedStmt ( "program", "updateProgram", program, null, null );
+    DaxDB dax_db_upd_prgm = daxMgr1.getDaxDB (dbRegionToConnect);
+    int statusCode = dax_db_upd_prgm.doUpdate ( updateStmt, program );
+    //update the publish components table
+    if (isGeneric) updatePubCompForPrograms(dbRegionToConnect);
+    
+    //Now update the above program name and description for en_US locale in
+    //CAT_PROGRAM_LOCALIZATION table also
+    DaxMgr dax_mgr2 = DaxMgr.getInstance ();
+    DaxParsedStmt upd_prgm_localization_en_US_stmt = dax_mgr2.makeParsedStmt ("program", "updateProgramLocalizationForEN_US", program, null, null );
+    DaxDB dax_db_upd_prgm_localization_en_US = dax_mgr2.getDaxDB (dbRegionToConnect);
+    statusCode = dax_db_upd_prgm_localization_en_US.doUpdate (upd_prgm_localization_en_US_stmt, program );
+    /*
+     Check if the selected locale already exists in the database for the given program key. If it does
+     then update the record. Otherwise insert the record.
+     */
+
+    if ( dateChanged != null && dateChanged.equals ( "Y" ) ) {
+      //If any of the start date or end date is changed in programs, update the bundle related information
+      //as well.
+
+      Program outProgram = new Program ();
+      callStoredProc ( "program", "updateSdateEdateForBundle", program, outProgram, program.getUser (), dbRegionToConnect );
+    }
+
+    if ( program.getPgmLocale () != null && "NONE".compareTo ( program.getPgmLocale () ) != 0 && "".compareTo ( program.getPgmLocale () ) != 0 ) {
+      Program prgm = getLocalizationInfoForProgram ( program.getProgramKey (), program.getPgmLocale (), dbRegionToConnect );
+      if ( prgm != null ) {
+        DaxMgr dax_mgr4 = DaxMgr.getInstance ();
+        DaxParsedStmt upd_prgm_localization_stmt = dax_mgr4.makeParsedStmt ( "program", "updateProgramLocalization", program, null, null );
+        DaxDB dax_db_add_prgm_localization = dax_mgr4.getDaxDB (dbRegionToConnect);
+        statusCode = dax_db_add_prgm_localization.doUpdate (upd_prgm_localization_stmt, program );
+      }
+      else {
+        //if no data found for given program key and locale combination then insert
+        //a record into CAT_PROGRAM_LOCALIZATION table
+        DaxMgr dax_mgr4 = DaxMgr.getInstance ();
+        DaxParsedStmt upd_prgm_localization_stmt = dax_mgr4.makeParsedStmt ("program", "addProgramLocalization", program, null, null );
+        DaxDB dax_db_add_prgm_localization = dax_mgr4.getDaxDB (dbRegionToConnect);
+        statusCode = dax_db_add_prgm_localization.doUpdate (upd_prgm_localization_stmt, program );
+      }
+    }
+    return statusCode;
+  }
+  
+  /**
+   *  updates publish components table for generic programs
+   *  
+   */
+  private void updatePubCompForPrograms(String dbRegionToConnect){
+      DaxMgr dax_mgr = DaxMgr.getInstance ();
+      DaxParsedStmt add_prgm_stmt = dax_mgr.makeParsedStmt ( "pricetier",
+          "updatePubCompForPrograms"
+          , null, null, null );
+      DaxDB dax_db_prgm_add = dax_mgr.getDaxDB (dbRegionToConnect);
+      dax_db_prgm_add.doUpdate ( add_prgm_stmt, null );
+	  
+  }
+  
+  private void callStoredProc ( String sql_group_id, String sql_stmt_id
+                                , Program input_bean, Object output_bean
+                                , String user_id, String dbRegionToConnect ) {
+    boolean dbError = false;
+    DaxDB dx_db = null;
+    try {
+      DaxMgr dx_mgr = DaxMgr.getInstance ();
+      DaxParsedStmt dx_pstmt = dx_mgr.makeParsedStmt ( sql_group_id
+          , sql_stmt_id, input_bean, null, null );
+      dx_db = dx_mgr.getDaxDB (dbRegionToConnect);
+      dx_db.doSP ( dx_pstmt, output_bean, input_bean );
+
+    }
+    catch ( CatRuntimeException catEx ) {dbError = true;
+    catEx.printStackTrace ();
+    }
+    finally {if ( dx_db != null ) {
+      dx_db.finish ( dbError );
+    }
+    }
+  }
+
+
+  /**
+   * Get all the locales from LANG_INFO table
+   * @param obj - Program object
+   * @return      List of all the locales
+   */
+  public java.util.List getLocalsList ( Program program, String dbRegionToConnect ) {
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", "getLocales", program, null, null );
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    java.util.List list = db.doSelect ( stmt, null, program );
+    return list;
+  }
+
+  /** retrieves a Program for given program key
+   *
+   * @param   String pgm_key
+   * @return  Program
+   */
+  public Program getProgram ( int pgm_key, String dbRegionToConnect) {
+    Program program = new Program ();
+    String param = "";
+    if ( pgm_key == 0 ) {
+      return program;
+    }
+
+    program.setProgramKey ( pgm_key );
+
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+    //Get the program information from CAT_PROGRAM Table
+    DaxParsedStmt program_stmt = daxMgr.makeParsedStmt ( "program", "programForPgmKey", program, null, null );
+
+    // do the query
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    List list1 = db.doSelect ( program_stmt, null, program );
+
+    if ( list1.size () > 0 ) {
+      return ( Program ) list1.get ( 0 );
+    }
+    else {
+      return null;
+    }
+  }
+
+  /** Returns a list object containing only one of the localizations available for given
+   * Program key from CAT_PROGRAM_LOCALIZATION table.
+   *
+   * @param   int pgm_key
+   * @return  Program Object
+   */
+
+  public Program getOnlyOneLocalizationInfoForProgram ( int pgm_key, String dbRegionToConnect ) {
+    //Get only one locale info for given program key from CAT_PROGRAM_LOCALIZATION Table.
+    //This is the case when we have more than one locale (including en_US) for given
+    // program key and we can show only one localization information on the GUI at a time.
+
+    Program program = new Program ();
+    program.setProgramKey ( pgm_key );
+
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+    DaxParsedStmt program_stmt = daxMgr.makeParsedStmt ( "program", "getOnlyOneLocaleInfoForPgmKey", program, null, null );
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    List list = db.doSelect ( program_stmt, null, program );
+    if ( list.size () > 0 ) {
+      return ( Program ) list.get ( 0 );
+    }
+    else {
+      return null;
+    }
+  }
+
+  /** Returns a list object containing only one of the localizations available for given
+   * Program key from CAT_PROGRAM_LOCALIZATION table.
+   *
+   * @param   int pgm_key
+   * @return  Program Object
+   */
+
+  public List getAllLocalesForProgram ( int pgm_key, String dbRegionToConnect) {
+    //Get all the locales list for given program key to show the list as comma
+    //seperated text on GUI which will show the user all the locales that
+    //are already assigned to the program.
+
+    Program program = new Program ();
+    program.setProgramKey ( pgm_key );
+
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+    DaxParsedStmt program_stmt = daxMgr.makeParsedStmt ( "program", "getAllLocalesForPgmKey", program, null, null );
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    List list = db.doSelect ( program_stmt, null, program );
+    return list;
+  }
+
+
+  /** Returns Program object for given program key and locale from CAT_PROGRAM_LOCALIZATION Table
+   *
+   * @param   int pgm_key and String locale
+   * @return  Program Object
+   */
+
+  public Program getLocalizationInfoForProgram ( int pgm_key, String locale, String dbRegionToConnect ) {
+    Program program = new Program ();
+    String param = "";
+    if ( pgm_key == 0 ) {
+      return program;
+    }
+
+    program.setProgramKey ( pgm_key );
+    program.setPgmLocale ( locale );
+
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+    DaxParsedStmt program_stmt = daxMgr.makeParsedStmt ( "program"
+        , "programForPgmKeyAndLocale", program, null, null );
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    List list = db.doSelect ( program_stmt, null, program );
+    if ( list.size () > 0 ) {
+      return ( Program ) list.get ( 0 );
+    }
+    else {
+      return null;
+    }
+  }
+
+
+  /** create a Program object
+   *
+   */
+  protected BizObject getBizObj () {
+    return new Program ();
+  }
+
+  /** Returns a list of programs for given program name and customer key
+   *
+   * @param   String pgm_key and String cust_key
+   * @return  Program objects list
+   */
+
+  public List getProgramList ( String pgm_name, String cust_key, String dbRegionToConnect ) {
+    Program program = new Program ();
+    //set the region code in bean
+    String whichStmt = "";
+    String param = "";
+
+    whichStmt = "programsListForPgmNameCustKey";
+    program.setProgramName ( "%" + pgm_name + "%" );
+    program.setProgramCustKey ( cust_key );
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+    // make the parsed statement, si and pg are SortInfo and Pagination
+    DaxParsedStmt stmt = null;
+    
+    stmt = daxMgr.makeParsedStmt ( "program", whichStmt, program, null, null );
+  
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    return ( List ) db.doSelect ( stmt, null, program );
+  }
+  
+  public List getProgramArray ( String pgm_name, String cust_key, String dbRegionToConnect ) {
+	    Program program = new Program ();
+	    //set the region code in bean
+	    String whichStmt = "";
+	    String param = "";
+
+	    whichStmt = "programsListForPgmNameCustKey";
+	    program.setProgramName ( "%" + pgm_name + "%" );
+	    program.setProgramCustKey ( cust_key );
+	    // get DaxMgr singleton
+	    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+	    // make the parsed statement, si and pg are SortInfo and Pagination
+	    DaxParsedStmt stmt = null;
+	    
+	    stmt = daxMgr.makeParsedStmt ( "program", whichStmt, program, null, null );
+	  
+	    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+	    return ( List ) db.doSelectJson( stmt, null, program );
+	  }
+
+
+  /** Returns a list of contents from CAT_ITEM for give program key
+   *
+   * @param   int program key
+   * @return  Program objects list
+   */
+
+  public List getProgramContentsList ( int prgm_key, String dbRegionToConnect ) {
+    Program program = new Program ();
+
+    program.setProgramKey ( prgm_key );
+
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+    // make the parsed statement, si and pg are SortInfo and Pagination
+    DaxParsedStmt stmt = null;
+    stmt = daxMgr.makeParsedStmt ( "program", "getProgramContentsForPgmKey"
+                                   , program, null, null );
+
+    // do the query
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    //return (List) db.doSelect(stmt, null, program);
+    List lst = new ArrayList ();
+    for ( int i = 0; i < 3; i++ ) {
+      Program prgm = new Program ();
+      prgm.setCatalogId ( "RAMATEST CATALOG" );
+      prgm.setProduct ( "PROD [" + i + "]" );
+      lst.add ( prgm );
+    }
+    return lst;
+  }
+
+
+  /** Returns a list of programs for given customer key.
+   * When cust_key is null/empty,all the programs are returned.
+   * When cust_key is not null/empty, programs list for given cust_key is returned.
+   *
+   * @param   String cust_key
+   * @return  Program objects list
+   */
+
+  public List getProgramsForCustomer ( String cust_key, String dbRegionToConnect ) {
+    Program program = new Program ();
+    String whichStmt = "";
+    if ( StrUtil.isEmpty ( cust_key ) ) {
+      whichStmt = "allPrograms";
+    }
+    else {
+      whichStmt = "getPgmsForCustKey";
+      program.setProgramCustKey ( cust_key );
+    }
+
+    // get DaxMgr singleton
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+    // make the parsed statement, si and pg are SortInfo and Pagination
+    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", whichStmt, program, null, null );
+
+    // do the query
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    return ( List ) db.doSelectJson ( stmt, null, program );
+  }
+  
+  public JSONArray getProgramsForCustomerJSON ( String cust_key, String dbRegionToConnect) {
+	    Program program = new Program ();
+	    String whichStmt = "";
+	    if ( StrUtil.isEmpty ( cust_key ) ) {
+	      whichStmt = "allPrograms";
+	    }
+	    else {
+	      whichStmt = "getPgmsForCustKey";
+	      program.setProgramCustKey ( cust_key );
+	    }
+	    SortInfo info = new SortInfo();
+	    info.setSortBy("PGM_NAME");
+
+	    // get DaxMgr singleton
+	    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+	    // make the parsed statement, si and pg are SortInfo and Pagination
+	    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", whichStmt, program, info, null );
+
+	    // do the query
+	    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+	    return db.doSelectJson ( stmt, null, program );
+	  }
+
+  /** Returns the list of Program Objects for a given catalog_id
+   * from CAT_CATALOG_ITEM table.
+   *
+   * @param   String catalog_id
+   * @return  Program objects list
+   */
+
+  public List getProgramsForCatalog ( String catalog_id, String dbRegionToConnect ) {
+    Program program = new Program ();
+    String sqlStmt = "getPgmsForCatalog";
+
+    // get DaxMgr singleton
+    program.setCatalogId ( catalog_id );
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+    // make the parsed statement, si and pg are SortInfo and Pagination
+    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, program, null, null );
+
+    // do the query
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    //return (List) db.doSelect(stmt, null, program);
+    List lst = ( List ) db.doSelect ( stmt, null, program );
+    return lst;
+  }
+
+  public List getCatalogPrograms ( String catalog_id, String dbRegionToConnect ) {
+  	ProgramFilter programFilter = new ProgramFilter ();
+  	String sqlStmt = "getCatalogPrograms";
+
+  	// get DaxMgr singleton
+  	programFilter.setCatalogId ( catalog_id );
+  	DaxMgr daxMgr = DaxMgr.getInstance ();
+
+  	// make the parsed statement, si and pg are SortInfo and Pagination
+  	DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, programFilter, null, null );
+
+  	// do the query
+  	DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+  	//return (List) db.doSelect(stmt, null, program);
+  	List lst = ( List ) db.doSelect ( stmt, ProgramFilter.class, programFilter );
+  	return lst;
+  }
+  
+  public List getCatalogProgramBundles ( String catalog_id, Integer programKey, String dbRegionToConnect ) {
+  	//CatalogBundle catalogBundle = new CatalogBundle ();
+  	Product product = new Product();
+  	String sqlStmt = "getCatalogProgramBundles";
+
+  	product.setCatalogID(catalog_id);
+  	product.setProgramKeyInt(programKey);
+  	
+  	
+
+  	DaxMgr daxMgr = DaxMgr.getInstance ();
+
+  	// make the parsed statement, si and pg are SortInfo and Pagination
+  	DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, product, null, null );
+
+  	// do the query
+  	DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+  	//return (List) db.doSelect(stmt, null, program);
+  	List lst = ( List ) db.doSelect ( stmt, Product.class, product );
+  	return lst;
+  }
+  
+  public List getCatalogProgramBundleProducts ( String bundleID, String dbRegionToConnect ) {
+  	Product product = new Product ();
+  	String sqlStmt = "getCatalogProgramBundleProducts";
+
+  	// get DaxMgr singleton
+  	product.setBundleID(bundleID);
+  	DaxMgr daxMgr = DaxMgr.getInstance ();
+
+  	// make the parsed statement, si and pg are SortInfo and Pagination
+  	DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, product, null, null );
+
+  	// do the query
+  	DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+  	//return (List) db.doSelect(stmt, null, program);
+  	List lst = ( List ) db.doSelect ( stmt, Product.class, product );
+  	return lst;
+  }
+  
+  public List getCatalogProgramBundleProductsBulk ( String []bundleIds, String dbRegionToConnect ) {
+  	Product product = new Product ();
+  	String sqlStmt = "getCatalogProgramBundleProductsBulk";
+
+  	// get DaxMgr singleton
+  	
+  	product.setProdIdInList(bundleIds);
+  	DaxMgr daxMgr = DaxMgr.getInstance ();
+
+  	// make the parsed statement, si and pg are SortInfo and Pagination
+  	DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, product, null, null );
+
+  	// do the query
+  	DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+  	//return (List) db.doSelect(stmt, null, program);
+  	List lst = ( List ) db.doSelect ( stmt, Product.class, product );
+  	return lst;
+  }
+  
+  
+
+  /** Returns the default Programs and other programs list for given cust_key.
+   *
+   * @param   String cust_key
+   * @return  Program objects list
+   */
+
+  public List getCustAndDefaultPrograms ( String cust_key, String dbRegionToConnect ) {
+    Program program = new Program ();
+    if ( !StrUtil.isEmpty ( cust_key ) ) {
+      program.setProgramCustKey ( cust_key );
+      // get DaxMgr singleton
+      DaxMgr daxMgr = DaxMgr.getInstance ();
+
+      // make the parsed statement, si and pg are SortInfo and Pagination
+      DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program"
+          , "getCustAndDefaultPrograms", program, null, null );
+
+      // do the query
+      DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+      return ( List ) db.doSelect ( stmt, null, program );
+    }
+    else {
+      return null;
+    }
+  }
+
+  /** Returns the list of Program keys(integers) for given catalog_id and program type
+   *
+   * @param   String catalogId, String pgmType
+   * @return  Program objects list
+   */
+
+  public int[] getProgramsKeyForCatalog ( String catalogId, String pgmType, String dbRegionToConnect ) {
+    String daxID = "program";
+    String stmtID = "programsKeyForCatalog";
+
+    DaxMgr daxMgr = DaxMgr.getInstance ();
+
+    // make the parsed statement, si and pg are SortInfo and Pagination
+    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( daxID, stmtID, null, null, null );
+    Program program = new Program ();
+    program.setCatalogId ( catalogId );
+    program.setPgmType ( pgmType );
+    // do the query
+    DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+    List programList = ( List ) db.doSelect ( stmt, Program.class, program );
+    if ( programList != null ) {
+      int[] keys = new int[programList.size ()];
+      for ( int i = 0; i < programList.size (); i++ ) {
+        keys[i] = ( ( Program ) programList.get ( i ) ).getProgramKey ();
+      }
+      return keys;
+    }
+    return null;
+  }
+
+  
+  public void setOffset ( long offset ) {
+    this.offset = offset;
+  }
+
+  public long getOffset () {
+	 return this.offset;
+  } 
+
+  public void setRetrievalSize ( int retrievalSize ) {
+	    this.retrievalSize = retrievalSize;
+  }
+
+   public int getRetrievalSize () {
+	 return this.retrievalSize;
+  } 	  
+  
+/**
+ * @return
+ */
+public List getAllProgramItems(String catalog_id, String hpLangCode, String dbRegionToConnect) {
+	Product product = new Product ();
+	String sqlStmt = "getAllProgramsForCatalog";
+
+	// get DaxMgr singleton
+	
+	product.setCatalogID(catalog_id);
+	product.setHpLangCode(hpLangCode);
+	
+	
+	DaxMgr daxMgr = DaxMgr.getInstance ();
+
+	// make the parsed statement, si and pg are SortInfo and Pagination
+	DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, product, null, null );
+
+	// do the query
+	DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+	//return (List) db.doSelect(stmt, null, program);
+	List lst = ( List ) db.doSelect ( stmt, Product.class, product );
+	return lst;
+}
+
+/**
+ * @return
+ */
+public List getNonProgramBndls(String catalog_id, String hpLangCode, String dbRegionToConnect) {
+	Product product = new Product ();
+	String sqlStmt = "getAllNonProgramsForCatalog";
+
+	// get DaxMgr singleton
+	
+	product.setCatalogID(catalog_id);
+	product.setHpLangCode(hpLangCode);
+	
+	
+	DaxMgr daxMgr = DaxMgr.getInstance ();
+
+	// make the parsed statement, si and pg are SortInfo and Pagination
+	DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", sqlStmt, product, null, null );
+
+	// do the query
+	DaxDB db = daxMgr.getDaxDB (dbRegionToConnect);
+	//return (List) db.doSelect(stmt, null, program);
+	List lst = ( List ) db.doSelect ( stmt, Product.class, product );
+	return lst;
+	
+  }
+
+/**
+ * @param prgFilterRoot
+ * @return
+ */
+public Product getProgramFilterRoot(Product prgFilterRoot, String dbRegionToConnect) {
+	DaxMgr mgr = DaxMgr.getInstance ();
+	DaxParsedStmt pstmt = null;
+
+	pstmt = mgr.makeParsedStmt ( "program", "getProgramFilterRoot", prgFilterRoot, null, null );
+	DaxDB db = mgr.getDaxDB (dbRegionToConnect);
+
+	prgFilterRoot = ( Product ) db.doGet ( pstmt, Product.class, prgFilterRoot );
+	
+	return prgFilterRoot;
+	
+}
+}

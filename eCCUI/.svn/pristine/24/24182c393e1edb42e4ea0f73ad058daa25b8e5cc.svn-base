@@ -1,0 +1,94 @@
+package com.hp.ecc.ui.view.beans;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class TemplateBundleForm extends ComponentsForm {
+
+	private String task;
+	private List fBundleList;
+	private String fSelectAllBundles = "";
+	private String[] fSelectedBundles;
+	private String fBundleTemplateID;
+
+	public List getBundleList() {
+		return this.fBundleList;
+	}
+
+	public void setBundleList(List bundleList) {
+		this.fBundleList = bundleList;
+	}
+
+	public String getSelectAllBundles() {
+		return this.fSelectAllBundles;
+	}
+
+	public void setSelectAllBundles(String selectAllBdl) {
+		this.fSelectAllBundles = selectAllBdl;
+	}
+
+	public String[] getSelectedBundles() {
+		return this.fSelectedBundles;
+	}
+
+	public void setSelectedBundles(String[] selectBdl) {
+		this.fSelectedBundles = selectBdl;
+	}
+
+	public void setBundleTemplateID(String bundle_template_id) {
+		this.fBundleTemplateID = bundle_template_id;
+	}
+
+	public String getBundleTemplateID() {
+		return fBundleTemplateID;
+	}
+
+	public void reset(HttpServletRequest request) {
+		this.init();
+	}
+
+	private void init() {
+		this.fBundleList = null;
+		this.fSelectAllBundles = null;
+	}
+
+	public String getTask() {
+		return task;
+	}
+
+	public void setTask(String task) {
+		this.task = task;
+	}
+
+	public boolean getInheritedFlag() {
+		return fInheritedFlag;
+	}
+
+	public void setInheritedFlag(boolean value) {
+		fInheritedFlag = value;
+	}
+
+	public boolean isReadOnly() {
+		return (getViewOnlyFlag() || getInheritedFlag());
+	}
+
+	// Added for SalesRep
+	public boolean isReadOnlyRole() {
+		return (getReadOnlyRoleFlag());
+	}
+
+	// End
+
+	private boolean fInheritedFlag;
+
+	private String fRoleId;
+
+	public String getRoleId() {
+		return this.fRoleId;
+	}
+
+	public void setRoleId(String id) {
+		this.fRoleId = id;
+	}
+}

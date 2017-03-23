@@ -1,0 +1,1606 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<comcat-dax-config>
+
+    <stmt-group id="deal">
+	<stmt id="getDealGrpOrAccIDsWithInClause">
+	select
+	  {groupID}:=GROUP_ID,
+	  {accountID}:=ACCOUNT_ID,
+	  {dealID}:=DEAL_ID
+	from DEAL_MERGE
+	where DEAL_ID in ({string1})
+	</stmt>	
+	<stmt id="getCustSegment">
+	 	select {custSegment}:= distinct  NVL(cust.cust_segment,'X')  from customer cust 
+	 	where cust.cust_id in  (select dm.group_id  from DEAL_MERGE dm) 	 	
+	</stmt>
+	<stmt id="getDealsForCatalog">
+	<![CDATA[ 
+		SELECT {id}:=DEAL_ID, 
+			{specialPricing}:=DEAL_OFFER_TYPE,
+			{cpltId}:=CONTRACT_PRICE_LIST_TYPE_ID 
+		  FROM CAT_DEAL_MAPPING 
+		 WHERE CAT_CATALOG_ID = {?:id}
+		   AND NVL(PULLED_FROM_PRICE_TIER,'N') != 'Y'
+	]]>
+	</stmt>
+	<stmt id="getSpecialPricing">
+	<![CDATA[ 
+		SELECT {dealId}:=DEAL_ID, 
+			{specialPricing}:=DEAL_OFFER_TYPE 
+		  FROM CAT_DEAL_MAPPING 
+		 WHERE DEAL_ID = {?:dealId} 
+		   AND CAT_CATALOG_ID = {?:catalogId}
+		   AND PULLED_FROM_PRICE_TIER != 'Y'
+	]]>
+	</stmt>
+
+	<stmt id="getCpltId">
+	<![CDATA[ 
+		SELECT {dealId}:=DEAL_ID, 
+			{cpltId}:=CONTRACT_PRICE_LIST_TYPE_ID 
+		  FROM CAT_DEAL_MAPPING 
+		 WHERE DEAL_ID = {?:dealId} 
+		   AND CAT_CATALOG_ID = {?:catalogId}
+		   AND PULLED_FROM_PRICE_TIER != 'Y'
+	]]>
+	</stmt>
+	
+	<stmt id="getSCDeals">
+		select
+		{id}:=DEAL_ID
+		from ALL_DEAL_INFO
+		where DEAL_TYPE LIKE 'SCD' AND
+		DEAL_ID NOT IN (SELECT DEAL_ID FROM CAT_DEAL_MAPPING WHERE CAT_CATALOG_ID = {?:id})
+	</stmt>
+	<stmt id="getSCMappedDeals">
+		select
+		{id}:=DEAL_ID
+		from ALL_DEAL_INFO
+		where DEAL_TYPE LIKE 'SCD' AND
+		DEAL_ID IN (SELECT DEAL_ID FROM CAT_DEAL_MAPPING WHERE CAT_CATALOG_ID = {?:id})
+	</stmt>
+	<stmt id="deleteDealMapping">
+		DELETE FROM CAT_DEAL_MAPPING where CAT_CATALOG_ID ={?:id} AND DEAL_ID IN
+		(SELECT DEAL_ID FROM ALL_DEAL_INFO WHERE CAT_CATALOG_ID ={?:id} AND DEAL_TYPE = 'SCD')
+	</stmt>
+	
+	<!-- Deals pulled from price teir are handled in fe_master.modify_master() and PROCESS_PRC_TIER_MOD_IN_MSTR()-->
+	<stmt id="deleteDealMappingGen"><![CDATA[ 
+		DELETE FROM CAT_DEAL_MAPPING where CAT_CATALOG_ID ={?:catalogId} AND DEAL_ID = {?:dealId} AND PULLED_FROM_PRICE_TIER <> 'Y' ]]>
+	</stmt>
+	<stmt id="insertDealMappingSP">
+	call Fe_MASTER.INSERT_DEAL_MAPPING({i:catalogId},
+						{i:dealId},
+						{i:lastModifiedBy},
+						{i:specialPricing},
+						{o:status},
+						{i:cpltId}
+						)
+	</stmt>
+	<stmt id="updateDealMappingSP">
+	call Fe_MASTER.UPDATE_DEAL_MAPPING({i:catalogId},
+						{i:dealId},
+						{i:lastModifiedBy},
+						{i:specialPricing},
+						{o:status},
+						{i:cpltId}
+						)
+	</stmt>
+
+	<stmt id="insertDealMapping">
+		INSERT INTO CAT_DEAL_MAPPING (CAT_CATALOG_ID, DEAL_ID, STATUS, LAST_MODIFIED_BY, LAST_MODIFIED_DATE, DEAL_OFFER_TYPE)
+		VALUES ({?:catalogId}, {?:dealId}, 'A', {?:lastModifiedBy}, sysdate, NVL({?:specialPricing},'A'))
+	</stmt>
+	<stmt id="updateDealMapping">
+		UPDATE CAT_DEAL_MAPPING SET LAST_MODIFIED_BY = {?:lastModifiedBy}, LAST_MODIFIED_DATE = sysdate, DEAL_OFFER_TYPE = {?:specialPricing}, CONTRACT_PRICE_LIST_TYPE_ID = {?:cpltId}
+		WHERE CAT_CATALOG_ID ={?:catalogId} AND DEAL_ID = {?:dealId}
+	</stmt>
+	<stmt id="insertDealMappingHistory">
+		INSERT INTO CAT_DEAL_MAPPING_HISTORY (CAT_CATALOG_ID, DEAL_ID, STATUS, LAST_MODIFIED_BY, LAST_MODIFIED_DATE, DEAL_OFFER_TYPE)
+		VALUES ({?:catalogId}, {?:dealId}, 'D', {?:lastModifiedBy}, sysdate, NVL({?:specialPricing},'A'))
+	</stmt>
+
+	<stmt id="insertAdditionalCustDeals">
+		INSERT INTO additional_cust_eclipse_deals (deal_id, cust_key, cust_id)
+		VALUES ({?:dealId},{?:custKey},{?:custId})
+	</stmt>
+	
+	<stmt id="selectAdditionalCustDeals">
+		select
+		{dealId}:=l.DEAL_ID,
+		{custKey}:=l.CUST_KEY
+		from 
+		(
+		Select
+		a.deal_id, a.cust_key
+		from
+		additional_cust_eclipse_deals a	
+		where 		
+		a.deal_id='{string1}' and a.cust_key='{string2}'
+		Union		
+		{string3}
+		)l		
+	</stmt>
+
+	<stmt id="getPlcLclpOmValues">
+		select 		
+		{string2}:=decode(crr_rule_status,'D','N','E','Y',crr_rule_status) 
+		from cust_region_rules 
+		where region_code='{string1}' 
+		and crr_rule_id in( 'OM-CHECK', 'PLC-CHECK', 'LCLP-CHECK' ) 
+		order by crr_rule_id
+	</stmt>
+	
+	<stmt id="refreshVistaDeal">
+		call VISTA_CATALOG_LOAD.VISTA_DEAL_REFRESH(
+						{i:string1},
+						{o:string2},
+						{o:string3}
+						)
+	</stmt>
+
+	<stmt id="getDealByCustID">
+        select
+			{id}:=dl.DEAL_ID,
+			{bdID}:=dl.BD_ID,
+			{custName}:=dl.CUST_NAME,
+			{custKey}:=dl.CUST_KEY,
+			{custID}:=dl.CUST_ID,
+			{amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID) as amid_id,
+			{version}:=dl.bd_version_nr,
+			{dealDesc}:=dl.DEAL_DESC,
+			{dealType}:=DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2},
+			{requestor}:=dl.REQUESTOR,
+			{approver}:=dl.APPROVER,
+			{startDate}:=dl.START_DATE,
+			{endDate}:=dl.END_DATE,
+			{priceDescriptor}:=dl.PRICE_DESCRIPTOR,
+			{importAuto}:=dl.IMPORT_AUTO,
+			{globalFlag}:=dl.GLOBAL_FLAG,
+			{original_Deal_Id}:=dl.ORIGINAL_DEAL_ID,
+			{defaultSalesCountry}:=dl.control_cntry_cd
+        	from ALL_DEAL_INFO dl , customer c where {string1}
+
+      </stmt>
+      
+      <stmt id="getViewDealByCustID">
+        select
+			{id}:=dl.DEAL_ID,
+			{bdID}:=dl.BD_ID,
+			{custName}:=dl.CUST_NAME,
+			{custKey}:=dl.CUST_KEY,
+			{custID}:=dl.CUST_ID,
+			{amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID) as amid_id,
+			{version}:=dl.bd_version_nr,
+			{dealDesc}:=dl.DEAL_DESC,
+			{dealType}:=dl.DEAL_CATEGORY,
+			{requestor}:=dl.REQUESTOR,
+			{approver}:=dl.APPROVER,
+			{startDate}:=dl.START_DATE,
+			{endDate}:=dl.END_DATE,
+			{priceDescriptor}:=dl.PRICE_DESCRIPTOR,
+			{importAuto}:=dl.IMPORT_AUTO,
+			{globalFlag}:=dl.GLOBAL_FLAG,
+			{original_Deal_Id}:=dl.ORIGINAL_DEAL_ID,
+			{defaultSalesCountry}:=dl.control_cntry_cd,
+			{mcCode}:=dl.MCC_CD
+        	from 
+        	(
+        	select
+        	l.DEAL_ID,
+			l.BD_ID,
+			l.CUST_NAME,
+			l.CUST_KEY,
+			l.CUST_ID,
+			l.AMID_global_account_id,
+			l.bd_version_nr,
+			l.DEAL_DESC,
+			DECODE(l.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2} DEAL_CATEGORY,			
+			l.REQUESTOR,
+			l.APPROVER,
+			l.START_DATE,
+			l.END_DATE,
+			l.PRICE_DESCRIPTOR,
+			l.IMPORT_AUTO,
+			l.GLOBAL_FLAG,
+			l.ORIGINAL_DEAL_ID,
+			l.control_cntry_cd,
+			l.MCC_CD
+        	from         	
+        	ALL_DEAL_INFO l , customer c 
+        	where {string1}
+        	union
+        	select
+        	l.DEAL_ID,
+			l.BD_ID,
+			c.CUST_NAME,
+			c.CUST_KEY,
+			c.CUST_ID,
+			l.AMID_global_account_id,
+			l.bd_version_nr,
+			l.DEAL_DESC,
+			DECODE(l.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2} DEAL_CATEGORY,
+			l.REQUESTOR,
+			l.APPROVER,
+			l.START_DATE,
+			l.END_DATE,
+			l.PRICE_DESCRIPTOR,
+			l.IMPORT_AUTO,
+			l.GLOBAL_FLAG,
+			l.ORIGINAL_DEAL_ID,
+			l.control_cntry_cd,
+			l.MCC_CD
+        	from         	
+        	ALL_DEAL_INFO l , customer c , additional_cust_eclipse_deals a
+        	where 
+        	a.cust_key=c.cust_key
+        	and l.tenant_cd {string4}
+        	and a.deal_id=l.deal_id
+        	{string3}
+			) dl
+	  </stmt>
+	  	  
+	   <stmt id="getManageDealsForGL">
+        select
+			{id}:=dl.DEAL_ID,
+			{bdID}:=dl.BD_ID,
+			{custName}:=dl.CUST_NAME,
+			{custKey}:=dl.CUST_KEY,
+			{custID}:=dl.CUST_ID,
+			{amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID),
+			{version}:=dl.bd_version_nr,
+			{dealDesc}:=dl.DEAL_DESC,
+			{dealType}:=dl.DEAL_CATEGORY,
+			{requestor}:=dl.REQUESTOR,
+			{approver}:=dl.APPROVER,
+			{startDate}:=dl.START_DATE,
+			{endDate}:=dl.END_DATE,
+			{priceDescriptor}:=dl.PRICE_DESCRIPTOR,
+			{importAuto}:=dl.IMPORT_AUTO,
+			{globalFlag}:=dl.GLOBAL_FLAG,
+			{original_Deal_Id}:=dl.ORIGINAL_DEAL_ID,
+			{defaultSalesCountry}:=dl.control_cntry_cd,
+			{mcCode}:=dl.MCC_CD
+        	from 
+        	(
+        	select
+        	l.DEAL_ID,
+			l.BD_ID,
+			l.CUST_NAME,
+			l.CUST_KEY,
+			l.CUST_ID,
+			l.AMID_global_account_id,
+			l.bd_version_nr,
+			l.DEAL_DESC,
+			DECODE(l.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2} DEAL_CATEGORY,			
+			l.REQUESTOR,
+			l.APPROVER,
+			l.START_DATE,
+			l.END_DATE,
+			l.PRICE_DESCRIPTOR,
+			l.IMPORT_AUTO,
+			l.GLOBAL_FLAG,
+			l.ORIGINAL_DEAL_ID,
+			l.control_cntry_cd,
+			l.MCC_CD
+        	from         	
+        	ALL_DEAL_INFO l , customer c 
+        	where l.tenant_cd {tenantCode} and {string1}
+        	union
+        	select
+        	l.DEAL_ID,
+			l.BD_ID,
+			c.CUST_NAME,
+			c.CUST_KEY,
+			c.CUST_ID,
+			l.AMID_global_account_id,
+			l.bd_version_nr,
+			l.DEAL_DESC,
+			DECODE(l.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2} DEAL_CATEGORY,
+			l.REQUESTOR,
+			l.APPROVER,
+			l.START_DATE,
+			l.END_DATE,
+			l.PRICE_DESCRIPTOR,
+			l.IMPORT_AUTO,
+			l.GLOBAL_FLAG,
+			l.ORIGINAL_DEAL_ID,
+			l.control_cntry_cd,
+			l.MCC_CD
+        	from         	
+        	ALL_DEAL_INFO l , customer c , additional_cust_eclipse_deals a
+        	where 
+        	a.cust_key=c.cust_key
+        	and a.deal_id=l.deal_id and l.tenant_cd {tenantCode} 
+        	{string3}
+        	UNION
+		        SELECT a.deal_id, d.bd_id, d.cust_name, d.cust_key,
+		               d.amid_global_account_id, d.cust_id, d.bd_version_nr,
+		               d.deal_desc,
+		               DECODE (d.deal_category,
+		                       'G', 'Global',
+		                       'P', 'Promo_Tier',
+		                       'L', 'Local',
+		                       'Regional'
+		                      ),
+		               d.requestor, d.approver, d.start_date, d.end_date,
+		               d.price_descriptor, d.import_auto, d.global_flag,
+		               d.original_deal_id, d.control_cntry_cd,
+		               d.MCC_CD
+		          FROM all_deal_info d, FETCH_CUST_ECLIPSE_DEALS a
+		         WHERE d.deal_id = a.deal_id 
+		       AND  d.deal_id LIKE '%{string4}%' and d.tenant_cd {tenantCode}
+		         UNION
+		        SELECT  d.deal_id, d.bd_id, d.cust_name, d.cust_key,
+		               d.amid_global_account_id, d.cust_id, d.bd_version_nr,
+		               d.deal_desc,
+		               DECODE (d.deal_category,
+		                       'G', 'Global',
+		                       'P', 'Promo_Tier',
+		                       'L', 'Local',
+		                       'Regional'
+		                      ),
+		               d.requestor, d.approver, d.start_date, d.end_date,
+		               d.price_descriptor, d.import_auto, d.global_flag,
+		               d.original_deal_id, d.control_cntry_cd,
+		               d.MCC_CD
+		          FROM all_deal_info d, GLOBAL_CUSTOMERS a
+		         WHERE d.cust_id = a.cust_id
+		AND  d.deal_id LIKE '%{string4}%' and d.tenant_cd {tenantCode}
+	) dl
+	  </stmt>
+
+	  <stmt id="getManageDealByCustID">
+        select
+			{id}:=dl.DEAL_ID,
+			{bdID}:=dl.BD_ID,
+			{custName}:=dl.CUST_NAME,
+			{custKey}:=dl.CUST_KEY,
+			{custID}:=dl.CUST_ID,
+			{amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID) as amid_id,
+			{version}:=dl.bd_version_nr,
+			{dealDesc}:=dl.DEAL_DESC,
+			{dealType}:=dl.DEAL_CATEGORY,
+			{requestor}:=dl.REQUESTOR,
+			{approver}:=dl.APPROVER,
+			{startDate}:=dl.START_DATE,
+			{endDate}:=dl.END_DATE,
+			{priceDescriptor}:=dl.PRICE_DESCRIPTOR,
+			{importAuto}:=dl.IMPORT_AUTO,
+			{globalFlag}:=dl.GLOBAL_FLAG,
+			{original_Deal_Id}:=dl.ORIGINAL_DEAL_ID,
+			{defaultSalesCountry}:=dl.control_cntry_cd,
+			{l4AmidID}:=dl.AMID_global_account_id,
+			{l2AmidID}:=dl.AMID_CNTRY_ACCOUNT_ID,
+    		{lastModifiedDate}:=dl.LAST_MODIFIED_DATE
+        	from 
+        	(
+        	select
+			d.DEAL_ID,
+			d.BD_ID,
+			d.CUST_NAME,
+			d.CUST_KEY,
+			d.CUST_ID,
+			d.bd_version_nr,
+			d.DEAL_DESC,
+			DECODE(d.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2} DEAL_CATEGORY,
+			d.REQUESTOR,
+			d.APPROVER,
+			d.START_DATE,
+			d.END_DATE,
+			d.PRICE_DESCRIPTOR,
+			d.IMPORT_AUTO,
+			d.GLOBAL_FLAG,
+			d.ORIGINAL_DEAL_ID,
+			d.control_cntry_cd,
+			d.AMID_global_account_id,
+			d.AMID_CNTRY_ACCOUNT_ID,
+    		d.LAST_MODIFIED_DATE
+        	from         	
+        	ALL_DEAL_INFO d , customer c where {string1}
+			UNION
+			select
+			d.DEAL_ID,
+			d.BD_ID,
+			d.CUST_NAME,
+			d.CUST_KEY,
+			d.CUST_ID,
+			d.bd_version_nr,
+			d.DEAL_DESC,
+			DECODE(d.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') {string2} DEAL_CATEGORY,
+			d.REQUESTOR,
+			d.APPROVER,
+			d.START_DATE,
+			d.END_DATE,
+			d.PRICE_DESCRIPTOR,
+			d.IMPORT_AUTO,
+			d.GLOBAL_FLAG,
+			d.ORIGINAL_DEAL_ID,
+			d.control_cntry_cd,
+			d.AMID_global_account_id,
+			d.AMID_CNTRY_ACCOUNT_ID,
+    		d.LAST_MODIFIED_DATE
+        	from ALL_DEAL_INFO d , additional_cust_eclipse_deals a
+			where
+			a.deal_id=d.deal_id and
+			d.tenant_cd {string4} and
+			a.cust_key ='{string3}' and
+			d.FED_DEAL_FL='{string5}' 
+			)dl
+      </stmt>
+
+  <stmt id="getDealForGlobalCust">
+   <![CDATA[ SELECT 
+    {id}:=dl.DEAL_ID, 
+    {bdID}:=dl.BD_ID, 
+    {custName}:=dl.CUST_NAME, 
+    {custKey}:=dl.CUST_KEY, 
+    {amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID),
+    {l4AmidID}:=dl.AMID_global_account_id,
+    {custID}:=dl.CUST_ID,
+    {version}:=dl.bd_version_nr, 
+    {dealDesc}:=dl.DEAL_DESC, 
+    {dealType}:=dl.deal_category, 
+    {requestor}:=dl.REQUESTOR, 
+    {approver}:=dl.APPROVER, 
+    {startDate}:=dl.START_DATE, 
+    {endDate}:=dl.END_DATE, 
+    {priceDescriptor}:=dl.PRICE_DESCRIPTOR, 
+    {importAuto}:=dl.IMPORT_AUTO, 
+    {globalFlag}:=dl.GLOBAL_FLAG, 
+    {original_Deal_Id}:=dl.ORIGINAL_DEAL_ID, 
+    {defaultSalesCountry}:=dl.control_cntry_cd,
+    {l2AmidID}:=dl.AMID_CNTRY_ACCOUNT_ID,
+    {lastModifiedDate}:=dl.LAST_MODIFIED_DATE FROM
+   (SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   dl_info.CUST_NAME, 
+   dl_info.CUST_KEY, 
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID
+   FROM ALL_DEAL_INFO dl_info 
+   WHERE (dl_info.CUST_ID LIKE '%{custID}%' OR dl_info.Amid_Global_Account_Id LIKE '%{custID}%' )
+   AND dl_info.SOURCE_OF_INFO IN ('ASIAPAC' , 'DL_UPLOAD' , 'ECLIPSE' , 'HAP' )  
+   AND (dl_info.REGION_CODE = 'GL')
+   UNION
+   SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+   NVL(c1.parent_CUST_KEY,dl_info.CUST_KEY) CUST_KEY,
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID 
+   FROM ALL_DEAL_INFO dl_info, customer c1
+   WHERE dl_info.global_account_fl = 'Y' 
+   AND   dl_info.REGION_CODE <> 'GL' AND dl_info.cust_key = c1.cust_key
+  AND dl_info.Amid_Global_Account_Id LIKE '%{custID}%' 
+   UNION     
+  SELECT DISTINCT 
+  dl_info.DEAL_ID, 
+  dl_info.BD_ID, 
+  NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+  dl_info.CUST_KEY,
+  dl_info.AMID_global_account_id,
+  dl_info.CUST_ID,
+  dl_info.bd_version_nr,
+  dl_info.DEAL_DESC, 
+  DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+  dl_info.REQUESTOR, 
+  dl_info.APPROVER, 
+  dl_info.START_DATE, 
+  dl_info.END_DATE, 
+  dl_info.PRICE_DESCRIPTOR, 
+  dl_info.IMPORT_AUTO,
+  dl_info.GLOBAL_FLAG, 
+  dl_info.ORIGINAL_DEAL_ID, 
+  dl_info.control_cntry_cd,
+  dl_info.LAST_MODIFIED_DATE,
+  dl_info.AMID_CNTRY_ACCOUNT_ID 
+  FROM ALL_DEAL_INFO dl_info
+  WHERE dl_info.region_code IN ('AP','EU')
+  AND deal_category = 'P' 
+  AND (AFFLIATE_FLAG = 'N' 
+       OR (AFFLIATE_FLAG = 'Y' 
+        AND deal_id IN (SELECT da.da_deal_id FROM DEAL_AFFILIATES da, customer c2
+                     WHERE da.DA_CUST_ID  = c2.CUST_ID
+                 AND (c2.parent_cust_key LIKE '{custKey}%' 
+				 OR c2.cust_key like '{custKey}%' )))))dl ]]>
+          		
+      </stmt>
+      
+      <stmt id="getViewDealForGlobalCust">
+   <![CDATA[ SELECT 
+    {id}:=dl.DEAL_ID, 
+    {bdID}:=dl.BD_ID, 
+    {custName}:=dl.CUST_NAME, 
+    {custKey}:=dl.CUST_KEY, 
+    {amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID),
+    {l4AmidID}:=dl.AMID_global_account_id,
+    {custID}:=dl.CUST_ID,
+    {version}:=dl.bd_version_nr, 
+    {dealDesc}:=dl.DEAL_DESC, 
+    {dealType}:=dl.deal_category, 
+    {requestor}:=dl.REQUESTOR, 
+    {approver}:=dl.APPROVER, 
+    {startDate}:=dl.START_DATE, 
+    {endDate}:=dl.END_DATE, 
+    {priceDescriptor}:=dl.PRICE_DESCRIPTOR, 
+    {importAuto}:=dl.IMPORT_AUTO, 
+    {globalFlag}:=dl.GLOBAL_FLAG, 
+    {original_Deal_Id}:=dl.ORIGINAL_DEAL_ID, 
+    {defaultSalesCountry}:=dl.control_cntry_cd,
+    {l2AmidID}:=dl.AMID_CNTRY_ACCOUNT_ID,
+    {lastModifiedDate}:=dl.LAST_MODIFIED_DATE,
+    {mcCode}:=dl.mcc_cd FROM
+   (SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   dl_info.CUST_NAME, 
+   dl_info.CUST_KEY, 
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID,
+   dl_info.MCC_CD
+   FROM ALL_DEAL_INFO dl_info 
+   WHERE (dl_info.CUST_ID LIKE '%{custID}%' OR dl_info.Amid_Global_Account_Id LIKE '%{custID}%')
+   AND dl_info.SOURCE_OF_INFO IN ('ASIAPAC' , 'DL_UPLOAD' , 'ECLIPSE' , 'HAP' )  
+   AND (dl_info.REGION_CODE = 'GL')
+   UNION
+   SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+   NVL(c1.parent_CUST_KEY,dl_info.CUST_KEY) CUST_KEY,
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID,
+   dl_info.MCC_CD 
+   FROM ALL_DEAL_INFO dl_info, customer c1
+   WHERE dl_info.global_account_fl = 'Y' 
+   AND   dl_info.REGION_CODE <> 'GL' AND dl_info.cust_key = c1.cust_key
+   AND dl_info.Amid_Global_Account_Id LIKE '%{custID}%' 
+   UNION     
+  SELECT DISTINCT 
+  dl_info.DEAL_ID, 
+  dl_info.BD_ID, 
+  NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+  dl_info.CUST_KEY,
+  dl_info.AMID_global_account_id,
+  dl_info.CUST_ID,
+  dl_info.bd_version_nr,
+  dl_info.DEAL_DESC, 
+  DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+  dl_info.REQUESTOR, 
+  dl_info.APPROVER, 
+  dl_info.START_DATE, 
+  dl_info.END_DATE, 
+  dl_info.PRICE_DESCRIPTOR, 
+  dl_info.IMPORT_AUTO,
+  dl_info.GLOBAL_FLAG, 
+  dl_info.ORIGINAL_DEAL_ID, 
+  dl_info.control_cntry_cd,
+  dl_info.LAST_MODIFIED_DATE,
+  dl_info.AMID_CNTRY_ACCOUNT_ID,
+  dl_info.MCC_CD 
+  FROM ALL_DEAL_INFO dl_info
+  WHERE dl_info.region_code IN ( 'AP' ,'EU')
+  AND deal_category = 'P' 
+  AND (AFFLIATE_FLAG = 'N' 
+       OR (AFFLIATE_FLAG = 'Y' 
+        AND deal_id IN (SELECT da.da_deal_id FROM DEAL_AFFILIATES da, customer c2
+                     WHERE da.DA_CUST_ID  = c2.CUST_ID
+                 AND (c2.parent_cust_key LIKE '{custKey}%' 
+				 OR c2.cust_key like '{custKey}%' ))))
+	union
+	select 
+	a.DEAL_ID,
+	d.BD_ID,
+	c.CUST_NAME,
+	a.CUST_KEY,
+	d.AMID_global_account_id,
+	a.CUST_ID,
+	d.bd_version_nr,
+	d.DEAL_DESC,
+	DECODE(d.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') ,
+	d.REQUESTOR,
+	d.APPROVER,
+	d.START_DATE,
+	d.END_DATE,
+	d.PRICE_DESCRIPTOR,
+	d.IMPORT_AUTO,
+	d.GLOBAL_FLAG,
+	d.ORIGINAL_DEAL_ID,
+	d.control_cntry_cd,
+	d.LAST_MODIFIED_DATE,
+	d.AMID_CNTRY_ACCOUNT_ID, 
+	d.MCC_CD
+	from
+	ALL_DEAL_INFO d , additional_cust_eclipse_deals a, customer c
+	where
+	a.cust_key=c.cust_key
+	and d.deal_id = a.deal_id
+	and a.cust_key ='{custKey}'	
+	 )dl ]]>
+          		
+      </stmt>      
+      
+      <stmt id="getManageDealForGlobalCust">
+  <![CDATA[ SELECT 
+    {id}:=dl.DEAL_ID, 
+    {bdID}:=dl.BD_ID, 
+    {custName}:=dl.CUST_NAME, 
+    {custKey}:=dl.CUST_KEY, 
+    {amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID) as amid_id,
+    {l4AmidID}:=dl.AMID_global_account_id,
+    {custID}:=dl.CUST_ID,
+    {version}:=dl.bd_version_nr, 
+    {dealDesc}:=dl.DEAL_DESC, 
+    {dealType}:=dl.deal_category, 
+    {requestor}:=dl.REQUESTOR, 
+    {approver}:=dl.APPROVER, 
+    {startDate}:=dl.START_DATE, 
+    {endDate}:=dl.END_DATE, 
+    {priceDescriptor}:=dl.PRICE_DESCRIPTOR, 
+    {importAuto}:=dl.IMPORT_AUTO, 
+    {globalFlag}:=dl.GLOBAL_FLAG, 
+    {original_Deal_Id}:=dl.ORIGINAL_DEAL_ID, 
+    {defaultSalesCountry}:=dl.control_cntry_cd,
+    {l2AmidID}:=dl.AMID_CNTRY_ACCOUNT_ID,
+    {lastModifiedDate}:=dl.LAST_MODIFIED_DATE FROM
+   (SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   dl_info.CUST_NAME, 
+   dl_info.CUST_KEY, 
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID
+   FROM ALL_DEAL_INFO dl_info 
+   WHERE (dl_info.CUST_ID = '{custID}' OR dl_info.Amid_Global_Account_Id ='{custID}'  )
+   AND dl_info.SOURCE_OF_INFO IN ('ASIAPAC' , 'DL_UPLOAD' , 'ECLIPSE' , 'HAP' )  
+   AND (dl_info.REGION_CODE = 'GL')
+   AND dl_info.tenant_cd {tenantCode}
+   AND dl_info.fed_deal_fl = '{string1}'
+   UNION
+   SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+   NVL(c1.parent_CUST_KEY,dl_info.CUST_KEY) CUST_KEY,
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID 
+   FROM ALL_DEAL_INFO dl_info, customer c1
+   WHERE dl_info.global_account_fl = 'Y' 
+   AND   dl_info.REGION_CODE <> 'GL' AND dl_info.cust_key = c1.cust_key
+   AND dl_info.Amid_Global_Account_Id ='{custID}' 
+   AND dl_info.tenant_cd {tenantCode}
+   AND dl_info.fed_deal_fl = '{string1}'
+   UNION     
+  SELECT DISTINCT 
+  dl_info.DEAL_ID, 
+  dl_info.BD_ID, 
+  NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+  dl_info.CUST_KEY,
+  dl_info.AMID_global_account_id,
+  dl_info.CUST_ID,
+  dl_info.bd_version_nr,
+  dl_info.DEAL_DESC, 
+  DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+  dl_info.REQUESTOR, 
+  dl_info.APPROVER, 
+  dl_info.START_DATE, 
+  dl_info.END_DATE, 
+  dl_info.PRICE_DESCRIPTOR, 
+  dl_info.IMPORT_AUTO,
+  dl_info.GLOBAL_FLAG, 
+  dl_info.ORIGINAL_DEAL_ID, 
+  dl_info.control_cntry_cd,
+  dl_info.LAST_MODIFIED_DATE,
+  dl_info.AMID_CNTRY_ACCOUNT_ID 
+  FROM ALL_DEAL_INFO dl_info
+  WHERE dl_info.region_code IN ('AP' ,'EU')
+  AND deal_category = 'P' 
+  AND dl_info.tenant_cd {tenantCode}
+  AND dl_info.fed_deal_fl = '{string1}'
+  AND (AFFLIATE_FLAG = 'N' 
+       OR (AFFLIATE_FLAG = 'Y' 
+        AND deal_id IN (SELECT da.da_deal_id FROM DEAL_AFFILIATES da, customer c2
+                     WHERE da.DA_CUST_ID  = c2.CUST_ID
+                 AND (c2.parent_cust_key LIKE '{custKey}%' 
+				 OR c2.cust_key like '{custKey}%' ))))
+  union
+  SELECT DISTINCT
+   dl_info.DEAL_ID, 
+   dl_info.BD_ID, 
+   dl_info.CUST_NAME, 
+   dl_info.CUST_KEY, 
+   dl_info.AMID_global_account_id,
+   dl_info.CUST_ID,
+   dl_info.bd_version_nr, 
+   dl_info.DEAL_DESC, 
+   DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+   dl_info.REQUESTOR, 
+   dl_info.APPROVER, 
+   dl_info.START_DATE, 
+   dl_info.END_DATE, 
+   dl_info.PRICE_DESCRIPTOR, 
+   dl_info.IMPORT_AUTO, 
+   dl_info.GLOBAL_FLAG, 
+   dl_info.ORIGINAL_DEAL_ID, 
+   dl_info.control_cntry_cd,
+   dl_info.LAST_MODIFIED_DATE,
+   dl_info.AMID_CNTRY_ACCOUNT_ID
+   FROM ALL_DEAL_INFO dl_info , additional_cust_eclipse_deals a
+   where
+   a.deal_id=dl_info.deal_id 
+   AND dl_info.tenant_cd {tenantCode}
+   AND dl_info.fed_deal_fl = '{string1}'
+   and a.cust_key ='{custKey}'
+  )dl ]]>        		
+      </stmt>
+  
+	  
+	  <stmt id="searchDealsForGlobalCust">
+         <![CDATA[ SELECT 
+         {id}:=dl.DEAL_ID, 
+          {bdID}:=dl.BD_ID, 
+          {custName}:=dl.CUST_NAME, 
+          {custKey}:=dl.CUST_KEY, 
+          {amidID}:= NVL(dl.AMID_global_account_id,dl.CUST_ID),
+          {custID}:=dl.CUST_ID,
+         {version}:=dl.bd_version_nr, 
+          {dealDesc}:=dl.DEAL_DESC, 
+          {dealType}:=dl.deal_category, 
+          {requestor}:=dl.REQUESTOR, 
+          {approver}:=dl.APPROVER, 
+          {startDate}:=dl.START_DATE, 
+          {endDate}:=dl.END_DATE, 
+          {priceDescriptor}:=dl.PRICE_DESCRIPTOR, 
+          {importAuto}:=dl.IMPORT_AUTO, 
+          {globalFlag}:=dl.GLOBAL_FLAG, 
+          {original_Deal_Id}:=dl.ORIGINAL_DEAL_ID, 
+         {defaultSalesCountry}:=dl.control_cntry_cd,
+         dl.cust_dun,
+         dl.source_of_info FROM
+         (SELECT DISTINCT
+         dl_info.DEAL_ID, 
+         dl_info.BD_ID, 
+         dl_info.CUST_NAME, 
+         dl_info.CUST_KEY, 
+         dl_info.AMID_global_account_id,
+         dl_info.CUST_ID,
+         dl_info.bd_version_nr, 
+         dl_info.DEAL_DESC, 
+         DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+         dl_info.REQUESTOR, 
+         dl_info.APPROVER, 
+         dl_info.START_DATE, 
+         dl_info.END_DATE, 
+         dl_info.PRICE_DESCRIPTOR, 
+         dl_info.IMPORT_AUTO, 
+         dl_info.GLOBAL_FLAG, 
+         dl_info.ORIGINAL_DEAL_ID, 
+         dl_info.control_cntry_cd ,
+         dl_info.cust_dun,dl_info.source_of_info
+         FROM ALL_DEAL_INFO dl_info 
+         WHERE (dl_info.CUST_ID LIKE '%{string2}%' OR dl_info.Amid_Global_Account_Id LIKE '%{string2}%' )
+         AND dl_info.SOURCE_OF_INFO IN ('ASIAPAC' , 'DL_UPLOAD' , 'ECLIPSE' , 'HAP' )  
+         AND dl_info.REGION_CODE = 'GL'
+         UNION
+         SELECT DISTINCT
+         dl_info.DEAL_ID, 
+         dl_info.BD_ID, 
+         NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+         NVL(c1.parent_CUST_KEY,dl_info.CUST_KEY) CUST_KEY,
+         dl_info.AMID_global_account_id,
+         dl_info.CUST_ID,
+         dl_info.bd_version_nr, 
+         dl_info.DEAL_DESC, 
+         DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+         dl_info.REQUESTOR, 
+         dl_info.APPROVER, 
+         dl_info.START_DATE, 
+         dl_info.END_DATE, 
+         dl_info.PRICE_DESCRIPTOR, 
+         dl_info.IMPORT_AUTO, 
+         dl_info.GLOBAL_FLAG, 
+         dl_info.ORIGINAL_DEAL_ID, 
+         dl_info.control_cntry_cd,
+         dl_info.cust_dun,dl_info.source_of_info
+         FROM ALL_DEAL_INFO dl_info, customer c1
+         WHERE (dl_info.global_account_fl = 'Y' 
+         AND 
+        (dl_info.REGION_CODE <> 'GL' AND dl_info.cust_key = c1.cust_key)  
+        AND dl_info.Amid_Global_Account_Id LIKE '%{string2}%' )
+         UNION     
+        SELECT DISTINCT 
+        dl_info.DEAL_ID, 
+        dl_info.BD_ID, 
+        NVL(dl_info.Amid_Global_Account_NM,dl_info.CUST_NAME) CUST_NAME, 
+        dl_info.CUST_KEY,
+        dl_info.AMID_global_account_id,
+        dl_info.CUST_ID,
+        dl_info.bd_version_nr,
+        dl_info.DEAL_DESC, 
+        DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+        dl_info.REQUESTOR, 
+        dl_info.APPROVER, 
+        dl_info.START_DATE, 
+        dl_info.END_DATE, 
+        dl_info.PRICE_DESCRIPTOR, 
+        dl_info.IMPORT_AUTO,
+        dl_info.GLOBAL_FLAG, 
+        dl_info.ORIGINAL_DEAL_ID, 
+        dl_info.control_cntry_cd,
+        dl_info.cust_dun,dl_info.source_of_info
+        FROM ALL_DEAL_INFO dl_info
+        WHERE dl_info.region_code IN ('AP','EU')
+        AND deal_category = 'P' 
+        AND (AFFLIATE_FLAG = 'N' 
+             OR (AFFLIATE_FLAG = 'Y' 
+              AND deal_id IN (SELECT da.da_deal_id FROM DEAL_AFFILIATES da, customer c2
+                           WHERE da.DA_CUST_ID  = c2.CUST_ID
+                       AND c2.parent_cust_key LIKE '{string1}%' ))))dl where 1=1 {string3}]]>
+                		
+      </stmt>
+      
+      <stmt id="getDealsForGlobalsByCntryAndPD">              
+           <![CDATA[    SELECT 
+	       {id}:=X.DEAL_ID, 
+	        {bdID}:=X.BD_ID, 
+	        {custName}:=X.CUST_NAME, 
+	        {custKey}:=X.CUST_KEY, 
+	        {amidID}:= NVL(X.AMID_global_account_id,X.CUST_ID),
+	        {custID}:=X.CUST_ID,
+	       {version}:=X.bd_version_nr, 
+	        {dealDesc}:=X.DEAL_DESC, 
+	        {dealType}:=X.deal_category dealType, 
+	        {requestor}:=X.REQUESTOR, 
+	        {approver}:=X.APPROVER, 
+	        {startDate}:=X.START_DATE, 
+	        {endDate}:=X.END_DATE, 
+	        {priceDescriptor}:=X.PRICE_DESCRIPTOR, 
+	        {importAuto}:=X.IMPORT_AUTO, 
+	        {globalFlag}:=X.GLOBAL_FLAG, 
+	        {original_Deal_Id}:=X.ORIGINAL_DEAL_ID, 
+	       {defaultSalesCountry}:=X.control_cntry_cd,
+	       {lastModifiedDate}:=X.LAST_MODIFIED_DATE FROM
+	       (SELECT DISTINCT
+	       dl.DEAL_ID, 
+	       dl.BD_ID, 
+	       dl.CUST_NAME, 
+	       dl.CUST_KEY, 
+	       dl.AMID_global_account_id,
+	       dl.CUST_ID,
+	       dl.bd_version_nr, 
+	       dl.DEAL_DESC, 
+	       DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+	       dl.REQUESTOR, 
+	       dl.APPROVER, 
+	       dl.START_DATE, 
+	       dl.END_DATE, 
+	       dl.PRICE_DESCRIPTOR, 
+	       dl.IMPORT_AUTO, 
+	       dl.GLOBAL_FLAG, 
+	       dl.ORIGINAL_DEAL_ID, 
+	       dl.control_cntry_cd,
+	       dl.LAST_MODIFIED_DATE
+	       FROM ALL_DEAL_INFO dl 
+	       WHERE (dl.CUST_ID LIKE '%{custID}%' OR dl.Amid_Global_Account_Id LIKE '%{custID}%'  )
+	       AND (dl.REGION_CODE = 'GL') 
+	       AND EXISTS
+	       		    (SELECT 'x' FROM GLOBAL_CUST_PRICE_DESCRIPTOR gpd
+	       		    WHERE gpd.DEAL_ID = dl.deal_id
+	       		    AND (gpd.PRICE_DESCRIPTOR = {?:priceDescriptor} OR gpd.PRICE_DESCRIPTOR='00USDDP')
+	       AND SUBSTR(gpd.OB_PRICE_DESCRIPTOR, 1,2) = {?:countryCode})
+	       AND {string1} dl.tenant_cd {tenantCode}
+	       UNION
+	       SELECT DISTINCT
+	       dl.DEAL_ID, 
+	       dl.BD_ID, 
+	       NVL(dl.Amid_Global_Account_NM,dl.CUST_NAME) CUST_NAME, 
+		NVL(c1.parent_CUST_KEY,dl.CUST_KEY) CUST_KEY,
+	       dl.AMID_global_account_id,
+	       dl.CUST_ID,
+	       dl.bd_version_nr, 
+	       dl.DEAL_DESC, 
+	       DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+	       dl.REQUESTOR, 
+	       dl.APPROVER, 
+	       dl.START_DATE, 
+	       dl.END_DATE, 
+	       dl.PRICE_DESCRIPTOR, 
+	       dl.IMPORT_AUTO, 
+	       dl.GLOBAL_FLAG, 
+	       dl.ORIGINAL_DEAL_ID, 
+	       dl.control_cntry_cd,
+	       dl.LAST_MODIFIED_DATE
+	       FROM ALL_DEAL_INFO dl, customer c1
+	       WHERE dl.global_account_fl = 'Y' 
+	       AND dl.REGION_CODE <> 'GL' AND dl.cust_key = c1.cust_key
+	       AND dl.Amid_Global_Account_Id LIKE '%{custID}%' 
+	       AND EXISTS
+	       		    (SELECT 'x' FROM GLOBAL_CUST_PRICE_DESCRIPTOR gpd
+	       		    WHERE gpd.DEAL_ID = dl.deal_id
+	       		    AND (gpd.PRICE_DESCRIPTOR = {?:priceDescriptor} OR gpd.PRICE_DESCRIPTOR='00USDDP')
+	       AND SUBSTR(gpd.OB_PRICE_DESCRIPTOR, 1,2) = {?:countryCode})
+	       AND {string1} dl.tenant_cd {tenantCode}
+	       UNION     
+		SELECT DISTINCT 
+		dl.DEAL_ID, 
+		dl.BD_ID, 
+		NVL(dl.Amid_Global_Account_NM,dl.CUST_NAME) CUST_NAME, 
+		dl.CUST_KEY,
+		dl.AMID_global_account_id,
+  		dl.CUST_ID,
+		dl.bd_version_nr, 
+		dl.DEAL_DESC, 
+		DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+		dl.REQUESTOR, 
+		dl.APPROVER, 
+		dl.START_DATE, 
+		dl.END_DATE, 
+		dl.PRICE_DESCRIPTOR, 
+		dl.IMPORT_AUTO,
+		dl.GLOBAL_FLAG, 
+		dl.ORIGINAL_DEAL_ID, 
+		dl.control_cntry_cd,
+		dl.LAST_MODIFIED_DATE
+		FROM ALL_DEAL_INFO dl
+		WHERE dl.region_code IN ('AP','EU')
+		AND deal_category = 'P' 
+		AND (AFFLIATE_FLAG = 'N' 
+		     OR (AFFLIATE_FLAG = 'Y' 
+		      AND deal_id IN (SELECT da.da_deal_id FROM DEAL_AFFILIATES da, customer c2
+				   WHERE da.DA_CUST_ID  = c2.CUST_ID
+			       AND (c2.parent_cust_key LIKE '{custKey}%' 
+				   OR c2.cust_key like '{custKey}%' ))))
+              		AND EXISTS
+			    (SELECT 'x' FROM GLOBAL_CUST_PRICE_DESCRIPTOR gpd
+			    WHERE gpd.DEAL_ID = dl.deal_id
+			    AND (gpd.PRICE_DESCRIPTOR = {?:priceDescriptor} OR gpd.PRICE_DESCRIPTOR='00USDDP')
+			    AND SUBSTR(gpd.OB_PRICE_DESCRIPTOR, 1,2) = {?:countryCode})		
+		AND {string1} dl.tenant_cd {tenantCode}	    
+	UNION
+	SELECT DISTINCT
+	       dl.DEAL_ID, 
+	       dl.BD_ID, 
+	       dl.CUST_NAME, 
+	       dl.CUST_KEY, 
+	       dl.AMID_global_account_id,
+	       dl.CUST_ID,
+	       dl.bd_version_nr, 
+	       dl.DEAL_DESC, 
+	       DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local','Regional') deal_category, 
+	       dl.REQUESTOR, 
+	       dl.APPROVER, 
+	       dl.START_DATE, 
+	       dl.END_DATE, 
+	       dl.PRICE_DESCRIPTOR, 
+	       dl.IMPORT_AUTO, 
+	       dl.GLOBAL_FLAG, 
+	       dl.ORIGINAL_DEAL_ID, 
+	       dl.control_cntry_cd,
+	       dl.LAST_MODIFIED_DATE
+	       FROM ALL_DEAL_INFO dl, additional_cust_eclipse_deals a
+	       where
+	       a.deal_id=dl.deal_id 
+	       and {string1} dl.tenant_cd {tenantCode} 
+	       and a.cust_key ='{custKey}'
+		   AND EXISTS
+	       		    (SELECT 'x' FROM GLOBAL_CUST_PRICE_DESCRIPTOR gpd
+	       		    WHERE gpd.DEAL_ID = dl.deal_id
+	       		    AND (gpd.PRICE_DESCRIPTOR = {?:priceDescriptor} OR gpd.PRICE_DESCRIPTOR='00USDDP')
+	    			AND SUBSTR(gpd.OB_PRICE_DESCRIPTOR, 1,2) = {?:countryCode})
+	)X  ]]>
+             
+      </stmt>
+      
+      
+      
+      <stmt id="getGlobalDeals">
+            select
+     		{id}:=X.DEAL_ID, 
+     		{bdID}:=X.BD_ID, 
+     		{custName}:=X.CUST_NAME,
+     		{custKey}:=X.CUST_KEY,
+     		{amidID}:= X.AMID_ID,
+     		{custID}:=X.CUST_ID,
+     		{version}:=X.bd_version_nr, 
+     		{dealDesc}:=X.DEAL_DESC,
+     		{dealType}:=X.DEAL_CATEGORY,
+     		{requestor}:=X.REQUESTOR, 
+     		{approver}:=X.APPROVER, 
+     		{startDate}:=X.START_DATE,
+     		{endDate}:=X.END_DATE,
+     		{priceDescriptor}:=X.PRICE_DESCRIPTOR,
+     		{importAuto}:=X.IMPORT_AUTO, 
+     		{globalFlag}:=X.GLOBAL_FLAG,
+     		{original_Deal_Id}:=X.ORIGINAL_DEAL_ID,
+     		{defaultSalesCountry}:=X.control_cntry_cd
+     		from (select
+     		dl.DEAL_ID, 
+     		dl.BD_ID, 
+     		dl.CUST_NAME,
+     		dl.CUST_KEY,
+     		NVL(dl.AMID_GLOBAL_ACCOUNT_ID,dl.CUST_ID) AMID_ID,
+     		dl.CUST_ID,
+     		dl.bd_version_nr, 
+     		dl.DEAL_DESC,
+     		DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') DEAL_CATEGORY,
+     		dl.REQUESTOR, 
+     		dl.APPROVER, 
+     		dl.START_DATE,
+     		dl.END_DATE,
+     		dl.PRICE_DESCRIPTOR,
+     		dl.IMPORT_AUTO, 
+     		dl.GLOBAL_FLAG,
+     		dl.ORIGINAL_DEAL_ID,
+     		dl.control_cntry_cd
+		from ALL_DEAL_INFO dl where  dl.GLOBAL_ACCOUNT_FL='Y' and (dl.AMID_global_account_id  is not null 
+      		 or dl.region_code='GL' or dl.AMID_CNTRY_ACCOUNT_ID is not null) {string1}
+     		UNION
+     		select
+     			dl.DEAL_ID, 
+     			dl.BD_ID, 
+     			dl.CUST_NAME,
+     			dl.CUST_KEY,
+     			NVL(dl.AMID_GLOBAL_ACCOUNT_ID,dl.CUST_ID) AMID_ID,
+     			dl.CUST_ID,
+     			dl.bd_version_nr, 
+     			dl.DEAL_DESC,
+     			DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') DEAL_CATEGORY,
+     			dl.REQUESTOR, 
+     			dl.APPROVER, 
+     			dl.START_DATE,
+     			dl.END_DATE,
+     			dl.PRICE_DESCRIPTOR,
+     			dl.IMPORT_AUTO, 
+     			dl.GLOBAL_FLAG,
+     			dl.ORIGINAL_DEAL_ID,
+     			dl.control_cntry_cd
+     			 FROM all_deal_info dl
+     			  WHERE dl.region_code IN ('AP','EU')
+     			    AND deal_category = 'P'
+     			    AND (   affliate_flag = 'N'
+     				 OR (    affliate_flag = 'Y'
+     				     AND deal_id IN (
+     					    SELECT da.da_deal_id
+     					      FROM deal_affiliates da, customer c2
+     					     WHERE da.da_cust_id = c2.cust_id
+     				))) {string1}
+     	)X
+      </stmt> 
+      
+      <stmt id="getViewGlobalDeals">
+        <![CDATA[select
+     		{id}:=X.DEAL_ID, 
+     		{bdID}:=X.BD_ID, 
+     		{custName}:=X.CUST_NAME,
+     		{custKey}:=X.CUST_KEY,
+     		{amidID}:= X.AMID_ID,
+     		{custID}:=X.CUST_ID,
+     		{version}:=X.bd_version_nr, 
+     		{dealDesc}:=X.DEAL_DESC,
+     		{dealType}:=X.DEAL_CATEGORY,
+     		{requestor}:=X.REQUESTOR, 
+     		{approver}:=X.APPROVER, 
+     		{startDate}:=X.START_DATE,
+     		{endDate}:=X.END_DATE,
+     		{priceDescriptor}:=X.PRICE_DESCRIPTOR,
+     		{importAuto}:=X.IMPORT_AUTO, 
+     		{globalFlag}:=X.GLOBAL_FLAG,
+     		{original_Deal_Id}:=X.ORIGINAL_DEAL_ID,
+     		{defaultSalesCountry}:=X.control_cntry_cd,
+     		{mcCode}:=X.MCC_CD
+     		from (select
+     		dl.DEAL_ID, 
+     		dl.BD_ID, 
+     		dl.CUST_NAME,
+     		dl.CUST_KEY,
+     		NVL(dl.AMID_GLOBAL_ACCOUNT_ID,dl.CUST_ID) as AMID_ID,
+     		dl.CUST_ID,
+     		dl.bd_version_nr, 
+     		dl.DEAL_DESC,
+     		DECODE(dl.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') DEAL_CATEGORY,
+     		dl.REQUESTOR, 
+     		dl.APPROVER, 
+     		dl.START_DATE,
+     		dl.END_DATE,
+     		dl.PRICE_DESCRIPTOR,
+     		dl.IMPORT_AUTO, 
+     		dl.GLOBAL_FLAG,
+     		dl.ORIGINAL_DEAL_ID,
+     		dl.control_cntry_cd,
+     		dl.MCC_CD
+		from ALL_DEAL_INFO dl 
+		where 
+		dl.tenant_cd {string4} and
+		dl.fed_Deal_fl={?:string2} and
+		(   (    dl.region_code = 'GL'                 
+            )
+            OR ( dl.region_code IN ('AP','EU')
+                 AND deal_category = 'P'                 
+                 AND (   affliate_flag = 'N'
+                         OR (    affliate_flag = 'Y'
+                                 AND deal_id IN (
+                                           SELECT da_deal_id
+                                             FROM deal_affiliates da,
+                                                  customer d
+                                            WHERE da.da_cust_id = d.cust_id)
+                            )
+                      )
+               )
+            OR ( dl.region_code <> 'GL'
+                 AND dl.global_account_fl = 'Y'
+                 AND dl.amid_global_account_id IS NOT NULL
+               )
+        ){string1}     		
+     	union
+     	select 
+		a.DEAL_ID,
+		d.BD_ID,
+		c.CUST_NAME,
+		a.CUST_KEY,
+		d.AMID_global_account_id,
+		a.CUST_ID,
+		d.bd_version_nr,
+		d.DEAL_DESC,
+		DECODE(d.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promo_Tier', 'L', 'Local', 'Regional') ,
+		d.REQUESTOR,
+		d.APPROVER,
+		d.START_DATE,
+		d.END_DATE,
+		d.PRICE_DESCRIPTOR,
+		d.IMPORT_AUTO,
+		d.GLOBAL_FLAG,
+		d.ORIGINAL_DEAL_ID,
+		d.control_cntry_cd,
+		d.MCC_CD 
+		from
+		ALL_DEAL_INFO d , additional_cust_eclipse_deals a, customer c
+		where
+		a.cust_key=c.cust_key and
+		d.fed_Deal_fl={?:string2} 
+		and d.tenant_cd {string4}
+		and d.deal_id = a.deal_id
+		)X ]]>
+      </stmt> 
+      
+
+      <stmt id="retrieveSCDealsCtryDes">
+       select {id}:= DISTINCT (dl.DEAL_ID)
+       from ALL_DEAL_INFO dl, GLOBAL_CUST_PRICE_DESCRIPTOR pd where
+       		dl.DEAL_TYPE = 'SCD'   AND dl.deal_id = pd.deal_id
+       		AND substr(pd.OB_PRICE_DESCRIPTOR, 1,2) in ({@q:countries})
+       		AND pd.PRICE_DESCRIPTOR in ({@q:pricedes})  AND dl.REGION_CODE = {q:regionCode}
+      </stmt>
+
+
+
+           <stmt id="updateDeal">
+
+                    UPDATE ALL_DEAL_INFO
+                    SET  	PRICING_MANAGER={?:pricingManager},
+                      	DEPLOY_MANAGER={?:deployManager},
+                      	SALES_REP_EMAIL={?:salesRepEmail},
+                           CAT_MANAGER={?:catManager},
+                           IMPORT_AUTO={?:importAuto},
+                           COMMENTS={?:comments}
+                           WHERE BD_ID={?:bdID}
+                 </stmt>
+
+
+
+              <stmt id="getDealByBdId">
+	             	select {id}:=DEAL_ID,
+	             	{bdID}:=BD_ID,
+	           		{custName}:= CUST_NAME,
+	           		{amidID}:= NVL(AMID_global_account_id,CUST_ID),
+	           		{priceDescriptor}:=PRICE_DESCRIPTOR,
+	           	    {startDate}:=START_DATE,
+	           	    {endDate}:=END_DATE,
+	           	  	{bdID}:=BD_ID,
+	           	  	{dealDesc}:=DEAL_DESC,
+	           	  	{requestor}:=REQUESTOR,
+	           	  	{approver}:=APPROVER,
+	           		{departmentCode}:=DEPARTMENT_CD,
+	           		{dealStatus}:=DEAL_STATUS,
+	           		{region}:=REGION_CODE,
+	           		{importAuto}:=IMPORT_AUTO,
+	           		{version}:=BD_VERSION_NR,
+	           		{custKey}:=CUST_KEY,
+	           		{custID}:=CUST_ID,
+	           		{custDun}:=CUST_DUN,
+	           		{catManager}:=CAT_MANAGER,
+	           		{pricingManager}:=PRICING_MANAGER,
+	           		{deployManager}:=DEPLOY_MANAGER,
+	           		{salesRepEmail}:=SALES_REP_EMAIL,
+	           		{revisionDate}:=REVISION_DATE,
+	           		{comments}:=COMMENTS,
+	           		{globalFlag}:=GLOBAL_FLAG,
+	           		{accRateFlag}:=EXCHANGE_RATE_OPTION_CD,
+	           		{glpDealFlag}:=GLP_DEAL_FL,
+	           		{totalAddtlDiscFlag}:=TOTAL_ADDTL_DISC_FL,
+	           		{eccTierFlag}:=ECC_TIER_FL,
+	           		{dealDiscTypeCd}:=DEAL_DISC_TYPE_CD,
+	           		{dealScopeCd}:=DEAL_SCOPE_CD
+	           		FROM ALL_DEAL_INFO
+	           	    WHERE BD_ID={?:bdID}
+	           	    
+	          </stmt>
+
+
+
+             <stmt id="getDealById">
+	               	select {id}:=DEAL_ID,
+	             		 {custName}:= CUST_NAME,
+	             		 {priceDescriptor}:=PRICE_DESCRIPTOR,
+	             	     {startDate}:=START_DATE,
+	             	     {endDate}:=END_DATE,
+	             	  	 {bdID}:=BD_ID,
+	             	  	 {dealDesc}:=DEAL_DESC,
+	             	  	 {requestor}:=REQUESTOR,
+	             	  	 {approver}:=APPROVER,
+	             		 {departmentCode}:=DEPARTMENT_CD,
+	             		 {dealStatus}:=DEAL_STATUS,
+	             		 {region}:=REGION_CODE,
+	             		 {importAuto}:=IMPORT_AUTO,
+	             		 {version}:=BD_VERSION_NR,
+	             		 {custKey}:=CUST_KEY,
+	             		 {custID}:=CUST_ID,
+	             		 {custDun}:=CUST_DUN,
+	             		 {catManager}:=CAT_MANAGER,
+	             		 {pricingManager}:=PRICING_MANAGER,
+	             		 {deployManager}:=DEPLOY_MANAGER,
+	             		 {salesRepEmail}:=SALES_REP_EMAIL,
+	             		 {revisionDate}:=REVISION_DATE,
+	             		 {comments}:=COMMENTS,
+	             		 {globalFlag}:=GLOBAL_FLAG,
+	             		 {accRateFlag}:=EXCHANGE_RATE_OPTION_CD,
+	             		 {glpDealFlag}:=GLP_DEAL_FL,
+	           		     {totalAddtlDiscFlag}:=TOTAL_ADDTL_DISC_FL,
+	           		     {eccTierFlag}:=ECC_TIER_FL,
+	           		     {dealDiscTypeCd}:=DEAL_DISC_TYPE_CD,
+	           		     {dealScopeCd}:=DEAL_SCOPE_CD
+	             		 FROM ALL_DEAL_INFO
+	             	     WHERE DEAL_ID={?:id}
+	        </stmt>
+
+          <stmt id="retrieveDealsByCustIdCustDun">
+
+		         	select {id}:=A.DEAL_ID,
+		       		{priceDescriptor}:=A.PRICE_DESCRIPTOR,
+		       	  	{bdID}:=A.BD_ID,
+		       	  	{requestor}:=A.REQUESTOR,
+		       	  	{approver}:=A.APPROVER,
+		       		{lastModifiedDate}:=A.LAST_MODIFIED_DATE,
+		       		{custID}:=A.CUST_ID,
+		       		{custDun}:=A.CUST_DUN
+		       		FROM 
+		       		(
+		       		select 
+		       		DEAL_ID,
+		       		PRICE_DESCRIPTOR,
+		       	  	BD_ID,
+		       	  	REQUESTOR,
+		       	  	APPROVER,
+		       		LAST_MODIFIED_DATE,
+		       		CUST_ID,
+		       		CUST_DUN
+		       		FROM ALL_DEAL_INFO
+		       	          WHERE {string1}
+		       	    UNION
+		       	    select 
+		       		d.DEAL_ID,
+		       		d.PRICE_DESCRIPTOR,
+		       	  	d.BD_ID,
+		       	  	d.REQUESTOR,
+		       	  	d.APPROVER,
+		       		d.LAST_MODIFIED_DATE,
+		       		a.CUST_ID,
+		       		d.CUST_DUN
+		       		FROM ALL_DEAL_INFO d, additional_cust_eclipse_deals a
+		       	          WHERE a.deal_id=d.deal_id
+		       	          and a.cust_key='{string3}'
+		       		)A
+
+	        </stmt>
+
+        	 <stmt id="getPANoByCatId">
+
+	 SELECT {PAName}:=CAP_PA_NO,{CACCode}:=CAP_CAC_CODE,{GEOCode}:=CAP_DISC_GEO
+	 FROM
+	 CAT_PATSY_MAPPING
+	 WHERE cat_catalog_id = {q:string1}
+
+	 </stmt>
+
+        <stmt id="deletePaByCatId">
+        DELETE FROM CAT_PATSY_MAPPING where CAT_CATALOG_ID ={?:string1} AND CAP_PA_NO= {q:string2}
+
+        </stmt>
+
+        <stmt id="insertPaByCatId">
+
+        INSERT INTO CAT_PATSY_MAPPING
+        SET
+      	CAT_CATALOG_ID, CAP_PA_NO, CAP_DISC_GEO, CAP_CAC_CODE, LAST_MODIFIED_DATE
+      	VALUES
+      	({catId}, {PAName}, {gEOCode}, {cACCode}, {sysdate})
+
+        </stmt>
+        
+        <stmt id="retrieveDealsByOfferType">
+        
+        SELECT DISTINCT
+	   {id}:=dl_info.DEAL_ID, 
+	   {bdID}:=dl_info.BD_ID, 
+	   {custName}:=dl_info.CUST_NAME, 
+	   {custKey}:=dl_info.CUST_KEY, 
+	   {amidID}:=NVL(dl_info.AMID_global_account_id,dl_info.CUST_ID),
+	   {amidCntryAccountId}:=NVL(dl_info.amid_cntry_account_id,dl_info.CUST_ID),
+	   {l2AmidID}:=dl_info.AMID_CNTRY_ACCOUNT_ID,
+	   {l4AmidID}:=dl_info.AMID_global_account_id,
+	   {custID}:=dl_info.CUST_ID,
+	   {version}:=dl_info.bd_version_nr, 
+	   {dealDesc}:=dl_info.DEAL_DESC, 
+	   {dealType}:=DECODE(dl_info.DEAL_TYPE_FLAG, 'S', 'Standard', 'P', 'Project', 'C', 'CustomerSat','') deal_type_flag, 
+	   {dealCategory}:=DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promotion', 'L', 'Local','Regional') deal_category, 
+	   {requestor}:=dl_info.REQUESTOR, 
+	   {approver}:=dl_info.APPROVER, 
+	   {startDate}:=dl_info.START_DATE, 
+	   {endDate}:=dl_info.END_DATE, 
+	   {priceDescriptor}:=dl_info.PRICE_DESCRIPTOR, 
+	   {importAuto}:=dl_info.IMPORT_AUTO, 
+	   {globalFlag}:=dl_info.GLOBAL_FLAG, 
+	   {original_Deal_Id}:=dl_info.ORIGINAL_DEAL_ID, 
+	   {defaultSalesCountry}:=dl_info.control_cntry_cd 
+	   FROM ALL_DEAL_INFO dl_info 
+	   WHERE dl_info.tenant_cd {string4} and (dl_info.CUST_ID = {q:string1} OR dl_info.Amid_Global_Account_Id = {q:string1}
+	    or dl_info.Amid_cntry_Account_Id = {q:string1}
+	    or dl_info.deal_id in (select deal_id from additional_cust_eclipse_deals aed where aed.cust_key = {q:string2}) )
+	   AND
+	   ((dl_info.deal_type_flag in ({@q:strArray1}) {string3})or (dl_info.cntry_cd ='JP'))
+	   AND exists
+	   (select 1 from global_cust_price_descriptor pd where pd.deal_id = dl_info.deal_id and (substr(ob_price_descriptor,1,2) = {?:countryCode} or pd.price_descriptor='00USDDP'))
+
+   
+   
+        </stmt>
+
+	  <stmt id="retrieveDealsByOfferId">
+	  SELECT DISTINCT
+	   {id}:=dl_info.DEAL_ID, 
+	   {bdID}:=dl_info.BD_ID, 
+	   {custName}:=dl_info.CUST_NAME, 
+	   {custKey}:=dl_info.CUST_KEY, 
+	   {amidID}:=NVL(dl_info.AMID_global_account_id,dl_info.CUST_ID),
+	   {amidCntryAccountId}:=NVL(dl_info.amid_cntry_account_id,dl_info.CUST_ID),
+	   {l2AmidID}:=dl_info.AMID_CNTRY_ACCOUNT_ID,
+	   {l4AmidID}:=dl_info.AMID_global_account_id,
+	   {custID}:=dl_info.CUST_ID,
+	   {version}:=dl_info.bd_version_nr, 
+	   {dealDesc}:=dl_info.DEAL_DESC, 
+	   {dealType}:=DECODE(dl_info.DEAL_TYPE_FLAG, 'S', 'Standard', 'P', 'Project', 'C', 'CustomerSat','') deal_type_flag, 
+	   {dealCategory}:=DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promotion', 'L', 'Local','Regional') deal_category, 
+	   {requestor}:=dl_info.REQUESTOR, 
+	   {approver}:=dl_info.APPROVER, 
+	   {startDate}:=dl_info.START_DATE, 
+	   {endDate}:=dl_info.END_DATE, 
+	   {priceDescriptor}:=dl_info.PRICE_DESCRIPTOR, 
+	   {importAuto}:=dl_info.IMPORT_AUTO, 
+	   {globalFlag}:=dl_info.GLOBAL_FLAG, 
+	   {original_Deal_Id}:=dl_info.ORIGINAL_DEAL_ID, 
+	   {defaultSalesCountry}:=dl_info.control_cntry_cd 
+	   FROM ALL_DEAL_INFO dl_info 
+	   WHERE  deal_id IN (SELECT deal_id
+                     FROM offer_deal_map
+                    WHERE offer_id = {q:string2})
+	  </stmt>
+	  
+	   <stmt id="retrieveSpecificDealByOfferId">
+	  SELECT DISTINCT
+	   {dealId}:=dl_info.DEAL_ID,
+	   {l2AmidID}:=dl_info.AMID_CNTRY_ACCOUNT_ID,
+	   {l4AmidID}:=dl_info.AMID_global_account_id,
+	   {custID}:=dl_info.CUST_ID,
+	   {dealCategory}:=DECODE(dl_info.DEAL_CATEGORY, 'G', 'Global', 'P', 'Promotion', 'L', 'Local','Regional') deal_category, 	   
+	   {dealType}:=DECODE(dl_info.DEAL_TYPE_FLAG, 'S', 'Standard', 'P', 'Project', 'C', 'CustomerSat','') deal_type_flag, 
+	   {requestor}:=dl_info.REQUESTOR, 
+	   {approver}:=dl_info.APPROVER, 
+	   {startDate}:=to_char(dl_info.START_DATE,'yyyy/mm/dd:hh24:mi:ss') as startDate,
+	   {endDate}:=to_char(dl_info.END_DATE,'yyyy/mm/dd:hh24:mi:ss') as endDate,
+	   {priceDescriptor}:=dl_info.PRICE_DESCRIPTOR, 
+	   {globalFlag}:=dl_info.GLOBAL_FLAG, 
+	   {replaceDealId}:=dl_info.ORIGINAL_DEAL_ID, 
+	   {defaultSalesCountry}:=dl_info.control_cntry_cd,
+	   {lastModifiedDate}:=to_char(dl_info.last_modified_date,'yyyy/mm/dd:hh24:mi:ss') as lastModifiedDate
+	   FROM ALL_DEAL_INFO dl_info 
+	   WHERE  deal_id IN (SELECT deal_id
+                     FROM offer_deal_map
+                    WHERE offer_id = {q:string2})
+	  </stmt>
+	  
+	  <stmt id="retrieveDealOfferTypeForGenesis">
+	  SELECT DISTINCT 
+	  {specialPricing}:=deal_offer_type
+	             FROM cat_deal_mapping
+          WHERE cat_catalog_id = {?:string1}
+	  </stmt>
+	  
+	  <stmt id="refreshEclipseDeal">
+	                Call BE_ECLIPSE_UTIL.REFRESH_ECLIPSE_DEAL(
+	                                           {i:string1},
+	                                           {i:string2},
+	                                           {o:string3},
+	                                           {o:string4}
+	                                        )
+	         </stmt>
+	         
+	         <stmt id="getDealStatus">
+	                SELECT 
+	                       {id}:=queue.deal_id,
+	                       {version}:=EXTRACT (queue.eventdata, '/eventdata/bd_version_nr/text()').getstringval() as eventData,
+	                       {status}:=queue.status,
+	                       {createDate}:=queue.eventsignaled,
+	                       {lastModifiedDate}:=queue.updatedts
+	                       FROM ecateclp.es_consumernotification queue
+	                             WHERE queue.deal_id = {?:string1} AND queue.SOURCE = 'ECLIPSE' AND  queue.eventsignaled in  (
+	                       SELECT MAX (eventsignaled)
+	                      FROM ecateclp.es_consumernotification
+	                      WHERE deal_id = {?:string2}
+	                      AND SOURCE = 'ECLIPSE')
+	                      AND exists (select 1 from all_deal_info deal where deal.deal_id = {?:string1} and deal.tenant_cd {string3} and deal.fed_deal_fl = {?:string4}) 
+	      				  AND rownum=1 
+	      </stmt>
+	      
+	      <stmt id="getDealDetails">
+	                SELECT {id}:=deal_id, {version}:=bd_version_nr FROM all_deal_info
+	                 WHERE deal_id = {?:string2} AND SOURCE_OF_INFO = 'ECLIPSE' AND tenant_cd {string3} AND fed_deal_fl = {?:string4}
+	      </stmt>
+	      
+	      <stmt id="getEccVersionForEclipseDeal">
+                SELECT
+					{string3}:=bd_version_nr, 
+					{string4}:=tier_deal_flag, 
+					{string5}:=(SELECT NVL (attribute_value, 'N') 
+							FROM regional_attribute_defaults WHERE table_name = 'ECLIPSE_TIER_DEAL'
+							AND attribute_name = 'PULL_ECLIPSE_TIER_DEAL') pull_tier_deal 
+				FROM all_deal_info deal, deal_category_matrix matrix 
+				WHERE deal.deal_id = {?:string1} 
+					AND deal.source_of_info='ECLIPSE'
+					AND deal.business_model_code = matrix.dcm_bus_model_cd(+) 
+					AND deal.mcc_cd = matrix.dcm_mcc_cd(+) 
+					AND deal.region_code = matrix.dcm_region_cd(+)
+					AND deal.tenant_cd {string3}
+					AND deal.fed_deal_fl = {?:string4}
+	      </stmt>
+
+	      <stmt id="findNumOfCatAssociation">
+	                    select  {string2}:=count(*) from cat_deal_mapping where deal_id={?:string1}
+    		</stmt>
+
+	<stmt id="insertFetchDeal">
+		Call Be_Eclipse_Util.FETCH_ECLIPSE_DEALS_IN_GLOBAL(
+		{i:string4},
+		{i:string5},
+		{i:string3},
+		{o:status},
+		{o:message})
+
+	</stmt>
+
+	<stmt id="checkDealStatus">
+
+		SELECT
+		{id}:=queue.deal_id,
+		{version}:=(select BD_VERSION_NR from all_deal_info where deal_id= {?:string3}),
+		{status}:=queue.status,
+		{createDate}:=queue.eventsignaled,
+		{lastModifiedDate}:=queue.updatedts
+		FROM ecateclp.es_consumernotification queue
+		WHERE queue.deal_id = {?:string1} AND queue.SOURCE = 'ECOMCAT' AND
+		queue.eventsignaled in (
+		SELECT MAX (eventsignaled)
+		FROM ecateclp.es_consumernotification
+		WHERE deal_id = {?:string2}
+		AND SOURCE = 'ECOMCAT'
+		AND  exists (SELECT 1 from fetch_cust_eclipse_deals where
+		deal_id={?:string4}) AND eventname='Eclipse_New_Deal_Quoted')
+		AND rownum=1
+	</stmt>
+	<stmt id="checkTenantCodeforDeal">
+		select
+			{string4}:=dl.tenant_cd
+        	from ALL_DEAL_INFO dl where dl.deal_id={?:string1}
+	</stmt>
+	
+
+  </stmt-group>
+
+</comcat-dax-config>

@@ -1,0 +1,56 @@
+/**
+ * Created on Sep 1, 2005
+ *
+ * @author HEMACHANDRA. N
+ *
+ */
+package com.hp.ecc.ui.biz.csog;
+
+public class SogPropagationInfo {
+
+  private String sogId;
+  private String sogItemCode;
+  private String lastPropagationDateStr;
+  private String propagationFlag;
+
+
+  public SogPropagationInfo () {
+  }
+
+  /**
+   * Setter and getter methods for the above private variables
+   */
+
+  public String getSogId () {
+    return sogId;
+  }
+
+  public void setSogId ( String string ) {
+    sogId = string;
+  }
+
+  public String getSogItemCode () {
+    return sogItemCode;
+  }
+
+  public void setSogItemCode ( String string ) {
+    sogItemCode = string;
+  }
+
+  public String getLastPropagationDateStr () {
+    return lastPropagationDateStr;
+  }
+
+  public void setLastPropagationDateStr ( String string ) {
+    lastPropagationDateStr = string;
+  }
+
+  public String getPropagationFlag () {
+    return propagationFlag;
+  }
+
+  public void setPropagationFlag ( String string ) {
+    propagationFlag = string;
+  }
+
+}

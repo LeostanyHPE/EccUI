@@ -1,0 +1,147 @@
+package com.hp.ecc.ui.biz.misc;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.hp.ecc.ui.biz.beans.CustomerSlaDetail;
+import com.hp.ecc.ui.biz.beans.DaoProdLine;
+import com.hp.ecc.ui.biz.beans.DaoRDD;
+import com.hp.ecc.ui.biz.beans.MyBean;
+import com.hp.ecc.ui.view.controller.CustomerController;
+
+public class CustomerRdd {
+	
+	private static final Logger logger = LoggerFactory.getLogger(CustomerRdd.class);
+
+	public Map<String, String> getPLsAsMap() {
+		RDDMgr rm = new RDDMgr();
+		Map<String, String> plMap = new HashMap<String, String>();
+		List list = rm.getProdLines();
+		Iterator itr = list.iterator();
+		ArrayList ts = new ArrayList();
+		ArrayList ks = new ArrayList();
+		while (itr.hasNext()) {
+			DaoProdLine pl = (DaoProdLine) itr.next();
+			String code = pl.getProdLineCode();
+			ks.add(code);
+			ts.add(code + ": " + pl.getProdLineName());
+			plMap.put(code, code + ": " + pl.getProdLineName());
+		}
+		String[] ss;
+		ss = (String[]) ks.toArray(new String[ks.size()]);
+		// form.setProdLineValues(ss);
+		ss = (String[]) ts.toArray(new String[ts.size()]);
+		// form.setProdLineLabels(ss);
+		return plMap;
+	}
+
+	public String[] getPLs() {
+		RDDMgr rm = new RDDMgr();
+		Map<String, String> plMap = new HashMap<String, String>();
+		List list = rm.getProdLines();
+		Iterator itr = list.iterator();
+		ArrayList ts = new ArrayList();
+		ArrayList ks = new ArrayList();
+		while (itr.hasNext()) {
+			DaoProdLine pl = (DaoProdLine) itr.next();
+			String code = pl.getProdLineCode();
+			ks.add(code);
+			ts.add(code + ": " + pl.getProdLineName());
+			plMap.put(code, code + ": " + pl.getProdLineName());
+		}
+		String[] ss;
+		ss = (String[]) ks.toArray(new String[ks.size()]);
+		// form.setProdLineValues(ss);
+		ss = (String[]) ts.toArray(new String[ts.size()]);
+		// form.setProdLineLabels(ss);
+		return ss;
+	}
+
+	public List getRDDs(String cust_key, String region_code, String pl,
+			String adbRegionToConnect) {
+		if (cust_key == null) {
+			return null;
+		}
+
+		RDDMgr rm = new RDDMgr();
+		boolean globalFlag = false;
+		/*
+		 * Global flag will be set to true if the region code is GL
+		 */
+		if (region_code.equals("GL")) {
+			globalFlag = true;
+		}
+
+		/*
+		 * Modified to meet the requirements for customer sla in globals
+		 */
+
+		return rm.getRDDs(pl, cust_key, region_code, globalFlag,
+				adbRegionToConnect);
+	}
+
+	public void processSave(List<CustomerSlaDetail> slaDetails) {
+		List<DaoRDD> rdds = new ArrayList<DaoRDD>();
+		for (CustomerSlaDetail sla : slaDetails) {
+			DaoRDD rdd = new DaoRDD();
+			rdd.setCountryCode(sla.country_code);
+			rdd.setCustKey(sla.cust_key);
+			rdd.setProdLineCode(sla.pl);
+			rdd.setCountryName(sla.country_name);
+			rdd.setCtoRDD(sla.cto_rdd);
+			rdd.setCustCtoRDD(sla.cust_cto_rdd);
+			rdd.setCustRDD(sla.cust_rdd);
+			rdd.setDftRDD(sla.dft_rdd);
+			rdd.setRegionCode(sla.region_code);
+			rdds.add(rdd);
+		}
+		Collection beans = rdds;
+		RDDMgr rm = new RDDMgr();
+		int n = rm.updateRDDs(beans);
+		System.out.println("updated: " + n);
+	}
+
+	public void processCallSPToUpdateCatalogs(String cust_key) {
+
+		String okmsg = "Your changes have been successfully propagated to all the affected catalogs.";
+		String errmsg = "There was an error propogating changes to the affected catalogs.";
+		String msg = null;
+
+		MyBean bean = new MyBean();
+		bean.setCustKey(cust_key);
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = daxMgr.makeParsedStmt("rdd",
+				"updateMasterCatalogAndCatalog", null, null, null);
+		DaxDB db = daxMgr.getDaxDB();
+		db.doSP(pstmt, bean, bean);
+
+		if (bean.getRetStatus() != null
+				&& bean.getRetStatus().trim().equals("err")) {
+			msg = errmsg + "\n" + " Database Error: " + bean.getRetMessage();
+			
+			logger.error("processCallSPToUpdateCatalogs() : error while updaing catalog with SLA details is " + bean.getRetMessage());
+		}
+		msg = okmsg;
+
+		logger.info("processCallSPToUpdateCatalogs() : Successfully updated catalog with SLA details." + okmsg);
+		
+	}
+
+	public List getEuRddList(String custKey) {
+		EuRDDMgr mgr = EuRDDMgr.getEuRDDMgr();
+		List rddlist = (List) mgr.getRddList(custKey);
+		return rddlist;
+	}
+
+}

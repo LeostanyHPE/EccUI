@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<comcat-dax-config>
+
+    <stmt-group id="master-uploads">
+
+        <stmt id="load_temp_table">
+		INSERT INTO CUSTOMER_CONTENT_DIFF_TEMP (UPLOAD_ID, ROW_NUM, SHORT_DESC, LONG_DESC, LANG_LOCALE, PART_NUMBER)
+
+		VALUES ({?:uploadId},{?:rowNo},{?:shortDesc},{?:longDesc},{?:langCd},{?:productNo})	
+
+        </stmt>
+
+        <stmt id="desc_upload_sp">	
+       		CALL UPLOAD_BULK_DESC.INSERT_UPDATE_PROD_DESC(
+          	{i:uploadId},
+	       	{i:custKey},            
+            {o:retMsg},
+			{o:retStatus}
+             	)
+        </stmt>
+
+  </stmt-group>
+
+</comcat-dax-config>

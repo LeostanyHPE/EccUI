@@ -1,0 +1,247 @@
+package com.hp.ecc.ui.biz.publish;
+
+import com.hp.ecc.ui.common.biz.BizObject;
+import com.hp.ecc.ui.util.StrUtil;
+
+
+
+/**
+ * Represent a target.
+ *
+ * @version 1.0
+ */
+
+public class Target extends BizObject {
+
+  public static final String AUTOUPLOAD_METHOD = "AUTOUPLOAD";
+  public static final String FTP_METHOD = "FTP";
+  public static final String EMAIL_METHOD = "EMAIL";
+  public static final String SFTP_METHOD="SFTP";
+  public static final String HPSB_METHOD="HPSB";
+  public String whereClause = null;
+  private Integer returnCode;
+  public Target () {
+    super ();
+  }
+
+  public Target ( Target t ) {
+    this.setCustKey ( t.getCustKey () );
+    this.setRegionCode ( t.getRegionCode () );
+    this.setTargetName ( t.getTargetName () );
+    this.setTargetId ( t.getTargetId () );
+    this.setMethod ( t.getMethod () );
+    this.setAccountId ( t.getAccountId () );
+    this.setNetworkId ( t.getNetworkId () );
+    this.setUploadUrl ( t.getUploadUrl () );
+    this.setShareSecret ( t.getShareSecret () );
+    this.setFtpAccount ( t.getFtpAccount () );
+    this.setFtpPassword ( t.getFtpPassword () );
+    this.setFtpServer ( t.getFtpServer () );
+    this.setFtpDirectory ( t.getFtpDirectory () );
+    this.setEmail ( t.getEmail () );
+  }
+
+  // CustKey
+  public void setCustKey ( java.lang.String custKey ) {
+    setValue ( TargetFields.CUST_KEY, custKey );
+  }
+
+  public java.lang.String getCustKey () {
+    String custKey = ( String ) getValue ( TargetFields.CUST_KEY );
+    if ( custKey == null ) {
+      custKey = "";
+    }
+    return custKey;
+  }
+
+  // RegionCode
+  public void setRegionCode ( java.lang.String regionCode ) {
+    setValue ( TargetFields.REGION_CODE, regionCode );
+  }
+
+  public java.lang.String getRegionCode () {
+    String regionCd = ( String ) getValue ( TargetFields.REGION_CODE );
+    if ( regionCd == null ) {
+      regionCd = "";
+    }
+    return regionCd;
+  }
+
+  // TargetName
+  public void setTargetName ( java.lang.String targetName ) {
+    setValue ( TargetFields.PUBLISH_TARGET_NAME, targetName );
+  }
+
+  public java.lang.String getTargetName () {
+    String tgtName = ( String ) getValue ( TargetFields.PUBLISH_TARGET_NAME );
+    if ( tgtName == null ) {
+      tgtName = "";
+    }
+    return tgtName;
+  }
+
+  // TargetId
+  public void setTargetId ( java.lang.String targetId ) {
+    setValue ( TargetFields.PUBLISH_TARGET_ID, targetId );
+  }
+
+  public java.lang.String getTargetId () {
+    return ( String ) getValue ( TargetFields.PUBLISH_TARGET_ID );
+  }
+
+  // Method
+  public void setMethod ( java.lang.String method ) {
+    setValue ( TargetFields.METHOD, method );
+  }
+
+  public java.lang.String getMethod () {
+    String mtd = ( String ) getValue ( TargetFields.METHOD );
+    if ( mtd == null ) {
+      mtd = "";
+    }
+    return mtd;
+  }
+
+  // NetworkId (for Auto Upload)
+  public void setNetworkId ( java.lang.String networkId ) {
+    setValue ( TargetFields.UPLOAD_ARIBA_NW_ID, networkId );
+  }
+
+  public java.lang.String getNetworkId () {
+    String ntwId = ( String ) getValue ( TargetFields.UPLOAD_ARIBA_NW_ID );
+    if ( ntwId == null ) {
+      ntwId = "";
+    }
+    return ntwId;
+  }
+
+  // AccountId (for Auto Upload)
+  public void setAccountId ( java.lang.String accountId ) {
+    setValue ( TargetFields.UPLOAD_ARIBA_ACCT, accountId );
+  }
+
+  public java.lang.String getAccountId () {
+    String accId = ( String ) getValue ( TargetFields.UPLOAD_ARIBA_ACCT );
+    if ( accId == null ) {
+      accId = "";
+    }
+    return accId;
+  }
+
+  // ShareSecret (for Auto Upload)
+  public void setShareSecret ( java.lang.String shareSecret ) {
+    setValue ( TargetFields.UPLOAD_ARIBA_PASSWORD, shareSecret );
+  }
+
+  public java.lang.String getShareSecret () {
+    String passWd = ( String ) getValue ( TargetFields.UPLOAD_ARIBA_PASSWORD );
+    if ( passWd == null ) {
+      passWd = "";
+    }
+    return passWd;
+  }
+
+  // UploadUrl (for Auto Upload)
+  public void setUploadUrl ( java.lang.String uploadUrl ) {
+    setValue ( TargetFields.UPLOAD_URL, uploadUrl );
+  }
+
+  public java.lang.String getUploadUrl () {
+    String url = ( String ) getValue ( TargetFields.UPLOAD_URL );
+    if ( url == null ) {
+      url = "";
+    }
+    return url;
+  }
+
+  // FtpServer (for FTP)
+  public void setFtpServer ( java.lang.String ftpServer ) {
+    setValue ( TargetFields.FTP_SERVER, ftpServer );
+  }
+
+  public java.lang.String getFtpServer () {
+    String ftpServer = ( String ) getValue ( TargetFields.FTP_SERVER );
+    if ( ftpServer == null ) {
+      ftpServer = "";
+    }
+    return ftpServer;
+  }
+
+  // FtpAccount (for FTP)
+  public void setFtpAccount ( java.lang.String ftpAccount ) {
+    setValue ( TargetFields.FTP_ACCT, ftpAccount );
+  }
+
+  public java.lang.String getFtpAccount () {
+    String ftpAcc = ( String ) getValue ( TargetFields.FTP_ACCT );
+    if ( ftpAcc == null ) {
+      ftpAcc = "";
+    }
+    return ftpAcc;
+  }
+
+  // FtpPassword (for FTP)
+  public void setFtpPassword ( java.lang.String ftpPassword ) {
+    setValue ( TargetFields.FTP_PASSWORD, ftpPassword );
+  }
+
+  public java.lang.String getFtpPassword () {
+    String ftpPass = ( String ) getValue ( TargetFields.FTP_PASSWORD );
+    if ( ftpPass == null ) {
+      ftpPass = "";
+    }
+    return ftpPass;
+  }
+
+  // FtpDirectory (for FTP)
+  public void setFtpDirectory ( java.lang.String ftpDirectory ) {
+    if ( StrUtil.isEmpty ( ftpDirectory ) ) {
+      ftpDirectory = ".";
+    }
+
+    ftpDirectory = ftpDirectory.replace ( '\\', '/' );
+
+    if ( ftpDirectory.endsWith ( "/" ) ) {
+      ftpDirectory = ftpDirectory.substring ( 0, ftpDirectory.length () - 1 );
+    }
+
+    setValue ( TargetFields.FTP_DIR, ftpDirectory );
+  }
+
+  public java.lang.String getFtpDirectory () {
+    String ftpDir = ( String ) getValue ( TargetFields.FTP_DIR );
+    if ( ftpDir == null ) {
+      ftpDir = "";
+    }
+    return ftpDir;
+  }
+
+  // Email (for Email)
+  public void setEmail ( java.lang.String email ) {
+    setValue ( TargetFields.EMAIL, email );
+  }
+
+  public java.lang.String getEmail () {
+    String email = ( String ) getValue ( TargetFields.EMAIL );
+    if ( email == null ) {
+      email = "";
+    }
+    return email;
+
+  }
+
+  // WhereClause
+  public void setWhereClause ( java.lang.String where ) {
+    whereClause = where;
+  }
+
+  public java.lang.String getWhereClause () {
+    return whereClause;
+  }
+
+  public void setRetCode ( Integer value ) {returnCode = value;
+  }
+
+  public Integer getRetCode () {return returnCode;
+  }
+}

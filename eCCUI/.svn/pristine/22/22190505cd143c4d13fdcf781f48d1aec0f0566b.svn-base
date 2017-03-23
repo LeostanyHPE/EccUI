@@ -1,0 +1,230 @@
+package com.hp.ecc.ui.biz.content;
+
+import java.util.Date;
+
+
+public class SearchCriteria implements ProductSearchConstants {private String
+    sku;
+private String shortDesc;
+private String prodClassCode;
+private String prodLine;
+private String mfgID;
+private String mfgName;
+private String customerSku;
+private String prodStockCode;
+private String prodActivityCode;
+private String prodVisionFlag;
+private Date endOfLifeFrom;
+private Date endOfLifeTo;
+private Date discontinueFrom;
+private Date discontinueTo;
+private Date lastModifiedFrom;
+private Date lastModifiedTo;
+private String categoryName;
+private int categorization;
+private int searchScope;
+private String countryCodes[];
+private String searchLocale;
+private String orderabilityCountries[];
+private String priceDescriptors[];
+private String whereClause;
+private String tenantCode;
+private int recordCount;
+private String sortByAndSortOrder;
+
+
+public String getSortByAndSortOrder() {
+	return sortByAndSortOrder;
+}
+
+public void setSortByAndSortOrder(String sortByAndSortOrder) {
+	this.sortByAndSortOrder = sortByAndSortOrder;
+}
+
+public int getRecordCount() {
+	return recordCount;
+}
+
+public void setRecordCount(int recordCount) {
+	this.recordCount = recordCount;
+}
+
+public void setSku ( String sku ) {this.sku = sku;
+}
+
+public String getSku () {return this.sku;
+}
+
+public void setShortDesc ( String shortDesc ) {this.shortDesc = shortDesc;
+}
+
+public String getShortDesc () {return this.shortDesc;
+}
+
+public void setProdClassCode ( String prodClassCode ) {this.prodClassCode =
+    prodClassCode;
+}
+
+public String getProdClassCode () {return this.prodClassCode;
+}
+
+public void setProdLine ( String prodLine ) {this.prodLine = prodLine;
+}
+
+public String getProdLine () {return this.prodLine;
+}
+
+public void setMfgID ( String mfgID ) {this.mfgID = mfgID;
+}
+
+public String getMfgID () {return this.mfgID;
+}
+
+public void setMfgName ( String mfgName ) {this.mfgName = mfgName;
+}
+
+public String getMfgName () {return this.mfgName;
+}
+
+public void setCustomerSku ( String customerSku ) {this.customerSku =
+    customerSku;
+}
+
+public String getCustomerSku () {return this.customerSku;
+}
+
+public void setProdStockCode ( String prodStockCode ) {this.prodStockCode =
+    prodStockCode;
+}
+
+public String getProdStockCode () {return this.prodStockCode;
+}
+
+public void setProdActivityCode ( String prodActivityCode ) {this.
+    prodActivityCode = prodActivityCode;
+}
+
+public String getProdActivityCode () {return this.prodActivityCode;
+}
+
+public void setProdVisionFlag ( String prodVisionFlag ) {this.prodVisionFlag =
+    prodVisionFlag;
+}
+
+public String getProdVisionFlag () {return this.prodVisionFlag;
+}
+
+public void setEndOfLifeFrom ( Date endOfLifeFrom ) {this.endOfLifeFrom =
+    endOfLifeFrom;
+}
+
+public Date getEndOfLifeFrom () {return this.endOfLifeFrom;
+}
+
+public void setEndOfLifeTo ( Date endOfLifeTo ) {this.endOfLifeTo = endOfLifeTo;
+}
+
+public Date getEndOfLifeTo () {return this.endOfLifeTo;
+}
+
+public void setDiscontinueFrom ( Date discontinueFrom ) {this.discontinueFrom =
+    discontinueFrom;
+}
+
+public Date getDiscontinueFrom () {return this.discontinueFrom;
+}
+
+public void setDiscontinueTo ( Date discontinueTo ) {this.discontinueTo =
+    discontinueTo;
+}
+
+public Date getDiscontinueTo () {return this.discontinueTo;
+}
+
+public void setLastModifiedFrom ( Date lastModifiedFrom ) {this.
+    lastModifiedFrom = lastModifiedFrom;
+}
+
+public Date getLastModifiedFrom () {return this.lastModifiedFrom;
+}
+
+public void setLastModifiedTo ( Date lastModifiedTo ) {this.lastModifiedTo =
+    lastModifiedTo;
+}
+
+public Date getLastModifiedTo () {return this.lastModifiedTo;
+}
+
+public void setCategoryName ( String categoryName ) {this.categoryName =
+    categoryName;
+}
+
+public String getCategoryName () {return this.categoryName;
+}
+
+public void setCategorization ( int categorization ) {this.categorization =
+    categorization;
+}
+
+public int getCategorization () {return this.categorization;
+}
+
+public void setSearchScope ( int searchScope ) {this.searchScope = searchScope;
+}
+
+public int getSearchScope () {return this.searchScope;
+}
+
+public void setCountryCodes ( String countryCodes[] ) {this.countryCodes =
+    countryCodes;
+}
+
+public String[] getCountryCodes () {return this.countryCodes;
+}
+
+public void setSearchLocale ( String searchLocale ) {this.searchLocale =
+    searchLocale;
+}
+
+public String getSearchLocale () {return this.searchLocale;
+}
+
+public String getWhereClause () {return this.whereClause;
+}
+
+public void setWhereClause ( String newWhereClause ) {this.whereClause =
+    newWhereClause;
+}
+
+public String getTenantCode() {
+	return tenantCode;
+}
+
+public void setTenantCode(String tenantCode) {
+	this.tenantCode = tenantCode;
+}
+
+public void setOrderabilityCountries ( String orderabilityCountries[] ) {if ( (
+    orderabilityCountries != null ) && ( orderabilityCountries.length > 0 ) ) {this.
+    orderabilityCountries = orderabilityCountries;
+}
+else {orderabilityCountries = null;
+}
+}
+
+public String[] getOrderabilityCountries () {return this.orderabilityCountries;
+}
+
+public void setPriceDescriptors ( String priceDescriptors[] ) {if ( (
+    priceDescriptors != null ) && ( priceDescriptors.length > 0 ) ) {this.
+    priceDescriptors = priceDescriptors;
+}
+else {priceDescriptors = null;
+}
+}
+
+public String[] getPriceDescriptors () {return this.priceDescriptors;
+}
+
+
+}

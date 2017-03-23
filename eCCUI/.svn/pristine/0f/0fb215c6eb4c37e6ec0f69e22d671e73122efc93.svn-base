@@ -1,0 +1,255 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.db.dao;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.ConfigItem;
+import com.hp.ecc.ui.view.beans.ManageConfigFullForm;
+import com.hp.ecc.ui.view.beans.ManageConfigObj;
+import com.hp.ecc.ui.view.beans.UpdateConfigItem;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+/**
+ * @author duvvurso
+ *
+ */
+public class ConfigDao {
+	
+	public ConfigDao(){
+
+	}
+	
+	public JSONArray getCountriesList(String groupId, String queryId, Object parameter, Object bindBean, String adbRegionToConnect) {	
+		DaxMgr daxMgr = DaxMgr.getInstance ();
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt ( groupId,queryId, parameter, null, null );
+		
+		JSONArray listOfCountries = daxDB.doSelectJson(stmt, ManageConfigFullForm.class, bindBean); 
+		
+		return listOfCountries;
+	}//getCountriesList
+	
+	public JSONArray getGenericList(String groupId, String queryId, Object parameter, Object bindBean, String adbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance ();
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt ( groupId,queryId, parameter, null, null );
+		
+		JSONArray list = daxDB.doSelectJson(stmt, ManageConfigFullForm.class, bindBean); 
+		
+		return list;
+	}	
+	public JSONArray getConfigsList(String groupId, String queryId, Object parameter, String catalogType, String adbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance ();
+		DaxDB daxDB = daxMgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt ( groupId, queryId, parameter, null, null );
+		
+		JSONArray listOfConfigs = daxDB.doSelectJson(stmt, ConfigItem.class, parameter); 
+		if (listOfConfigs != null && listOfConfigs.size() > 0 && !StrUtil.isListEmpty ( listOfConfigs ) ) {
+		    addFilterCondtoEnableCheckbox(listOfConfigs, catalogType);
+		}		
+		return listOfConfigs;
+	}//getList
+	
+	public JSONArray getConfigs(String whereClause, String regionCode, String catalogId, String catalogType, String adbRegionToConnect) {
+		DaxMgr daxMgr = DaxMgr.getInstance ();
+	    DaxDB daxDb = daxMgr.getDaxDB(adbRegionToConnect);
+	    
+		DaxDataBeanGeneral gBean = new DaxDataBeanGeneral ();
+		gBean.setString1 ( whereClause );
+		gBean.setString2( regionCode );
+		gBean.setString3(catalogId);
+	    
+		DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( "ConfigLandingMgr", "getConfigsBasedOnSearch", gBean, null, null );
+		
+		JSONArray listOfConfigs = daxDb.doSelectJson(pstmt, ConfigItem.class, gBean );
+		if (listOfConfigs != null && listOfConfigs.size() > 0 && !StrUtil.isListEmpty ( listOfConfigs ) ) {
+		    addFilterCondtoEnableCheckbox(listOfConfigs, catalogType);
+		}
+		return listOfConfigs;
+	}//getConfigs
+	
+	public JSONArray addFilterCondtoEnableCheckbox(JSONArray listOfConfigs, String catalogType){
+		
+		JSONObject jsonObject = null;
+        for ( int i = 0; i < listOfConfigs.size (); i++ ) {
+            boolean enable1 = false;
+            boolean enable2 = false;
+        	java.util.Date sysdate = new java.util.Date ( System.currentTimeMillis () );
+            if (!TimeZone.getDefault().equals(TimeZone.getTimeZone("GMT"))) {
+               SimpleDateFormat sim = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+               sim.setTimeZone(TimeZone.getTimeZone("GMT"));
+               sysdate = new Date(sim.format(sysdate));
+            }
+            jsonObject = (JSONObject)listOfConfigs.get(i);
+            
+            String replacedid = (String)jsonObject.get("replacedid");
+            if ( StrUtil.isEmpty ( replacedid ) ) {
+                enable1 = true; //enable the check box
+            }
+            else {
+                enable1 = false; //disable the check box
+            }
+            Date effFromDate = (Date)jsonObject.get("validfromdate");
+            Date effToDate = (Date)jsonObject.get("validtodate");
+            if ( enable1 ) {
+                if  ((effFromDate== null || sysdate.after ( effFromDate )) &&  
+               	 	(effToDate== null || (sysdate.before ( effToDate ) )  ))
+                {
+                	enable2 = true; //enable the check box
+                }
+                else {
+                  enable2 = false; //disable the check box
+                }
+            }
+
+            if ( enable1 && enable2 ) {
+            	jsonObject.put ("flagdisable", false ); //disable = false ----ENABLE the check box
+            }
+            else {
+            	jsonObject.put ( "flagdisable", true ); //disable = true
+            }
+
+            String keepFlag = (String)jsonObject.get("existingconfigflag");
+            //If it's master catalog then apply KEEP_FLAG="Y" filter
+            if (!keepFlag.equals("N")){
+            	if (!StrUtil.isEmpty ( catalogType ) && catalogType.equals("MCAT")){
+            	   if (keepFlag.equals("K")){
+            		   jsonObject.put ("flagdisable", false );
+            	   }else{
+            		   jsonObject.put ("flagdisable", true );
+            	   }
+
+            	}else{
+            	//For standard catalog, existing configs are always enabled..no need to check for "casual" value in contract_type col
+            	   jsonObject.put ("flagdisable", false );
+            	}
+            }
+      }                    
+
+		return listOfConfigs;
+	}
+	
+	/**
+	   * Add a list of configs from the given catalog id based on type of catalog (Master or Standard).
+	   * Configs are passed to the Stored proc one by one.
+	   * @param List - List of ConfigLandingObj objects containing Catalogid, user, config id, ConfigProd etc
+	   * @param String cat_type : Type of catalog. It could be "MASTER" or "STD"
+	   * @param SortInfo
+	   * @param Pagination
+	   * @return List - list of objects containing the return code and message from procedure call
+	   **/
+	  public List doAdd ( List lst, String catType, String adbRegionToConnect) {
+		  ArrayList returnList = new ArrayList ();
+		  if ( lst != null && lst.size () != 0 ) {
+			  DaxMgr dMgr = DaxMgr.getInstance ();
+			  DaxDB db = dMgr.getDaxDB(adbRegionToConnect);
+	    	
+			  for ( int i = 0; i < lst.size (); i++ ) {
+				    UpdateConfigItem obj = ( UpdateConfigItem ) lst.get ( i );
+		    		DaxParsedStmt pstmt = null;
+		    		if ( catType.equals ( "MCAT" ) ) {
+		    			pstmt = dMgr.makeParsedStmt ( "ConfigLandingMgr", "addConfigToMaster", obj, null, null );
+		    		}
+		    		else if ( catType.equals ( "STD" ) ) {
+		    			pstmt = dMgr.makeParsedStmt ( "ConfigLandingMgr", "addConfigToStandard", obj, null, null );
+	
+		          /**setting autocommit to false to make sure entire transaction is successful
+		           * based on return status of each config prod when adding
+		           * a config to the catalog. */
+		    		}
+		    		db.setAutoCommit ( false );
+	
+		    		db.doSP ( pstmt, obj, obj );
+	
+		    		boolean isError = false;
+		    		if ( obj != null && obj.getReturnCode() == 1 ) {
+		    			isError = false;
+		    		}
+		    		else {
+		    			isError = true;
+		    		}
+		    		db.setAutoCommit ( true );
+		    		db.finish ( isError );
+		    		
+		    		returnList.add ( obj );
+		      }//i
+	     }
+	    
+		 return returnList;
+	  }//doAdd
+	  
+	  
+	  /**
+	   * Delete a list of configs from the given catalog id based on type of catalog (Master or Standard).
+	   * Configs are passed to the Stored proc one by one.
+	   * @param List - List of ConfigLandingObj objects containing ConfigProd information.
+	   * @param String cat_type : Type of catalog. It could be "MASTER" or "STD"
+	   * @return List - list of objects containing the return code and message from procedure call
+	   **/
+	  public List doDelete ( List lst, String cat_type,  String adbRegionToConnect) {
+		  ArrayList returnList = new ArrayList ();
+		  if ( lst != null && lst.size () != 0 ) {
+			  DaxMgr dMgr = DaxMgr.getInstance ();
+			  DaxDB db = dMgr.getDaxDB(adbRegionToConnect);
+			  for ( int i = 0; i < lst.size (); i++ ) {
+					UpdateConfigItem obj = ( UpdateConfigItem ) lst.get ( i );
+			        DaxParsedStmt pstmt = null;
+			        if ( cat_type.equals ( "MCAT" ) ) {
+			          pstmt = dMgr.makeParsedStmt ( "ConfigLandingMgr","deleteConfigFromMaster", obj, null, null );
+			        }
+			        else if ( cat_type.equals ( "STD" ) ) {
+			          pstmt = dMgr.makeParsedStmt ( "ConfigLandingMgr", "deleteConfigFromStandard", obj, null, null );
+		
+			          /**setting autocommit to false to make sure entire transaction is successful
+			           * based on return status of each config prod when deleting
+			           * a config from the catalog. */
+			        }
+			        db.setAutoCommit ( false );
+		
+			        db.doSP ( pstmt, obj, obj );
+		
+			        boolean isError = false;
+			        if ( obj != null && obj.getReturnCode () == 1 ) {
+			          isError = false;
+			        }
+			        else {
+			          isError = true;
+			        }
+			        db.setAutoCommit ( true );
+			        db.finish ( isError );
+		
+			        returnList.add ( obj );
+			  }
+		  }
+		  return returnList;
+	  }//doDelete
+	
+	  /**
+	   * Raises DBMS alert manually to process an event residing in CONFIG_QUEUE table.
+	   **/
+	  public static void raiseAlert(String adbRegionToConnect) {
+	      DaxMgr dMgr = DaxMgr.getInstance ();
+	      DaxDB db = dMgr.getDaxDB (adbRegionToConnect);
+	      DaxParsedStmt pstmt = dMgr.makeParsedStmt ( 
+	         "ConfigLandingMgr", "raiseAlert", null, null, null);
+	      db.doSP (pstmt, null, null);
+	      db.finish(false);
+	  }
+}//class

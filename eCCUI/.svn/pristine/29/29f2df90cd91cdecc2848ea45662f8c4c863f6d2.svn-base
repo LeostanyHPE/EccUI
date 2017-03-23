@@ -1,0 +1,269 @@
+eccApp.controller('addProductManuallyCtrl',['$scope', '$http','$routeParams', '$timeout','shareddata','webStorage','$routeParams','dateParser','$upload',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage,$routeParams,dateParser,$upload) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.displayCategories = [];
+	$scope.displaySuppIdList = [];	
+	$scope.suppliername  = '';
+	$scope.roleId = webStorage.local.get('userRoleId');
+	$scope.files = [];
+	$scope.form={"prodId":"","category":"","warrantyCode":"","suppId":"","suppPartId":"","shortDesc":"","leadTime":"","mrfUrl":"","suppUrl":"","longDesc":"","suppName":"","mfr":"","uom":"","mfrPartId":"","warrantyDesc":""};
+	
+	$scope.loadAddProductManually=function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Add Product Manually Task\"");
+		
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$http({   
+            url: 'manage/addProductManually.htm?task=display',
+            method:"POST",
+            data: $scope.form,
+            headers: {
+            		"Accept": "application/json; charset=utf-8",
+                    "Cache-Control" : "no-cache",
+                    "Pragma" : "no-cache",
+                    "If-Modified-Since" : "0"
+            		}
+			}).
+			success(function(data,status,header,config) {
+				
+				  $scope.errorMessage = data.errorMessage;
+				  $scope.successMessage = data.successMessage;				 
+				  
+				  if($scope.errorMessage == undefined){
+					  $("#idErrorMessage").css({"display":"none"});					  
+				  }
+				  if($scope.successMessage == undefined){					  
+					  $("#idSuccessMessage").css({"display":"none"});
+				  }
+				  
+				  $scope.displayCategoriesList = data.categoriesInfo;					 
+				  $scope.displayCategoriesList.splice(0,0,{"nodeId":"0","nodeName":"------------------Select----------------"});
+				  $scope.selCategory	= '0';
+				  
+				  $scope.displaySuppIdList = data.supplierInfo;	
+				  $scope.displaySuppIdList.splice(0,0,{"supplier_id":"-----Select-----","region_code":""});
+				  $scope.selSuppId	= '-----Select-----';
+				  
+				  $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).
+			error(function(data, status, headers, config) {
+			        console.log("Error in Add prodcut manually service");
+			                            
+			});	
+	};
+		 	
+	$scope.allSuppInfo=function(){	
+		angular.forEach($scope.displaySuppIdList, function(item){	
+        	if(item.supplier_id==$scope.selSuppId){
+        		
+        		$scope.suppliername = item.supplier_name;
+        		$scope.supplierurl = item.supplier_url;
+        	}
+	    });
+			 	
+	};
+	$scope.changeEvent = function()
+	{
+		$scope.form.mfrPartId = $scope.form.prodId;
+	    $scope.form.suppPartId = $scope.form.prodId;		
+    };
+    $scope.SaveProductManually=function(){
+    	if($scope.files && $scope.files[0] && $scope.files[0].name) {
+			var extension = $scope.files[0].name.substr($scope.files[0].name.indexOf(".")+1);
+			if(!(extension == "jpg" || extension == "gif")) {
+				$scope.showMsg('', 'Invalid upload image file or file type. The upload image file has to be a gif or jpg type.');
+				return ;
+			}
+		}
+    	if($scope.form.prodId == ""){
+			 $scope.hideMsg();			 
+			 $scope.showMsg('','Product w/option: Required field');			
+			return;
+		}
+		if($scope.form.uom==""){
+			 $scope.hideMsg();
+			 $scope.showMsg('','UOM: Required field');			
+			return;
+		}
+		if($scope.form.mfrPartId==""){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Mfr Part ID: Required field');			
+			return;
+		}
+		if($scope.form.shortDesc==""){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Short Description: Required field');			
+			return;
+		}
+		if($scope.form.longDesc==""){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Long Description: Required field');			
+			return;
+		}	
+		if($scope.selCategory == "" || $scope.selCategory == "0" ){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Category: Required field');			
+			return;
+		}
+		
+    	 if( $scope.files && $scope.files[0] && $scope.files[0].name)
+			  $scope.uploadImage($scope.form.prodId);
+    	 else
+    	 $scope.SaveProductManuallyWithoutUpload();
+    };
+	
+	$scope.SaveProductManuallyWithoutUpload=function(){		 
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		 $scope.hideMsg();	
+		//alert("lDescong : "+$scope.form.longDesc);
+		//$scope.form.prodId = $scope.prodId;
+		/*$scope.form.shortDesc = $scope.shortDesc;
+		$scope.form.longDesc = $scope.longDesc;
+		$scope.form.uom = $scope.uom;
+		$scope.form.mfrPartId = $scope.mfrPartId;*/	
+		 if($scope.selSuppId=="-----Select-----"){
+			 $scope.form.suppId="";
+		 }
+		 else{
+		$scope.form.suppId = $scope.selSuppId;
+		}
+		$scope.form.category = $scope.selCategory;
+		$scope.form.suppName = $scope.suppliername;
+		$scope.form.suppUrl = $scope.supplierurl;	
+		
+	
+		$http({   
+            url: 'manage/addProductManually.htm?task=save',
+            method:"POST",
+            data: $scope.form,
+            headers: {
+            		"Accept": "application/json; charset=utf-8",
+                    "Cache-Control" : "no-cache",
+                    "Pragma" : "no-cache",
+                    "If-Modified-Since" : "0"
+            		}
+			}).
+			success(function(data,status,header,config) {
+				 if(data.success_msg!=null){
+								 $scope.showMsg(data.success_msg,'');
+								 document.location.href='#/ManageProductList';
+								 webStorage.session.add('messageAfterSaveProduct', data.success_msg);
+						}
+						if(data.error_msg!=null){
+							$scope.hideMsg();
+							$scope.showMsg('',data.error_msg);	
+						}
+			
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).
+			error(function(data, status, headers, config) {
+			        console.log("Error in Saving Product");
+			                            
+			});
+		
+	};
+	
+	$scope.resetAddProdManually=function(){	
+		
+		if($scope.form.prodId != undefined){
+			$scope.form.prodId = "";
+		}
+		if($scope.selCategory != undefined){
+			$scope.selCategory ="";
+		}
+		if($scope.form.warrantyCode != undefined){
+			$scope.form.warrantyCode ="";
+		}
+		if($scope.selSuppId != undefined){
+			$scope.selSuppId="";			
+		}
+		if($scope.form.suppPartId != undefined){
+			$scope.form.suppPartId="";
+		}
+		if($scope.form.shortDesc != undefined){
+			$scope.form.shortDesc = "";
+		}
+		if($scope.form.longDesc != undefined){
+			$scope.form.longDesc = "";
+		}
+		if($scope.form.uom != undefined){
+			$scope.form.uom = "";
+		}
+		if($scope.form.mfrPartId != undefined){
+			$scope.form.mfrPartId = "";
+		}
+		if($scope.form.suppId != undefined){
+			$scope.form.suppId = "";
+		}
+		if($scope.form.category != undefined){
+			$scope.form.category = "";
+		}
+		if($scope.suppliername != undefined){
+			$scope.suppliername = "";
+		}
+		if($scope.supplierurl != undefined){
+			$scope.supplierurl = "";
+		}
+		if($scope.form.leadTime != undefined){
+			$scope.form.leadTime = "";
+		}
+		if($scope.form.image != undefined){
+			$scope.form.image = "";
+		}
+		if($scope.form.mrfUrl != undefined){	
+			$scope.form.mrfUrl = "";
+		}
+		if($scope.form.warrantyDesc != undefined){
+			$scope.form.warrantyDesc = "";
+		}
+		if($scope.form.mfr != undefined){
+			$scope.form.mfr = "";
+		}
+		$scope.files='';
+		
+	};
+	$scope.returnTo_addProductManuallyCtrl = webStorage.session.get('PrevPage');
+	$scope.cancelAddProdManually=function(){	
+		document.location.href=webStorage.session.get('PrevPage');		
+	};
+	
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	$scope.uploadImage = function(prodId){
+		 $upload.upload({
+       	method: 'POST',
+       	url: 'manage/productImageUpload.htm?prodId='+$scope.form.prodId,
+		    file: $scope.files[0],
+		    async: false
+       }).success(function (data, status, headers, config) {
+    	   $scope.form.imageImport=data.ImageName;
+    	   $scope.SaveProductManuallyWithoutUpload();
+           return true;
+       }).error(function(data, status, headers, config) {
+  			 $scope.hideMsg();
+  			// $scope.showMsg('',data.error);
+  			 return false;
+			});
+	};
+	
+	$scope.showMsg=function(success, error){
+    	$scope.successMessage=success;
+    	$scope.errorMessage=error;
+    	
+    	if($scope.successMessage != ""){
+    		$("#idSuccessMessage").css({"display":"block"});
+    	}    	
+    	
+    	if($scope.errorMessage != ""){
+    		$("#idErrorMessage").css({"display":"block"});
+    	}
+    };
+    $scope.hideMsg=function(){
+    	$scope.successMessage='';
+    	$scope.errorMessage='';
+    };
+}]);

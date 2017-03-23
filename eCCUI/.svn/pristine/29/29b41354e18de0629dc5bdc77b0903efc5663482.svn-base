@@ -1,0 +1,72 @@
+package com.hp.ecc.ui.biz.processor.catalog;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.StringTokenizer;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.pricetier.PriceTierMgr;
+import com.hp.ecc.ui.util.StrUtil;
+
+
+
+@Service
+public class PriceTierAssociatesListProcessor {
+
+	PriceTierMgr priceTierManager;
+
+	public List getPriceTierAssociatesList(String regionCode, String priceTierId, String dbRegion, String tenantCode) {
+		HashMap<String, Object> messgae = new HashMap<String, Object>();
+		List priceTierAssociatesList = new ArrayList();
+		List catalogList = null;
+		List priceTierAssociatesListJsonArray = null;
+		Catalog catalog = null;
+		priceTierManager = new PriceTierMgr();
+		catalogList = priceTierManager.getPriceTierInfoAsJson(regionCode, priceTierId, dbRegion, tenantCode);
+		priceTierAssociatesList.add(catalogList);
+		if ( catalogList == null ) {
+			messgae.put("errorMsg", "Failed to retreive Price tier Details, Contact Support !");
+		}
+		priceTierAssociatesListJsonArray = priceTierManager.getAssociateMasterCatalogsAsJson(priceTierId, dbRegion);
+		processDealIdAndPricingFlag(priceTierAssociatesListJsonArray);
+		priceTierAssociatesList.add(priceTierAssociatesListJsonArray);
+		Gson gson = new Gson();
+		priceTierAssociatesList.add(gson.toJson(messgae));
+		return priceTierAssociatesList;
+	}
+
+	
+	private void processDealIdAndPricingFlag(List priceTierAssociatesList) {
+		for (int i = 0; i < priceTierAssociatesList.size(); i++) {
+			JSONObject priceTierAssociateObject = (JSONObject) priceTierAssociatesList.get(i);
+			String dealIds = (String)priceTierAssociateObject.get("dealids");
+			String pricingFlags = (String)priceTierAssociateObject.get("pricingflag");
+			String[] dealIdArray = convertStringArray(dealIds);
+			String[] pricingFlagArray = convertStringArray(pricingFlags);
+			String processDealIds = StrUtil.getDealDisplayList(dealIdArray, pricingFlagArray);
+			priceTierAssociateObject.put("processedDealId", processDealIds);
+		}
+	}
+	
+	
+	private String[] convertStringArray(String strToProcess) {
+		if (strToProcess != null) {
+			StringTokenizer st = new StringTokenizer(strToProcess, ",");
+			String[] strArr = new String[st.countTokens()];
+			int count = 0;
+			while (st.hasMoreTokens()) {
+				strArr[count] = st.nextToken();
+				count++;
+			}
+			return strArr;
+		}
+		return null;
+	}
+	
+}

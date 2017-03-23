@@ -1,0 +1,50 @@
+<div class="row" id="prodSearchId" ng-controller="ManageProgramsCrtl" ng-init=init();>
+<div id="messageDiv"></div>	
+    <div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+    <div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows" id="titleDiv" style="margin-top: 10px;"> 	
+    	<span ng-show="generic" style="font-size: 11px; color: #000066">
+			Programs created and managed via this screen are generic programs, available to all price tiers in this region.
+        </span>
+		<h1 class="h1Underline">				
+			<span>Select Program</span>
+		</h1>
+	</div>
+    <div class="customer_rows form-border" id="bodyDiv">
+        <div class="four columns">
+        	<div class="generals">
+                <span>Program Name:</span>
+                <input type="text" id="pgmName" name="pgmName" ng-model="pgmName" ng-enter="manageProgramsSearchResults();"></input>
+            </div>
+        </div>    
+        <div class="four columns">
+         	<a class="btn btn-inline" ng-click="manageProgramsSearchResults();" style="margin-top:0px;">Search</a>               
+            <a class="btn btn-inline" ng-href="#/ProgramDetail?task=add" ng-show="roleId != '2'" ng-click="createProgram();" style="margin-top:0px;">Create Program</a>
+        </div>              
+	</div>
+      <div class="customer_rows id-body" ng-show="dataLoad && !generic">
+  		<div class="twelve columns">
+		   	<div id="ecc_hpegrid1" hpe-grid
+		        grd-data="grid.data"
+		        grd-header="grid.header"
+		        grd-col-defs="grid.colDefs"
+		        grd-sort="grid.sort"
+		        grd-col-view-by="grid.colViewBy" >
+		    </div>
+  		</div>
+     </div>
+     <div class="customer_rows id-body" ng-show="dataLoad && generic">
+  		<div class="twelve columns">
+		   	<div id="ecc_hpegrid2" hpe-grid
+		        grd-data="grid_std.data"
+		        grd-header="grid_std.header"
+		        grd-col-defs="grid_std.colDefs"
+		        grd-sort="grid_std.sort"
+		        grd-col-view-by="grid_std.colViewBy" >
+		    </div>
+  		</div>
+     </div>
+     <div class="search">
+		<a class="btn btn-inline btn-Critical btn-del" ng-show="generic" ng-click="deleteProgram()" ><i class="icon-trash"></i>Delete</a>
+	 </div>
+ </div>

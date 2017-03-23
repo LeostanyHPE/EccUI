@@ -1,0 +1,103 @@
+<div class="row"  ng-controller="bundleRankingCtrl" style="width:100%;">
+	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+  			<div class="six columns">
+	           	<div class="generals" ng-show="form.templateFlag=='false'">
+		            <span>Bundle Name:</span>
+		            <div class="div_input"  ng-bind="form.fBundleName"></div>
+		        </div>
+		        <div class="generals">
+	                <span>Bundle Template Name : </span>
+	                <div id="CustomerName"  class="div_input" ng-bind="form.bundleTemplateName"></div>
+	           </div>
+	           <div class="generals" >
+	               <span> Customer Part# : </span>
+	               <div  class="div_input" ng-bind="form.customerPartNo" ></div>
+	           </div>
+	           <div class="generals" ng-show="form.templateFlag=='false'">
+	            	<span>Price:</span>
+	               	<div class="div_input"  ng-bind="form.fPrice"></div>
+	           </div>
+	           <div class="generals" ng-show="form.templateFlag=='false'">
+	            	<span>Catalog ID:</span>
+	               	<div class="div_input"  ng-bind="form.catalogID"></div>
+	           </div>
+	        </div>
+	        <div class="six columns">
+	        	<div class="generals" ng-show="form.templateFlag=='false'">
+		            <span>Bundle ID:</span>
+		            <div class="div_input"  ng-bind="form.bundleID"></div>
+		        </div>
+		        <div class="generals">
+	              <span> Bundle Template ID:</span>
+	              <div id="CustomerID"  class="div_input"  ng-bind="form.bundleTemplateID"></div>
+	           </div>
+	           <div class="generals" >
+	               <span ng-if="form.templateFlag=='false'">Bundle Status:</span><span ng-if="form.templateFlag=='true'">Bundle Template Status:</span>
+	               <div  class="div_input" ng-bind="bundleTempStatus" ></div>
+	           </div>
+	           <div class="generals" ng-show="form.templateFlag=='false'">
+	               <span>Price Descriptor: </span>
+	               <div  class="div_input" ng-bind="form.priceDescriptor" ></div>
+	           </div>
+	           <div class="generals" ng-show="form.templateFlag=='false'">
+	            	<span>Catalog Name:</span>
+	               	<div class="div_input"  ng-bind="form.fCatalogName"></div>
+	           </div>
+	        </div>
+  		</div>
+  		<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0; height: 0px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	  		<div class="six columns">
+	  			<div class="generals">
+	               <span>Last Catalog Bundle Update : </span>
+	               <div  class="div_input" ng-bind="dateParserForBundleUpdatedTime.changeDateFormat(form.fLastModifiedDate)" ></div>
+	           </div>
+	  		</div>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0; height: 0px;"></h1>
+	  	</div>
+	  	<div class="customer_rows">
+	    	<div class="two columns">
+	          <img class="display_img" alt="RC" src="resources/images/ecc/R-Image.png">
+	          <span style="margin-left:25px">- Required Component</span>
+	    	</div>
+	    	<div class="two columns">
+			  <img class="display_img" alt="PSC" src="resources/images/ecc/P-Image.png">
+	          <span style="margin-left:25px">- Pre-Selected Component</span>
+	    	</div>
+	    	<div class="two columns">
+	          <img class="display_img" alt="IB" src="resources/images/ecc/I-Image.png">
+	          <span style="margin-left:25px">- In the Box </span>
+	    	</div>
+	    	<div class="two columns">
+	           <img class="display_img" alt="BC" src="resources/images/ecc/B-Image.png">
+	           <span style="margin-left:25px">- Base component </span>
+	    	</div>
+	  	</div>
+	  	<div class="customer_rows"><br></div>
+	  	<div class="customer_rows">
+	  		<div class="twelve columns">
+	 			<div style="margin-left: -20px;"
+			      data-angular-treeviewrank="true"
+			      data-tree-idrank="bundleRankTree"
+			      data-tree-modelrank="bundleRankList"
+			      data-node-idrank="Id"
+			      data-node-labelrank="NodeText"
+			      data-node-childrenrank="children" >
+			    </div>
+	  		</div>
+	  	</div>
+		<div class="customer_rows"><br></div>
+	  	<div class="customer_rows">
+	  		<div class="eight columns">
+	  			<a class="btn btn-inline" ng-click="propagateTemplateChanges()" ng-if="form.fReadOnlyRoleFlag==false && form.templateFlag=='true'"><span>Propagate Template Changes</span></a> 
+		        <a class="btn btn-inline" ng-click="updateBundleRankingTree()" ng-if="form.fReadOnlyRoleFlag==false" ><span>Update</span></a> 
+		        <a class="btn btn-inline" ng-click="resetBundleRankingTree()" ng-if="form.fReadOnlyRoleFlag==false" ><span>Reset</span></a>
+	  		</div>
+	  	</div>
+  	</div>
+</div>

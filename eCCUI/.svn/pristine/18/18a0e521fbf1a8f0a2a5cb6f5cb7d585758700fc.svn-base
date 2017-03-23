@@ -1,0 +1,107 @@
+/*
+ * Created 
+ *
+ * TODO To change the template for this generated file go to
+ * Window - Preferences - Java - Code Style - Code Templates
+ */
+package com.hp.ecc.ui.view.beans;
+
+
+/**
+ * @author 
+ *
+ * TODO To change the template for this generated type comment go to
+ * Window - Preferences - Java - Code Style - Code Templates
+ */
+public class BundleExportForm  {
+
+  public BundleExportForm () {
+    this.init ();
+  }
+
+  /**
+   * Reset all properties to their default values.
+   *
+   * @param mapping The mapping used to select this instance
+   * @param request The servlet request we are processing
+   */
+ /* public void reset ( ActionMapping mapping, HttpServletRequest request ) {
+    super.reset ( mapping, request );
+    this.init ();
+  }*/
+
+  private void init () {
+    this.notifyEmail = null;
+    this.notifyFlag = false;
+    this.sendVia = null;
+    this.email = null;
+    this.customerName = null;
+    this.task = null;
+  }
+
+  public void setTask ( String task ) {
+    this.task = task;
+  }
+
+  public String getTask () {
+    return this.task;
+  }
+
+  public void setCustomerName ( String name ) {
+    this.customerName = name;
+  }
+
+  public String getCustomerName () {
+    return this.customerName;
+  }
+
+  public void setNotifyEmail ( String notifyMail ) {
+    this.notifyEmail = notifyMail;
+  }
+
+  public void setNotifyFlag ( boolean flag ) {
+    this.notifyFlag = flag;
+  }
+
+  public void setSendVia ( String sendVia ) {
+    this.sendVia = sendVia;
+  }
+
+  public void setEmail ( String email ) {
+    this.email = email;
+  }
+
+  public String getNotifyEmail () {
+    return this.notifyEmail;
+  }
+
+  public boolean isNotifyFlag () {
+    return this.notifyFlag;
+  }
+
+  public String getSendVia () {
+    return this.sendVia;
+  }
+
+  public String getEmail () {
+    return this.email;
+  }
+
+  private String notifyEmail;
+  private boolean notifyFlag;
+  private String sendVia;
+  private String email;
+  private String customerName;
+  private String task;
+  
+  private String fRoleId=null;
+
+  public String getRoleId()
+    {
+    	  return this.fRoleId;
+    }
+    public void setRoleId(String id)
+    {
+    	  this.fRoleId = id;
+    }
+}

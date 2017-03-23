@@ -1,0 +1,1360 @@
+package com.hp.ecc.ui.biz.fulfillmentsite;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.Map.Entry;
+
+import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+
+public class FulfillmentSiteMgr {
+	private static Logger logger = Logger.getLogger(FulfillmentSiteMgr.class.getName());
+
+	public FulfillmentSiteMgr() {
+	}
+
+	/*
+	 * The method is used to get list of all fulfilment Sites. if the
+	 * FulfillmentSiteForm has FFSName set then it will result in FFS's with
+	 * that FFSName.
+	 * 
+	 * Input : Fulfillment Site List Form. Output : Returns the list of
+	 * FulfilmentSite bean objects. If the select clause fails then List object
+	 * returned will be null;
+	 */
+	public List getFulfillmentSites(String ffsName, String adbRegionToConnect) {
+		FulfillmentSite ffs_bean = new FulfillmentSite();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		if (ffsName != null && !StrUtil.isEmpty(ffsName)) {
+			ffs_bean.setFfs_Name("%" + ffsName.trim() + "%");
+			pstmt = mgr.makeParsedStmt("fulfillmentSite",
+					"selectFulfillmentSite1", ffs_bean, null, null);
+		} else {
+			// :Action: If Search string is empty then display error
+			// "Please message enter Customer Name to be search"
+			pstmt = mgr.makeParsedStmt("fulfillmentSite",
+					"selectFulfillmentSite", ffs_bean, null, null);
+		}
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		List list = db.doSelect(pstmt, null, ffs_bean);
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSites() - Number of elements selected "
+						+ list.size());
+		return list;
+	}
+
+	/*
+	 * The method is used to get list of all fulfillment Sites.
+	 * 
+	 * Input : none Output : Returns the list of FulfilmentSite bean objects. If
+	 * the select clause fails then List object returned will be null;
+	 */
+	public List getFulfillmentSites(String adbRegionToConnect) {
+		FulfillmentSite ffs_bean = new FulfillmentSite();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		pstmt = mgr.makeParsedStmt("fulfillmentSite", "selectFulfillmentSite",
+				ffs_bean, null, null);
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		List list = db.doSelect(pstmt, null, ffs_bean);
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSites() - Number of elements selected "
+						+ list.size());
+		return list;
+	}
+
+	/*
+	 * The method is used to get list of all fulfilment Sites based on FFS_id
+	 * specified.
+	 * 
+	 * Input : Fulfillment Site Id Output : Returns the list of FulfilmentSite
+	 * bean object If the select clause fails then List object returned will be
+	 * null;
+	 */
+
+	public List getFulfillmentSiteById(String ffsite_id, String adbRegionToConnect) {
+		FulfillmentSite ffs_bean = new FulfillmentSite();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		if (ffsite_id != null && !StrUtil.isEmpty(ffsite_id)) {
+			ffs_bean.setFfs_Id(ffsite_id);
+			pstmt = mgr.makeParsedStmt("fulfillmentSite",
+					"selectFulfillmentSite2", ffs_bean, null, null);
+		} else {
+			return null;
+		}
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		db.setAutoCommit(false);
+		try {
+			List list = db.doSelect(pstmt, null, ffs_bean);
+			return list;
+		} finally {
+			db.finish(false);
+		}
+	}
+	
+	/*
+	 * The method is used to get list of all fulfilment Sites based on FFS_id
+	 * and Tenant Code specified.
+	 * 
+	 * Input : Fulfillment Site Id Output : Returns the list of FulfilmentSite
+	 * bean object If the select clause fails then List object returned will be
+	 * null;
+	 */
+
+	public List getFulfillmentSiteByIdTenant(String ffsite_id, String tenantCode) {
+		FulfillmentSite ffs_bean = new FulfillmentSite();
+		DaxMgr mgr = DaxMgr.getInstance();
+       System.out.println("getFulfillmentSiteByIdTenant"+tenantCode);
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		if (ffsite_id != null && !StrUtil.isEmpty(ffsite_id)) {
+			ffs_bean.setFfs_Id(ffsite_id);
+			ffs_bean.setTenantCode(tenantCode);
+			pstmt = mgr.makeParsedStmt("fulfillmentSite",
+					"selectFulfillmentSitebyTenant", ffs_bean, null, null);
+		} else {
+			return null;
+		}
+		 // do the query
+	    DaxDB db = mgr.getDaxDB ();
+	    db.setAutoCommit ( false );
+	    try {List list = db.doSelect ( pstmt, null, ffs_bean );
+	    return list;
+	    }
+	    finally {db.finish ( false );
+	    }
+	}
+	
+	
+
+	/*
+	 * The method is used to get list of all products based on local_prod
+	 * and Tenant Code specified.
+	 * 
+	 * Input : Local prod Output : Returns the list of FulfilmentSite
+	 * bean object If the select clause fails then List object returned will be
+	 * null;
+	 */
+	  public List getProductCompare (String local_prod,String tenantCode) {
+			
+		   FulfillmentSiteProd ffs_bean = new FulfillmentSiteProd ();
+		    DaxMgr mgr = DaxMgr.getInstance ();
+		  
+		    DaxParsedStmt pstmt = null;
+		    //Make the parsed statement.
+		    if ( local_prod != null && !StrUtil.isEmpty ( local_prod ) ) {
+		      ffs_bean.setLocal_Prod(local_prod);
+		      ffs_bean.setTenantCode(tenantCode);
+		      pstmt = mgr.makeParsedStmt ( "fulfillmentSite", "localProductCompare"
+		                                   , ffs_bean, null, null );
+		    }
+		    else {
+		      return null;
+		    }
+		    // do the query
+		    DaxDB db = mgr.getDaxDB ();
+		    db.setAutoCommit ( false );
+		    try {List list = db.doSelect ( pstmt, null, ffs_bean );
+		    return list;
+		    }
+		    finally {db.finish ( false );
+		    }
+		  }
+
+	/*
+	 * The method is used to update FFS attributes.
+	 * 
+	 * Input : Fulfillment Site Bean Output : Returns the result of update ie.,
+	 * count of rows updated. In this case will be 0 or 1.
+	 */
+	public int updateFulfillmentSiteById(FulfillmentSite ffs_bean, String adbRegionToConnect) {
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		// Make the parsed statement.
+		if (ffs_bean.getFfs_Id() != null
+				&& !StrUtil.isEmpty(ffs_bean.getFfs_Id())) {
+			ffs_bean.setFfs_Id(ffs_bean.getFfs_Id());
+		}
+
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"updateFulfillmentSiteById", ffs_bean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		db.setAutoCommit(false);
+		try {
+			int count = db.doUpdate(pstmt, ffs_bean);
+			return count;
+		} finally {
+			db.finish(false);
+		}
+
+	}
+
+	/*
+	 * The method is used to insert new FFS record.
+	 * 
+	 * Input : Fulfillment Site Bean Output : Returns the result of insertion
+	 * ie., count of rows inserted. In this case will be 0 or 1.
+	 */
+	public int insertFulfillmentSite(FulfillmentSite ffs_bean, String adbRegionToConnect) {
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		// Make the parsed statement.
+		if (ffs_bean.getFfs_Id() != null
+				&& !StrUtil.isEmpty(ffs_bean.getFfs_Id())) {
+			ffs_bean.setFfs_Id(ffs_bean.getFfs_Id());
+		}
+
+		pstmt = mgr.makeParsedStmt("fulfillmentSite", "insertFulfillmentSite",
+				ffs_bean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		db.setAutoCommit(false);
+		try {
+			int count = db.doUpdate(pstmt, ffs_bean);
+			return count;
+		} finally {
+			db.finish(false);
+		}
+	}
+
+	/*
+	 * The method is used to get Fulfilment Sites Customer Mapping. if the
+	 * FulfillmentSiteCustListForm has FFSName/FFSId set then it will result in
+	 * FFS's with that FFSName/FFSId.
+	 * 
+	 * Input : FulfillmentSiteCustListForm. Output : Returns the list of
+	 * FulfilmentSiteCust bean objects. If the select clause fails then List
+	 * object returned will be null;
+	 */
+	public List getFulfillmentSiteCust(String task, String ffsIdSearch, String ffsNameId, String adbRegionToConnect) {
+		FulfillmentSiteCust ffs_bean = new FulfillmentSiteCust();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		if (task != null && task.equals("search")
+				&& ffsIdSearch != null
+				&& !StrUtil.isEmpty(ffsIdSearch)) {
+			if (ffsNameId.equals("Id")) {
+				ffs_bean.setFfs_Id(ffsIdSearch.trim());
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteCustById", ffs_bean, null, null);
+			} else {
+				ffs_bean.setFfs_Name("%" + ffsIdSearch.trim() + "%");
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteCustByName", ffs_bean, null, null);
+			}
+		} else {
+			// :Action: If Search string is empty then display error
+			// "Please message enter Customer Name to be search"
+			pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteCust", ffs_bean, null, null);
+		}
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		List list = db.doSelect(pstmt, null, ffs_bean);
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSiteCust() - Number of elements selected "
+						+ list.size());
+		return list;
+	}
+
+	/*
+	 * The method is used to get Fulfilment Sites Product Mapping. if the
+	 * FulfillmentSiteProdListForm has FFSName/FFSId set then it will result in
+	 * FFS's with that FFSName/FFSId.
+	 * 
+	 * Input : FulfillmentSiteProdListForm. Output : Returns the list of
+	 * FulfilmentSiteProd bean objects. If the select clause fails then List
+	 * object returned will be null;
+	 */
+	public List getFulfillmentSiteProd(String ffsIdSearch, String ffsNameId, String localProdIdSearch, String adbRegionToConnect) {
+		FulfillmentSiteProd ffs_bean = new FulfillmentSiteProd();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		if (ffsIdSearch != null
+				&& !StrUtil.isEmpty(ffsIdSearch)
+				&& localProdIdSearch != null
+				&& !StrUtil.isEmpty(localProdIdSearch)) {
+			if (ffsNameId.equals("Id")) {
+				ffs_bean.setFfs_Id(ffsIdSearch.trim());
+				ffs_bean.setLocal_Prod(localProdIdSearch.trim());
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProdByFfsIdProdId", ffs_bean,null,null);
+			} else {
+				ffs_bean.setFfs_Name("%" + ffsIdSearch.trim() + "%");
+				ffs_bean.setLocal_Prod(localProdIdSearch.trim());
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProdByFfsNameProdId", ffs_bean,null,null);
+			}
+		} else if (ffsIdSearch != null
+				&& !StrUtil.isEmpty(ffsIdSearch)) {
+			if (ffsNameId.equals("Id")) {
+				ffs_bean.setFfs_Id(ffsIdSearch.trim());
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProdById", ffs_bean, null, null);
+			} else {
+				ffs_bean.setFfs_Name("%" + ffsIdSearch.trim() + "%");
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProdByName", ffs_bean, null, null);
+			}
+		} else if (localProdIdSearch != null
+				&& !StrUtil.isEmpty(localProdIdSearch)) {
+			ffs_bean.setLocal_Prod(localProdIdSearch.trim());
+			pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProdByProdId", ffs_bean, null, null);
+		} else {
+			// :Action: If Search string is empty then display error
+			// "Please message enter Customer Name to be search"
+			pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProd", ffs_bean, null, null);
+		}
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		List<FulfillmentSiteProd> list = db.doSelect(pstmt, null, ffs_bean);
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSiteProd() - Number of elements selected "
+						+ list.size());
+		return list;
+	}
+
+	/*
+	 * The method is used to delete FFS Customer Mapping record.
+	 * 
+	 * Input : FulfillmentSiteCustListForm Output : Returns the result of
+	 * deletion ie., count of rows deleted.
+	 */
+	public int deleteFulfillmentSiteCust(String[] deleteList, String adbRegionToConnect) {
+		FulfillmentSiteCust ffs_bean = new FulfillmentSiteCust();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		int deletedRows = 0;
+		try {
+			for (int i = 0; i < deleteList.length; i++) {
+				int index = deleteList[i].indexOf(',');
+				ffs_bean.setFfs_Id(deleteList[i].substring(0, index));
+				ffs_bean.setCust_Key(deleteList[i].substring(index + 1));
+
+				// Make the parsed statement.
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","deleteFulfillmentSiteCust", ffs_bean, null, null);
+				// do the query
+				int count = db.doUpdate(pstmt, ffs_bean);
+				// :Action: Error handling needs to be done if delete fails.
+				if (count == 1) {
+					deletedRows++;
+				}
+			}
+		} finally{
+			db.finish(false);
+		}
+		System.out
+				.println("FulfillmentSiteMgr : deleteFulfillmentSiteCust() - Number of elements deleted "
+						+ deletedRows);
+		return deletedRows;
+	}
+
+	/*
+	 * The method is used to delete FFS Product Mapping record.
+	 * 
+	 * Input : FulfillmentSiteProdListForm Output : Returns the result of
+	 * deletion ie., count of rows deleted.
+	 */
+	public int deleteFulfillmentSiteProd(String[] deleteList, String adbRegionToConnect) {
+		FulfillmentSiteProd ffs_bean = new FulfillmentSiteProd();
+		DaxMgr mgr = DaxMgr.getInstance();
+		
+		DaxParsedStmt pstmt = null;
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		int deletedRows = 0;
+		try {
+			for (int i = 0; i < deleteList.length; i++) {
+				int index = deleteList[i].indexOf(',');
+				ffs_bean.setFfs_Id(deleteList[i].substring(0, index));
+				ffs_bean.setLocal_Prod(deleteList[i].substring(index + 1));
+
+				// Make the parsed statement.
+				pstmt = mgr.makeParsedStmt("fulfillmentSite","deleteFulfillmentSiteProd", ffs_bean, null, null);
+				// do the query
+				int count = db.doUpdate(pstmt, ffs_bean);
+				// :Action: Error handling needs to be done if delete fails.
+				if (count == 1) {
+					deletedRows++;
+				}
+			}
+		} finally{
+			db.finish(false);
+		}
+		System.out
+				.println("FulfillmentSiteMgr : deleteFulfillmentSiteProd() - Number of elements deleted "
+						+ deletedRows);
+		return deletedRows;
+	}
+
+	/*
+	 * The method is used to get list of Fulfilment Sites Customer Mapping. if
+	 * the FulfillmentSiteCustListForm has FFSId && CustId set then it will
+	 * result in FFS Cust Mapping for that FFSId and CustId.
+	 * 
+	 * Input : FulfillmentSiteCustListForm with FFSId and CustKey.[Both
+	 * required] Output : Returns the list of FulfilmentSiteCust bean objects.
+	 * If the select clause fails then List object returned will be null;
+	 */
+	public List getFulfillmentSiteCustByFfsIdCustId(String ffsId, String custKey, String adbRegionToConnect){
+		FulfillmentSiteCust ffs_bean = new FulfillmentSiteCust();
+		DaxMgr mgr = DaxMgr.getInstance();
+		
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		ffs_bean.setFfs_Id(ffsId.trim());
+		ffs_bean.setCust_Key(custKey.trim());
+
+		pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteCustByFfsIdCustId", ffs_bean, null, null);
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		List list = db.doSelect(pstmt, null, ffs_bean);
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSiteCustByFfsIdCustId() - Number of elements selected "
+						+ list.size());
+		return list;
+	}
+
+	/*
+	 * The method gives the FulfillmentSite Customer ID based on FFS_ID and
+	 * Cust_Key. If the combinations/result fails fails then empty string is
+	 * returned. The Input FFS_ID and Cust_Key should not be null.
+	 */
+	public String getFulfillmentSiteCustKey(String ffs_id, String cust_key, String adbRegionToConnect) {
+		String ffs_cust_id = "";
+		FulfillmentSiteCust ffs_bean = new FulfillmentSiteCust();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		ffs_bean.setFfs_Id(ffs_id);
+		ffs_bean.setCust_Key(cust_key);
+
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"selectFulfillmentSiteCustByFfsIdCustId", ffs_bean, null, null);
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, null, ffs_bean);
+		if (list.size() > 0) {
+			FulfillmentSiteCust resultBean = (FulfillmentSiteCust) list.get(0);
+			ffs_cust_id = resultBean.getFfs_Cust_Id();
+		} else {
+			ffs_cust_id = "";
+		}
+		return ffs_cust_id;
+	}
+
+	/*
+	 * Method for getting fulfillment Site Product Id's based on fulfillment
+	 * Site id and local_product. It accepts list of local product. It Returns
+	 * HashMap with key --> local_prod value --> ffs_prod. If FFS is Direct FFS
+	 * then local_prod = ffs_prod.
+	 */
+	public HashMap getFulfillmentSiteProducts(String ffs_id, List local_prod, String adbRegionToConnect) {
+		HashMap hMap = new HashMap();
+
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		FulfillmentSite fulfillmentSite = new FulfillmentSite();
+		fulfillmentSite.setFfs_Id(ffs_id);
+		pstmt = mgr.makeParsedStmt("fulfillmentSite", "selectFulfillmentSite2",
+				fulfillmentSite, null, null);
+		List list = db.doSelect(pstmt, FulfillmentSite.class, fulfillmentSite);
+		if (list != null && list.size() > 0) {
+			FulfillmentSite ffs = (FulfillmentSite) list.get(0);
+			if (ffs.getFfs_Direct_Flag() != null
+					&& ffs.getFfs_Direct_Flag().equalsIgnoreCase("Y")) {
+				for (int i = 0; i < local_prod.size(); i++) {
+					hMap.put(local_prod.get(i), local_prod.get(i));
+				}
+				return hMap;
+			}
+		}
+
+		pstmt = null;
+		list = null;
+		for (int i = 0; i < local_prod.size(); i++) {
+			FulfillmentSiteProd ffs_bean = new FulfillmentSiteProd();
+			ffs_bean.setFfs_Id(ffs_id);
+			ffs_bean.setLocal_Prod((String) local_prod.get(i));
+			pstmt = mgr.makeParsedStmt("fulfillmentSite",
+					"selectFulfillmentSiteProdByFfsIdProdId", ffs_bean, null,
+					null);
+			list = db.doSelect(pstmt, null, ffs_bean);
+			FulfillmentSiteProd resultBean = (FulfillmentSiteProd) list.get(0);
+
+			if (resultBean.getFfs_Prod() != null
+					&& !StrUtil.isEmpty(resultBean.getFfs_Prod())) {
+				hMap.put(local_prod.get(i), resultBean.getFfs_Prod());
+			} else {
+				hMap.put(local_prod.get(i), "");
+			}
+		}
+		return hMap;
+	}
+	
+	
+
+	/*
+	 * The method is used to get list of Fulfilment Sites Product Mapping. if
+	 * the FulfillmentSiteProdListForm has FFSId && local_prod set then it will
+	 * result in FFS Prod Mapping for that FFSId and local_prod.
+	 * 
+	 * Input : FulfillmentSiteProdListForm with FFSId and local_prod.[Both
+	 * required] Output : Returns the list of FulfilmentSiteProd bean objects.
+	 * If the select clause fails then List object returned will be null;
+	 */
+	public List getFulfillmentSiteProdByFfsIdProdId(String ffsId, String localProd,String tenantCode) {
+		FulfillmentSiteProd ffs_bean = new FulfillmentSiteProd();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+		// Make the parsed statement.
+		ffs_bean.setFfs_Id(ffsId);
+		ffs_bean.setLocal_Prod(localProd.trim());
+		ffs_bean.setTenantCode ( tenantCode );
+		pstmt = mgr.makeParsedStmt("fulfillmentSite","selectFulfillmentSiteProdByFfsIdProdId1", ffs_bean, null, null);
+
+		// do the query
+		
+		DaxDB db = mgr.getDaxDB();
+		List list = db.doSelect(pstmt, null, ffs_bean);
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSiteProd() - Number of elements selected "
+						+ list.size());
+		return list;
+	}
+
+	/*
+	 * The method is used to insert new FFS Customer Mapping record.
+	 * 
+	 * Input : FulfillmentSiteCustBean Output : Returns the result of insertion
+	 * ie., count of rows inserted. In this case will be 0 or 1.
+	 */
+	public int insertFulfillmentSiteCust(FulfillmentSiteCust ffs_bean, String adbRegionToConnect) {
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"insertFulfillmentSiteCust", ffs_bean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		try {
+			int count = db.doUpdate(pstmt, ffs_bean);
+			return count;
+		} finally{
+			db.finish(false);
+		}
+	}
+
+	/*
+	 * The method is used to insert new FFS Product Mapping record.
+	 * 
+	 * Input : FulfillmentSiteProdBean Output : Returns the result of insertion
+	 * ie., count of rows inserted. In this case will be 0 or 1.
+	 */
+	public int insertFulfillmentSiteProd(FulfillmentSiteProd ffs_bean, String adbRegionToConnect) {
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"insertFulfillmentSiteProd", ffs_bean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		try {
+			int count = db.doUpdate(pstmt, ffs_bean);
+			return count;
+		} finally{
+			db.finish(false);
+		}
+	}
+
+	/*
+	 * The method is used to assign Fulfillment Site product id to products.
+	 * 
+	 * Input : List of Product Objects. Output : List of Product Objects with
+	 * FFSProductID assign to them. Products which are not found in FFS_Prod
+	 * mapping will be returned without FFSProdId. It will be null If FFS is
+	 * Direct FFS then ffs_prod = local_prod.
+	 */
+	public List assignFSProdNumToProds(List prods, String adbRegionToConnect) {
+		List resultList = new ArrayList();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = null;
+		DaxParsedStmt pstmt1 = null;
+		Map hMap = new HashMap();
+		FulfillmentSiteProd ffs_bean = null;
+		String ffsID = null;
+
+		// Make the parsed statement.
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"selectFulfillmentSiteProdByFfsIdProdId", ffs_bean, null, null);
+
+		for (int i = 0; i < prods.size(); i++) {
+			Product prod = (Product) prods.get(i);
+			ffsID = prod.getFFsID();
+
+			if (StrUtil.isEmpty(ffsID)) {
+				prod.setSupplierPartID(prod.getProdId());
+				resultList.add(prod);
+				continue;
+
+			}
+			// Checking whether FFS is direct FFS.
+			if (hMap.get(prod.getFFsID()) == null) {
+				FulfillmentSite ffs = new FulfillmentSite();
+				ffs.setFfs_Id(prod.getFFsID());
+				pstmt1 = mgr.makeParsedStmt("fulfillmentSite",
+						"selectFulfillmentSite2", ffs, null, null);
+				List list = db.doSelect(pstmt1, FulfillmentSite.class, ffs);
+				if (list != null && list.size() > 0) {
+					FulfillmentSite fulfillmentSite = (FulfillmentSite) list
+							.get(0);
+					if (fulfillmentSite.getFfs_Direct_Flag().equalsIgnoreCase(
+							"Y")) {
+						hMap.put(fulfillmentSite.getFfs_Id(), "Y");
+						prod.setSupplierPartID(prod.getProdId());
+						resultList.add(prod);
+						continue;
+					} else {
+						hMap.put(fulfillmentSite.getFfs_Id(), "N");
+					}
+				}
+			} else if (((String) hMap.get(prod.getFFsID()))
+					.equalsIgnoreCase("Y")) {
+				prod.setSupplierPartID(prod.getProdId());
+				resultList.add(prod);
+				continue;
+			}
+
+			ffs_bean = new FulfillmentSiteProd();
+			ffs_bean.setFfs_Id(prod.getFFsID());
+			ffs_bean.setLocal_Prod(prod.getProdId());
+
+			// do the query
+			List list = db.doSelect(pstmt, null, ffs_bean);
+			if (list.size() > 0) {
+				FulfillmentSiteProd rstBean = (FulfillmentSiteProd) list.get(0);
+				prod.setSupplierPartID(rstBean.getFfs_Prod());
+				resultList.add(prod);
+			} else {
+				prod.setSupplierPartID("");
+				resultList.add(prod);
+			}
+		}
+
+		return resultList;
+	}
+
+	/*
+	 * The method is used to assign Fulfillment Site product id to products.
+	 * 
+	 * Input : List of Product Objects. Output : List of Product Objects with
+	 * FFSProductID assign to them. Products which are not found in FFS_Prod
+	 * mapping will be returned without FFSProdId. It will be null. If
+	 * Fulfillment Site is Direct FFS then FFS_Prod_ID = FFS_Local_ID. IF FFS ID
+	 * is null - then original list is returned without initializing value.
+	 */
+
+	public List assignFSProdNumTOptions(JSONArray options, String fsID, String adbRegionToConnect, String tenantCode) {
+		List resultList = new ArrayList();
+
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = null;
+
+		// Fulfillment Site ID cannot be null
+		if (fsID == null || StrUtil.isEmpty(fsID)) {
+			return options;
+		}
+
+		// Check whether the FFS is Direct FFS.
+		FulfillmentSite ffsSite = new FulfillmentSite();
+		// Make the parsed statement.
+		pstmt = mgr.makeParsedStmt("fulfillmentSite", "selectFulfillmentSite2",
+				ffsSite, null, null);
+		ffsSite.setFfs_Id(fsID);
+		List ffsList = db.doSelect(pstmt, FulfillmentSite.class, ffsSite);
+
+		if (ffsList != null && ffsList.size() > 0) {
+			ffsSite = (FulfillmentSite) ffsList.get(0);
+			if (ffsSite.getFfs_Direct_Flag().equalsIgnoreCase("Y")) {
+				JSONObject option = null;
+				for (int i = 0; i < options.size(); i++) {
+					option = (JSONObject) options.get(i);
+					option.put("FSPartNum", option.get("prod").toString().trim());
+					resultList.add(option);
+				}
+				return resultList;
+			}
+		}
+
+		pstmt = null;
+		FulfillmentSiteProd ffs_bean = new FulfillmentSiteProd();
+		// Make the parsed statement.
+		ffs_bean.setTenantCode(TenantConstants.getAllSharedTenant(tenantCode));		
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"selectFulfillmentSiteProdByFfsIdProdId1", ffs_bean, null, null);
+
+		List queryList = new ArrayList();
+		JSONObject option = null;
+		for (int i = 0; i < options.size(); i++) {
+			option = (JSONObject) options.get(i);
+			ffs_bean = new FulfillmentSiteProd();
+
+			ffs_bean.setFfs_Id(fsID);
+			ffs_bean.setLocal_Prod(option.get("prod").toString());
+			queryList.add(ffs_bean);
+		}
+		// do the query
+		List list = db.doSelectBatch(pstmt, FulfillmentSiteProd.class,
+				queryList);
+
+		Hashtable hash = new Hashtable();
+		for (int i = 0; i < list.size(); i++) {
+			FulfillmentSiteProd fulfillmentSiteProd = (FulfillmentSiteProd) list
+					.get(i);
+			hash.put(fulfillmentSiteProd.getLocal_Prod(),
+					fulfillmentSiteProd.getFfs_Prod());
+		}
+		for (int i = 0; i < options.size(); i++) {
+			option = (JSONObject) options.get(i);
+			option.put("FSPartNum", ((String) hash.get(option.get("prod").toString().trim())));
+			resultList.add(option);
+		}
+		return resultList;
+	}
+
+	/*
+	 * The method is used to get list of Reseller Margins. if the
+	 * ResellerMarginListForm has FFSName set then it will result in FFS's with
+	 * that FFSName.
+	 * 
+	 * Input : Reseller Margin List Form. Output : Returns the list of
+	 * ResellerMargin bean objects. If the select clause fails then List object
+	 * returned will be null; Assumption : Following fields needs to be present
+	 * in the form bean FFS_ID and COUNTRY_CD.
+	 */
+	public List getResellerMargins(String ffsId, String countryCode, String adbRegionToConnect, String tenantCode) {
+		ResellerMargin ffs_bean = new ResellerMargin();	
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		// Necessary Parameter for the bean.
+		ffs_bean.setFfs_Id(ffsId.trim());
+		ffs_bean.setCountry_Cd(countryCode.trim());
+        ffs_bean.setTenantCode(TenantConstants.getMixedSharedTenant(tenantCode));
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin","selectAllResellerMarginJoinProduct", ffs_bean, null, null);
+
+		List list1 = db.doSelect(pstmt, null, ffs_bean);
+
+		logger.debug("FulfillmentSiteMgr : getResellerMargins() - Number of elements selected "
+				+ list1.size());
+
+		return list1;
+	}// getResellerMargins
+
+	public ResellerMargin getSelectedResellerMargin(String ffsId, String countryCd, String productLineCd, String adbRegionToConnect) {
+		ResellerMargin ffs_bean = new ResellerMargin();
+		ResellerMargin rMargin = null;
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		// Necessary Parameter for the bean.
+		ffs_bean.setFfs_Id(ffsId);
+		ffs_bean.setCountry_Cd(countryCd);
+		ffs_bean.setProd_Line_Cd(productLineCd);
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin","selectResellerMargin", ffs_bean, null, null);
+
+		List list1 = db.doSelect(pstmt, null, ffs_bean);
+
+		if (list1 != null && list1.size() > 0) {
+			rMargin = (ResellerMargin) list1.get(0);
+		}
+
+		logger.debug("FulfillmentSiteMgr : getResellerMargin() -" + rMargin);
+
+		return rMargin;
+	}// getSelectedResellerMargin
+
+	/*
+	 * The method is used to get list of Reseller Margins.
+	 * 
+	 * Input : Reseller Margin List Form. Output : Returns the list of
+	 * ResellerMargin bean objects. If the select clause fails then List object
+	 * returned will be null; Assumption : Following fields needs to be present
+	 * in the form bean FFS_ID, PL and COUNTRY_CD.
+	 */
+	public List searchResellerMargins(String countryCode, String ffsId, String plForSearch, String adbRegionToConnect, String tenantCode) {
+		logger.debug("-------------------------------"
+				+ countryCode.trim());
+		ResellerMargin ffs_bean = new ResellerMargin();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		// Necessary Parameter for the bean.
+		ffs_bean.setFfs_Id(ffsId.trim());
+		ffs_bean.setPlForSearch(plForSearch.trim());
+		ffs_bean.setCountry_Cd(countryCode.trim());
+		ffs_bean.setTenantCode(TenantConstants.getMixedSharedTenant(tenantCode));
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin","searchAllResellerMarginJoinProduct", ffs_bean, null, null);
+		List list1 = db.doSelect(pstmt, null, ffs_bean);
+
+		logger.debug("FulfillmentSiteMgr : searchResellerMargin() - Number of elements selected "
+				+ list1.size());
+
+		return list1;
+	}// searchResellerMargins
+
+	/*
+	 * Get the partner Currency type and FFs_Name
+	 * 
+	 * Output : Returns the Currency type and FFs_Name
+	 */
+	public List getPartnerCurrencyFfsName(String ffsId, String countryCode, String adbRegionToConnect) {
+		logger.debug("---------Inside getPartnerCurrencyFfsName method----------------------");
+
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		ResellerMargin ffs_bean = new ResellerMargin();
+		ffs_bean.setFfs_Id(ffsId.trim());
+		ffs_bean.setCountry_Cd(countryCode.trim());
+
+		// do the query
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"selectResellerCurrencyFfsName", ffs_bean, null, null);
+
+		List list1 = db.doSelect(pstmt, null, ffs_bean);
+		logger.debug("FulfillmentSiteMgr : getPartnerCurrencyFfsName - Number of elements selected "
+				+ list1.size());
+
+		return list1;
+	} // getPartnerCurrencyFfsName
+
+	/*
+	 * Get all the Product Line List
+	 * 
+	 * Output : Returns the Product Line List.
+	 */
+	public List getAllPlList(String adbRegionToConnect,String tenantCode) {
+		ResellerMargin ffs_bean = new ResellerMargin();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		 ffs_bean.setTenantCode(tenantCode);
+		// do the query
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"selectAllProductLine", ffs_bean, null, null);
+		List plList = db.doSelect(pstmt, null, ffs_bean);
+		logger.debug("FulfillmentSiteMgr : selectAllProductLine() - Number of elements selected "
+				+ plList.size());
+
+		return plList;
+	}// getAllPlList
+
+	/*
+	 * Get the Product line list added to cat_reseller margin table
+	 * 
+	 * Input : ResellerMarginListForm form Output : Returns the Product Line
+	 * List.
+	 */
+	public List getAddedPlList(String countryCode, String ffsId, String adbRegionToConnect, String tenantCode) {
+
+		logger.debug("-------Inside getAddedPlList method: --------------"
+				+ countryCode.trim());
+
+		// Necessary Parameter for the bean.
+		ResellerMargin ffs_bean = new ResellerMargin();
+		ffs_bean.setFfs_Id(ffsId.trim());
+		ffs_bean.setCountry_Cd(countryCode.trim());
+		ffs_bean.setTenantCode(tenantCode);
+
+		// do the query
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"selectAddedProductLine", ffs_bean, null, null);
+
+		List list1 = db.doSelect(pstmt, null, ffs_bean);
+		logger.debug("FulfillmentSiteMgr : selectAddedProductLine() - Number of elements selected "
+				+ list1.size());
+
+		return list1;
+	}// getAddedPlList
+
+	/*
+	 * Convert List to JsonArray
+	 * 
+	 * Input : List list Output : Returns the Product Line List.
+	 */
+	public JsonArray convertListToJsonArray(List list) {
+		logger.debug("FulfillmentSiteMgr : convertListToJsonArray(List list)");
+		String str = "";
+		JsonArray jsonArray = null;
+		JsonElement element = null;
+		Gson converter = new Gson();
+		JsonParser parser = new JsonParser();
+
+		if (!list.equals(null)) {
+			str = converter.toJson(list);
+			element = parser.parse(str);
+			jsonArray = element.getAsJsonArray();
+		}
+
+		return jsonArray;
+	}// convertListToJsonArray
+
+	/*
+	 * Find the difference of two list
+	 * 
+	 * Input : JsonArray allpllist, JsonArray list Output : Returns the list
+	 * with differece.
+	 */
+	public List diffPlList(JsonArray allpllist, JsonArray addpllist) {
+		Gson converter = new Gson();
+		List list1 = new ArrayList();
+		List list2 = new ArrayList();
+
+		Type type = new TypeToken<List>() {
+		}.getType();
+
+		list1 = converter.fromJson(allpllist, type);
+
+		list2 = converter.fromJson(addpllist, type);
+
+		list1.removeAll(list2);
+
+		logger.debug("FulfillmentSiteMgr : diffPlList(JsonArray allpllist, JsonArray addpllist)"
+				+ list1.size());
+
+		return list1;
+	} // diffPlList
+
+	/*
+	 * The method is used to update Reseller Margin
+	 * 
+	 * Input : Reseller Margin Bean Output : Returns the result of update ie.,
+	 * count of rows updated. In this case will be 0 or 1.
+	 */
+	public int updateResellerMargin(ResellerMargin ffs_bean,
+			ResellerMargin oldMargin, String adbRegionToConnect) {
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		int count = 0;
+
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"updateResellerMargin", ffs_bean, null, null);
+		db.setAutoCommit(false);
+		count = db.doUpdate(pstmt, ffs_bean);
+
+		if (count > 0) {
+
+			count = insertResellerMarginHistory(oldMargin, adbRegionToConnect);
+
+			if (count > 0) {
+				logger.debug("The Partner Margin History record has been inserted for "
+						+ ffs_bean.getProd_Line_Cd());
+
+				db.finish(false); // commit
+			} else {
+				logger.error("Error while inserting to Partner Margin History "
+						+ ffs_bean.getProd_Line_Cd());
+
+				db.finish(true); // rollback
+			}
+		} else {
+			logger.error(" The partner margin data not updated for "
+					+ ffs_bean.getProd_Line_Cd());
+		}
+
+		logger.debug("FulfillmentSiteMgr : updateResellerMargin ( ResellerMargin ffs_bean )"
+				+ count);
+
+		return count;
+	}// updateResellerMargin
+
+	/*
+	 * The method is used to insert Reseller Margin History
+	 * 
+	 * Input : Reseller Margin Bean Output : Returns the result of insert ie. In
+	 * this case will be 0 or 1.
+	 */
+
+	public int insertResellerMarginHistory(ResellerMargin ffs_bean, String adbRegionToConnect) {
+		int count = 0;
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"insertResellerMarginHistory", ffs_bean, null, null);
+
+		try {
+			count = db.doUpdate(pstmt, ffs_bean);
+
+			logger.debug("FulfillmentSiteMgr : insertResellerMarginHistory ( ResellerMargin ffs_bean )"
+					+ count);
+
+			return count;
+		} finally{
+			db.finish(false);
+		}
+	}// insertResellerMarginHistory
+
+	public int insertResellerMargin(ResellerMargin ffs_bean, String adbRegionToConnect) {
+		int count = 0;
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"insertResellerMargin", ffs_bean, null, null);
+
+		try {
+			count = db.doUpdate(pstmt, ffs_bean);
+
+			logger.debug("FulfillmentSiteMgr : insertResellerMarginHistory ( ResellerMargin ffs_bean )"
+					+ count);
+
+			return count;
+		} finally{
+			db.finish(false);
+		}
+	}// insertResellerMargin
+
+	/*
+	 * The method is used to delete Reseller Margin
+	 * 
+	 * Input : Reseller Margin Bean Output : Returns the result of delete ie.,
+	 * count of rows deleted. In this case will be 0 or 1.
+	 */
+	public int deleteResellerMargin(ResellerMargin ffs_bean,
+			ResellerMargin oldMargin, String adbRegionToConnect) {
+		int count = 0;
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		// db.setAutoCommit(false);
+
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"deleteResellerMargin", ffs_bean, null, null);
+		count = db.doUpdate(pstmt, ffs_bean);
+
+		if (count > 0) {
+			count = insertResellerMarginHistory(oldMargin, adbRegionToConnect);
+
+			if (count > 0) {
+				logger.debug("The Partner Margin History record has been inserted for "
+						+ ffs_bean.getProd_Line_Cd());
+
+				// db.finish(false); //commit
+			} else {
+				logger.error("Error while inserting to Partner Margin History "
+						+ ffs_bean.getProd_Line_Cd());
+
+				// db.finish(true); //rollback
+			}
+		} else {
+			logger.error(" The partner margin data not deleted for "
+					+ ffs_bean.getProd_Line_Cd());
+		}
+
+		logger.debug("FulfillmentSiteMgr : deleteResellerMargin ( ResellerMargin ffs_bean )"
+				+ count);
+
+		return count;
+	}// deleteResellerMargin
+
+	/*
+	 * The method is used to find if Fulfillment Site can be viewed or update.
+	 * 
+	 * Input : Session Object and HttpServletRequest. Output : int value with
+	 * following result values. Value ==> 2 Update Permission. Value ==> 1 View
+	 * Permission. Value ==> 0 No Permission.
+	 */
+	public int canViewUpdateFulfillmentSite(Session ses) {
+
+		if (ses.isAuthorized(PermissionCode.UPDATE_FULFILLMENT_SITE)) {
+			return 2;
+		} else if (ses.isAuthorized(PermissionCode.VIEW_FULFILLMENT_SITE)) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+
+	/*
+	 * The method is used to find if Reseller Margin can be viewed or update.
+	 * 
+	 * Input : Session Object and HttpServletRequest. Output : int value with
+	 * following result values. Value ==> 2 Update Permission. Value ==> 1 View
+	 * Permission. Value ==> 0 No Permission.
+	 */
+	public int canViewUpdateResellerMargin(Session ses) {
+
+		if (ses.isAuthorized(PermissionCode.UPDATE_RESELLER_MARGIN)) {
+			return 2;
+		} else if (ses.isAuthorized(PermissionCode.VIEW_RESELLER_MARGIN)) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+
+	public static class TransType {
+		public TransType() {
+		}
+
+		// Get and Set method for FFSTransType
+		public String getFfs_Trans_Type() {
+			return this.fFfs_Trans_Type;
+		}
+
+		public void setFfs_Trans_Type(String ffs_trans_type) {
+			this.fFfs_Trans_Type = ffs_trans_type;
+		}
+
+		private String fFfs_Trans_Type;
+	}
+
+	// The class is used as substitute for bean with two string elements.
+	public static class DummyBean {
+		public DummyBean() {
+		}
+
+		// Get and Set method for Status variable
+		public String getStatus() {
+			return this.fStatus;
+		}
+
+		public void setStatus(String status) {
+			this.fStatus = status;
+		}
+
+		public String getMsg() {
+			return this.fMsg;
+		}
+
+		public void setMsg(String msg) {
+			this.fMsg = msg;
+		}
+
+		public String getUserId() {
+			return this.fUserId;
+		}
+
+		public void setUserId(String userId) {
+			this.fUserId = userId;
+		}
+
+		public String getFfsId() {
+			return this.fFfsId;
+		}
+
+		public void setFfsId(String ffsId) {
+			this.fFfsId = ffsId;
+		}
+
+		public String getCustKey() {
+			return this.fCustKey;
+		}
+
+		public void setCustKey(String custKey) {
+			this.fCustKey = custKey;
+		}
+
+		private String fStatus;
+		private String fMsg;
+		private String fUserId;
+		private String fFfsId;
+		private String fCustKey;
+
+	}
+
+	/*
+	 * Method returns the result of FFS transmission Types.
+	 */
+	public List getTransTypeList() {
+		List lst = new ArrayList();
+		lst.add("Email");
+		lst.add("Email & XML");
+		lst.add("Email & Webmethods");
+		lst.add("No Transmission");
+		lst.add("XML");
+		lst.add("Webmethods");
+
+		return lst;
+	}
+
+	/*
+	 * Method returns the result of FFS Types.
+	 */
+	public List getFfsTypeList(String adbRegionToConnect) {
+
+		TransType transType = new TransType();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		pstmt = mgr.makeParsedStmt("fulfillmentSite",
+				"selectFulfillmentSiteTransType", transType, null, null);
+		List list = db.doSelect(pstmt, null, transType);
+
+		List resultList = new ArrayList();
+		for (int i = 0; i < list.size(); i++) {
+			transType = (TransType) list.get(i);
+			resultList.add(transType.getFfs_Trans_Type());
+		}
+
+		System.out
+				.println("FulfillmentSiteMgr : getFulfillmentSiteType() - Number of elements selected "
+						+ resultList.size());
+
+		return resultList;
+
+	}
+
+	// Method to execute FE_FULLFILLMENT.FS_PROD_CATALOG stored procedure.
+	public boolean updateCatalogs(String ffsId, String custKey, String userId, String adbRegionToConnect) {
+		DummyBean dummyBean = new DummyBean();
+		// FFSMappingData ffsData = new FFSMappingData();
+		dummyBean.setFfsId(ffsId);
+		dummyBean.setCustKey(custKey);
+		dummyBean.setUserId(userId);
+		System.out.println("user is @@@@@@@@ " + dummyBean.getUserId());
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		pstmt = mgr.makeParsedStmt("resellerMargin", "updateCatalog",
+				dummyBean, null, null);
+		db.doSP(pstmt, dummyBean, dummyBean);
+		System.out.println("status is " + dummyBean.getStatus());
+		if (dummyBean.getStatus().equals("ok")) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	// Method to execute FE_FULLFILLMENT.FS_PROD_CATALOG stored procedure.
+	public boolean updateProducts(String adbRegionToConnect) {
+		DummyBean dummyBean = new DummyBean();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = null;
+
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		pstmt = mgr.makeParsedStmt("resellerMargin", "updateProduct", null,
+				null, null);
+		db.doSP(pstmt, dummyBean, dummyBean);
+		System.out.println("status is " + dummyBean.getStatus());
+		System.out.println("msg is " + dummyBean.getMsg());
+		if (dummyBean.getStatus().equals("ok")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	// Method to retrieve the region default Fulfillment site
+	public FulfillmentSite getDefaultFulfillmentSiteByRegion(String regionCode, String adbRegionToConnect) {
+		FulfillmentSite fs = new FulfillmentSite();
+		DaxMgr mgr = DaxMgr.getInstance();
+
+		DaxParsedStmt pstmt = null;
+
+		// Make the parsed statement.
+		if (!StrUtil.isEmpty(regionCode)) {
+			fs.setRegionCode(regionCode);
+			pstmt = mgr.makeParsedStmt("fulfillmentSite",
+					"getDefaultFsIdByRegion", fs, null, null);
+		} else {
+			return fs;
+		}
+		// do the query
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		fs = (FulfillmentSite) db.doGet(pstmt, fs.getClass(), fs);
+		return fs;
+	}
+
+	public List getCurrentyList(String adbRegionToConnect) {
+		List currencyList = null;
+		ResellerMargin ffs_bean = new ResellerMargin();
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("resellerMargin",
+				"GET_CURRENCY_LIST", ffs_bean, null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+		currencyList = db.doSelect(pstmt, null, ffs_bean);
+
+		List resultList = new ArrayList();
+		ResellerMargin rsBean = null;
+		for (int i = 0; i < currencyList.size(); i++) {
+			rsBean = (ResellerMargin) currencyList.get(i);
+			resultList.add(rsBean.getCurrency_list().trim());
+		}
+
+		return resultList;
+	}// getCurrentyList
+
+	public String getRegionForCountry(String countrycd,
+			Map<String, String> regionlist) {
+		String regionCd = "";
+
+		for (Entry<String, String> entry : regionlist.entrySet()) {
+			if (countrycd.equals(entry.getKey())) {
+				regionCd = entry.getValue();
+				if (regionCd != null) {
+					return regionCd;
+				}
+			}
+		}
+
+		return regionCd;
+	}// getRegionForCountry
+
+}// class

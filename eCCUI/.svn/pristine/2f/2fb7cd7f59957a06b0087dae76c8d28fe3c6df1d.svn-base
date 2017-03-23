@@ -1,0 +1,54 @@
+package com.hp.ecc.ui.biz.publish;
+
+import java.io.InputStream;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+
+import com.hp.ecc.ui.common.util.XMLIOTool;
+
+/*
+ * Catalog upload response
+ *
+ * @author WWCAT
+ * @version 2.0
+ */
+public class CatalogUploadResponse {
+  private Document doc = null;
+  private String responseText = null;
+  private final String REQUEST_NAME = "Status";
+
+  public CatalogUploadResponse ( InputStream inStream ) throws PublishException {
+    SAXReader reader = new SAXReader ();
+    try {
+      doc = reader.read ( inStream );
+      XMLIOTool.output ( doc, System.out );
+    }
+    catch ( Exception e ) {
+      e.printStackTrace ();
+      throw new PublishException ( e );
+    }
+  }
+
+  public boolean uploaded () {
+    //200 success
+    //201 accepted
+    //563 catalog validating
+    Element node = ( Element ) doc.selectSingleNode ( "/cXML/Response/Status" );
+    try {
+      int code = Integer.parseInt ( node.attributeValue ( "code" ) );
+      responseText = node.attributeValue ( "text" ) + " " + node.getText ();
+      if ( code == 200 || code == 201 || code == 563 ) {
+        return true;
+      }
+    }
+    catch ( NumberFormatException e ) {
+    }
+
+    return false;
+  }
+
+  public String getResponseText () {
+    return responseText;
+  }
+}

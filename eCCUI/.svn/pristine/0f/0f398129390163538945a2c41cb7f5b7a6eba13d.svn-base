@@ -1,0 +1,872 @@
+	package com.hp.ecc.ui.biz.alert;
+	
+	import java.util.Date;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.CustomerMgr;
+import com.hp.ecc.ui.common.biz.BizObject;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.util.StrUtil;
+	
+	
+	
+	/**
+	 * @author Andy Li
+	 * @version 1.0
+	 *
+	 */
+	
+	public class Alert extends BizObject {
+	  /*=====================================================================
+	   /* Alert IDs
+	    /*=====================================================================
+	
+	     /**
+	  * New version of deal has arrived.
+	  */
+	 public final static String DEAL_NEW_ARRIVED = "101";
+	
+	  /**
+	   * The deal end date is less than 2 weeks away from current date.
+	   */
+	  public final static String DEAL_EXPIRED = "102";
+	
+	  /**
+	   * A product is end-of-life (non-orderable) or obsolete in GPSY
+	   */
+	  public final static String PROD_EOF_OR_OBSOLETE = "104";
+	  /**
+	   * The product is going to be obseleted in 14 days
+	   */
+	  public final static String PROD_TO_OBSOLETE = "109";
+	
+	  /**
+	   * A product is end-of-life (non-orderable) or obsolete in GPSY
+	   */
+	  public final static String BUNDLE_EOF_OR_OBSOLETE = "105";
+	
+	  /**
+	   * An interface (pull from Eclipse, push to ePrime, publish of non-ePrime catalog) failed to run as scheduled.
+	   */
+	  public final static String INTERFACE_FAILED = "106";
+	
+	  /**
+	   * New customer found in source system
+	   */
+	  public final static String MISC_NEW_CUSTOMER = "107";
+	
+	  /**
+	   * Catalog is incomplete
+	   */
+	  public final static String CATALOG_INCOMPLETE = "150";
+	  /**
+	   * Catalog expired
+	   */
+	  public final static String CATALOG_EXPIRED = "151";
+	  /**
+	   * Catalog to be expired
+	   */
+	  public final static String CATALOG_TO_EXPIRE = "153";
+	
+	  /**
+	   * The product price is missing
+	   */
+	  public final static String C_ITEM_NO_PRICE = "152";
+	
+	  /**
+	   * The supplier part id is not unique
+	   */
+	  public final static String C_ITEM_LOCAL_PRICE_LESS_THAN_NET_PRICE = "154";
+	
+	  /**
+	   * Failed to generate catalog
+	   */
+	  public final static String TASK_CATALOG_GENERATION_FAILED = "155";
+	
+	  /**
+	   * Failed to publish catalog
+	   */
+	  public final static String TASK_CATALOG_PUBLISH_FAILED = "156";
+	
+	  /**
+	   * A regional administrator manually triggered the end-to-end feed from Eclipse to ePrime.
+	   */
+	  public final static String MISC_END_TO_END_TRIGGERED = "108";
+	
+	  /**
+	   * Customized price will expire within 14 days
+	   */
+	  public final static String C_ITEM_PRICE_TO_EXPIRE = "211";
+	
+	  /**
+	   * Incomplete Catalog will be deleted within 14 days
+	   */
+	  public final static String CATALOG_INCOMPLETED = "212";
+	
+	  /**
+	   * The auto import deal option is dsiabled
+	   */
+	  public final static String DEAL_AUTO_IMPORT_DISABLED = "250";
+	
+	  /**
+	   * The supplier part id is not available
+	   */
+	  public final static String C_ITEM_NO_SUPPLIER_PART_ID = "251";
+	
+	  /**
+	   * The supplier part id is not unique
+	   */
+	  public final static String C_ITEM_DUPLICATED_SUPPLIER_PART_ID = "252";
+	
+	  /**
+	   * The mfg part id is not unique
+	   */
+	  public final static String C_ITEM_DUPLICATED_MFG_PART_ID = "253";
+	
+	  /**
+	   * The prod id is not unique
+	   */
+	  public final static String C_ITEM_DUPLICATED_PROD_ID = "254";
+	
+	  /**
+	   * This product has been removed from the deal
+	   */
+	  public final static String C_ITEM_PRODUCT_REMOVED_FROM_DEAL = "303";
+	
+	  /**
+	   * This product has been added according to the source system
+	   */
+	  public final static String C_ITEM_PRODUCT_ADDED_FROM_DEAL = "306";
+	
+	  /**
+	   * This product has a localization option that is not found
+	   */
+	  public final static String C_ITEM_PRODUCT_MIS_LOCALIZED = "307";
+	
+	  /**
+	   * This product has been removed from a bundle of the deal
+	   */
+	  public final static String DEAL_REMOVEFROM_BUNDLE = "309";
+	
+	  /**
+	   * This product has been removed from the catalog
+	   */
+	  public final static String C_ITEM_PRODUCT_REMOVED_CATALOG = "312";
+	
+	  /**
+	   * For a given product, there is no description, neither in the deal or in GPSy
+	   */
+	  public final static String C_ITEM_PRODUCT_NO_DESCRIPTION = "313";
+	
+	  /**
+	   * PPC product without option
+	   */
+	  public final static String PROD_PPC_NO_OPTION = "314";
+	
+	  /**
+	   * This deal is deleted from the customer
+	   */
+	  public final static String DEAL_DELETED_FROM_CUSTOMER = "315";
+	
+	  /**
+	   * This customer is not found in the source system
+	   */
+	  public final static String CUST_NOT_FOUND_IN_SRC_SYS = "316";
+	
+	  /**
+	   * This category is invalid
+	   */
+	  public final static String INVALID_CATEGORY = "317";
+	
+	
+	  /**
+	   * Misc
+	   */
+	  public final static String C_ITEM_CUSTOMIZED = "999";
+	
+	  /**
+	   * ppc no mfg prat id
+	   */
+	  public final static String PPC_MFG_PART_ID = "157";
+	
+	  /**
+	   * Bundle price changed due to components price change
+	   */
+	  public final static String BDL_PRICE_CHANGED = "801";
+	
+	  /**
+	   * Bundle will expire in 14 days
+	   */
+	  public final static String BDL_TO_EXPIRE = "802";
+	
+	  /**
+	   * Component in the bundle will be obsolete.
+	   */
+	  public final static String BDL_ITEM_TO_EXPIRE = "803";
+	
+	  /**
+	   * Bundle component deleted
+	   */
+	  public final static String BDL_COMPONENT_DELETED = "804";
+	
+	  /**
+	   * Bundle is expired
+	   */
+	  public final static String BDL_SET_TO_PENDING = "805";
+	
+	  /**
+	   * Web service call for config failed
+	   */
+	  public final static String EASY_CONFIG_WEB_SERVICE_CALL = "806";
+	
+	  /**
+	   * UNSPSC not assigned to config
+	   */
+	  public final static String UNSPSC_NOT_ASSIGNED_TO_CONFIG = "807";
+	
+	  /**
+	   * Bundle is empty
+	   */
+	  public final static String BDL_EMPTY = "808";
+	
+	  /*
+	   * catalog program is not started
+	   */
+	  public final static String PROGRAM_NOT_STARTED = "191";
+	
+	  /*
+	   * catalog program expired
+	   */
+	  public final static String PROGRAM_EXPIRED = "192";
+	
+	
+	  /*=====================================================================
+	   /* Methods
+	    /*=====================================================================
+	
+	     /**
+	  * Get AlertDate
+	  */
+	     public Date getAlertDate () {
+	       return this.getValueAsDate ( AlertFields.ALERT_DATE );
+	     }
+	
+	
+	  /**
+	   * Set AlertDate
+	   */
+	  public void setAlertDate ( Date alertdate ) {
+	    this.setValueByDate ( AlertFields.ALERT_DATE, alertdate );
+	  }
+	
+	
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * @param none
+	   * @return AlertFields.ALERT_ID
+	   */  
+	  public String getId () {
+	    return ( String )this.getValue ( AlertFields.ALERT_ID );
+	  }
+	
+	
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * @param id
+	   * @return void
+	   */ 
+	  public void setId ( String id ) {
+	    this.setValue ( AlertFields.ALERT_ID, id );
+	  }
+	
+	
+	  /**
+	   * Get Key
+	   */
+	  public long getKey () {
+	    return this.getValueAsLong ( AlertFields.ALERT_KEY );
+	  }
+	
+	
+	  /**
+	   * Set Key
+	   */
+	  public void setKey ( long key ) {
+	    this.setValueByLong ( AlertFields.ALERT_KEY, key );
+	  }
+	
+	
+	  public int getPriority () {
+	    int p = ( int )this.getValueAsLong ( AlertFields.ALERT_PRIORITY );
+	    if ( p == 0 ) {
+	      AlertInfo ai = this.getAlertInfo ();
+	      return ai.getPriority ();
+	    }
+	    else {
+	      return p;
+	    }
+	  }
+	
+	
+	  /**
+	   * Set Key
+	   */
+	  public void setPriority ( int key ) {
+	    this.setValueByLong ( AlertFields.ALERT_PRIORITY, key );
+	  }
+	
+	
+	  /**
+	   * Get source
+	   */
+	  public AlertSrc getSource () {
+	    AlertSrc src = this.fSrc;
+	    if ( src != null ) {
+	      return src;
+	    }
+	
+	    String st = ( String )this.getValue ( AlertFields.SRC_TYPE );
+	    st = st.toLowerCase ();
+	    Date ts = this.getValueAsDate ( AlertFields.SRC_TIMESTAMP );
+	    long task_key = this.getValueAsLong ( AlertFields.TASK_ID );
+	
+	    boolean enforced = true;
+	    if ( AlertSrcCatalog.sSrcType.equals ( st ) ) {
+	      String k = ( String )this.getValue ( AlertFields.CATALOG_ID );
+	      src = new AlertSrcCatalog ( k, ts, enforced );
+	    }
+	    else if ( AlertSrcCatalogItem.sSrcType.equals ( st ) ) {
+	      String k = this.getValueToStr ( AlertFields.CATALOG_ITEM_KEY );
+	      src = new AlertSrcCatalogItem ( k, ts, enforced );
+	      AlertSrcCatalogItem s = ( AlertSrcCatalogItem ) src;
+	      s.setCatalogID ( ( String )this.getValue ( AlertFields.CATALOG_ID ) );
+	      s.setProductNum ( ( String )this.getValue ( AlertFields.PROD ) );
+	    }
+	    else if ( AlertSrcProduct.sSrcType.equals ( st ) ) {
+	      String k = ( String )this.getValue ( AlertFields.PROD );
+	      src = new AlertSrcProduct ( k, ts, enforced );
+	    }
+	    else if ( AlertSrcDeal.sSrcType.equals ( st ) ) {
+	      String k = ( String )this.getValue ( AlertFields.DEAL_ID );
+	      if(k!=null)
+	      src = new AlertSrcDeal ( k, ts, enforced );
+	    }
+	    else if ( AlertSrcCustomer.sSrcType.equals ( st ) ) {
+	      String k = ( String )this.getValue ( AlertFields.CUSTOMER_KEY );
+	      String n = ( String )this.getValue ( AlertFields.CUSTOMER_NAME );
+	      src = new AlertSrcCustomer ( k, n, ts, enforced );
+	    }
+	    else if ( AlertSrcTask.sSrcType.equals ( st ) ) {
+	      long k = this.getValueAsLong ( AlertFields.TASK_ID );
+	      src = new AlertSrcTask ( k, ts );
+	    }
+	    else {
+	      throw new RuntimeException ( "unsupported alert source type: " + st );
+	    }
+	
+	    this.fSrc = src;
+	    return src;
+	  }
+	
+	
+	  /**
+	   * Set source
+	   */
+	  public void setSource ( AlertSrc src , String adbRegionToConnect) {
+	    this.setValue ( AlertFields.SRC_TYPE, src.getSrcType () );
+	    this.setValueByDate ( AlertFields.SRC_TIMESTAMP, src.getTimestamp () );
+	    long task_key = src.getTaskKey ();
+	    if ( task_key > 0 ) {
+	      this.setValueByLong ( AlertFields.TASK_ID, task_key );
+	    }
+	
+	    this.setValue ( AlertFields.CATALOG_ID, null );
+	    this.setValue ( AlertFields.CATALOG_ITEM_KEY, null );
+	    this.setValue ( AlertFields.PROD, null );
+	
+	    if ( src instanceof AlertSrcCatalog ) {
+	      AlertSrcCatalog s = ( AlertSrcCatalog ) src;
+	      Catalog catalog = s.getCatalog ("default");
+	      Customer customer = ( Customer ) s.getFromCache ( catalog.getCustKey () );
+	      if ( customer != null ) {
+	        fCustomer = customer;
+	      }
+	      if ( catalog == null ) {
+	        throw new CatRuntimeException ( "No catalog found: " + s.getKey () );
+	  }
+	  //if(catalog.getCatalogType() != 1)
+	  this.updateByCatalog ( catalog,  adbRegionToConnect );
+	  if ( fCustomer != null ) {
+	    s.putToCache ( fCustomer.getCustKey (), fCustomer );
+	  }
+	}
+	else if ( src instanceof AlertSrcCatalogItem ) {
+	  AlertSrcCatalogItem s = ( AlertSrcCatalogItem ) src;
+	  this.setValue ( AlertFields.CATALOG_ITEM_KEY, s.getKey () );
+	  Catalog catalog = s.getCatalog ();
+	  Customer customer = ( Customer ) s.getFromCache ( catalog.getCustKey () );
+	  if ( customer != null ) {
+	    fCustomer = customer;
+	  }
+	  if ( catalog == null ) {
+	    throw new CatRuntimeException (
+	        "No catalog found for catalog item: key=" + s.getKey () +
+	        "catalog id=" + s.getCatalogID () );
+	  }
+	  //if(catalog.getCatalogType() != 1)
+	  this.updateByCatalog ( catalog ,  adbRegionToConnect);
+	  this.setValue ( AlertFields.PROD, s.getCatalogItem ().getProdId () );
+	  if ( fCustomer != null ) {
+	    s.putToCache ( fCustomer.getCustKey (), fCustomer );
+	  }
+	}
+	else if ( src instanceof AlertSrcProduct ) {
+	  AlertSrcProduct s = ( AlertSrcProduct ) src;
+	  this.setValue ( AlertFields.PROD, s.getKey () );
+	}
+	else if ( src instanceof AlertSrcDeal ) {
+	  AlertSrcDeal s = ( AlertSrcDeal ) src;
+	  this.setValue ( AlertFields.DEAL_ID, s.getKey () );
+	}
+	else if ( src instanceof AlertSrcCustomer ) {
+	  AlertSrcCustomer s = ( AlertSrcCustomer ) src;
+	  this.setValue ( AlertFields.CUSTOMER_KEY, s.getKey () );
+	  this.setValue ( AlertFields.CUSTOMER_NAME, s.getName () );
+	}
+	else if ( src instanceof AlertSrcTask ) {
+	  //AlertSrcTask s = (AlertSrcTask) src;
+	  //this.setValueByLong(AlertFields.TASK_ID, s.getKey());
+	}
+	else {
+	  throw new RuntimeException ( "unsupported alert source type: "
+	                                   + src.getClass () );
+	    }
+	    this.fSrc = src;
+	  }
+	
+	
+	  /**
+	   * Get Msg
+	   */
+	  public String getMsg () {
+	    String msg = ( String )this.getValue ( AlertFields.ALERT_MSG );
+	    if ( StrUtil.isEmpty ( msg ) ) {
+	      msg = this.getAlertInfo ().getDesc ();
+	    }
+	    return msg;
+	  }
+	
+	
+	  /**
+	   * Set Msg
+	   */
+	  public void setMsg ( String msg ) {
+	    this.setValue ( AlertFields.ALERT_MSG, msg );
+	  }
+	
+	
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * @param none
+	   * @return fAlertInfo
+	   */ 
+	  public AlertInfo getAlertInfo () {
+	    if ( this.fAlertInfo == null ) {
+	      this.fAlertInfo = AlertInfoMgr.getAlertInfoMgr ().getAlertInfo ( this.
+	          getId (), false );
+	    }
+	    return this.fAlertInfo;
+	  }
+	
+	
+	  /**
+	   * Set AlertInfo
+	   */
+	  public void setAlertInfo ( AlertInfo alertinfo ) {
+	    this.fAlertInfo = alertinfo;
+	  }
+	
+	  /**
+	   * Get CustomerKey
+	   */
+	  public String getCustomerKey () {
+	    return ( String )this.getValue ( AlertFields.CUSTOMER_KEY );
+	  }
+	
+	
+	  /**
+	   * Get CustomerName
+	   */
+	  public String getCustomerName () {
+	    return ( String )this.getValue ( AlertFields.CUSTOMER_NAME );
+	  }
+	
+	
+	  /**
+	   * Set CustomerName
+	   */
+	  public void setCustomerInfo ( String customerkey, String customername ) {
+	    this.setValue ( AlertFields.CUSTOMER_KEY, customerkey );
+	    this.setValue ( AlertFields.CUSTOMER_NAME, customername );
+	  }
+	
+	  public String toString () {
+	    StringBuffer sb = new StringBuffer ();
+	    //sb.append("================================\n");
+	sb.append ( "Key: " ).append ( this.getKey () ).append ( " " );
+	// Modified by Sivakumar on 12-09-2007 
+	sb.append ( "ID: " ).append ( this.getId () ).append ( " " );
+	sb.append ( "Priority: " ).append ( this.getPriority () ).append ( " " );
+	sb.append ( "Source: " ).append ( this.getSource ().getHashCode () ).append (
+	    "\n" );
+	    sb.append ( this.getMsg () );
+	
+	    return sb.toString ();
+	  }
+	
+	
+	  String buildWhere () {
+	    return null;
+	  }
+	
+	  private void getCustomerInfo ( String custKey , String adbRegionToConnect) {
+	    if ( fCustomer == null || ( !fCustomer.getCustKey ().equals ( custKey ) ) ) {
+	      CustomerMgr mgr = new CustomerMgr ();
+	      fCustomer = mgr.getCustomer ( custKey,  adbRegionToConnect );
+	    }
+	
+	  }
+	
+	  private void updateByCatalog ( Catalog cat , String adbRegionToConnect) {
+	    // Modified by Sivakumar on 12-09-2007 	  
+	String id = cat.getId ();
+	String cust_key = cat.getCustKey ();
+	this.setValue ( AlertFields.CATALOG_ID, id );
+	
+	if ( !StrUtil.isEmpty ( cust_key ) ) {
+	  getCustomerInfo ( cust_key , adbRegionToConnect);
+	  if ( fCustomer == null ) {
+	    throw new CatRuntimeException ( "Cannot find customer " + cust_key +
+	                                    " for catalog id " + id );
+	      }
+	      String cust_name = fCustomer.getCustName ();
+	      this.setCustomerInfo ( cust_key, cust_name );
+	    }
+	  }
+	
+	  private void init ( String id, AlertSrc source, boolean for_query ) {
+	    if ( !for_query ) {
+	      if ( id == null ) {
+	        throw new IllegalArgumentException ( "Alert id cannot be null" );
+	  }
+	
+	  if ( source == null ) {
+	    throw new IllegalArgumentException ( "Alert source cannot be null" );
+	  }
+	}
+	
+	this.fAlertInfo = AlertInfoMgr.getAlertInfoMgr ().getAlertInfo ( id, false );
+	this.setValueByLong ( AlertFields.ALERT_PRIORITY
+	                      , ( long )this.fAlertInfo.getPriority () );
+	this.setAlertDate ( new Date () );
+	// Modified by Sivakumar on 12-09-2007 	    
+	    this.setId ( id );
+	    this.setKey ( 0 );
+	    this.setSource ( source, "default" );
+	  }
+	
+	
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * Parameterized Constructor 
+	   * 
+	   * @param id
+	   * @param source
+	   * @return none
+	   */   
+	  public Alert ( String id, AlertSrc source ) {
+	    this.init ( id, source, false );
+	  }
+	
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * Constructor 
+	   * 
+	   * @param none
+	   * @return none
+	   */ 
+	  public Alert () {
+		  super();
+	  }
+	  
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * @param none
+	   * @return AlertFields.ALERT_COUNT
+	   */   
+	   public long getAlertCount() {
+		return getValueAsLong(AlertFields.ALERT_COUNT);
+	   }
+		
+	   /*************************************************************************
+	    * Change History: 
+	    * DATE : 12-09-07 
+	    * CHANGED-BY : Sivakumar
+	    * COMMENTS : modified.
+	    * ***********************************************************************
+	    * @param count
+	    * @return void
+	    */	   
+	   public void setAlertCount(long count) {
+	    setValueByLong(AlertFields.ALERT_COUNT, count);        
+	   }
+		  
+	  /*************************************************************************
+	   * Change History: 
+	   * DATE : 12-09-07 
+	   * CHANGED-BY : Sivakumar
+	   * COMMENTS : modified.
+	   * ***********************************************************************
+	   * @param none
+	   * @return AlertFields.CATALOG_ID
+	   */ 	
+	   public String getCatalogID() {
+		return ( String )this.getValue ( AlertFields.CATALOG_ID );
+	   }
+	
+	   /*************************************************************************
+	    * Change History: 
+	    * DATE : 12-09-07 
+	    * CHANGED-BY : Sivakumar
+	    * COMMENTS : modified.
+	    * ***********************************************************************
+	    * @param catalog_id
+	    * @return void
+	    */	   
+	   public void setCatalogID(String catalog_id) {
+		this.setValue ( AlertFields.CATALOG_ID, catalog_id );
+	   }
+	
+	/*************************************************************************
+	 * Change History: 
+	 * DATE : 12-09-07 
+	 * CHANGED-BY : Sivakumar
+	 * COMMENTS : modified.
+	 * ***********************************************************************
+	 * @param none
+	 * @return AlertFields.CATALOG_ITEM_KEY
+	 */ 
+	public String getCatalogItemKey() {
+	 return ( String )this.getValue ( AlertFields.CATALOG_ITEM_KEY );
+	}
+	
+   /*************************************************************************
+    * Change History: 
+    * DATE : 12-09-07 
+    * CHANGED-BY : Sivakumar
+    * COMMENTS : modified.
+    * ***********************************************************************
+    * @param catalog_item_key
+    * @return void
+    */	
+	public void setCatalogItemKey(String catalog_item_key) {
+		this.setValue ( AlertFields.CATALOG_ITEM_KEY, catalog_item_key );
+	}
+	
+   /*************************************************************************
+    * Change History: 
+    * DATE : 12-09-07 
+    * CHANGED-BY : Sivakumar
+    * COMMENTS : modified.
+    * ***********************************************************************
+    * @param customer_key
+    * @return void
+    */
+	public void setCustomerKey(String customer_key) {
+		this.setValue ( AlertFields.CUSTOMER_KEY, customer_key );
+	}
+	
+   /*************************************************************************
+    * Change History: 
+    * DATE : 12-09-07 
+    * CHANGED-BY : Sivakumar
+    * COMMENTS : modified.
+    * ***********************************************************************
+    * @param customer_name
+    * @return void
+    */	
+	public void setCustomerName(String customer_name) {
+		this.setValue ( AlertFields.CUSTOMER_NAME, customer_name );
+	}
+	
+	/*************************************************************************
+	 * Change History: 
+	 * DATE : 12-09-07 
+	 * CHANGED-BY : Sivakumar
+	 * COMMENTS : modified.
+	 * ***********************************************************************
+	 * @param none
+	 * @return AlertFields.DEAL_ID
+	 */ 
+	public String getDealID() {
+		return ( String )this.getValue ( AlertFields.DEAL_ID );
+	}
+	
+   /*************************************************************************
+    * Change History: 
+    * DATE : 12-09-07 
+    * CHANGED-BY : Sivakumar
+    * COMMENTS : modified.
+    * ***********************************************************************
+    * @param deal_id
+    * @return void
+    */	
+	public void setDealID(String deal_id) {
+		this.setValue ( AlertFields.DEAL_ID, deal_id );
+	}
+	
+	/*************************************************************************
+	 * Change History: 
+	 * DATE : 12-09-07 
+	 * CHANGED-BY : Sivakumar
+	 * COMMENTS : modified.
+	 * ***********************************************************************
+	 * @param none
+	 * @return AlertFields.PROD 
+	 */ 
+	public String getProd() {
+		return ( String )this.getValue ( AlertFields.PROD );
+	}
+	
+   /*************************************************************************
+    * Change History: 
+    * DATE : 12-09-07 
+    * CHANGED-BY : Sivakumar
+    * COMMENTS : modified.
+    * ***********************************************************************
+    * @param prod
+    * @return void
+    */	
+	public void setProd(String prod) {
+		this.setValue ( AlertFields.PROD, prod );
+	}
+	
+	 /*************************************************************************
+	 * Change History: 
+	 * DATE : 12-09-07 
+	 * CHANGED-BY : Sivakumar
+	 * COMMENTS : modified.
+	 * ***********************************************************************
+	 * @param none
+	 * @return AlertFields.SRC_TIMESTAMP
+	 */ 
+	public Date getSrcTimestamp() {
+		return ( Date )this.getValueAsDate(AlertFields.SRC_TIMESTAMP );
+	}
+
+   /*************************************************************************
+    * Change History: 
+    * DATE : 12-09-07 
+    * CHANGED-BY : Sivakumar
+    * COMMENTS : modified.
+    * ***********************************************************************
+    * @param src_timestamp
+    * @return void
+    */	
+	public void setSrcTimestamp(Date src_timestamp) {
+		this.setValueByDate(AlertFields.SRC_TIMESTAMP, src_timestamp );
+	}
+	
+	/*************************************************************************
+	  * Change History: 
+	  * DATE : 12-09-07 
+	  * CHANGED-BY : Sivakumar
+	  * COMMENTS : modified.
+	  * ***********************************************************************
+	  * @param none
+	  * @return AlertFields.SRC_TYPE 
+	  */ 
+	  public String getSrcType() {
+		return ( String )this.getValue ( AlertFields.SRC_TYPE );
+	  }
+	
+	   /*************************************************************************
+	    * Change History: 
+	    * DATE : 12-09-07 
+	    * CHANGED-BY : Sivakumar
+	    * COMMENTS : modified.
+	    * ***********************************************************************
+	    * @param src_type
+	    * @return void
+	    */	  
+	  public void setSrcType(String src_type) {
+		this.setValue ( AlertFields.SRC_TYPE, src_type );
+	  }
+	
+	  /*************************************************************************
+	  * Change History: 
+	  * DATE : 12-09-07 
+	  * CHANGED-BY : Sivakumar
+	  * COMMENTS : modified.
+	  * ***********************************************************************
+	  * @param none
+	  * @return AlertFields.TASK_ID
+	  */ 
+	  public String getTaskID() {
+		return ( String )this.getValue ( AlertFields.TASK_ID );
+	  }
+	
+	   /*************************************************************************
+	    * Change History: 
+	    * DATE : 12-09-07 
+	    * CHANGED-BY : Sivakumar
+	    * COMMENTS : modified.
+	    * ***********************************************************************
+	    * @param task_id
+	    * @return void
+	    */	  
+	  public void setTaskID(String task_id) {
+		this.setValue ( AlertFields.TASK_ID, task_id);
+	  }
+	  private AlertInfo fAlertInfo;
+	  private AlertSrc fSrc;
+	  private Customer fCustomer;
+	}
+	
+	/*
+	 catalog incomplete
+	 deal import auto dsiabled
+	 ci blank price
+	 ci supplier-part id is not available
+	 ci non-uniqe supplier-part id
+	 ci local price lower than net price
+	 PPC 314 (prod)
+	 task: generation failed
+	 task: pulish failed
+	
+	 */

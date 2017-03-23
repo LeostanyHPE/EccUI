@@ -1,0 +1,102 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.view.beans;
+
+/**
+ * @author gottipat
+ * 
+ */
+public class ProductFamilyCodesBean {
+	private int ctg;
+	private String productModel;
+	private String code;
+	private String categorizationName;
+	private String regionCode;
+	private String  lastModifiedBy;
+	private String pmcode;
+	private String region;
+	
+	public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+
+	/**
+	 * @return the pfcode
+	 */
+	public String getPmcode() {
+		return pmcode;
+	}
+
+	/**
+	 * @param pfcode the pfcode to set
+	 */
+	public void setPmcode(String pmcode) {
+		this.pmcode = pmcode;
+	}
+
+	/**
+	 * @return the lastModifiedBy
+	 */
+	public String getLastModifiedBy() {
+		return lastModifiedBy;
+	}
+
+	/**
+	 * @param lastModifiedBy the lastModifiedBy to set
+	 */
+	public void setLastModifiedBy(String lastModifiedBy) {
+		this.lastModifiedBy = lastModifiedBy;
+	}
+
+	/**
+	 * @return the regionCode
+	 */
+	public String getRegionCode() {
+		return regionCode;
+	}
+
+	/**
+	 * @param regionCode the regionCode to set
+	 */
+	public void setRegionCode(String regionCode) {
+		this.regionCode = regionCode;
+	}
+
+	public String getCategorizationName() {
+		return categorizationName;
+	}
+
+	public void setCategorizationName(String categorizationName) {
+		this.categorizationName = categorizationName;
+	}
+
+	public int getCtg() {
+		return ctg;
+	}
+
+	public void setCtg(int ctg) {
+		this.ctg = ctg;
+	}
+
+	public String getProductModel() {
+		return productModel;
+	}
+
+	public void setProductModel(String productModel) {
+		this.productModel = productModel;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+}

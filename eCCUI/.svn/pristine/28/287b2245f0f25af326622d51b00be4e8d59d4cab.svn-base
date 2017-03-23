@@ -1,0 +1,813 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.product;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.text.ParseException;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.category.Category;
+import com.hp.ecc.ui.biz.category.CategoryException;
+import com.hp.ecc.ui.biz.category.ProductContentDaxCollector;
+import com.hp.ecc.ui.biz.category.SearchMgr;
+import com.hp.ecc.ui.biz.colPreference.ColPrefBean;
+import com.hp.ecc.ui.biz.colPreference.ColPrefMgr;
+import com.hp.ecc.ui.biz.content.ContentMgr;
+import com.hp.ecc.ui.biz.content.ProductSearchConstants;
+import com.hp.ecc.ui.biz.content.SearchCriteria;
+import com.hp.ecc.ui.biz.misc.PriceDescriptor;
+import com.hp.ecc.ui.biz.misc.PriceDescriptorMgr;
+import com.hp.ecc.ui.biz.misc.ProductLineInfoMgr;
+import com.hp.ecc.ui.biz.product.ProdLocalInfoMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.ProductContent;
+import com.hp.ecc.ui.biz.product.ProductSearchException;
+import com.hp.ecc.ui.biz.references.ProductLineInfo;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.ProdFilterForm;
+import com.hp.ecc.ui.view.beans.QuickManageForm;
+import com.hp.ecc.ui.view.beans.SearchProductsForm;
+
+/**
+ * @author reddvino
+ *
+ */
+public class ProductSearchHelper implements ProductSearchConstants{
+	private String catalogIds[];
+	private String catalogNames[];
+	private String countries[];
+	private String priceDescriptors[];
+	private String noPriceDescriptorCountries[];
+	private ContentMgr ctntMgr;
+	private CategorizationMgr catMgr;
+	private ProdLocalInfoMgr prodMgr;
+	private User user;
+	private Map prodAttrGuiVisibilityMap;
+	
+	private static SimpleDateFormat dtFormatter;
+	
+	public static final String GUI_COL_CATALOG_AVAILABILITY = "catalogAvailability";
+	public static final String GUI_COL_ORDERABILITY = "orderability";
+	public static final String GUI_COL_DISCONTINUE_DATE = "discontinueDate";
+	public static final String GUI_COL_END_OF_LIFE_DATE = "eolDate";
+	//public static final String GUI_COL_NODE_PATH = "nodePath";
+	
+	static {dtFormatter = new SimpleDateFormat ( "dd-MMM-yyyy" );
+	}
+	
+	public ProductSearchHelper ( User user ) {ctntMgr = new ContentMgr ();
+	prodMgr = ProdLocalInfoMgr.getProdLocalInfoMgr ();
+	catMgr = new CategorizationMgr ( user.getId (), user.getRegion () );
+	this.user = user;
+	prodAttrGuiVisibilityMap = new HashMap ();
+	prodAttrGuiVisibilityMap.put ( GUI_COL_CATALOG_AVAILABILITY, new Boolean ( true ) );
+	prodAttrGuiVisibilityMap.put ( GUI_COL_ORDERABILITY, new Boolean ( true ) );
+	prodAttrGuiVisibilityMap.put ( GUI_COL_DISCONTINUE_DATE, new Boolean ( true ) );
+	prodAttrGuiVisibilityMap.put ( GUI_COL_END_OF_LIFE_DATE, new Boolean ( true ) );
+	//prodAttrGuiVisibilityMap.put(GUI_COL_NODE_PATH, new Boolean(true));
+	}
+	
+	public ProductSearchHelper ( User user, String catalogIds[] , String adbRegionValue) {
+		this ( user );
+		this.catalogIds = catalogIds;
+		
+		this.catalogNames = new String[catalogIds.length];
+		List countryList = new ArrayList ();
+		List prcDescList = new ArrayList ();
+		
+		CatalogMgr catMgr = new CatalogMgr ();
+		Catalog stdCat = new Catalog ();
+		stdCat.setCatalogType ( Catalog.STD_CATLAOG );
+		stdCat.setRegionCode ( user.getRegion_code() );
+		
+		for ( int i = 0; i < catalogIds.length; i++ ) {
+			stdCat.setId ( catalogIds[i] );
+			Catalog cat = catMgr.getCatalogInfo ( stdCat, adbRegionValue );
+			
+			catalogNames[i] = cat.getCatalogName ();
+			if(cat.getOptCountries() != null){
+				String catCountries[] = cat.getOptCountries().split(",");
+				if ( ( catCountries != null ) && ( catCountries.length > 0 ) ) {
+					for ( int j = 0;j < catCountries.length; j++ ) {
+						if ( !countryList.contains ( catCountries[j] ) ) {
+							countryList.add ( catCountries[j] );
+						}
+					}
+				}
+				else {
+				/* If catCountries[] is null for a given catalog it means user has selected "All countries"
+				    options for this particular standard catalog. So get all countries for the catalog's region
+				   */
+				  PriceDescriptorMgr prcDescMgr = new PriceDescriptorMgr ();
+				   List prcDescs = prcDescMgr.getCountryByRegion ( cat.getRegionCode (), adbRegionValue );
+					   for ( int j = 0; j < prcDescs.size (); j++ ) {
+						   PriceDescriptor prcDesc = (PriceDescriptor ) prcDescs.get ( j );
+						   if ( !countryList.contains ( prcDesc.getHpCntryCd () ) ) {
+							   countryList.add (
+						       prcDesc.getHpCntryCd () );
+						   }
+					   }
+				 }
+				
+			}
+		
+			if(cat.getOBPriceDescriptor() != null){
+				String catPrcDescs[] = cat.getOBPriceDescriptor().split(",");
+				if ( catPrcDescs != null ) {
+					for ( int j = 0; j < catPrcDescs.length; j++ ) {
+						if ( !prcDescList.contains ( catPrcDescs[j] ) ) {
+							prcDescList.add ( catPrcDescs[j] );
+						}
+					}
+				}
+			}
+		}
+		countries = ( String[] ) countryList.toArray ( new String[0] );
+		priceDescriptors = ( String[] ) prcDescList.toArray ( new String[0] );
+		noPriceDescriptorCountries = getCountriesWithoutPriceDescriptors ( countries, priceDescriptors, adbRegionValue );
+	}
+	
+	public ProductSearchHelper ( User user, String catalogIds[], String countries[]
+	                             , String priceDescriptors[], String adbRegionValue ) {this ( user );
+	this.catalogIds = catalogIds;
+	this.countries = countries;
+	this.priceDescriptors = priceDescriptors;
+	noPriceDescriptorCountries = getCountriesWithoutPriceDescriptors ( countries
+	    , priceDescriptors, adbRegionValue );
+	}
+	
+	public String[] getCatalogNames () {return this.catalogNames;
+	}
+	
+	public String[] getCatalogIds () {return this.catalogIds;
+	}
+	
+	public String[] getCountries () {return this.countries;
+	}
+	
+	public String[] getPriceDescriptors () {return this.priceDescriptors;
+	}
+	
+	boolean isColumnVisibleOnGUI ( String columnName ) {Boolean visibilty = (
+	    Boolean ) prodAttrGuiVisibilityMap.get ( columnName );
+	if ( visibilty != null ) {return visibilty.booleanValue ();
+	}
+	return false;
+	}
+	
+	public void populateCatalogAvailability ( ProductContent prodContent, String adbRegionValue ) {if ( (
+	    catalogIds != null ) && ( catalogIds.length > 0 )
+	    && ( isColumnVisibleOnGUI ( GUI_COL_CATALOG_AVAILABILITY ) ) ) {Map
+	    availability = ctntMgr.isProductAvailableInCatalogs ( prodContent.getProdId ()
+	    , catalogIds, adbRegionValue );
+	for ( int i = 0; i < catalogIds.length; i++ ) {Boolean available = ( Boolean )
+	    availability.get ( catalogIds[i] );
+	prodContent.setCatalogAvailability ( catalogIds[i], available.booleanValue () );
+	}
+	}
+	}
+	
+	public void populateOrderability ( ProductContent prodContent, String adbRegionValue ) {if ( (
+	    countries != null ) && ( countries.length > 0 ) ) {Map orderability =
+	    ctntMgr.isProductOrderable ( prodContent.getProdId ()
+	                                 , noPriceDescriptorCountries, priceDescriptors, adbRegionValue );
+	for ( int i = 0; i < countries.length; i++ ) {Boolean orderable = ( Boolean )
+	    orderability.get ( countries[i] );
+	prodContent.setOrderability ( countries[i], orderable.booleanValue () );
+	}
+	}
+	}
+	
+	public void populateDiscontinueDate ( String categorizationID
+	                                      , ProductContent prodContent, String adbRegionValue ) {if ( (
+	    countries != null ) && ( countries.length > 0 )
+	    && ( isColumnVisibleOnGUI ( GUI_COL_DISCONTINUE_DATE ) ) ) {Map
+	    discontinueDate = ctntMgr.getDiscontinueDates ( prodContent.getProdId ()
+	    , categorizationID, countries , adbRegionValue);
+	for ( int i = 0; i < countries.length; i++ ) {Date discontDt = ( Date )
+	    discontinueDate.get ( countries[i] );
+	prodContent.setDiscontinueDate ( countries[i], discontDt );
+	}
+	}
+	}
+	
+	public void populateNodePaths ( int ctgID, ProductContent prodContent, String adbRegionValue ) {List
+	    prodParentCategories = catMgr.getCategories ( ctgID, prodContent.getProdId (), true, adbRegionValue );
+	for ( int i = 0; i < prodParentCategories.size (); i++ ) {Category
+	    parentCategory = ( Category ) prodParentCategories.get ( i );
+	prodContent.addNodePath ( parentCategory.getNodePath () );
+	}
+	}
+	
+	public SearchCriteria buildSearchCriteria ( ProdFilterForm searchForm ) throws ProductSearchException {
+		boolean validSearch = false;
+		SearchCriteria searchClause = new SearchCriteria ();
+		String prodLine = searchForm.getProductLine ();
+		String discontinueDateAfter = searchForm.getAfterDiscontinueDate ();
+		String discontinueDateBefore = searchForm.getBeforeDiscontinueDate ();
+		String eolDateAfter = searchForm.getAfterEndOfLifeDate ();
+		String eolDateBefore = searchForm.getBeforeEndOfLifeDate ();
+		String lastModifiedDateAfter = searchForm.getAfterLastModifiedDate ();
+		String lastModifiedDateBefore = searchForm.getBeforeLastModifiedDate ();
+		String prodSearchAttribute = searchForm.getSearchByAttribute ();
+		
+		if ( !StrUtil.isEmpty ( prodSearchAttribute ) ) {String keyword = searchForm.
+		    getKeyword ();
+		if ( !StrUtil.isEmpty ( keyword ) ) {keyword = keyword.trim ();
+		if ( "%".equals ( keyword ) ) {throw new ProductSearchException ( "\"%\" can not be used as a keyword. Please use valid keyword with some letters." );
+		}
+		
+		validSearch = true;
+		if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_SKU ) ) {searchClause.setSku (
+		    keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_SHORT_DESC ) ) {
+		    searchClause.setShortDesc ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_CLASS_CODE ) ) {
+		    searchClause.setProdClassCode ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_MFG_ID ) ) {searchClause.
+		    setMfgID ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_MFG_NAME ) ) {
+		    searchClause.setMfgName ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_CUST_SKU ) ) {searchClause.
+		    setCustomerSku ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_STOCK_CODE ) ) {
+		    searchClause.setProdStockCode ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_ACTIVITY_CODE ) ) {
+		    searchClause.setProdActivityCode ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_VISION_FLAG ) ) {
+		    searchClause.setProdVisionFlag ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_HIERARCHY ) ) {
+		    searchClause.setCategoryName ( keyword );
+		}
+		}
+		else {throw new ProductSearchException (
+		    "Keyword can not be empty for the selected search parameter value" );
+		}
+		}
+		
+		if ( !StrUtil.isEmpty ( prodLine ) ) {validSearch = true;
+		searchClause.setProdLine ( prodLine );
+		}
+		
+		if ( ( !StrUtil.isEmpty ( discontinueDateAfter ) )
+		     || ( !StrUtil.isEmpty ( discontinueDateBefore ) ) ) {if ( ( !StrUtil.
+		    isEmpty ( discontinueDateAfter ) )
+		    && ( !StrUtil.isEmpty ( discontinueDateBefore ) ) ) {validSearch = true;
+		try {Date startDate = dtFormatter.parse ( discontinueDateAfter );
+		Date endDate = dtFormatter.parse ( discontinueDateBefore );
+		if ( !startDate.before ( endDate ) ) {throw new ProductSearchException (
+		    "Discontinue Date After must be less than Discontinue Date Before." );
+		}
+		searchClause.setDiscontinueFrom ( startDate );
+		searchClause.setDiscontinueTo ( endDate );
+		}
+		catch ( ParseException parseEx ) {throw new ProductSearchException (
+		    "Invalid After and/or Before Discontinue Date specified: "
+		    + parseEx.getMessage () );
+		}
+		}
+		else {throw new ProductSearchException ( "Both, After and Before Discontinue Dates must be specified while searching using Discontinue Dates" );
+		}
+		}
+		
+		if ( ( !StrUtil.isEmpty ( eolDateAfter ) )
+		     || ( !StrUtil.isEmpty ( eolDateBefore ) ) ) {if ( ( !StrUtil.isEmpty (
+		    eolDateAfter ) ) && ( !StrUtil.isEmpty ( eolDateBefore ) ) ) {validSearch = true;
+		try {Date startDate = dtFormatter.parse ( eolDateAfter );
+		Date endDate = dtFormatter.parse ( eolDateBefore );
+		if ( !startDate.before ( endDate ) ) {throw new ProductSearchException (
+		    "End of Life Date After must be less than End of Life Date Before." );
+		}
+		searchClause.setEndOfLifeFrom ( startDate );
+		searchClause.setEndOfLifeTo ( endDate );
+		}
+		catch ( ParseException parseEx ) {throw new ProductSearchException (
+		    "Invalid After and/or Before End of Life Date specified: "
+		    + parseEx.getMessage () );
+		}
+		
+		}
+		else {throw new ProductSearchException ( "Both, After and Before End of Life Dates must be specified while searching using End of Life Dates" );
+		}
+		}
+		
+		if ( ( !StrUtil.isEmpty ( lastModifiedDateAfter ) )
+		     || ( !StrUtil.isEmpty ( lastModifiedDateBefore ) ) ) {if ( ( !StrUtil.
+		    isEmpty ( lastModifiedDateAfter ) )
+		    && ( !StrUtil.isEmpty ( lastModifiedDateBefore ) ) ) {validSearch = true;
+		try {Date startDate = dtFormatter.parse ( lastModifiedDateAfter );
+		Date endDate = dtFormatter.parse ( lastModifiedDateBefore );
+		if ( !startDate.before ( endDate ) ) {throw new ProductSearchException (
+		    "Last Modified Date After must be less than Last Modified Date Before." );
+		}
+		searchClause.setLastModifiedFrom ( startDate );
+		searchClause.setLastModifiedTo ( endDate );
+		}
+		catch ( ParseException parseEx ) {throw new ProductSearchException (
+		    "Invalid After and/or Before Last Modified Date specified: "
+		    + parseEx.getMessage () );
+		}
+		
+		}
+		else {throw new ProductSearchException ( "Both, After and Before Last Modified Dates must be specified while searching using Last Modified Dates" );
+		}
+		}
+		
+		if ( validSearch == false ) {throw new ProductSearchException (
+		    "Atleast one of the search parameters should have non empty value." );
+		}
+		else {try {searchClause.setSearchScope ( Integer.parseInt ( searchForm.
+		    getSearchScope () ) );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid search scope : " + searchForm.getSearchScope () );
+		}
+		
+		String categorization = searchForm.getCategorization ();
+		try {int ctgID = Integer.parseInt ( categorization );
+		searchClause.setCategorization ( ctgID );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid categorization ID : " + categorization );
+		}
+		
+		searchClause.setCountryCodes ( searchForm.getCountries () );
+		searchClause.setSearchLocale ( getHPLangCode () );
+		
+		if ( ( priceDescriptors != null ) && ( priceDescriptors.length > 0 ) ) {
+		    searchClause.setPriceDescriptors ( priceDescriptors );
+		}
+		else {searchClause.setOrderabilityCountries ( noPriceDescriptorCountries );
+		}
+		}
+		return searchClause;
+	}
+	
+	
+	public List retrieveProductContents ( ProdFilterForm searchForm, String adbRegionValue ) throws ProductSearchException {
+		SearchCriteria searchClause = buildSearchCriteria (searchForm );
+		searchClause.setTenantCode(searchForm.getTenantCode());
+		System.out.println("retrieveProductContents"+searchClause.getTenantCode());
+		ProductContentDaxCollector pdc = new ProductContentDaxCollector (noPriceDescriptorCountries, priceDescriptors );
+		List products = ctntMgr.searchProducts ( searchClause, pdc,adbRegionValue, searchForm.getRecordOnHand(), searchForm.getRecordOnDemand(), searchForm.getSortBy(), searchForm.getSortOrder(), searchForm.getFilterProdId() );
+		
+		if ( products == null ) {return Collections.EMPTY_LIST;
+		}
+		
+		searchForm.setRecordCount(searchClause.getRecordCount());
+		
+		String categorization = searchForm.getCategorization ();
+		int ctgID = 0;
+		try {ctgID = Integer.parseInt ( categorization );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid categorization ID: " + categorization );
+		}
+		
+		for ( int i = 0; i < products.size (); i++ ) {
+		     System.out.println("Object class from "+products.get ( i ).getClass ().toString () );
+//			ProductContent prodCtnt = ( ProductContent ) products.get ( i );
+		     ProductContent prodCtnt = ( ProductContent ) products.get ( i );
+		if ( ProductSearchConstants.SEARCH_IN_PROD_POOL.equals ( ""+ searchClause.getSearchScope () ) ) { ;
+		}
+		{
+		/* If search is done in product pool node path will not be populated. So populate it now */
+		  this.populateNodePaths ( ctgID, prodCtnt, adbRegionValue );
+		}
+		this.populateDiscontinueDate ( categorization, prodCtnt, adbRegionValue );
+		this.populateCatalogAvailability ( prodCtnt,adbRegionValue );
+		}
+		return products;
+	}
+	
+	public ProductContent getProductContentForProdID ( String prodID, int ctgID, String adbRegionValue ) throws ProductSearchException {
+		ProductContent prodCtnt = new ProductContent ( prodID );
+		this.populateOrderability ( prodCtnt ,adbRegionValue);
+		if ( !prodCtnt.isOrderable () ) {return null;
+		}
+		Product prod = prodMgr.getGeneralProdLocalInfo ( prodID, this.getHPLangCode (),adbRegionValue );
+		if ( prod != null ) {prodCtnt.populateProductDetails ( prod );
+		}
+		this.populateCatalogAvailability ( prodCtnt, adbRegionValue );
+		this.populateDiscontinueDate ( "" + ctgID, prodCtnt, adbRegionValue );
+		this.populateNodePaths ( ctgID, prodCtnt, adbRegionValue );
+		return prodCtnt;
+	}
+	
+	public List getCategoryProductContents ( ProdFilterForm searchForm, int prodType, String adbRegionValue ) throws
+	    ProductSearchException {
+		String categorization = searchForm.getCategorization ();
+		List products = getCategoryProductContents ( searchForm, adbRegionValue );
+		if(products.size() > 0){
+			ProductContent prodCtnt = null;
+			for ( int i = 0; i < products.size (); i++ ) {
+				prodCtnt = (ProductContent ) products.get ( i );
+				this.populateCatalogAvailability ( prodCtnt,adbRegionValue );
+				this.populateDiscontinueDate ( categorization, prodCtnt, adbRegionValue );
+				}
+		}
+		return products;
+	}
+	
+	public List getCategoryProductContents ( ProdFilterForm searchForm,String adbRegionValue ) throws ProductSearchException {
+		String categorization = searchForm.getCategorization ();
+		String categoryID = searchForm.getCategoryID ();
+		try {
+			int ctgID = Integer.parseInt ( categorization );
+			int nodeID = Integer.parseInt ( categoryID );
+			Categorization ctg = catMgr.getCategorization ( ctgID, adbRegionValue );
+			Category category = catMgr.getCategory ( ctg, nodeID, adbRegionValue );
+			
+			SearchMgr sMgr = new SearchMgr ( ctg, SearchMgr.PRODSET_ALL_PRODUCTS );
+			sMgr.setHpLangCode ( this.getHPLangCode () );
+			
+			List result = sMgr.getOrderableCategoryProductsPerf ( category, noPriceDescriptorCountries
+			                                           , priceDescriptors, adbRegionValue, searchForm.getRecordOnHand(), searchForm.getRecordOnDemand(), searchForm.getSortBy(), searchForm.getSortOrder(), searchForm.getFilterProdId() );
+			searchForm.setRecordCount(category.getRecordCount());
+			return result;
+		}
+		catch ( CategoryException catEx ) {throw new ProductSearchException (
+		    "Error while getting producst in a category:" + catEx.getMessage () );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid categorization ID and/or category ID specified: "
+		    + numEx.getMessage () );
+		}
+		
+	}
+	
+	
+	public static void populateProductLinesListing ( SearchProductsForm searchForm , String adbRegionValue) {
+	    ProductLineInfoMgr plMgr = new ProductLineInfoMgr ();
+		List pls = plMgr.getProductLines (adbRegionValue);
+		String plNames[] = new String[pls.size ()];
+		String plCodes[] = new String[pls.size ()];
+		for ( int i = 0; i < pls.size (); i++ ) {
+			ProductLineInfo plInfo = (ProductLineInfo ) pls.get ( i );
+			plCodes[i] = plInfo.getPl ();
+			plNames[i] = plInfo.getPl () + " - " + plInfo.getPlDesc ();
+		}
+		searchForm.setPlCodes ( plCodes );
+		searchForm.setPlNames ( plNames );
+	}///populateProductLinesListing
+	
+	public static JSONArray populateProductLinesListingJson ( ProdFilterForm searchForm , String adbRegionValue) {
+		System.out.println("ProductSearchHelper populateProductLinesListingJson "+searchForm.getTenantCode());
+	    ProductLineInfoMgr plMgr = new ProductLineInfoMgr ();
+	    String tenantCode = searchForm.getTenantCode();
+		JSONArray pls = plMgr.getProductLinesJson (adbRegionValue,tenantCode);
+		JSONArray returnObject = new JSONArray();
+		JSONObject jsonObject = null;
+		///String plNames[] = new String[pls.size ()];
+		///String plCodes[] = new String[pls.size ()];
+		for ( int i = 0; i < pls.size (); i++ ) {
+			jsonObject = null;
+			jsonObject = new JSONObject();
+			JSONObject plInfo = (JSONObject ) pls.get ( i );
+			///plCodes[i] = plInfo.get ("pl").toString();
+			///plNames[i] = plInfo.get ("pl").toString() + " - " + plInfo.get ("pl_desc").toString();
+			jsonObject.put("pl",plInfo.get ("pl").toString());
+			if(plInfo.get ("pl_desc") != null){
+				jsonObject.put("pl_desc",plInfo.get ("pl").toString() + " - " + plInfo.get ("pl_desc").toString());
+			}
+			returnObject.add(jsonObject);
+		}
+		///searchForm.setPlCodes ( plCodes );
+		///searchForm.setPlNames ( plNames );
+		return returnObject;
+	}///populateProductLinesListingJson
+	
+	private String getHPLangCode () {
+		if ( "AP".equals ( user.getRegion () ) ) {
+		return "AP";
+		}
+		/*
+		   else if ("US".equals(user.getRegion()))
+		   {	return "US";
+		   }
+		 */
+		return "99";
+	}
+	
+	private String[] getCountriesWithoutPriceDescriptors ( String countries[]
+	    , String priceDescriptors[] , String adbRegionValue) {HashSet prcDescCountries = new HashSet ();
+	for ( int i = 0; i < priceDescriptors.length; i++ ) {prcDescCountries.add (
+	    priceDescriptors[i].substring ( 0, 2 ) );
+	}
+	
+	ArrayList noPrcDescCntrys = new ArrayList ();
+	for ( int i = 0; i < countries.length; i++ ) {if ( !prcDescCountries.contains (
+	    countries[i] ) ) {noPrcDescCntrys.add ( countries[i] );
+	}
+	}
+	
+	return ( String[] ) noPrcDescCntrys.toArray ( new String[0] );
+	}
+	
+	public void decideProdContentAttributeVisibility ( String guiStyle, String adbRegionValue ) {Map
+	    guiProdCtntAttrToColNameMapping = new HashMap ();
+		guiProdCtntAttrToColNameMapping.put ( GUI_COL_CATALOG_AVAILABILITY
+		                                      , GUI_COL_CATALOG_AVAILABILITY );
+		guiProdCtntAttrToColNameMapping.put ( GUI_COL_ORDERABILITY
+		                                      , GUI_COL_ORDERABILITY );
+		guiProdCtntAttrToColNameMapping.put ( GUI_COL_DISCONTINUE_DATE
+		                                      , GUI_COL_DISCONTINUE_DATE );
+		guiProdCtntAttrToColNameMapping.put ( GUI_COL_END_OF_LIFE_DATE
+		                                      , GUI_COL_END_OF_LIFE_DATE );
+		//guiProdCtntAttrToColNameMapping.put(GUI_COL_NODE_PATH,GUI_COL_NODE_PATH);
+		decideProdContentAttributeVisibility ( guiStyle, guiProdCtntAttrToColNameMapping, adbRegionValue );
+	}///decideProdContentAttributeVisibility
+	
+	public void decideProdContentAttributeVisibility ( String guiStyle, Map guiProdCtntAttrToColNameMapping, String adbRegionValue ) {
+		ColPrefMgr colPrefMgr = new ColPrefMgr ();
+		String regionCd = user.getRegion ();
+		String userID = user.getId ();
+		List styles = colPrefMgr.getUserStyles ( guiStyle, regionCd, userID , adbRegionValue);
+			if ( ( styles != null ) && ( styles.size () > 0 ) ) {
+				ColPrefBean style = (ColPrefBean ) styles.get ( 0 );
+				int styleID = style.getStyleID ();
+				colPrefMgr = new ColPrefMgr ( styleID );
+				
+				Iterator itr = prodAttrGuiVisibilityMap.keySet ().iterator ();
+				while ( itr.hasNext () ) {
+					String prodCtntAttr = ( String ) itr.next ();
+					String guiColName = ( String ) guiProdCtntAttrToColNameMapping.get (prodCtntAttr );
+					if ( guiColName != null ) {
+						boolean visible = colPrefMgr.isVisible ( guiColName, adbRegionValue );
+						prodAttrGuiVisibilityMap.put ( prodCtntAttr, new Boolean ( visible ) );
+					}
+				}
+			}
+	}///decideProdContentAttributeVisibility
+	
+	////For QUICK Manage Link Related Methods
+	
+	public List getCategoryProductContents ( QuickManageForm searchForm, int prodType, String adbRegionValue ) throws
+    ProductSearchException {
+		String categorization = searchForm.getCategorization ();
+		List products = getCategoryProductContents ( searchForm, adbRegionValue );
+		if(products.size() > 0){
+			for ( int i = 0; i < products.size (); i++ ) {
+				ProductContent prodCtnt = (ProductContent ) products.get ( i );
+				this.populateCatalogAvailability ( prodCtnt,adbRegionValue );
+				this.populateDiscontinueDate ( categorization, prodCtnt, adbRegionValue );
+				}
+		}
+		return products;
+	}
+	
+	public List getCategoryProductContents ( QuickManageForm searchForm,String adbRegionValue ) throws ProductSearchException {
+		String categorization = searchForm.getCategorization ();
+		String categoryID = searchForm.getCategoryID ();
+		try {
+			int ctgID = Integer.parseInt ( categorization );
+			int nodeID = Integer.parseInt ( categoryID );
+			Categorization ctg = catMgr.getCategorization ( ctgID, adbRegionValue );
+			Category category = catMgr.getCategory ( ctg, nodeID, adbRegionValue );
+			
+			SearchMgr sMgr = new SearchMgr ( ctg, SearchMgr.PRODSET_ALL_PRODUCTS );
+			sMgr.setHpLangCode ( this.getHPLangCode () );
+			
+			return sMgr.getOrderableCategoryProducts ( category, noPriceDescriptorCountries
+			                                           , priceDescriptors, adbRegionValue );
+		}
+		catch ( CategoryException catEx ) {throw new ProductSearchException (
+		    "Error while getting producst in a category:" + catEx.getMessage () );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid categorization ID and/or category ID specified: "
+		    + numEx.getMessage () );
+		}
+		
+	}
+	
+	public List retrieveProductContents ( QuickManageForm searchForm, String adbRegionValue ) throws ProductSearchException {
+		SearchCriteria searchClause = buildSearchCriteria (searchForm );
+		ProductContentDaxCollector pdc = new ProductContentDaxCollector (noPriceDescriptorCountries, priceDescriptors );
+		searchClause.setTenantCode(searchForm.getTenantCode());
+		List products = ctntMgr.searchProducts ( searchClause, pdc,adbRegionValue );
+		
+		if ( products == null ) {return Collections.EMPTY_LIST;
+		}
+		
+		String categorization = searchForm.getCategorization ();
+		int ctgID = 0;
+		try {ctgID = Integer.parseInt ( categorization );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid categorization ID: " + categorization );
+		}
+		
+		for ( int i = 0; i < products.size (); i++ ) {
+		     System.out.println("Object class from "+products.get ( i ).getClass ().toString () );
+//			ProductContent prodCtnt = ( ProductContent ) products.get ( i );
+		     ProductContent prodCtnt = ( ProductContent ) products.get ( i );
+		if ( ProductSearchConstants.SEARCH_IN_PROD_POOL.equals ( ""+ searchClause.getSearchScope () ) ) { ;
+		}
+		{
+		/* If search is done in product pool node path will not be populated. So populate it now */
+		  this.populateNodePaths ( ctgID, prodCtnt, adbRegionValue );
+		}
+		this.populateDiscontinueDate ( categorization, prodCtnt, adbRegionValue );
+		this.populateCatalogAvailability ( prodCtnt,adbRegionValue );
+		}
+		return products;
+	}
+	
+	public SearchCriteria buildSearchCriteria ( QuickManageForm searchForm ) throws ProductSearchException {
+		boolean validSearch = false;
+		SearchCriteria searchClause = new SearchCriteria ();
+		String prodLine = searchForm.getProductLine ();
+		String discontinueDateAfter = searchForm.getAfterDiscontinueDate ();
+		String discontinueDateBefore = searchForm.getBeforeDiscontinueDate ();
+		String eolDateAfter = searchForm.getAfterEndOfLifeDate ();
+		String eolDateBefore = searchForm.getBeforeEndOfLifeDate ();
+		String lastModifiedDateAfter = searchForm.getAfterLastModifiedDate ();
+		String lastModifiedDateBefore = searchForm.getBeforeLastModifiedDate ();
+		String prodSearchAttribute = searchForm.getSearchByAttribute ();
+		
+		if ( !StrUtil.isEmpty ( prodSearchAttribute ) ) {String keyword = searchForm.
+		    getKeyword ();
+		if ( !StrUtil.isEmpty ( keyword ) ) {keyword = keyword.trim ();
+		if ( "%".equals ( keyword ) ) {throw new ProductSearchException ( "\"%\" can not be used as a keyword. Please use valid keyword with some letters." );
+		}
+		
+		validSearch = true;
+		if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_SKU ) ) {searchClause.setSku (
+		    keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_SHORT_DESC ) ) {
+		    searchClause.setShortDesc ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_CLASS_CODE ) ) {
+		    searchClause.setProdClassCode ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_MFG_ID ) ) {searchClause.
+		    setMfgID ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_MFG_NAME ) ) {
+		    searchClause.setMfgName ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_CUST_SKU ) ) {searchClause.
+		    setCustomerSku ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_STOCK_CODE ) ) {
+		    searchClause.setProdStockCode ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_ACTIVITY_CODE ) ) {
+		    searchClause.setProdActivityCode ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_VISION_FLAG ) ) {
+		    searchClause.setProdVisionFlag ( keyword );
+		}
+		else if ( prodSearchAttribute.equals ( SEARCH_BY_PROD_HIERARCHY ) ) {
+		    searchClause.setCategoryName ( keyword );
+		}
+		}
+		else {throw new ProductSearchException (
+		    "Keyword can not be empty for the selected search parameter value" );
+		}
+		}
+		
+		if ( !StrUtil.isEmpty ( prodLine ) ) {validSearch = true;
+		searchClause.setProdLine ( prodLine );
+		}
+		
+		if ( ( !StrUtil.isEmpty ( discontinueDateAfter ) )
+		     || ( !StrUtil.isEmpty ( discontinueDateBefore ) ) ) {if ( ( !StrUtil.
+		    isEmpty ( discontinueDateAfter ) )
+		    && ( !StrUtil.isEmpty ( discontinueDateBefore ) ) ) {validSearch = true;
+		try {Date startDate = dtFormatter.parse ( discontinueDateAfter );
+		Date endDate = dtFormatter.parse ( discontinueDateBefore );
+		if ( !startDate.before ( endDate ) ) {throw new ProductSearchException (
+		    "Discontinue Date After must be less than Discontinue Date Before." );
+		}
+		searchClause.setDiscontinueFrom ( startDate );
+		searchClause.setDiscontinueTo ( endDate );
+		}
+		catch ( ParseException parseEx ) {throw new ProductSearchException (
+		    "Invalid After and/or Before Discontinue Date specified: "
+		    + parseEx.getMessage () );
+		}
+		}
+		else {throw new ProductSearchException ( "Both, After and Before Discontinue Dates must be specified while searching using Discontinue Dates" );
+		}
+		}
+		
+		if ( ( !StrUtil.isEmpty ( eolDateAfter ) )
+		     || ( !StrUtil.isEmpty ( eolDateBefore ) ) ) {if ( ( !StrUtil.isEmpty (
+		    eolDateAfter ) ) && ( !StrUtil.isEmpty ( eolDateBefore ) ) ) {validSearch = true;
+		try {Date startDate = dtFormatter.parse ( eolDateAfter );
+		Date endDate = dtFormatter.parse ( eolDateBefore );
+		if ( !startDate.before ( endDate ) ) {throw new ProductSearchException (
+		    "End of Life Date After must be less than End of Life Date Before." );
+		}
+		searchClause.setEndOfLifeFrom ( startDate );
+		searchClause.setEndOfLifeTo ( endDate );
+		}
+		catch ( ParseException parseEx ) {throw new ProductSearchException (
+		    "Invalid After and/or Before End of Life Date specified: "
+		    + parseEx.getMessage () );
+		}
+		
+		}
+		else {throw new ProductSearchException ( "Both, After and Before End of Life Dates must be specified while searching using End of Life Dates" );
+		}
+		}
+		
+		if ( ( !StrUtil.isEmpty ( lastModifiedDateAfter ) )
+		     || ( !StrUtil.isEmpty ( lastModifiedDateBefore ) ) ) {if ( ( !StrUtil.
+		    isEmpty ( lastModifiedDateAfter ) )
+		    && ( !StrUtil.isEmpty ( lastModifiedDateBefore ) ) ) {validSearch = true;
+		try {Date startDate = dtFormatter.parse ( lastModifiedDateAfter );
+		Date endDate = dtFormatter.parse ( lastModifiedDateBefore );
+		if ( !startDate.before ( endDate ) ) {throw new ProductSearchException (
+		    "Last Modified Date After must be less than Last Modified Date Before." );
+		}
+		searchClause.setLastModifiedFrom ( startDate );
+		searchClause.setLastModifiedTo ( endDate );
+		}
+		catch ( ParseException parseEx ) {throw new ProductSearchException (
+		    "Invalid After and/or Before Last Modified Date specified: "
+		    + parseEx.getMessage () );
+		}
+		
+		}
+		else {throw new ProductSearchException ( "Both, After and Before Last Modified Dates must be specified while searching using Last Modified Dates" );
+		}
+		}
+		
+		if ( validSearch == false ) {throw new ProductSearchException (
+		    "Atleast one of the search parameters should have non empty value." );
+		}
+		else {try {searchClause.setSearchScope ( Integer.parseInt ( searchForm.
+		    getSearchScope () ) );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid search scope : " + searchForm.getSearchScope () );
+		}
+		
+		String categorization = searchForm.getCategorization ();
+		try {int ctgID = Integer.parseInt ( categorization );
+		searchClause.setCategorization ( ctgID );
+		}
+		catch ( NumberFormatException numEx ) {throw new ProductSearchException (
+		    "Invalid categorization ID : " + categorization );
+		}
+		
+		searchClause.setCountryCodes ( searchForm.getCountries () );
+		searchClause.setSearchLocale ( getHPLangCode () );
+		
+		if ( ( priceDescriptors != null ) && ( priceDescriptors.length > 0 ) ) {
+		    searchClause.setPriceDescriptors ( priceDescriptors );
+		}
+		else {searchClause.setOrderabilityCountries ( noPriceDescriptorCountries );
+		}
+		}
+		return searchClause;
+	}
+	
+	public static JSONArray populateProductLinesListingJson ( QuickManageForm searchForm , String adbRegionValue) {
+	    ProductLineInfoMgr plMgr = new ProductLineInfoMgr ();
+	    String tenantCode = searchForm.getTenantCode();
+		JSONArray pls = plMgr.getProductLinesJson (adbRegionValue,tenantCode);
+		JSONArray returnObject = new JSONArray();
+		JSONObject jsonObject = null;
+		for ( int i = 0; i < pls.size (); i++ ) {
+			jsonObject = null;
+			jsonObject = new JSONObject();
+			JSONObject plInfo = (JSONObject ) pls.get ( i );
+			jsonObject.put("pl",plInfo.get ("pl").toString());
+			if(plInfo.get ("pl_desc") != null){
+				jsonObject.put("pl_desc",plInfo.get ("pl").toString() + " - " + plInfo.get ("pl_desc").toString());
+			}
+			returnObject.add(jsonObject);
+		}
+		return returnObject;
+	}///populateProductLinesListingJson
+}

@@ -1,0 +1,89 @@
+<div ng-controller="viewCustOfferPopUpCtrl" ng-init="loadCustOfferCatalog()">
+  	<div class="customer_rows form-border">
+  		<div class="customer_rows">
+	        <div class="four columns">
+	           <div class="generals">
+	                <span>Select Offer Type:</span>
+	                <div class="div_input"  ng-bind="form.offerType"></div>
+	           </div>
+	           <div class="generals">
+	                <span data-toggle="tooltip" data-placement="bottom" title="RuleDesc,RuleID,PricingGeo-PT id-RuleType">Pricing Rule:</span>
+	                <div class="div_input" ng-bind="form.priceRule"></div>
+	            </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	              <span>Offer Name:</span>
+	              <div class="div_input" ng-bind="form.offerName" ></div>
+	           </div>
+	           <div class="generals">
+	                <span data-toggle="tooltip" data-placement="bottom" title="Profile Name(Profile ID)">Pricing Profile:</span>
+	                <div class="div_input" ng-bind="form.priceProfile"></div>
+	            </div>
+            </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	               <span>Country:</span>
+	               <div id="CustomerDUN" class="div_input" ng-bind="form.selectedCountry"></div>
+	           	</div>
+	        	<div class="generals">
+	                <span>Purchasing Terms:</span>
+	                <div class="div_input" ng-bind="form.purchaseTerm"></div>
+	            </div>
+	         </div>
+	     </div>
+	   </div>
+	   <div class="customer_rows">
+ 	 		<div class="twelve columns">
+	  	 		<h1 class="h1Underline">				
+					<span>Deal List:</span>
+				</h1>
+	  	 		<div class="table-scroll">
+		    		<table id="dealList" class="dataGrid" width="150%">
+						<thead>
+							<tr class="GridHeaderRow">
+								<th class="center">Deal ID</th>
+								<th class="center">L4 AMID</th>
+								<th class="center">L2 AMID </th>
+								<th class="center">Eclipse Customer ID </th>
+								<th class="center">Deal Category </th>
+								<th class="center">Deal Type</th>
+							    <th class="center">Deal Start Date</th>
+								<th class="center">Deal End Date</th>
+								<th class="center">Default Price Descriptor </th>	
+								<th class="center">Default Sales Country</th>									
+								<th class="center">Requestor </th>
+								<th class="center">Approver</th>
+								<th class="center">Last Update Date</th>										
+								<th class="center">Replacement For Deal ID</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="odd" ng-class-odd="'odd'"  ng-class-even="'even'" ng-repeat="deal in dealList" >
+										<td>{{deal.deal_id}}</td>
+										<td>{{deal.amid_global_account_id}}</td>
+										<td>{{deal.amid_cntry_account_id}}</td>
+										<td>{{deal.cust_id}}</td>
+										<td>{{deal.deal_category}}</td>
+										<td>{{deal.deal_type_flag}}</td>
+										<td>{{changeDateParser.changeDateFormat(deal.start_date)}}</td>
+										<td>{{changeDateParser.changeDateFormat(deal.end_date)}}</td>
+										<td>{{deal.price_descriptor}}</td>
+										<td>{{deal.control_cntry_cd}}</td>
+										<td>{{deal.requestor}}</td>
+										<td>{{deal.approver}}</td>
+										<td>{{deal.last_modified_date}}</td>
+										<td>{{deal.original_deal_id}}</td>
+							</tr>
+						</tbody>
+				</table> 
+			</div>
+	 	</div>
+	</div>
+  	<div class="customer_rows">
+  		<div class="eight columns">
+	        <!-- <a class="btn btn-inline" ng-click="prevPageRedirect()" ><span id="ok">OK</span></a> -->
+	        <a class="btn btn-inline"   ng-click="close(false)"><span>OK</span></a>
+  		</div>
+  	</div>
+</div>  	

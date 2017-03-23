@@ -1,0 +1,57 @@
+<div class="row" ng-controller="registerOfferCrtl"
+	id="registerOfferCrtl" ng-init="init()">
+	<div class="alert success" ng-show="successMessage!=''">
+		<span>{{successMessage}}</span>
+	</div>
+	<div class="alert error" ng-show="errorMessage!=''">
+		<span>{{errorMessage}}</span>
+	</div>
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Re-Register Offer</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="four columns">
+			<div class="generals">
+				<span>Offer ID:</span> <input type="text" id="offerId" value=""
+					name="offerId" ng-model="offerId"></input>
+
+			</div>
+			<div class="generals">
+				<br /> <span style="white-space: nowrap; margin-top: 0px;">
+					<input type="checkbox" ng-click="enableButton()"
+					ng-model="hideValue" multiple>&nbsp;&nbsp;Reregister Offer
+					with Specific Products
+				</span> <br /> <br /> <br />
+			</div>
+
+			<div class="generals" ng-show="productList">
+				<span style="white-space: nowrap; margin-top: 0px;">ProductListFile
+					(*.xls)</span> <a class="btn btn-inline" ng-file-select=""
+					ng-model="files"
+					style="margin-top: 0px; margin-left: 18px; overflow: hidden;">Choose
+					File</a>
+				<ul>
+					<li ng-repeat="f in files" style="font: smaller">{{f.name}}</li>
+				</ul>
+			</div>
+		</div>
+
+
+		<div class="four columns" ng-hide="RegisterOffer">
+			<div class="search">
+				<a class="btn btn-inline" ng-click="register()">Register</a> <a
+					class="btn btn-inline" ng-click="cancel()">Cancel</a>
+			</div>
+		</div>
+		<div class="four columns" ng-show="UploadOfferProds">
+			<div class="search">
+				<a class="btn btn-inline" ng-click="registerWithProds(files)">Register
+					with products</a> <a class="btn btn-inline" ng-click="cancel()">Cancel</a>
+			</div>
+		</div>
+
+
+	</div>
+</div>

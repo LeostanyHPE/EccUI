@@ -1,0 +1,386 @@
+package com.hp.ecc.ui.biz.processor.programs;
+
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.catalog.Program;
+import com.hp.ecc.ui.biz.catalog.ProgramMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.pricetier.PriceTierMgr;
+import com.hp.ecc.ui.biz.pricetier.PriceTierUtil;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.web.FormatUtil;
+import com.hp.ecc.ui.view.beans.ProgramDetailsForm;
+import com.hp.ecc.ui.view.beans.ProgramsListForm;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Service
+public class ProgramProcessor {
+
+	public List processSearch(ProgramsListForm form, Session ses, String dbRegionToConnect) {
+		String prgm_name = form.getProgramName();
+		String cust_key = "";
+
+		boolean isGeneric = form.getIsGeneric();
+		if (isGeneric)
+			cust_key = form.getProgramCustKey();
+		else {
+			try {
+				Customer boCustomer = ses.getCurrentCustomer ( false );
+			    cust_key = boCustomer.getCustKey();
+			} catch (Exception _except) {
+				
+			}
+		}
+		ProgramMgr mgr = new ProgramMgr();
+		
+		if (prgm_name == null)
+			prgm_name = "";
+
+		 List programs = mgr.getProgramList(prgm_name, cust_key, dbRegionToConnect);
+		 form.setProgramsList ( programs );
+		 		 
+		return programs;
+	}//processSearch
+	
+	public void processRetrieve(ProgramDetailsForm form, String programKey, Session ses, String dbRegionToConnect){
+		ProgramMgr mgr = new ProgramMgr ();
+			    
+	    if ( programKey != null ) {
+	      if ( form.getOperation () != null && ( "locale".equals ( form.getOperation () ) ) ) {
+	    	  Program prgm = mgr.getLocalizationInfoForProgram ( new Integer (programKey ).intValue (), form.getProgramLocale (), dbRegionToConnect );
+	        
+	    	  if ( prgm != null ) {
+	    		  form.setProgramLocale ( prgm.getPgmLocale () );
+	    		  form.setProgramLocalizedName ( prgm.getPgmLocalizedName () );
+	    		  form.setProgramLocalizedDesc ( prgm.getPgmLocalizedDesc () );
+	    	  }
+	    	  else {
+	    		  form.setProgramLocalizedName ( "" );
+	    		  form.setProgramLocalizedDesc ( "" );
+	    	  }
+	    	  form.setTask ( "edit" );
+	    	  form.setProgramLocales ( getLocalesForProgram ( new Integer ( programKey ).intValue (), dbRegionToConnect ) );
+	      }
+	      else {
+	    	  Program program = mgr.getProgram ( new Integer ( programKey ).intValue (), dbRegionToConnect);
+	    	  if ( program == null ) {
+	    		  // "Unable to find the program." ;
+	    	  }
+	    	  else {
+	    		  String prgm_key = new Integer ( program.getProgramKey () ).toString ();
+	    		  String start_date = FormatUtil.dateToStr ( program.getProgramStartDate (), FormatUtil.FormatDatePicker );
+	    		  String end_date = FormatUtil.dateToStr ( program.getProgramEndDate (), FormatUtil.FormatDatePicker );
+	    		  form.setProgramKey ( programKey );
+	    		  form.setProgramName ( program.getProgramName () );
+	    		  form.setProgramNameTemp ( program.getProgramName () );
+	    		  form.setProgramStartDate ( start_date );
+	    		  form.setStartDateHidden ( start_date );
+	    		  form.setProgramEndDate ( end_date );
+	    		  form.setEndDateHidden ( end_date );
+	    		  form.setProgramDesc ( program.getProgramDesc () );
+	         
+	    		  if ( !"details".equals ( form.getTask () ) ) {
+	    			  Program prgm = mgr.getOnlyOneLocalizationInfoForProgram ( new Integer (programKey ).intValue (), dbRegionToConnect );
+	    			  if ( prgm != null ) {
+			              form.setProgramLocale ( prgm.getPgmLocale () );
+			              form.setProgramLocalizedName ( prgm.getPgmLocalizedName () );
+			              form.setProgramLocalizedDesc ( prgm.getPgmLocalizedDesc () );
+			              form.setProgramLocales ( getLocalesForProgram ( new Integer (programKey ).intValue (), dbRegionToConnect ) );
+	    			  }
+	    		  }
+	    	  }
+	      }
+	    }
+	      
+	    form.setProgramLocalesList(getLocalesList (dbRegionToConnect));
+	    
+	}//processRetrieve
+	
+	 public void processGetLocaleInfo ( ProgramDetailsForm form, String programKey, String dbRegionToConnect) {
+		 ProgramMgr mgr = new ProgramMgr ();
+		 List localeList = null;
+
+		 if ( programKey != null ) {
+			 Program prgm = mgr.getLocalizationInfoForProgram ( new Integer ( programKey ). intValue (), form.getProgramLocale (), dbRegionToConnect );
+			 if(prgm!=null){
+				 form.setProgramLocale ( prgm.getPgmLocale () );
+				 form.setProgramLocalizedName ( prgm.getPgmLocalizedName () );
+				 form.setProgramLocalizedDesc ( prgm.getPgmLocalizedDesc () );
+			 } else {
+				 form.setProgramLocalizedName ( null );
+				 form.setProgramLocalizedDesc ( null );
+			 }
+			 
+			 localeList = getLocalesList (dbRegionToConnect);
+		 }
+		 
+		 /*Program program = mgr.getProgram ( new Integer ( programKey ).intValue (), dbRegionToConnect);
+   	  	 if ( program == null ) {
+   		  // "Unable to find the program." ;
+   	  	 }
+   	  	 else {
+   	  		 String prgm_key = new Integer ( program.getProgramKey () ).toString ();
+   	  		 String start_date = FormatUtil.dateToStr ( program.getProgramStartDate (), FormatUtil.FormatDatePicker );
+   	  		 String end_date = FormatUtil.dateToStr ( program.getProgramEndDate (), FormatUtil.FormatDatePicker );
+   	  		 form.setProgramKey ( programKey );
+   	  		 form.setProgramName ( program.getProgramName () );
+   	  		 form.setProgramNameTemp ( program.getProgramName () );
+   	  		 form.setProgramStartDate ( start_date );
+   	  		 form.setStartDateHidden ( start_date );
+   	  		 form.setProgramEndDate ( end_date );
+   	  		 form.setEndDateHidden ( end_date );
+   	  		 form.setProgramDesc ( program.getProgramDesc () );
+   	  		 form.setProgramLocales ( getLocalesForProgram ( new Integer (programKey ).intValue (), dbRegionToConnect ) );
+   	  	 }*/
+       
+		form.setProgramLocalesList(localeList);
+	 }//processGetLocaleInfo
+	 
+	 private List getLocalesList (String dbRegionToConnect) {
+		 ProgramMgr mgr = new ProgramMgr ();
+		 Program prgm = new Program ();
+		 List localesList = mgr.getLocalsList ( prgm, dbRegionToConnect );
+		 Program program = null;
+		 List localesListWithDesc = new ArrayList ();
+		 for ( Iterator it = localesList.iterator (); it.hasNext (); ) {
+			 program = ( Program ) it.next ();
+			 if ( program.getJavaLangCD () != null && program.getLangName () != null ) {
+				 program.setPgmLocale ( program.getLangName () + "      "+ program.getJavaLangCD () );
+			 }
+			 localesListWithDesc.add ( program );
+		 }
+		 return localesListWithDesc;
+	}//getLocalesList
+	 
+	private String getLocalesForProgram ( int prgm_key, String dbRegionToConnect ) {
+	    ProgramMgr mgr = new ProgramMgr ();
+	    Program program = null;
+	    List alreadyAssignedLocalesList = mgr.getAllLocalesForProgram ( prgm_key, dbRegionToConnect);
+	    String locales = "";
+	    for ( Iterator it = alreadyAssignedLocalesList.iterator (); it.hasNext (); ) {
+	    	program = ( Program ) it.next ();
+	    	if ( it.hasNext () ) {
+	    		locales = locales + ( String ) program.getAlreadyAssignedLocale () + ", ";
+	    	}
+	    	else {
+	    		locales = locales + ( String ) program.getAlreadyAssignedLocale ();
+	    	}
+	    }
+	    return locales;
+	}//getLocalesForProgram
+	
+	
+	public ProgramDetailsForm processSave ( ProgramDetailsForm form, Session ses, String programKey, String operation,  boolean isGeneric, String dbRegionToConnect ) {
+		String errorMessage = null;
+		String message = null;
+		String cust_key = "";
+		String user = "";
+
+		try {			
+			if ( isGeneric ) 
+				cust_key = form.getProgramCustKey();
+			else 
+				cust_key = ses.getCurrentCustomerKey ( false );
+				
+			user = ses.getUserID ();
+		}
+		catch ( Exception _except ) {
+		
+		}
+
+		String program_name = "";
+		if ( form.getProgramName () == null ) {
+			if ( form.getProgramNameTemp () == null ) {
+				program_name = "";
+			}
+			else {
+				program_name = form.getProgramNameTemp ();
+			}
+		}
+		else {
+			program_name = form.getProgramName ();
+		}
+		
+		List localeList = getLocalesList(dbRegionToConnect);
+		form.setProgramLocalesList(localeList);
+
+		
+		Date start_date = null;
+		if ( !StrUtil.isEmpty ( form.getProgramStartDate () ) ) {
+			start_date = FormatUtil.strToDate ( form.getProgramStartDate (), FormatUtil.FormatDatePicker, true );
+			if ( start_date == null ) {
+				errorMessage= "Invalid format or data for Start Date. Please re-enter or select from the Calendar.";
+				if ( !"create".equals ( operation ) ) {
+					form.setTask ( "edit" );
+				}
+				
+				form.setErrorMessage(errorMessage);
+				return form;
+			}
+		}
+		Date end_date = null;
+		if ( !StrUtil.isEmpty ( form.getProgramEndDate () ) ) {
+			end_date = FormatUtil.strToDate ( form.getProgramEndDate (), FormatUtil.FormatDatePicker, true );
+			if ( end_date == null ) {
+				errorMessage = "Invalid format  or data for End Date. Please re-enter or select from the Calendar.";
+				if ( !"create".equals ( operation ) ) {
+					form.setTask ( "edit" );
+				}				
+				form.setErrorMessage(errorMessage);
+				return form;
+			}
+		}
+
+		if ( ( start_date != null ) && ( end_date != null ) && ( start_date.getTime () > end_date.getTime () ) ) {
+			errorMessage="End date must be greater than start date";
+			if ( !"create".equals ( operation ) ) {
+				form.setTask ( "edit" );
+			}			
+			form.setErrorMessage(errorMessage);
+			return form;
+		}
+
+		ProgramMgr mgr = new ProgramMgr ();
+		Program program = new Program ();
+		program.setProgramName ( program_name );
+		program.setProgramStartDate ( start_date );
+		program.setProgramEndDate ( end_date );
+		program.setProgramDesc ( form.getProgramDesc () );
+		program.setProgramCustKey ( cust_key );
+		program.setUser ( user );		
+		
+		int status = 0;
+		//If the locale is selected
+
+		if ( form.getProgramLocale () != null ) {
+			if ( "NONE".compareTo ( form.getProgramLocale () ) != 0 ) {
+				if ( ( form.getProgramLocalizedName () != null ) && ( form.getProgramLocalizedName ().length () != 0 ) && ( form.getProgramLocalizedDesc () != null ) && ( form.getProgramLocalizedDesc ().length () != 0 ) ) {
+					program.setPgmLocale ( form.getProgramLocale () );
+					program.setPgmLocalizedName ( form.getProgramLocalizedName () );
+					program.setPgmLocalizedDesc ( form.getProgramLocalizedDesc () );
+				}
+			}
+		}
+
+		if ( program_name != null && !"".equals ( program_name ) ) {
+			if ( "create".equals ( operation ) ) {
+				//	If the operation is "ADD" then
+				status = mgr.addProgram ( program, isGeneric, dbRegionToConnect );
+				if ( status == 1 ) {					
+					message =  "Program '" + program_name + "' is added successfully.";
+					form.setMessage(message);
+				}
+				else if ( status == 3 ) {
+					errorMessage = "Program name and cust key combination already exists. Please provide different program name." ;
+					form.setErrorMessage(errorMessage);
+				}
+				else {
+					errorMessage= "Failed to add the program." ;
+					form.setErrorMessage(errorMessage);
+				}				
+			}
+			else {
+				//	If the operation is "EDIT" then
+				String pgm_key = programKey;
+				Integer ipgm_key = new Integer ( pgm_key );
+				program.setProgramKey ( ipgm_key.intValue () );
+				status = mgr.editProgram ( program, form.getDateChanged () , isGeneric, dbRegionToConnect);
+
+				if ( status == 1 ) {
+					message =  "Program '" + program_name + "' is updated successfully.";
+					form.setMessage(message);
+				}
+				else {
+					errorMessage = "Failed to update the program.";
+					form.setErrorMessage(errorMessage);
+				}
+			}
+		}
+		return form;
+		
+	}//processSave
+	
+	public void processAdd( ProgramDetailsForm form, String dbRegionToConnect){
+		List localeList = this.getLocalesList(dbRegionToConnect);
+		
+		form.setProgramLocalesList(localeList);
+		
+	}//processAdd
+	
+	public String processDeleteProgram(ProgramDetailsForm form, Session ses, String userId, String dbRegionToConnect){
+		Program program = new Program();
+		  PriceTierUtil util = new PriceTierUtil();
+		  PriceTierMgr mgr = new PriceTierMgr();
+
+		  String selectedProgram = form.getSelectedPgmKey();
+		  String programKey=null;;
+		  
+		    ArrayList list = StrUtil.split( selectedProgram, "~" );
+		    if (list != null && list.size() > 0) {
+		    	programKey = (String) list.get(0);
+		    } else {
+		        // "Failed to capture Program from Form.";
+		    	
+		    	//return processSearch ( vw, mapping, form, request );
+		    }
+
+		    program.setProgramKey(Integer.parseInt(programKey));
+		    //log.info( "Program Selected For Delete::::  " + programKey );
+
+			program.setLastModifiedBy( userId );
+			
+			String message = "Program " + programKey + " Deleted Succesfully.";
+			try {
+				mgr.deleteGenericProgram ( program, dbRegionToConnect );
+				String retCode = program.getRetCode();
+				/*if ( !StrUtil.isEmpty( retCode ) ) {
+					//log.info ( "++++ Ret Code:::: " + retCode );
+					if ( "0".equalsIgnoreCase( retCode.trim() ) )
+						throw new CatRuntimeException ();
+					else if ( "1".equalsIgnoreCase( retCode.trim() ) ) {
+						//log.info ( message );
+						//vw.getMsgs().add( message );
+					} else throw new CatRuntimeException ();
+				} else throw new CatRuntimeException ();*/
+			} catch (CatRuntimeException e) {
+				//log.error( PriceTierUtil.ERR_MSG_1, e);
+				if ( e.getThrowable() != null && e.getThrowable() instanceof SQLException ) {
+					String err = util.resolveErrorCode( e );
+				    //it requires to avoid page refresh again with same task in case of delete.
+					if ( !"ORA-01403".equalsIgnoreCase( err ) ) {
+						//if ( err != null ) vw.getErrs ().add ( PriceTierUtil.ERR_MSG_3 + err + "." );
+						//else vw.getErrs ().add ( PriceTierUtil.ERR_MSG_2 );
+					}
+				} //else 
+					//vw.getErrs ().add ( PriceTierUtil.ERR_MSG_2 );
+			}//	  
+		//return processSearch(vw, mapping, form, request); 
+			return message;
+	}
+	
+	
+	public List processProgramsPriceTierAndMasterCatalogCount(String programKeyToProcess, String dbRegionToConnect) {
+		List priceTierAndMasterCatalogCountList = null;
+		PriceTierMgr mgr = new PriceTierMgr();
+		Program program = new Program();
+		if (programKeyToProcess != null){
+			priceTierAndMasterCatalogCountList = new ArrayList();
+			program = mgr.getPriceTierCount(programKeyToProcess, dbRegionToConnect);
+			priceTierAndMasterCatalogCountList.add(String.valueOf(program.getPriceTierCount()));
+			priceTierAndMasterCatalogCountList.add(String.valueOf(program.getMasterCatCount()));
+		}
+		return priceTierAndMasterCatalogCountList;
+	}
+	
+}//class

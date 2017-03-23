@@ -1,0 +1,120 @@
+/**
+ * <p>Title: FileMergeController</p>
+ * <p>Description: Task Contoller for Batch Publish</p>
+ * <p>Copyright: Copyright (c) 2005</p>
+ * <p>Company: HP</p>
+ */
+package com.hp.ecc.ui.biz.publish;
+
+import java.io.*;
+import java.util.ArrayList;
+
+import com.hp.ecc.ui.biz.archive.CatalogArchive;
+import com.hp.ecc.ui.biz.archive.CatalogArchiveMgr;
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.util.StrUtil;
+
+/**
+ * This Class provides functionality to merge files generated in batch
+ * publishing.
+ * 
+ * @author
+ * @version 1.0
+ */
+
+public class FileMergeController {
+
+	//private Category log = null;
+	private CatalogArchive archive = null;
+	private CatalogArchiveMgr archiveMgr = null;
+
+	public FileMergeController(CatalogArchiveMgr archiveMgr,
+			CatalogArchive archive) {
+		this.archiveMgr = archiveMgr;
+		this.archive = archive;
+		CTX ctx = CTX.getCTX();
+		//log = ctx.getLog("MergeController");
+
+	}
+
+	/**
+	 * Merge files from given file list to merge file as per given encoding.
+	 * 
+	 * @param mergeList
+	 * @param mergeFile
+	 * @param encoding
+	 */
+	public void mergeFile(ArrayList mergeList, File mergeFileObj,
+			String encoding) throws MergeException {
+		mergeFile(mergeList, mergeFileObj, encoding, false);
+	}
+
+	/**
+	 * Merge files from given file list to merge file as per given encoding.
+	 * This method accepts flag to consider header for merge process.
+	 * 
+	 * @param mergeList
+	 *            ArrayList of File objects to merge
+	 * @param mergeFile
+	 *            File merge file
+	 * @param encoding
+	 *            encoding parameter
+	 * @param mergeHeader
+	 *            flag to consider headers for merging
+	 */
+	public void mergeFile(ArrayList mergeList, File mergeFileObj,
+			String encoding, boolean mergeHeader) throws MergeException {
+		if (!StrUtil.isListEmpty(mergeList)) {
+			try {
+				// write for output file
+				PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+						new FileOutputStream(mergeFileObj), encoding));
+				// loop for all files to merge from the list
+				for (int fileCnt = 0; fileCnt < mergeList.size(); fileCnt++) {
+					boolean first = true;
+					boolean notEOF = true;
+					// get file from the list
+					File inputFile = (File) mergeList.get(fileCnt);
+					BufferedReader br = new BufferedReader(
+							new InputStreamReader(
+									new FileInputStream(inputFile), encoding));
+					// for all lines from the input file
+					while (notEOF) {
+						String line = br.readLine();
+						if (line == null) {
+							notEOF = false;
+						} else {
+							// if not first record merge
+							if (!first) {
+								writer.println(line);
+							} else {
+								// for first record from input file
+								// if header flag false merge record OR
+								// if header flag true and first file merge
+								// record
+								if ((!mergeHeader)
+										|| (mergeHeader && fileCnt == 0)) {
+									writer.println(line);
+								}
+								first = false;
+							}
+						}
+					}
+					br.close();
+				}
+				writer.flush();
+				writer.close();
+			} catch (IOException e) {
+				//log.error("Error Merging files for Batch Publish Task:"+ archive.getTaskKey(), e);
+				updateStatus(CatalogArchive.STATUS_MERGE_FAILED);
+				throw new MergeException(e);
+			}
+		} // end if
+	}
+
+	private void updateStatus(String status) {
+		archive.setStatus(status);
+		archiveMgr.saveArchive(archive, "default");
+	}
+
+}

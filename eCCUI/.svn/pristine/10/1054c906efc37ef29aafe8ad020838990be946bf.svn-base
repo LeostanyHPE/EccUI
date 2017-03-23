@@ -1,0 +1,100 @@
+package com.hp.ecc.ui.biz.filter;
+
+
+/**
+ * DAX bean
+ *
+ * @author Andy Li
+ * @version 1.0
+ */
+
+public class BeanUpdateRules extends BeanForDaxSP {
+  private String fFilterID;
+  private String fRuleType;
+  private String fUpdateType;
+  private String fLastModifiedBy;
+  private BeanRule[] fRuleArray;
+
+
+  /**
+   * @return
+   */
+  public String getFilterID () {
+    return fFilterID;
+  }
+
+  /**
+   * @return
+   */
+  public String getLastModifiedBy () {
+    return fLastModifiedBy;
+  }
+
+  /**
+   * @return
+   */
+  public String getRuleType () {
+    return fRuleType;
+  }
+
+
+  /**
+   * @param i
+   */
+  public void setFilterID ( String i ) {
+    fFilterID = i;
+  }
+
+  /**
+   * @param string
+   */
+  public void setLastModifiedBy ( String string ) {
+    fLastModifiedBy = string;
+  }
+
+  /**
+   * @param string
+   */
+  public void setRuleType ( String string ) {
+    fRuleType = string;
+  }
+
+  /**
+   * @return
+   */
+  public BeanRule[] getRuleArray () {
+    return fRuleArray;
+  }
+
+  /**
+   * @param rule
+   */
+  public void setRuleArray ( BeanRule[] rules ) {
+    fRuleArray = rules;
+  }
+
+  public String getUpdateTypeStr () {
+    return fUpdateType;
+  }
+
+
+  public void setUpdateTypeStr ( String type ) {
+    fUpdateType = type;
+  }
+
+
+  /**
+   * @return
+   */
+  public String getUpdateType () {
+    return fUpdateType;
+  }
+
+  /**
+   * @param string
+   */
+  public void setUpdateType ( int t ) {
+    fUpdateType = t == ProdFilter.UPDATE_INCR ? "incr" : "full";
+  }
+
+}

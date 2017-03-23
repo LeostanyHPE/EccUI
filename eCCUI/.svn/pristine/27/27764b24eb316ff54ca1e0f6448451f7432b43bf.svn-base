@@ -1,0 +1,119 @@
+<div class="row" id="SogLocOptionCatManageException" ng-controller="SogLocOptionCatManageExceptionCtrl" ng-init="loadSogLocOptionCatManageException()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+	
+	<div class="customer_rows">
+			<h1 class="h1Underline">				
+				<div class="label-unit">
+					<span>Manage Exception Custom Localization Option Category</span>
+				</div>
+			</h1>
+		</div>
+
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>SOG ID:</span>
+					<div class="div_input" ng-bind="form.sogId"></div>
+				</div>
+			</div>
+			<div class="four columns" >
+				<div class="generals">
+					<span>SOG Name:</span>
+					<div class="div_input" ng-bind="form.sogName" ></div>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Manage Exceptions For:</span>
+					<div class="div_input" ng-bind="form.countryName"> </div>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Selected Localization option Categories:</span>
+					   <select  size="10"  style="width:64%;height:85px;" ng-model="Locals" ng-options=" item as item.label for item in selectedLocal" disabled></select> 
+	          	</div>
+		</div>
+		</div>
+						
+		 <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>
+	  	
+	  	<div class="customer_rows">
+		  	<div class="twelve columns">
+		    		<div class="generals">
+		              <span>Search for Catalog Masters:</span>
+	                  <div class="div_input" ></div>
+		           	</div>
+		    	</div>
+		    	
+		    <div class="four columns">
+			<div class="generals">
+				<span>Customer ID:</span>
+				<input type="text" ng-model="form.customerID" ></input>
+			</div>
+			<div class="generals">
+				<span>Catalog Master Id:</span>
+				<input type="text" ng-model="form.masterCatelogID" ></input>
+			</div>
+			<div class="generals">
+				<span>Price Descriptor:</span>
+				<select class="orgSelect" ng-model="form.priceDescriptor" ng-options="item.price_descriptor as item.price_descriptor for item in priceDescriptors" ng-change="changePriceDesc()"></select>
+			</div>
+						
+			<div class="generals">
+				<span>Search Excluded Only:</span>
+				<input style="margin-right: 10px;margin-top: 18px;" type="checkbox" ng-model="form.excludeFlag" />
+			</div>
+		</div>
+		
+			<div class="four columns">
+				<div class="generals">
+					<span>Customer Name:</span>
+					<input type="text" ng-model="form.customerName" ></input>
+				</div>
+				<div class="generals">
+					<span>Catalog Master Name:</span>
+					<input type="text" ng-model="form.masterCatelogName" ></input>
+				</div>
+			</div>
+		  </div>
+		  
+		  <div class="customer_rows">
+	    	<h1 class="h1Underline row" style="margin:0;"></h1>
+	  	</div>
+		
+		<br style="margin-top: 80px">
+		<div class="search">
+            <div class="generals">
+				<a class="btn btn-inline" ng-click="search()" style="margin: 10px 0px 0px 0px;">Search</a>
+				<a class="btn btn-inline" ng-click="cancel()" style="margin: 10px 0px 0px 0px;">Cancel</a>
+			</div>
+		</div>
+	</div>
+	
+	 <div class="customer_rows id-body" ng-show="showCatalogMasters">
+	      		<div class="twelve columns">
+		      		<div id="ecc_hpegrid1" hpe-grid
+				         grd-data="grid.data"
+				         grd-select-all="true"
+				         grd-select-unselect-all-boxes = "chkAll()"
+				         grd-header="grid.header"
+				         grd-col-defs="grid.colDefs"
+				         grd-sort="grid.sort"
+				         grd-col-view-by="grid.colViewBy" class="table-scroll">
+				     </div>
+	      		</div>
+	      	</div>
+	 
+	 <div class="generals"  ng-show="showCatalogMasters">
+							<a class="btn btn-inline" ng-click="updateCatalogs()" >Update</a>
+							<a class="btn btn-inline btn-Primary btn-copy" ng-click="done()" >done</a>
+							
+						</div>	
+	
+		
+</div>

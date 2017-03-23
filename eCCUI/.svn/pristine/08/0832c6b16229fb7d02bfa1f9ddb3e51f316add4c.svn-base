@@ -1,0 +1,40 @@
+package com.hp.ecc.ui.biz.publish;
+
+import java.io.FileWriter;
+import java.io.InputStream;
+import org.dom4j.Document;
+import org.dom4j.io.SAXReader;
+
+import com.hp.ecc.ui.common.util.XMLIOTool;
+
+/*
+ * Upload profile response
+ *
+ * @author WWCAT
+ * @version 2.0
+ */
+public class ProfileResponse {
+  private Document doc = null;
+  private final String REQUEST_NAME = "CatalogUploadRequest";
+
+  public ProfileResponse ( InputStream inStream ) throws PublishException {
+    SAXReader reader = new SAXReader ();
+    try {
+      doc = reader.read ( inStream );
+      XMLIOTool.output ( doc, new FileWriter ( "\\temp\\res_out.xml" ) );
+    }
+    catch ( Exception e ) {
+      e.printStackTrace ();
+      throw new PublishException ( e );
+    }
+  }
+
+  public String getProfileURL () {
+
+    String url = doc.valueOf ( "/cXML/Response/ProfileResponse/Transaction[@requestName=\"CatalogUploadRequest\"]" );
+    if ( url != null ) {
+      url = url.trim ();
+    }
+    return url;
+  }
+}

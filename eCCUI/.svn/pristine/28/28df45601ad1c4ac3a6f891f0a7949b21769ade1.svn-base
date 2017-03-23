@@ -1,0 +1,14 @@
+/**
+ * Defines the catalog price source by locale  biz object fields
+ *
+ * @author Jing Wei
+ * @version 1.0 8/09/02
+ */
+
+package com.hp.ecc.ui.biz.misc;
+
+public interface CatalogPriceSourceLocaleFields {
+	public static final String LANG_CD = "lang_cd";
+	public static final String SOURCE_TYPE = "source_type";
+	public static final String SOURCE_NAME = "source_name";
+}//class

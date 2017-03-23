@@ -1,0 +1,200 @@
+package com.hp.ecc.ui.biz.bundle;
+
+import java.util.*;
+
+import com.hp.ecc.ui.util.web.FormatUtil;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.util.*;
+
+/**
+ * Abstract base form for BundleTemplateForm and CatalogBundleForm
+ * @author     Susheel Aroskar
+ * @version    5.0
+ */
+
+public class QuickManageTemplateForm {
+private String fTask;
+private String[] fSelectedBundle;
+private String fDeleteProdStr;
+private String[] fProdIDsToDelete;
+private String fOriginalProd;
+private String fReplaceByProd;
+private String fEndDateStr;
+private String fResultMessage = "";
+private String fLastModifiedBy;
+private String fCurrentTemplateID;
+private List quickManageBean;
+private List dealEclipseId;
+private List dealEclipseValues;
+private List selDeals = new ArrayList ();
+private String regionCode;
+//private String[] selDeals;
+//private String[] selDealTemplateID;
+private List selDealTemplateID = new ArrayList ();
+
+public void setDealTemplateId ( List id ) {
+  selDealTemplateID = id;
+}
+
+public List getDealTemplateId () {
+  return selDealTemplateID;
+}
+
+public void setDealTemplateId ( int i, String s ) {
+
+  selDealTemplateID.add ( s );
+}
+
+public String getDealTemplateId ( int i ) {
+  return ( String ) selDealTemplateID.get ( i );
+}
+
+/*public void setSelDeals(int i,String s)
+  {
+ if(selDeals!=null)
+  selDeals[i]=s;
+  }
+
+  public String getSelDeals(int i)
+  {
+ if(selDeals!=null)
+  return (String)selDeals[i];
+ else
+  return null;
+  }*/
+public void setSelDeals ( int i, String s ) {
+  selDeals.add ( s );
+}
+
+public String getSelDeals ( int i ) {
+  return ( String ) selDeals.get ( i );
+}
+
+public List getSelDeals () {
+  return selDeals;
+}
+
+public void setSelDeals ( List deals ) {
+  selDeals = deals;
+}
+
+/*
+ public String[] getSelDeals()
+ {
+  return selDeals;
+ }
+
+ public void setSelDeals(String[] deals)
+ {
+  selDeals = deals;
+ }
+
+ */
+public void setDealEclipseId ( List values ) {
+  dealEclipseId = values;
+}
+
+public List getDealEclipseId () {
+  return this.dealEclipseId;
+}
+
+public void setDealEclipseValues ( List values ) {
+  dealEclipseValues = values;
+}
+
+public List getDealEclipseValues () {
+  return this.dealEclipseValues;
+}
+
+public void setQuickManageBean ( List bean ) {
+  System.out.println ( "Quickmanage bean size set: >>>>>>>>>> " + bean.size () );
+  this.quickManageBean = bean;
+}
+
+public List getQuickManageBean () {
+  return quickManageBean;
+}
+
+public void setTask ( String task ) {this.fTask = task;
+}
+
+public String getTask () {return fTask;
+}
+
+public void setSelectedBundle ( String[] selected_bundle ) {this.
+    fSelectedBundle = selected_bundle;
+}
+
+public String[] getSelectedBundle () {return fSelectedBundle;
+}
+
+public void setCurrentTemplateID ( String current_template_id ) {this.
+    fCurrentTemplateID = current_template_id;
+}
+
+public String getCurrentTemplateID () {return fCurrentTemplateID;
+}
+
+public void setDeleteProdStr ( String delete_prod_str ) {this.fDeleteProdStr =
+    delete_prod_str;
+}
+
+public String getDeleteProdStr () {return fDeleteProdStr;
+}
+
+public String[] getProdIDsToDelete () {if ( fProdIDsToDelete == null ) {
+    ArrayList del_prod_ids = StrUtil.split ( fDeleteProdStr, "," );
+fProdIDsToDelete = ( String[] ) del_prod_ids.toArray ( new String[del_prod_ids.
+    size ()] );
+}
+return fProdIDsToDelete;
+}
+
+public void setOriginalProd ( String original_prod ) {if ( !StrUtil.isEmpty (
+    original_prod ) ) {this.fOriginalProd = original_prod.trim ();
+}
+}
+
+public String getOriginalProd () {return fOriginalProd;
+}
+
+public void setReplaceByProd ( String replace_by_prod ) {if ( !StrUtil.isEmpty (
+    replace_by_prod ) ) {this.fReplaceByProd = replace_by_prod.trim ();
+}
+}
+
+public String getReplaceByProd () {return fReplaceByProd;
+}
+
+public void setEndDateStr ( String end_date ) {this.fEndDateStr = end_date;
+}
+
+public String getEndDateStr () {return fEndDateStr;
+}
+
+public Date getEndDate () {return FormatUtil.strToDate ( fEndDateStr
+    , FormatUtil.FormatDatePicker, true );
+}
+
+public void setResultMessage ( String result_message ) {this.fResultMessage =
+    result_message;
+}
+
+public String getResultMessage () {return fResultMessage;
+}
+
+public void setLastModifiedBy ( String last_modified_by ) {this.fLastModifiedBy =
+    last_modified_by;
+}
+
+public String getLastModifiedBy () {return fLastModifiedBy;
+}
+
+public void setRegionCode ( String code ) {
+  this.regionCode = code;
+}
+
+public String getRegionCode () {
+  return this.regionCode;
+}
+}

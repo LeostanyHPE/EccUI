@@ -1,0 +1,714 @@
+package com.hp.ecc.ui.db.dao;
+
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogDaxDataCollector;
+import com.hp.ecc.ui.biz.catalog.CatalogDaxUtil;
+import com.hp.ecc.ui.biz.catalog.CatalogProgram;
+import com.hp.ecc.ui.biz.catalog.Master;
+import com.hp.ecc.ui.biz.catalog.Program;
+import com.hp.ecc.ui.biz.category.ResultSetDaxFilter;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.VistaCustomer;
+import com.hp.ecc.ui.biz.deal.Deal;
+import com.hp.ecc.ui.biz.deal.DealMerge;
+import com.hp.ecc.ui.biz.filter.BeanUpdateFilter;
+import com.hp.ecc.ui.biz.fulfillmentsite.FulfillmentSite;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.biz.product.UpdMultiProds;
+import com.hp.ecc.ui.biz.product.UpdMultiProduct;
+import com.hp.ecc.ui.common.TenantConstants;
+import com.hp.ecc.ui.common.constants.IApplicationConstants;
+import com.hp.ecc.ui.common.web.support.SupportBean;
+import com.hp.ecc.ui.db.vo.DaxDataBeanCount;
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.StrUtil;
+
+
+/**
+ * @author reddvino
+ *
+ */
+@Service
+public class MasterCatalogDao {
+	private Category log  = com.hp.ecc.ui.common.util.FeCTX.getCTX ().getLog ();
+	 public final String CONST_DEAL_STMT_GRP_ID = "deal";
+	 private static final String CA_GLOBAL_REGION = "GL";
+	 public static final String GET_MDCP = "GetMDCP";
+	 public static final String MDCP_ORG_ID_LIST = "getMdcpOrgId";
+	 public static final String MST_CAT_MDCP_ID = "GetMasterCatalogMdcpId";
+	 private static String baseWhere =
+		      " CAT_MASTER_ITEM.pgm_key = CAT_PROGRAM.pgm_key(+)" +
+		      " AND CAT_MASTER_ITEM.delete_flag = 'N' AND CAT_MASTER_ITEM.exclude_flag = 'N' AND CAT_MASTER_ITEM.cat_master_key = ";
+
+		  private static String DB_GROUP = "UpdateMultipleProds";
+		  private static String DB_PRODS = "selectProds";
+		  private static String DB_TMP_INSERT = "insertTempTable";
+		  private static String DB_UPD_ITEMS = "updateItems";
+		  private static String DB_UPD_PRICETIER_ITEMS ="updatePriceTierItems";
+		  private static String DB_UPD_FED_ITEMS = "updateFedItems";
+		  private static String DB_PRICETIERS ="selectPriceTiers";
+		  private static String DB_SEARCH_PRICETIERS="searchPriceTiers";
+
+		  private static String FUN_UPPER = "UPPER";
+		  private static String OPT_LIKE = " LIKE ";
+		  private static String OPT_EQUAL = " = ";
+		  private static String CAT_MASTER_ITEM = "cat_master_item.";
+		  private static String CAT_PROGRAM = "cat_program.";
+
+	
+	
+	public MasterCatalogDao(){
+		
+	}
+	
+	
+	public JSONArray getMasterList(String custKey, String adbRegionToConnect, String tenantCode){
+		long start = System.currentTimeMillis();
+		DaxMgr daxMgr = DaxMgr.getInstance();
+		DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		Catalog catalog = new Catalog ();
+		catalog.setCustKey ( custKey );
+		catalog.setTenantCode(TenantConstants.getNoSharedTenant(tenantCode));
+		
+		DaxParsedStmt stmt = daxMgr.makeParsedStmt (IApplicationConstants.MST_CAT, IApplicationConstants.CAT_LIST,catalog, null, null);
+						
+		JSONArray catalogs = daxDb.doSelectJson(stmt, catalog.getClass (), catalog );
+		long end = System.currentTimeMillis();
+		System.out.println("Time taken to retrieve master catalog list:--->"+ (end-start));
+			    
+	    return catalogs;
+		
+	}
+	  
+	 	  
+	  public List retrieveCatalogProductCount(String catalogId, String adbRegionToConnect){
+		  DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		  	Master master = null;
+		  	List listProductCount  = null;
+			master = new Master();
+			master.setId(catalogId);
+			
+			DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( IApplicationConstants.MST_CAT, "RetrieveProductCount", master, null, null );
+			
+			listProductCount = daxDb.doSelect ( pstmt, master.getClass (), master );
+			
+			return listProductCount;
+	  }//retrieveCatalogProductCount
+	  
+	  
+	  public String putCatalogIntoPropForDelete ( List catalogIds, String mode, String userId, String adbRegionToConnect){
+		  DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		    SupportBean supportBean = new SupportBean ();
+		    String[] strs = StrUtil.listToStrArray ( catalogIds );
+		    supportBean.setCatalogIds ( strs);
+		    supportBean.setChange ( mode );
+		    supportBean.setSource ( "GUI" );
+		    supportBean.setLastModifiedBy(userId);
+		    
+			DaxParsedStmt stmt = daxMgr.makeParsedStmt ("Std_Catalog", "async_cat_delete", supportBean, null, null );
+			String errorMsg = "";
+			
+			try {
+			  	daxDb.doSP ( stmt, supportBean, supportBean);
+			  	errorMsg=supportBean.getErrorMsg();
+			}
+			catch(Exception e) {
+			  	e.printStackTrace();
+			  	errorMsg = "DBException";
+			}
+			return errorMsg;
+	  }//putCatalogIntoPropForDelete 
+	  
+	  
+	  /**
+	   * delete a record from db
+	   * 4.1
+	   */
+	  public List deleteMasterCatalog ( Master bizObj, String adbRegionToConnect ) {
+		  DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		  ArrayList list = new ArrayList();
+		  Master mst = ( Master ) bizObj;
+	    
+		  Catalog catalog = mst.getCatalog ();
+		  String id = catalog.getId ();
+	    
+		  DaxParsedStmt stmt = daxMgr.makeParsedStmt ( IApplicationConstants.MST_CAT, IApplicationConstants.DEL_ONE_CAT, catalog, null, null );
+		  daxDb.doSP ( stmt, catalog, catalog );
+	    
+		  int retCode = catalog.getRetCode ();
+		  if ( retCode == 1 ) {
+			  list.add ( mst );
+		  }
+		  
+		  return list;	   
+	  }//deleteMasterCatalog
+	  
+	  public boolean getAsyncFlagForMcatDelete(String adbRegionToConnect) {
+		  DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+	  	    BeanUpdateFilter bean = new BeanUpdateFilter ();
+	  	    String stmt_id = "get_async_flag_for_mcat_delete";	  	 
+	  	    DaxParsedStmt pstmt = daxMgr.makeParsedStmt ( IApplicationConstants.MST_CAT, stmt_id, null, null, null );
+	  	    BeanUpdateFilter data = ( BeanUpdateFilter ) daxDb.doGet ( pstmt, BeanUpdateFilter.class, bean );
+	  	    String flag=data.getAsyncFlag();
+	  	    if("Y".equalsIgnoreCase(flag))
+	  	    	return true;
+	  	    else
+	  	    	return false;	
+	  }//getAsyncFlagForMcatDelete
+	  
+	 	  
+	  /**
+		 * This method calls a stored procedure to place all price 
+		 * tiers associated to this catalogid to publishing queue
+		 */
+		public boolean publishPriceTiers ( String catalogId, String adbRegionToConnect){	
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+			SupportBean spb1 = new SupportBean();
+			spb1.setCatalogId(catalogId); 
+			
+			DaxParsedStmt stmt = daxMgr.makeParsedStmt("publishing", "publishTiers", spb1, null,null);
+			daxDb.doSP(stmt, spb1, spb1);
+			if( spb1.getStatus() != null && !(spb1.getStatus().equalsIgnoreCase("err"))){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}//publishPriceTiers
+		
+		public  JSONArray getTxCurrCodesN (String adbRegionToConnect) {
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		    CatalogProgram catalogProgram = new CatalogProgram ();
+		    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "catalogProgram", "getTrnCurrListN"
+		                                                 , catalogProgram, null, null );
+		    JSONArray list = daxDb.doSelectJson ( stmt, null, catalogProgram );
+
+		    return list;
+
+		  }///getTxCurrCodesN
+		
+		 public JSONArray getProgramsForCustomer ( String cust_key , String adbRegionToConnect) {
+			 DaxMgr daxMgr = DaxMgr.getInstance();
+				DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+			    Program program = new Program ();
+			    String whichStmt = "";
+			    if ( StrUtil.isEmpty ( cust_key ) ) {
+			      whichStmt = "allPrograms";
+			    }
+			    else {
+			      whichStmt = "getPgmsForCustKey";
+			      program.setProgramCustKey ( cust_key );
+			    }
+			    // make the parsed statement, si and pg are SortInfo and Pagination
+			    DaxParsedStmt stmt = daxMgr.makeParsedStmt ( "program", whichStmt, program, null, null );
+		    return  daxDb.doSelectJson ( stmt, null, program );
+		 }///getProgramsForCustomer
+
+		
+		public JSONObject getVistaCustomer ( String custkey, String adbRegionToConnect ) {
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		    if ( StrUtil.isEmpty ( custkey ) ) {
+		      return null;
+		    }
+		    String searchStatement = " where cust_key ='" + custkey + "'";
+		    DaxParsedStmt stmt = null;
+		    DaxDataBeanGeneral bean = new DaxDataBeanGeneral ();
+		    bean.setString1 ( searchStatement );
+		    stmt = daxMgr.makeParsedStmt ( "customer","getVistaCustomer", bean, null, null );
+		    JSONArray list = daxDb.doSelectJson ( stmt, VistaCustomer.class, null );
+		    if ( list != null && list.size () > 0 ) {
+		      return ( JSONObject ) list.get ( 0 );
+		    }
+		    else {
+		      return null;
+		    }
+		  }///getVistaCustomer
+		
+		public int updItems ( UpdMultiProds mPrds, String adbRegionToConnect ) {
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		    int ret = 0;
+		    boolean err = false;
+		    Collection selectedProds = mPrds.getSelectedProdList ();
+		    try {
+
+		      //boolean dbErr = true;
+		    	daxDb.setAutoCommit(false);
+		      if ( !StrUtil.isListEmpty ( selectedProds ) ) {
+		        batchInsertSelectedItems ( daxMgr, daxDb, mPrds );
+		        log.debug ( "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@############# start sp " );
+		      }
+		      else {
+		        log.debug ( "@@@@@@@@@@@@@@@@@@ no data insert" );
+		      }
+		      ret = spUpdateItems ( daxMgr, daxDb, mPrds );
+		      log.debug (
+		          "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#################### end sp ret:( "
+		          + ret + ")" );
+
+		    }
+		    catch ( Exception e ) {
+		    	err = true;
+		    	log.debug (
+		    	          "Exception while saving update multiple records in Master catalog", e );
+		    }
+		    finally
+			{
+		    	daxDb.finish(err);
+			}
+
+		    log.debug ( "@@@@@@@@@@@@@@@@@@ return value:" + ret );
+		    return ret;
+		  }
+		
+		
+		  private void batchInsertSelectedItems ( DaxMgr dbMgr, DaxDB db
+                  , UpdMultiProds mPrds ) throws Exception {
+				DaxParsedStmt insertStmt = null;
+				UpdMultiProduct prod = new UpdMultiProduct ();
+				//Adde for March CPE 2006 - Vinod Mathew
+				//Collection selectedProds = mPrds.getSelectedProdList ();
+				Hashtable prodList = mPrds.getProdList();
+				
+				boolean err = false;
+				//Adde for March CPE 2006 - Vinod Mathew
+				//int prodSize = selectedProds.size ();
+				int prodSize = prodList.size();
+				log.debug ( "@@@@@@@@@@@@@@@@@@@@ start batch update: update size:"
+				+ prodSize );
+				try {
+				insertStmt = dbMgr.makeParsedStmt ( DB_GROUP, DB_TMP_INSERT, prod, null, null );
+				db.setBatchSize ( prodSize );
+				db.startBatch ();
+				//Added for March CPE 2006 - Vinod Mathew
+				Enumeration enu = prodList.keys();
+				while(enu.hasMoreElements())
+				{
+				//for ( Iterator it = selectedProds.iterator (); it.hasNext (); ) {
+				//String mItemKey = ( String ) it.next ();
+				String mItemKey = enu.nextElement().toString();
+				String mItemProd = prodList.get(mItemKey).toString();
+				log.debug ( "@@@@@@@@@@@@@@@@@@@@ in batch update id: " + mItemKey );
+				prod.setId ( mItemKey );
+				log.debug ( "@@@@@@@@@@@@@@@@@@@@ in batch prod id: " + mItemProd );
+				prod.setProdId(mItemProd);
+				prod.setSessionId ( mPrds.getSessionId () );
+				log.debug ( "@@@@@@@@@@@@@@@@@@@@ in batch pgm key: " + mPrds.getPgmKey());
+				prod.setProgKey(mPrds.getPgmKey());
+				log.debug ( "@@@@@@@@@@@@@@@@@@@@ in batch update session id: ("
+				+ prod.getSessionId () + ")" );
+				List contextIdList = StrUtil.split(mItemKey,"^");
+				String contextId = null;
+				if(contextIdList!=null)
+				{
+				if(contextIdList.size()>3)
+				{
+				if(!contextIdList.get(3).toString().equalsIgnoreCase("S"))
+				contextId = contextIdList.get(2).toString();
+				}
+				}
+				//  System.out.println("context id is:"+contextId);
+				log.debug("@@@@@@@@@@@@context id is:"+contextId);
+				prod.setContextId(contextId);
+				db.doUpdate ( insertStmt, prod );
+				}
+				db.finishBatch ();
+				log.debug ( "@@@@@@@@@@@@@@@ finished batch update: update size:"
+				+ prodSize );
+				
+				}
+				catch ( Exception e ) {
+				err = true;
+				e.printStackTrace ();
+				throw e;
+				
+				}
+				finally {
+				db.finish ( err );
+				
+				}
+		}
+		  
+		  private int spUpdateItems ( DaxMgr dbMgr, DaxDB db, UpdMultiProds mPrds ) {
+				 boolean priceTier = false;
+				 
+				
+				if(mPrds.getMasterKey().startsWith("PCAT"))  {
+					DaxParsedStmt updStmt = dbMgr.makeParsedStmt ( DB_GROUP, DB_UPD_PRICETIER_ITEMS, null, null, null );
+				    db.doSP ( updStmt, mPrds, mPrds );
+				    return mPrds.getReturnValue ();	
+			    
+				}else{
+					DaxParsedStmt updStmt = dbMgr.makeParsedStmt ( DB_GROUP, DB_UPD_ITEMS, null, null, null );
+				    db.doSP ( updStmt, mPrds, mPrds );
+				    return mPrds.getReturnValue ();
+				}
+		}
+		  
+		  public int updItemsFed ( UpdMultiProds mPrds, String adbRegionToConnect ) {
+              DaxMgr daxMgr = DaxMgr.getInstance();
+              DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+           int ret = 0;
+           boolean err = false;
+           Collection selectedProds = mPrds.getSelectedProdList ();
+           try {
+
+             //boolean dbErr = true;
+              daxDb.setAutoCommit(false);
+             if ( !StrUtil.isListEmpty ( selectedProds ) ) {
+               batchInsertSelectedItems ( daxMgr, daxDb, mPrds );
+               log.debug ( "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@############# start sp " );
+             }
+             else {
+               log.debug ( "@@@@@@@@@@@@@@@@@@ no data insert" );
+             }
+             ret = spUpdateFedItems ( daxMgr, daxDb, mPrds );
+             log.debug (
+                 "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#################### end sp ret:( "
+                 + ret + ")" );
+
+           }
+           catch ( Exception e ) {
+              err = true;
+              log.debug (
+                        "Exception while saving update multiple records in Master catalog", e );
+           }
+           finally
+              {
+              daxDb.finish(err);
+              }
+
+           log.debug ( "@@@@@@@@@@@@@@@@@@ return value:" + ret );
+           return ret;
+         }
+			  
+		  private int spUpdateFedItems(DaxMgr dbMgr, DaxDB db, UpdMultiProds mPrds) {
+				boolean priceTier = false;
+
+				DaxParsedStmt updStmt = dbMgr.makeParsedStmt(DB_GROUP, DB_UPD_FED_ITEMS, null, null, null);
+				db.doSP(updStmt, mPrds, mPrds);
+				return mPrds.getReturnValue();
+			}
+		  
+		  public JSONArray getFulfillmentSitesJson(String adbRegionToConnect) {
+				FulfillmentSite ffs_bean = new FulfillmentSite();
+				DaxMgr mgr = DaxMgr.getInstance();
+
+				DaxParsedStmt pstmt = null;
+				// Make the parsed statement.
+				pstmt = mgr.makeParsedStmt("fulfillmentSite", "selectFulfillmentSite",
+						ffs_bean, null, null);
+
+				// do the query
+				DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+				JSONArray list = db.doSelectJson(pstmt, null, ffs_bean);
+				return list;
+			}///getFulfillmentSitesJson
+		  
+		  public JSONArray getFulfillmentSitesJsonWithTenant(String adbRegionToConnect, String tenantCode) {
+				FulfillmentSite ffs_bean = new FulfillmentSite();
+				ffs_bean.setTenantCode(tenantCode);
+				DaxMgr mgr = DaxMgr.getInstance();
+
+				DaxParsedStmt pstmt = null;
+				// Make the parsed statement.
+				pstmt = mgr.makeParsedStmt("fulfillmentSite", "selectFulfillmentSite",
+						ffs_bean, null, null);
+
+				// do the query
+				DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+				JSONArray list = db.doSelectJson(pstmt, null, ffs_bean);
+				return list;
+			}///getFulfillmentSitesJson
+		  
+		  
+		  public JSONArray getDealListForCustByCntryAndPD(Customer customer,
+				String regionCode, String adbRegionToConnect, String tenantCode) {
+				if (StrUtil.isEmpty(customer.getCustKey())) {
+					return new JSONArray();
+				}
+				DaxMgr mgr = DaxMgr.getInstance();
+				DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+				boolean showFedLlcDeal=false;
+				if ("FD".equalsIgnoreCase(customer.getCustType()))
+					showFedLlcDeal=true;
+				DaxParsedStmt paQuery = null;
+				DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+				if (regionCode.equals("GL")) {
+					customer.setTenantCode(tenantCode);
+					if (!showFedLlcDeal)
+						customer.setString1("dl.fed_deal_fl='N'  and ");
+					paQuery = mgr.makeParsedStmt("deal",
+							"getDealsForGlobalsByCntryAndPD", customer, null, null);
+				} else {
+					DaxDataBeanGeneral whereBean = new DaxDataBeanGeneral();
+					String whereClause = "";
+					String whereClause1 = "";
+					if (  showFedLlcDeal ) 
+						{ 	whereClause =  "d.fed_deal_fl='Y'  and ";
+							whereClause1=  "d.fed_deal_fl='Y'  and "+"d.tenant_cd "+ tenantCode;
+						}
+					else
+						{	whereClause =  "d.fed_deal_fl='N'  and ";
+							whereClause1=  "d.fed_deal_fl='N'  and "+"d.tenant_cd "+ tenantCode;
+						}
+					whereClause +=  "d.tenant_cd "+ tenantCode+ " and ";
+					whereClause += " ((DEAL_ID IN (SELECT DEAL_ID FROM DEAL_MERGE dm WHERE dm.GROUP_ID ='"
+							+ customer.getCustID() + "')) ";
+					if ("US".equalsIgnoreCase(regionCode)
+							&& customer.getGenesisCustomer()) {
+						whereClause += " OR ((d.CUST_ID ='"
+								+ customer.getCustID()
+								+ "' OR  d.Amid_Global_Account_Id ='"
+								+ customer.getCustID()
+								+ "'  or d.AMID_CNTRY_ACCOUNT_ID  = '"
+								+ customer.getCustID()
+								+ "' ) AND (( d.region_code = '"
+								+ regionCode
+								+ "' ) or (d.REGION_CODE = 'GL' AND business_model_code = 'GD'))) ";
+					} else {
+						whereClause += " OR (d.CUST_ID ='"
+								+ customer.getCustID()
+								+ "' AND (( d.region_code = '"
+								+ regionCode
+								+ "'  AND d.CUST_DUN = '"
+								+ customer.getCustDUN()
+								+ "' ) or (d.REGION_CODE = 'GL' AND business_model_code = 'GD'))) ";
+					}
+
+					whereClause += " OR (region_code = '"
+							+ customer.getRegionCode()
+							+ "' AND deal_category = 'P' AND (AFFLIATE_FLAG = 'N' OR (AFFLIATE_FLAG = 'Y' AND deal_id IN "
+							+ " (SELECT da_deal_id FROM DEAL_AFFILIATES da WHERE da.DA_CUST_ID ='"
+							+ customer.getCustID() + "' ))))) " + " AND EXISTS "
+							+ " (SELECT 'x' FROM GLOBAL_CUST_PRICE_DESCRIPTOR gpd "
+							+ " WHERE gpd.DEAL_ID = d.deal_id "
+							+ " AND gpd.PRICE_DESCRIPTOR = '"
+							+ customer.getPriceDescriptor() + "' "
+							+ " AND SUBSTR(gpd.OB_PRICE_DESCRIPTOR, 1,2) = '"
+							+ customer.getCountryCode() + "' )";
+
+					if ("US".equalsIgnoreCase(regionCode)) {
+						whereBean
+								.setString2(" || DECODE(d.CUST_SAT_FL, 'Y', '-Sat','')");
+					} else {
+						whereBean.setString2("");
+
+					}
+					whereBean.setString1(whereClause);
+					whereBean.setString3(customer.getCustKey());
+					whereBean.setString4(whereClause1);
+					whereBean.setCountryCode(customer.getCountryCode());
+					whereBean.setPriceDescriptor(customer.getPriceDescriptor());
+
+					paQuery = mgr.makeParsedStmt("customer",
+							"getDealForCustByCntryAndPD", whereBean, null, null);
+				}
+				JSONArray dealList = db.doSelectJson(paQuery, Deal.class, customer);
+				log.debug("((((((" + dealList.size() + ")))))");
+				log.debug("Customer Segment:" + customer.getCustSegment());
+
+				if ("US".equalsIgnoreCase(regionCode)) {
+					dealList = getDealListWithAcc(dealList, adbRegionToConnect);
+
+				}
+
+				return dealList;
+
+			}
+		  
+		  private JSONArray getDealListWithAcc(JSONArray dealList, String adbRegionToConnect) {
+			  	JSONObject dealMergeObj = null;
+				String dealMergeAccId = null;
+				String dealMergeId = null;
+				HashMap<String, ArrayList<String>> dealAccMap = new HashMap<String, ArrayList<String>>();
+				ArrayList<String> accIds = null;
+
+				JSONArray dmList = getDealMergeList(dealList, adbRegionToConnect);
+				for (int j = 0; j < dmList.size(); j++) {
+					dealMergeObj = (JSONObject) dmList.get(j);
+
+					dealMergeId = (String)dealMergeObj.get("deal_id");
+					dealMergeAccId = (String)dealMergeObj.get("account_id");
+
+					if (dealAccMap.containsKey(dealMergeId)) {
+						accIds = (ArrayList) dealAccMap.get(dealMergeId);
+					} else {
+						accIds = null;
+					}
+
+					if (accIds == null) {
+						accIds = new ArrayList<String>();
+					}
+
+					accIds.add(dealMergeAccId);
+					dealAccMap.put(dealMergeId, accIds);
+				}// j
+
+				if (dealAccMap.size() > 0) {
+					Set<String> keys = dealAccMap.keySet();
+					Iterator<String> keyIterator = keys.iterator();
+					String acntIdList = null;
+					JSONObject dealObj = null;
+
+					while (keyIterator.hasNext()) {
+						dealMergeId = keyIterator.next();
+						accIds = (ArrayList) dealAccMap.get(dealMergeId);
+						acntIdList = StrUtil.join(accIds.toArray(), ",");
+
+						for (int i = 0; i < dealList.size(); i++) {
+							dealObj = (JSONObject) dealList.get(i);
+
+							if (dealObj.get("deal_id").equals(dealMergeId)) {
+								dealObj.put("custAccountIDs", acntIdList);///setCustAccountIDs(acntIdList);
+								break;
+							}
+						}// i
+					}// while
+				}// if
+
+				return dealList;
+			}
+		  
+		  private JSONArray getDealMergeList(JSONArray dealList, String adbRegionToConnect) {
+			  JSONArray dmList = new JSONArray();
+				DealMerge dm = new DealMerge();
+				DaxMgr mgr = DaxMgr.getInstance();
+				DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+				int noOfMList = dealList.size();
+				if (noOfMList > 0) {
+					int noOfTx = -1;
+					int recordPointer = -1;
+					int remainderNum = -1;
+					int arrayDim = -1;
+					int MAX_NO_OF_DATA = 999;
+
+					if (noOfMList <= MAX_NO_OF_DATA) {
+						noOfTx = 1;
+						recordPointer = noOfMList;
+					} else if (noOfMList > MAX_NO_OF_DATA) {
+						noOfTx = (noOfMList / MAX_NO_OF_DATA);
+						remainderNum = (noOfMList % MAX_NO_OF_DATA);
+						if (remainderNum > 0) {
+							noOfTx += 1;
+						}
+						recordPointer = MAX_NO_OF_DATA;
+					}
+
+					arrayDim = recordPointer;
+					for (int m = 0; m < noOfTx; m++) {
+						int n = m * MAX_NO_OF_DATA;
+						String[] dealStr = new String[arrayDim];
+
+						for (int l = 0; n < recordPointer; n++, l++) {
+							dealStr[l] = (String) ((JSONObject) dealList.get(l)).get("deal_id");
+						} // n
+
+						String dealListString = StrUtil.joinEndFreeIn(dealStr, ",");
+						dm.setString1(dealListString);
+						DaxParsedStmt pstmt = mgr.makeParsedStmt(
+								CONST_DEAL_STMT_GRP_ID,
+								"getDealGrpOrAccIDsWithInClause", dm, null, null);
+
+						JSONArray rData = db.doSelectJson(pstmt, dm.getClass(), null);
+						if (rData != null && rData.size() > 0) {
+							dmList = rData;
+						}
+
+						if (m == (noOfTx - 2) && remainderNum > 0) {
+							recordPointer += remainderNum;
+							arrayDim = remainderNum;
+						} else {
+							recordPointer += MAX_NO_OF_DATA;
+							arrayDim = MAX_NO_OF_DATA;
+						}
+					}// m
+				}
+				return dmList;
+
+			}// getDealMergeList
+		  
+		  
+		  public JSONArray getStdCatalogsByCntry ( Catalog catalog , String adbRegionToConnect, String tenantCode) {
+			  JSONArray stdCatList = null;
+			  catalog.setTenantCode(TenantConstants.getMixedSharedTenant(tenantCode));
+			  if(catalog.getProfileId() != null){
+				  stdCatList= doSelectCatalogsJson ( catalog,
+			              CatalogDaxUtil.STD_CAT,
+			              "CatalogListByCntryUS",
+			              null  ,  adbRegionToConnect);
+				  
+			  }else if(catalog.getOfferId()!= null){
+				  stdCatList= doSelectCatalogsJson ( catalog,
+			              CatalogDaxUtil.STD_CAT,
+			              "CatalogListByCntryForStdProjectOffer",
+			              null,  adbRegionToConnect);
+			  }else{
+				  stdCatList= doSelectCatalogsJson ( catalog,
+		              CatalogDaxUtil.STD_CAT,
+		              CatalogDaxUtil.
+		              GET_CAT_LIST_BY_CNTRY,
+		              null, adbRegionToConnect);
+			  }
+			  return stdCatList;
+		  }///getStdCatalogsByCntry
+		  
+		  public JSONArray doSelectCatalogsJson ( Catalog catalog,
+                  String groupStmt,
+                  String stmtID,
+                  CatalogDaxDataCollector ddc, String adbRegionToConnect
+                  ) {
+					
+					DaxMgr mgr = DaxMgr.getInstance ();
+					DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, stmtID, catalog, null, null );
+					DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+					//CatalogDaxDataCollector ddc = new CatalogDaxDataCollector();
+					// db.doSelect(stmt,catalog.getClass(),catalog,ddc);
+					
+					JSONArray cats = db.doSelectJson ( stmt, catalog.getClass (), catalog );
+					return cats;
+		  	}///doSelectCatalogsJson
+		  
+			public JSONArray getDealsForCatalog(String cat_Id, String adbRegionToConnect) {
+				Catalog cat = new Catalog();
+				cat.setId(cat_Id);
+				Deal dl = new Deal();
+				DaxMgr mgr = DaxMgr.getInstance();
+				DaxParsedStmt pstmt = mgr.makeParsedStmt(CONST_DEAL_STMT_GRP_ID,
+						"getDealsForCatalog", dl, null, null);
+				DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+				JSONArray dmList = db.doSelectJson(pstmt, dl.getClass(), cat);
+				return dmList;
+
+			}
+				
+}//class

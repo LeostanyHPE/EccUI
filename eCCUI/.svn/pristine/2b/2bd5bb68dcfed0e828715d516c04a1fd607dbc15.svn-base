@@ -1,0 +1,67 @@
+<div class="row" id="batchPub" ng-controller="BatchPublishCatalogListCrtl" ng-init="init()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}}
+	</div>
+	<div class="alert error" ng-show="errorMessage!=''">
+		<span>{{errorMessage}}</span>
+	</div>
+	<div class="customer_rows">
+		<span id="messageSpan" style="color: green;"></span><span
+			id="spanIdRed" style="color: red;"></span>
+	</div>
+	
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Batch Publish Tasks</span>
+		</h1>
+	</div>		
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns">
+				<div class="generals">
+					<span>Task Name:</span><input type="text" max="50"  maxlength="50" value=""  ng-model="taskName"></input>
+				</div>					
+			</div>				
+		</div>
+		<div class="customer_rows">
+			<div class="eight columns">
+				<a class="btn btn-inline"  ng-click="search()"><span id="search">Search</span></a> 
+				<a class="btn btn-inline"  ng-click="reset()"><span id="search">Reset</span></a>
+			</div>
+		</div> 
+	</div>
+	
+	  <div class="customer_rows id-body" ng-show="dataLoad">
+  		<div class="twelve columns">
+		   	<div id="ecc_hpegrid1" hpe-grid
+		   		grd-select-all="true"
+		      	grd-select-unselect-all-boxes = "chkAllBoxes()"
+		        grd-data="grid.data"		        
+		        grd-header="grid.header"
+		        grd-col-defs="grid.colDefs"
+		        grd-sort="grid.sort"
+		        grd-col-view-by="grid.colViewBy" >
+		    </div>
+  		</div>
+     </div>
+	
+  	<div class="customer_rows">
+	    <!-- <div class="two columns"> 
+		   <div class="reset">
+				<div class="generals">
+					<a class="btn btn-inline" ng-show="roleId != 2" ng-click="clearSchedule()" >Clear Schedule</a>
+				</div>
+			</div>
+	 	</div>
+
+	    <div class="two columns">   
+		    <div class="reset">
+			    <div class="generals">
+					 <a class="btn btn-inline" ng-show="roleId != 2"  ng-click="createSchedule()" >Create Schedule</a>
+				</div>
+		  </div>
+	    </div> -->
+	    <a class="btn btn-inline" ng-show="roleId != 2" ng-click="clearSchedule()" >Clear Schedule</a>
+	   <a class="btn btn-inline" ng-show="roleId != 2"  ng-click="createSchedule()" >Create Schedule</a>
+	</div>	
+
+</div>

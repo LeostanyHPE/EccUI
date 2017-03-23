@@ -1,0 +1,79 @@
+eccApp.controller('viewTemplateCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams',
+  function ($scope, $http, $timeout, webStorage, $routeParams) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.warningMessage='';
+	$scope.bundleTemplateID=$routeParams.bundleTemplateID;
+	$scope.templateFlag=$routeParams.templateFlag;
+	
+	$scope.tab = $routeParams.tab;
+	
+	if($scope.tab == undefined || $scope.tab == '')
+		setTimeout(function(){$('#bundleHeaderTab')[0].click();}, 1000);
+	else
+		setTimeout(function(){$('#'+$scope.tab)[0].click();}, 1000);
+	
+		
+	$('#myTab a').click(function (e) {		
+		  e.preventDefault();
+		  $(this).tab('show');
+		  $scope.$broadcast('loadPage', $(this).attr('href'));
+	});
+	
+	$scope.showMsg=function(success, error){
+		if(success != ''){
+		   	$scope.successArray = [];
+	 		$scope.successArray.push(success);
+	 		$scope.addLineSuccessMsg($scope.successArray);
+		}
+		if(error != ''){
+			$scope.errorArray = [];
+	 		$scope.errorArray.push(error);
+	 		$scope.addLineErrMessage($scope.errorArray);
+		}
+	};
+		
+	$scope.hideMsg=function(){
+	   	$scope.successMessage='';
+	   	$scope.errorMessage='';
+	   	$scope.warningMessage='';
+	   	document.getElementById("successMess").innerHTML = '';
+	   	document.getElementById("errorMess").innerHTML = '';
+	};
+	$scope.showSuccessMsg = function(successMsg){
+		$scope.successMessage=successMsg;
+	};
+	$scope.showErrorMsg = function(errorMsg){
+		$scope.errorMessage=errorMsg;
+	};
+	$scope.showWarningMsg = function(warningMsg){
+		$scope.warningMessage=warningMsg;
+	};
+	
+
+	  $scope.addLineErrMessage=function(errorMsg) {
+	    	
+		  $scope.errorMessage = errorMsg[0];
+		  $scope.showErrorMsg($scope.errorMessage);
+		  	
+		  	document.getElementById("errorMess").innerHTML = $scope.errorMessage;
+	    	
+	    	for (var a = 1; a < errorMsg.length; a++) {
+	    		document.getElementById("errorMess").innerHTML = document.getElementById("errorMess").innerHTML + "<br>" + errorMsg[a];
+	    	}
+	    	
+	    };
+	    
+	    $scope.addLineSuccessMsg=function(successMsg) {
+	    	
+	  		  $scope.successMessage = successMsg[0];
+	  		  $scope.showSuccessMsg($scope.successMessage);
+	  		  	
+	  		  	document.getElementById("successMess").innerHTML = $scope.successMessage;
+	  	    	
+	  	    	for (var a = 1; a < successMsg.length; a++) {
+	  	    		document.getElementById("successMess").innerHTML = document.getElementById("successMess").innerHTML + "<br>" + successMsg[a];
+	  	    	}
+	  	    	
+	  	    };
+}]);

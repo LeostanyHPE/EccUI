@@ -1,0 +1,528 @@
+package com.hp.ecc.ui.biz.product;
+
+
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.hp.ecc.ui.db.vo.DaxDataBeanGeneral;
+import com.hp.ecc.ui.util.DaxUtil;
+import com.hp.ecc.ui.util.StrUtil;
+
+/**
+ * Catalog Product Manager class is used to implement business logic for catalog product, determine
+ * how to search/update/delete/add product info into catalog, and convert db object to product object.
+ *
+ * @author Jane Chen
+ * @version 1.0
+ */
+
+public class GeneralProductMgr extends ProductMgr {
+
+  private static final String PROD = "prod";
+  private static final String CURR_CD = "curr_cd";
+  private static final String CNTRY_CD = "cntry_cd";
+  private static final String PRC_TERM_CD = "prc_term_cd";
+
+  private static final String DEFAULT_HP_LANG_CODE = "99";
+  
+  private String hpLangCode = "";
+  private String priceDescriptor = "";
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Constructor 
+   * 
+   * @param none
+   * @return none
+   */
+  public GeneralProductMgr () {
+    super ();
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * @param hpLangCode
+   * @return void
+   */  
+  public void setHPLangCode ( String hpLangCode ) {
+    this.hpLangCode = hpLangCode;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * @param none
+   * @return String - hpLangCode
+   */   
+  public String getHPLangCode () {
+    return this.hpLangCode;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * @param priceDescriptor
+   * @return void
+   */  
+  public void setPriceDescriptor ( String priceDescriptor ) {
+    this.priceDescriptor = priceDescriptor;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * @param none
+   * @return String - priceDescriptor
+   */   
+  public String getPriceDescriptor () {
+    return this.priceDescriptor;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves the Product information based on the Default HP Lang Code 
+   * 
+   * @param hasPrice
+   * @return List - Collection of Product Object
+   */
+  public List retrieveItem ( boolean hasPrice ) {
+    String langCode = this.getHPLangCode ();
+    List list = retrieveGeneralInfo ();
+    if ( !langCode.equals ( DEFAULT_HP_LANG_CODE ) ) {
+      list = retrieveLocalLangInfo ( list );
+    }
+    if ( hasPrice ) {
+      list = retrieveLocalPrice ( list );
+    }
+    return list;
+  }
+ 
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Builds the search Criteria  
+   * 
+   * @param sku
+   * @param prodId
+   * @param desc
+   * @param mainCategoryId
+   * @return String - where Clause
+   */  
+  private String setSearchCriteria ( String sku, String prodId, String desc
+                                   , String mainCategoryId ) {
+    DaxUtil daxUtil = new DaxUtil();
+    List list = new LinkedList();
+    list.add(daxUtil.getExpression(ProductFields.SKU_ID, sku, DaxUtil.OP_LIKE));
+    list.add(daxUtil.getExpression(ProductFields.PROD_ID, prodId, DaxUtil.OP_LIKE));
+    return daxUtil.getExpression(list, DaxUtil.OP_AND);
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves the Total no. of product beased on the criteria  
+   * 
+   * @param sku
+   * @param prodId
+   * @param desc
+   * @param mainCategoryId
+   * @return long - Total no.of Products which statisfies the condition
+   */   
+  public long getTotalCount ( String sku, String prodId, String desc
+                              , String categoryId ) {
+    DaxMgr mgr = DaxMgr.getInstance ();
+	DaxDB db = mgr.getDaxDB ();
+	DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+	String whereStr = setSearchCriteria(sku, prodId, desc, categoryId);
+	if(!StrUtil.isEmpty(whereStr))
+	  bean.setString1(" WHERE "+whereStr);
+	else
+	  bean.setString1("");	
+	DaxParsedStmt pstmt = mgr.makeParsedStmt ( "dealProduct", 
+			"getProductCount", bean, null,null );
+    List list = db.doSelect(pstmt, Product.class, null);
+    Product product = (Product) list.get(0);
+    String count = product.getTotalCount(); 
+    return new Long(count).longValue();	  
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves the Total no. of product beased on the criteria  
+   * 
+   * @param sku
+   * @param prodId
+   * @param desc
+   * @param categoryId
+   * @return long - Total no.of Products which statisfies the condition
+   */    
+  public long getTotalProductCount ( String sku, String prodId, String desc
+                                     , String categoryId ) {
+    DaxMgr mgr = DaxMgr.getInstance ();
+	DaxDB db = mgr.getDaxDB ();
+	DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+	String whereStr = setSearchCriteria(sku, prodId, desc, categoryId);
+	  bean.setString1(" WHERE "+whereStr+" AND "+ProductFields.SOURCE+ " <> 'COMCAT_BDL'");
+	DaxParsedStmt pstmt = mgr.makeParsedStmt ( "dealProduct", 
+			"getProductCount", bean, null,null);
+    List list = db.doSelect(pstmt, Product.class, null);
+    Product product = (Product) list.get(0);
+    String count = product.getTotalCount(); 
+    return new Long(count).longValue();	 	  
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves the Product information based on the Product ID  
+   * 
+   * @param prodId
+   * @return Product - Product Object
+   */
+  public Product getItem ( String prodId ) {
+    List list = retrieveItemDetails (prodId, false );
+    if ( !StrUtil.isListEmpty ( list ) ) {
+      Product p = ( Product ) list.get ( 0 );
+      p.setHpLangCode ( DEFAULT_HP_LANG_CODE );
+      p = retrieveLocalLangInfo ( p );
+      return p;
+    }
+    else {
+      return null;
+    }
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : Created.
+   * ***********************************************************************
+   * Retrieves the General Product information based on the Product ID  and priceFlag
+   * 
+   * @param prodId
+   * @param hasPrice
+   * @return List - Collection of Product Object
+   */  
+  public List retrieveItemDetails (String prodId, boolean hasPrice ) {
+    String langCode = this.getHPLangCode ();
+    List list = retrieveGeneralDetails (prodId);
+    if ( !langCode.equals ( DEFAULT_HP_LANG_CODE ) ) {
+      list = retrieveLocalLangInfo ( list );
+    }
+    if ( hasPrice ) {
+      list = retrieveLocalPrice ( list );
+    }
+    return list;
+  }  
+  
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : Created.
+   * ***********************************************************************
+   * Retrieves the General Product information based on the Product ID  
+   * 
+   * @param prodId
+   * @param hasPrice
+   * @return List - Collection of Product Object
+   */   
+  public List retrieveGeneralDetails (String prodId) {
+	DaxMgr mgr = DaxMgr.getInstance ();
+	DaxDB db = mgr.getDaxDB ();
+	DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+	bean.setString1(prodId);
+	DaxParsedStmt pstmt = mgr.makeParsedStmt ( "dealProduct", "getGeneralDetails", bean, null,null );
+    return db.doSelect(pstmt, Product.class, null);	  
+  }  
+  
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves the Product information based on the Product ID  and priceFlag
+   * 
+   * @param prodId
+   * @param hasPrice
+   * @return Product - Product Object
+   */  
+  public Product getItem ( Product product, boolean hasPrice ) {
+    product = this.getItem ( product.getProdId () );
+    String langCode = this.getHPLangCode ();
+    if ( !langCode.equals ( DEFAULT_HP_LANG_CODE ) ) {
+      product = retrieveLocalLangInfo ( product );
+    }
+    if ( hasPrice && this.getPriceDescriptor () != null ) {
+      product = retrieveLocalPrice ( product );
+    }
+    return product;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 18-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Updates local price in local_price table, If there is such record exist,
+   * otherwise create a new record.
+   * 
+   * @param product
+   * @param country_code
+   * @param currency_code
+   * @param term_code
+   * @return List - Collection contains the result of operation
+   */   
+  public List updateLocalPrice ( Product product,
+                                 String country_code,
+                                 String currency_code,
+                                 String term_code, String dbRegion) {
+	DaxUtil daxUtil = new DaxUtil();
+    DaxMgr mgr = DaxMgr.getInstance ();
+  	DaxDB db = mgr.getDaxDB (dbRegion);
+  	DaxParsedStmt pstmt = null;
+  	DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+	//check if record exist
+    List result = new LinkedList ();
+      if(findLocalPrice(product, country_code, currency_code, term_code) ) {
+        //need to update
+    	bean.setString1(product.getLocalPriceD().toString());  
+        result.add(daxUtil.getExpression(ProductFields.PROD_ID, product.getProdId (), DaxUtil.OP_EQ));
+        result.add(daxUtil.getExpression(ProductFields.COUNTRY_CD, country_code, DaxUtil.OP_EQ));
+        result.add(daxUtil.getExpression(ProductFields.PROD_CURRENCY_CD, currency_code, DaxUtil.OP_EQ));
+        result.add(daxUtil.getExpression(ProductFields.PRC_TERM_CD, term_code, DaxUtil.OP_EQ));
+        String whereClause = daxUtil.getExpression(result, DaxUtil.OP_AND);
+        if(!StrUtil.isEmpty(whereClause))
+        	bean.setString2(whereClause);
+        pstmt = mgr.makeParsedStmt ( "dealProduct", "updateLocalPriceInfo", bean, null, null );
+        db.doUpdate(pstmt, Product.class);
+        result.clear();
+        return result;
+      }
+      else {
+        //insert new
+    	product.setCountryCode(country_code);
+    	product.setProdCurrencyCode(currency_code);
+    	product.setPrcTermCode(term_code);
+        pstmt = mgr.makeParsedStmt ( "dealProduct", "addLocalPriceInfo", product, null, null );
+        db.doUpdate(pstmt, Product.class);	        
+      }
+    return result;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 19-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Finds if any such record exists in Database
+   * 
+   * @param product
+   * @param country_code
+   * @param currency_code
+   * @param term_code
+   * @return boolean - true - no record , false - record exists
+   */  
+  public boolean findLocalPrice( Product product,
+          String country_code,
+          String currency_code,
+          String term_code) {
+    DaxUtil daxUtil = new DaxUtil();
+    List list = new ArrayList();
+    list.add(daxUtil.getExpression(this.PROD, product.getProdId (), DaxUtil.OP_EQ));
+    list.add(daxUtil.getExpression(this.CNTRY_CD, country_code, DaxUtil.OP_EQ));
+    list.add(daxUtil.getExpression(this.CURR_CD, currency_code, DaxUtil.OP_EQ));
+    list.add(daxUtil.getExpression(this.PRC_TERM_CD, term_code, DaxUtil.OP_EQ));
+    String whereCaluse = daxUtil.getExpression(list, DaxUtil.OP_AND);	  
+	DaxMgr mgr = DaxMgr.getInstance ();
+	DaxDB db = mgr.getDaxDB ();
+	DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+	if(!StrUtil.isEmpty(whereCaluse))
+	   bean.setString1(" WHERE "+whereCaluse);
+	else
+	   bean.setString1("");	
+	DaxParsedStmt pstmt = mgr.makeParsedStmt ( "dealProduct", "findLocalPriceInfo", bean, null, null );
+    List result = db.doSelect(pstmt, Product.class, null);
+    System.out.println(" List size "+result.size());
+    if(list.size() == 0)
+    	return true;
+    else
+    	return false;
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 19-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves General information of a Products
+   * 
+   * @param none
+   * @return List - Collection of Product Object
+   */  
+  private List retrieveGeneralInfo () {
+	DaxMgr mgr = DaxMgr.getInstance ();
+	DaxDB db = mgr.getDaxDB ();
+	DaxParsedStmt pstmt = mgr.makeParsedStmt ( "dealProduct", "getGeneralInfo", null, null,null );
+    return db.doSelect(pstmt, Product.class, null);	  
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 19-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves LangInfo of a Product
+   * 
+   * @param product - Product Object
+   * @return Product - Product Object
+   */  
+  private Product retrieveLocalLangInfo ( Product product ) {
+    ArrayList list = new ArrayList ( 1 );
+    list.add ( product );
+    return ( Product ) retrieveLocalLangInfo ( list ).get ( 0 );
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 19-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves LangInfo of a Product
+   * 
+   * @param List - Collection of Product Object
+   * @return List  - Collection of updated Product Object
+   */ 
+  private List retrieveLocalLangInfo ( List products ) {
+    if ( products == null ) {
+      return null;
+    }
+    Iterator i = products.iterator ();
+    Product prod = null;
+    while ( i.hasNext () ) {
+      prod = ( Product ) i.next ();
+      Product p = super.getProduct ( prod );
+      if ( p != null ) {
+        if ( p.getShortDesc () != null ) {
+          prod.setShortDesc ( p.getShortDesc () );
+          prod.setLongDesc ( p.getLongDesc () );
+        }
+        if ( p.getDataSheetName () != null ) {
+          prod.setDataSheetName ( p.getDataSheetName () );
+        }
+      }
+    }
+    return products;
+  }
+
+  private Product retrieveLocalPrice ( Product product ) {
+    ArrayList list = new ArrayList ( 1 );
+    list.add ( product );
+    return ( Product ) retrieveLocalPrice ( list ).get ( 0 );
+  }
+
+  /*************************************************************************
+   * Change History: 
+   * DATE : 19-10-07 
+   * CHANGED-BY : Sivakumar
+   * COMMENTS : modified.
+   * ***********************************************************************
+   * Retrieves Local Price infrmation of a Product
+   * 
+   * @param List - Collection of Product Object
+   * @return List  - Collection of updated Product Object
+   */  
+  private List retrieveLocalPrice ( List products ) {
+    if ( products == null ) {
+      return null;
+    }
+    String prcDescr = this.getPriceDescriptor ();
+
+    if ( prcDescr == null || prcDescr.length () < 6 ) {
+      return null;
+    }
+
+    DaxUtil daxUtil = new DaxUtil();
+    List list = new LinkedList();
+    Iterator i = products.iterator ();
+    Product prod = null;
+    if ( prcDescr.length () == 6 ) {
+      list.add(daxUtil.getExpression(this.CNTRY_CD, prcDescr.substring ( 0, 2 ), DaxUtil.OP_EQ));	
+      list.add(daxUtil.getExpression(this.CURR_CD, prcDescr.substring ( 2, 4 ), DaxUtil.OP_EQ));
+      list.add(daxUtil.getExpression(this.PRC_TERM_CD, prcDescr.substring ( 4, 6 ), DaxUtil.OP_EQ));
+    }
+  	DaxMgr mgr = DaxMgr.getInstance ();
+	DaxDB db = mgr.getDaxDB ();
+	DaxParsedStmt pstmt = null;
+	DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+    while ( i.hasNext () ) {
+      prod = ( Product ) i.next ();
+      list.add(daxUtil.getExpression(ProductFields.PROD_ID, prod.getProdId (), DaxUtil.OP_EQ));
+      list.add(daxUtil.getExpression(ProductFields.PRICE_DESCRIPTOR, this.getPriceDescriptor(), DaxUtil.OP_EQ));
+      String whereClause = daxUtil.getExpression(list, DaxUtil.OP_AND);
+      if(!StrUtil.isEmpty(whereClause))
+    	  bean.setString1(" WHERE "+whereClause);
+      else
+    	  bean.setString1("");
+      pstmt = mgr.makeParsedStmt ( "dealProduct", "getLocalPriceInfo", bean, null,null );
+      List results = db.doSelect(pstmt, Product.class, null);	  
+      if ( results != null && results.size () > 0 ) {
+        Product p = ( Product ) results.get ( 0 );
+        Double localPrice = p.getLocalPrice ();
+        if ( localPrice != null ) {
+          prod.setLocalPrice ( localPrice.toString () );
+          prod.setNetPriceD ( localPrice );
+        }
+      }
+    }
+    return products;
+  }
+}

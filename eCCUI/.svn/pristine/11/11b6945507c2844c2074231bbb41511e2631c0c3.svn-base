@@ -1,0 +1,73 @@
+<div class="row" ng-controller="viewCombinedOfferCtrl" ng-init="loadCombinedOffering()">
+	<div class="customer_rows">
+		<h1 class="h1Underline">
+			<span>Combined (Master Catalog & Price Tier) Product Offering</span>
+		</h1>
+	</div>
+	<div class="customer_rows form-border">
+		<div class="customer_rows">
+			<div class="four columns">
+				<div ng-show="!isPriceTier" class="generals">
+					<span>Price Tier Name:</span>
+					<select  size="10"  style="width:55%;height:60px;" ng-model= "priceTier"  ng-options=" item as item for item  in formData.priceTierName"></select> 
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Master Catalog Id:</span>
+					<div class="div_input" id="description" ng-bind="formData.masterCatalogId"></div>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Master Catalog Name:</span>
+					<div class="div_input" id="country" ng-bind="formData.masterCatalogName"></div>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Price Descriptor:</span>
+					<textarea  rows="" cols="" ng-model="formData.priceDescriptor" disabled> </textarea>
+				</div>
+			</div>
+			<div class="four columns">
+				<div class="generals">
+					<span>Sale Country:</span>
+					<textarea  rows="" cols="" ng-model="formData.saleCountry" disabled> </textarea>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="customer_rows">
+      	<div class="twelve columns">
+      		 <section>
+				<div id="viewCombinedOfferingGridDiv" style="display:none;">
+					<table id="search_result" class="TableBackground search_result" style="width:100%">
+						<thead>
+							<tr class="TableHeaderRow">
+								<th>Hidden</th>
+								<th>Delete</th>
+								<th>Hide</th>
+								<th>Status</th>
+								<th>Catalog ID</th>
+								<th>Base Model</th>
+								<th>Part Number</th>
+								<th>Description</th>
+								<th>Price{{currency}}</th>
+								<th>Program</th>
+								<th>SLA</th>
+							</tr>
+						</thead>
+						<tbody>	</tbody>
+					</table>
+					<div class="generals" id="viewCombinedOfferingButtons">
+						<a class="btn btn-inline" ng-click="cancelCombinedOffering()">Cancel</a>
+					</div>
+				</div>
+			</section>
+ 		</div>
+    </div>
+</div>
+
+
+

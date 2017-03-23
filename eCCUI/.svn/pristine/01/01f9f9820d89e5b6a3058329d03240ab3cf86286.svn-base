@@ -1,0 +1,71 @@
+package com.hp.ecc.ui.web.util;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.customer.CustomerMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.view.beans.CustomerProfileForm;
+import com.hp.ecc.ui.biz.misc.Supplier;
+import com.hp.ecc.ui.biz.misc.SupplierFields;
+import com.hp.ecc.ui.biz.misc.SupplierNamed;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+
+public class CustomerProfileWebUtil {
+
+	  public static Customer retrieveCustomer ( String key, String dbRegionToConnect ) {
+	    CustomerMgr customerMgr = new CustomerMgr ();
+	    Customer customer = customerMgr.getCustomer ( key, dbRegionToConnect );
+	    return customer;
+
+	  }
+
+
+	  public static List getNamedSuppliers ( JSONArray suppliers ) {
+	    List namedSuppliers = new ArrayList ();
+	    SupplierNamed namedSupplier;
+	    JSONObject supplier;
+	    StringBuffer sb = null;
+	    if ( suppliers != null ) {
+	      Iterator i = suppliers.iterator ();
+	      while ( i.hasNext () ) {
+	        sb = new StringBuffer ();
+	        supplier = ( JSONObject ) i.next ();
+	        namedSupplier = new SupplierNamed ();
+	        namedSupplier.setSupplierId ( (String)supplier.get(SupplierFields.ID) );
+	        //sb.append ( (String)supplier.get(SupplierFields.ID) );
+	        //sb.append ( "-" );
+	        sb.append ( (String)supplier.get(SupplierFields.NAME) );
+	        namedSupplier.setSupplierFullName ( sb.toString () );
+	        namedSuppliers.add ( namedSupplier );
+	        sb = null;
+	      }
+	    }
+	    return namedSuppliers;
+	  }
+
+
+	  public static String getCustomerTypeDesc ( String custTypeCode ) {
+	    if ( custTypeCode.equals ( "PS" ) ) {
+	      return "Public Sector";
+	    }
+	    else if ( custTypeCode.equals ( "LS" ) ) {
+	      return "Leasing";
+	    }
+	    else if ( custTypeCode.equals ( "BD" ) ) {
+	      return "Big Deal";
+	    }
+	    else if ( custTypeCode.equals ( "EC" ) ) {
+	      return "eCate";
+	    }
+	    else {
+	      return "Big Deal";
+	    }
+	  }
+
+}

@@ -1,0 +1,158 @@
+eccApp.controller('ProductSearchCrtl',['$scope', '$http','$timeout','webStorage','dateParser','$routeParams', 
+  function($scope, $http, $timeout,webStorage,dateParser,$routeParams) {
+	$scope.importAutoList= [{"id":"All", "value":"All"}, {"id":"Yes", "value":"Y"}, {"id":"No", "value":"N"}];
+	$scope.importAuto = "All";
+	
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	$scope.addDataToTable=[];
+	
+	$scope.dataLoad=false;
+	$scope.select = true;
+	$scope.defaultSet=true;
+	$scope.form = {};
+	
+	$scope.initLoad = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Product Content Search Task\"");
+
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		try { 
+			
+			 $scope.custDetails=webStorage.local.get('selCustData');
+			  $scope.selCustName=$scope.custDetails.cust_name;
+			  $scope.selCustId	=$scope.custDetails.cust_id;
+			  $scope.selCustKey	=$scope.custDetails.cust_key;
+		} catch(e) { 
+			$scope.customerId='';
+			console.log('Not Data Selected');
+		}
+		
+		$scope.url='content/ProdContentSearch.htm';
+		
+		var req = {
+				type: "GET",
+	            url: $scope.url,
+	            headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            },
+	            dataType: "json"
+				};
+		$http(req).success(function(data, status, headers, config) {
+			$scope.localeJsonList = data.locales;
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Edit Catalog Service');
+		  });
+	};
+	
+	$scope.productSearchResults = function(){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		
+		if(!$scope.fSelectedLangCode){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Please Select a locale for Search');
+			return;
+		}
+		
+		if(!$scope.form.fProductSku){
+			 $scope.hideMsg();
+			 $scope.showMsg('','Please fill the Product SKU. Wild card (%) search for product SKU not supported');
+			return;
+		}
+		
+		if ($scope.form.fProductSku.indexOf("%") != -1) {
+			 $scope.hideMsg();
+			 $scope.showMsg('','Wild card (%) search for product SKU not supported.');
+			 return;
+		}
+		
+		$scope.form.fSelectedLangCode = $scope.fSelectedLangCode.hpLangCode;
+		$scope.url='content/ProdContentSearchResults.htm';
+		var req = {
+				method: "POST",
+				url: $scope.url,
+				data:$scope.form
+	            
+				};
+		$http(req).success(function(data, status, headers, config) {
+			$scope.hideMsg();
+			$scope.productSearchList = [];
+			$scope.productSearchList = data.ProductSearchJson;
+			$scope.addDataToTable.length=0;
+			angular.forEach($scope.productSearchList, function(item){	
+				$scope.addDataToTable.push([
+		        	item.prod,
+					item.short_desc,
+					$scope.productContentEditInfoOpenWithNewTab(item.prod,item)
+	        	]);  
+			});
+			
+			if ($scope.addDataToTable.length >0){
+	        	$scope.dataLoad=true;
+			}
+	        else{
+				 $scope.hideMsg();
+				 $scope.showMsg('','No Results Found! ');
+			}
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			
+		  }).
+		  error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error in Edit Catalog Service');
+		  });
+		
+	};
+	
+	$scope.productContentEditInfo = function(prod_id){
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			webStorage.session.add('PrevPage', '#/ProductContentSearch');
+			document.location.href='#/ProductContentEdit?prodContentDataId='+prod_id.replace("#","%23")+'&langCode='+$scope.form.fSelectedLangCode+'';
+	};
+	$scope.productContentEditInfoOpenWithNewTab_link = "";
+	$scope.productContentEditInfoOpenWithNewTab = function(prod_id,item){
+		$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		webStorage.session.add('PrevPage', '#/ProductContentSearch');
+		$scope.productContentEditInfoOpenWithNewTab_link='#/ProductContentEdit?prodContentDataId='+prod_id.replace("#","%23")+'&langCode='+$scope.form.fSelectedLangCode+'';
+		return "<a href="+$scope.productContentEditInfoOpenWithNewTab_link+"  id="+item.prod+" tabRightClick=angular.element(document.getElementById('prodSearchResults_Table')).scope().productContentEditInfoOpenWithNewTab('"+item.prod+"')" +
+		" onClick=angular.element(document.getElementById('prodSearchResults_Table')).scope().productContentEditInfo('"+item.prod+"')>Edit Product Content</a>";
+		
+};
+	
+     $scope.grid = {
+	    		header: ["SKU", "Short Description", "Edit"],
+	    		data: $scope.addDataToTable,
+	    		sort: [[1, "asc"]],
+	    		colDefs: [
+	    			//{ "sClass": "center", "aTargets": [2, 3] },
+	    			//{ "sClass": "center unsortable", "aTargets": [0] },
+	    			{ "sClass": "left", "aTargets": [0,1,2] }
+	    			//{ "sClass": "right", "aTargets": [4] },
+	    			//{ "bSortable": false, "aTargets": [0] }
+	    		],
+	    		colViewBy: { // define view by function styleif sDom has C, this is required
+	    			"buttonText": 'Show / Hide <i class="icon-chevron-down"></i>',
+	    			"bShowAll": true,
+	    			"sShowAll": "Show All",
+	    			"sAlign": "left"
+	    		}
+	    };
+     
+     $scope.showMsg=function(success, error){
+      	$scope.successMessage=success;
+      	$scope.errorMessage=error;
+      };
+      $scope.hideMsg=function(){
+      	$scope.successMessage='';
+      	$scope.errorMessage='';
+      };
+}]);

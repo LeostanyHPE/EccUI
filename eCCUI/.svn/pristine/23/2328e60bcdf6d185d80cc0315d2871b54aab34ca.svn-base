@@ -1,0 +1,89 @@
+/* From Version 4.1*/
+package com.hp.ecc.ui.biz.customer;
+
+import java.util.List;
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import org.apache.log4j.Category;
+
+import com.hp.ecc.ui.common.util.CTX;
+
+
+public class CustProdFilterMgr {
+	private Category log;
+
+	/**
+	 * Create CustCatFormatMgr Instance
+	 */
+	static public CustProdFilterMgr getCustProdFilterMgr() {
+		CustProdFilterMgr mgr = new CustProdFilterMgr();
+		return mgr;
+	}
+
+	private CustProdFilterMgr() {
+		log = CTX.getCTX().getLog();
+	}
+
+	public void deleteCustProdFilter(String custKey, String adbRegionToConnect) {
+
+		DaxMgr dMgr = DaxMgr.getInstance();
+		DaxDB db = dMgr.getDaxDB(adbRegionToConnect);
+		CustProdFilterBean filterinfo = new CustProdFilterBean();
+		filterinfo.setCustKey(custKey);
+		boolean err = false;
+		try {
+
+			DaxParsedStmt pstmtDelete = dMgr.makeParsedStmt("custMasterInfo",
+					"deleteProdFilter", null, null, null);
+			db.doUpdate(pstmtDelete, filterinfo);
+		} catch (Exception e) {
+			err = true;
+			e.printStackTrace();
+		} finally {
+			db.finish(err);
+		}
+
+	}
+
+	public void insertCustProdFilter(List filterinfo, String adbRegionToConnect) {
+
+		DaxMgr dMgr = DaxMgr.getInstance();
+		DaxDB db = dMgr.getDaxDB(adbRegionToConnect);
+		boolean err = false;
+		try {
+
+			DaxParsedStmt pstmtInsert = dMgr.makeParsedStmt("custMasterInfo",
+					"insertProdFilter", null, null, null);
+			db.setBatchSize(filterinfo.size());
+			db.startBatch();
+			for (int i = 0; i < filterinfo.size(); i++) {
+				db.doUpdate(pstmtInsert, filterinfo.get(i));
+			}
+			db.finishBatch();
+		} catch (Exception e) {
+			err = true;
+			e.printStackTrace();
+		} finally {
+			db.finish(err);
+		}
+
+	}
+
+	public List selectCustProdFilter(String custKey, String filterName, String adbRegionToConnect) {
+
+		CustProdFilterBean bean = new CustProdFilterBean();
+		bean.setCustKey(custKey);
+		bean.setFilterName(filterName);
+
+		DaxMgr mgr = DaxMgr.getInstance();
+		DaxParsedStmt pstmt = mgr.makeParsedStmt("custMasterInfo",
+				"selectProdFilter", bean, null, null);
+
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		List list = db.doSelect(pstmt, null, bean);
+		return list;
+	}
+
+}//class

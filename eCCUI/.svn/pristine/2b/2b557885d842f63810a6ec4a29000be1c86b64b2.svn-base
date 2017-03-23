@@ -1,0 +1,377 @@
+package com.hp.ecc.ui.biz.catalog;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxDataBeanGeneral;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+
+import com.hp.ecc.ui.common.util.CTX;
+import com.hp.ecc.ui.common.web.support.SupportBean;
+import com.hp.ecc.ui.util.StrUtil;
+
+
+/**
+ * <p>Title: </p>
+ * <p>Description: </p>
+ * <p>Copyright: Copyright (c) 2001</p>
+ * <p>Company: </p>
+ * @author unascribed
+ * @version 1.0
+ */
+
+public class CatalogDaxUtil {
+
+  private Category log;
+
+  public static final String GEN_CAT = "Gen_Catalog";
+  public static final String MST_CAT = "Master_Catalog";
+  public static final String STD_CAT = "Std_Catalog";
+  public static final String CUST_CAT = "Cust_Catalog";
+  public static final String MST_STD_CAT = "Master_Catalog_And_Std_Catalog";
+
+  public static final String ADD_CATALOG = "CreateCatalog";
+  public static final String COPY_CATALOG = "CopyCatalog";
+  public static final String MODIFY_CATALOG = "ModifyCatalog";
+  public static final String DEL_CATS = "DelCatalogs";
+  public static final String PROPAGATE_CAT = "addCatPropDLC";
+  public static final String INSERT_SU_AUDIT = "insertSUAudit";
+
+  public static final String GET_CAT = "GetCatalog";
+  public static final String GET_CATS = "GetCatalogs";
+  public static final String GET_CAT_LIST_BY_REGION = "CatalogListByRegion";
+  public static final String GET_CAT_LIST_BY_CNTRY = "CatalogListByCntry";
+  public static final String CAT_LIST = "GetCatalogList";
+  public static final String CAT_LIST_NEW="GetCatalogListNew";
+
+  //added by meenakshi
+  public static final String BATCH_LIST = "GetBatchList";
+
+  public static final String PD_LIST = "GetPDList";
+  public static final String GET_SCHEDULE_CATS = "getScheduledCatalogs";
+  public static final String GET_CATS_BY_BORG_ID = "getCatalogListByBorgID";
+  public static final String GET_CATEGORIZATION_BY_CUST_KEY =
+      "getCategorizationsByCustKey";
+  public static final String CRT_CAT_ITEM = "CreateCatItem";
+  public static final String UPD_FILTER_ID = "UpdateFilter_id";
+  public static final String DEL_ONE_CAT = "DelCatalog";
+  public static final String CGBX_CAT = "GetCGBXCatalogs";
+  public static final String GET_CAT_LIST_BY_REGION_SIMP =
+      "SimpCatalogListByRegion";
+  public static final String GET_MASTER_STD_CAT_LIST =
+      "GetSimpCatalogsByRegionAndMasterCatalogList";
+  //added by Ishu
+  public static final String GET_SCHEDULE_CATS_FOR_MASTER =
+      "getScheduledCatalogsForMaster";
+  //added by Hemachandra - GCCM
+  public static final String GET_PRICE_TIER_SCHEDULE_CATS =
+      "getPriceTierScheduledCatalogs";
+  public static final String POPULATE_CATALOG_PRICE_DESCRIPTOR =
+      "populateCatalogPDs";
+  public static final String REG_CONFIG_LIST ="regConfigList";
+  public static final String ADD_REG_CONFIG ="updRegConfigs";
+  
+//MDCP 
+  public static final String GET_MDCP = "GetMDCP";
+  public static final String MDCP_ORG_ID_LIST = "getMdcpOrgId";
+  public static final String MST_CAT_MDCP_ID = "GetMasterCatalogMdcpId";
+  
+
+  public CatalogDaxUtil ( String stmtGroupID ) {
+    log = CTX.getCTX ().getLog ();
+    //setGroupID(stmtGroupID);
+  }
+
+
+  /**
+   * insert a catalog into cat_info
+   */
+  public static Catalog saveCatInfo ( Catalog catalog, String groupStmt
+                                      , String stmtID, String adbRegionToConnect ) {
+
+    Catalog cat = new Catalog ();
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxParsedStmt stmt = null;
+    //String groupStmt = getDaxGroupStmt();
+    System.out.println ( "AJAY &&&&&&&&&&&&&&&&&&&&&&&&  groupstmt:" + groupStmt
+                         + ",stmt:" + stmtID );
+    stmt = mgr.makeParsedStmt ( groupStmt, stmtID, catalog, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+    db.doSP ( stmt, catalog, catalog );
+    return catalog;
+  }
+
+
+  
+  /**
+   * delete catalogs from cat_info
+   */
+  public static CatListHolder delCatalogs ( List delCatalogsList, String groupStmt, String adbRegionToConnect ) {
+    CatListHolder bUpdCats = new CatListHolder ();
+    String[] strs = StrUtil.listToStrArray ( delCatalogsList );
+    bUpdCats.setDelList ( strs );
+
+    DaxMgr mgr = DaxMgr.getInstance ();
+    System.out.println ( "&&&&&&&&&&&&&&&&&&&&&&&&  groupstmt:" + groupStmt );
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, DEL_CATS, bUpdCats, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    db.doSP ( stmt, bUpdCats, bUpdCats );
+    return bUpdCats;
+  }
+
+  /*** delete a catalog(customer catalog or master catalog
+   * Modified by Sivakumar on 18-10-2007
+   */
+  public static Catalog delCatalog ( Catalog catalog, String groupStmt, String adbRegionToConnect ) {
+
+    DaxMgr mgr = DaxMgr.getInstance ();
+    String id = catalog.getId ();
+    System.out.println ( "&&&&&&&&&&&&&&&&&&&&&&&&  groupstmt:" + groupStmt );
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, DEL_ONE_CAT, catalog, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    db.doSP ( stmt, catalog, catalog );
+    catalog.setId ( id );
+    return catalog;
+  }
+
+  /**
+   * retrieve a catalog info from db
+   */
+  public static List doSelectCatalogs ( Catalog catalog,
+                                        String groupStmt,
+                                        String stmtID,
+                                        CatalogDaxDataCollector ddc, String adbRegionToConnect
+                                        ) {
+
+    DaxMgr mgr = DaxMgr.getInstance ();
+    // String groupStmt = getDaxGroupStmt();
+    System.out.println ( "&&&&&&&&&&&&&&&&&&&&&&&&  groupstmt:" + groupStmt );
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, stmtID, catalog, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    //CatalogDaxDataCollector ddc = new CatalogDaxDataCollector();
+    // db.doSelect(stmt,catalog.getClass(),catalog,ddc);
+
+    List cats = db.doSelect ( stmt, catalog.getClass (), catalog );
+    return cats;
+  }
+  
+	public static JSONArray doSelectCatalogsJSON(Catalog catalog, String groupStmt,
+			String stmtID, CatalogDaxDataCollector ddc,
+			String adbRegionToConnect) {
+
+		System.out.println("Inside doSelectCatalogs - CatalogDaxUtil");
+		DaxMgr mgr = DaxMgr.getInstance();
+		// String groupStmt = getDaxGroupStmt();
+		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&  groupstmt:" + groupStmt);
+		DaxParsedStmt stmt = mgr.makeParsedStmt(groupStmt, stmtID, catalog,
+				null, null);
+		DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+		
+		 JSONArray catalogListJsonArray = db.doSelectJson( stmt,
+		catalog.getClass (), catalog ) ; 
+		 return catalogListJsonArray;
+		
+	}
+
+   public static int getCatalogType( Catalog catalog,
+                                          String groupStmt,
+                                          String stmtID, String adbRegionToConnect
+                                          ) {
+
+      DaxMgr mgr = DaxMgr.getInstance ();
+      // String groupStmt = getDaxGroupStmt();
+      System.out.println ( "&&&&&&&&&&&&&&&&&&&&&&&&  groupstmt:" + groupStmt );
+      DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, stmtID, catalog, null
+                                                , null );
+      DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+      //CatalogDaxDataCollector ddc = new CatalogDaxDataCollector();
+      // db.doSelect(stmt,catalog.getClass(),catalog,ddc);
+
+      boolean b = db.doFetch( stmt, catalog);
+      if(b)
+    	  return catalog.getCatalogType();
+      else
+    	  return 0;
+  }
+
+
+  /**
+   * update cat_info table
+   *
+   */
+
+  public static Catalog doUpdCatalog ( Catalog catalog,
+                                       String groupStmt,
+                                       String stmtID , String adbRegionToConnect) {
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, stmtID, catalog, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    db.doUpdate ( stmt, catalog );
+    return catalog;
+
+  }
+
+  /**
+   * Returns list of price descriptor for the catalog.
+   *
+   * Mainly for master and std catalogs. For std catalog/gen catalog
+   * all pd matching the cat id will be returned. For master all the pd that
+   * matches the cust key will be returned.
+   */
+  public static List getPriceDescriptorList ( Catalog catalog, String groupStmt, String adbRegionToConnect ) {
+
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, PD_LIST, catalog, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    List catList = db.doSelect ( stmt, catalog.getClass (), catalog, null );
+    List pdList = new ArrayList ();
+    /* Get the Price Desc List */
+    for ( int i = 0; i < catList.size (); i++ ) {
+      pdList.add ( ( ( Catalog ) catList.get ( i ) ).getPriceDescriptor () );
+    }
+
+    return pdList;
+
+  }
+
+  /**
+   * add configs into the queue add by Keshav
+   */
+
+  public static Catalog doUpdConfig ( Catalog catalog,
+                                       String groupStmt,
+                                       String stmtID , String adbRegionToConnect) {
+    DaxMgr mgr = DaxMgr.getInstance ();
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( groupStmt, stmtID, catalog, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    db.doSP ( stmt, catalog, catalog );
+    return catalog;
+
+  }
+/**
+   * This method puts the specified master catalog into the CAT_CATALOG_DLC
+   * table to propagate catalog in FULL_MODE
+   * @param catalog
+   * @return
+   */
+
+  public static boolean propagateCatalog ( String catalogId, String mode, String userId, String adbRegionToConnect)
+  {
+
+    DaxMgr mgr = DaxMgr.getInstance ();
+
+    SupportBean a = new SupportBean ();
+    a.setCatalogId ( catalogId );
+	a.setChange ( mode );
+	a.setSource ( "GUI" );
+	a.setLastModifiedBy(userId);
+
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( MST_CAT, PROPAGATE_CAT, a, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+    try
+    {
+    	db.doSP ( stmt, null, a);
+    	return true;
+    }
+    catch(Exception e)
+    {
+    	e.printStackTrace();
+    	return false;
+    }
+
+  }
+
+
+  public static boolean populateSUAudit ( String comments, int code, String userId, String adbRegionToConnect)
+  {
+
+    DaxMgr mgr = DaxMgr.getInstance ();
+
+    DaxDataBeanGeneral bean = new DaxDataBeanGeneral();
+    bean.setString1(comments);
+    bean.setInt1(code);
+    bean.setString2(userId);
+
+    DaxParsedStmt stmt = mgr.makeParsedStmt ( MST_STD_CAT, INSERT_SU_AUDIT, bean, null, null );
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+
+    try
+    {
+    	db.doUpdate(stmt, bean);
+    	return true;
+    }
+    catch(Exception e)
+    {
+    	e.printStackTrace();
+    	return false;
+    }
+
+  }
+  
+  /**
+   * get all MDCP ORG ID from db
+   */
+  public static List doSelectMdcpOrgId (Catalog catalog, String adbRegionToConnect) {     
+	  com.hp.ecc.ui.db.vo.DaxDataBeanGeneral bean = new com.hp.ecc.ui.db.vo.DaxDataBeanGeneral();
+	  bean.setString1(catalog.getCurrCustKey());
+	DaxMgr mgr = DaxMgr.getInstance ();  
+    DaxParsedStmt stmt = mgr.makeParsedStmt(GET_MDCP,MDCP_ORG_ID_LIST, bean, null, null);
+    DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+    List mdcpOrgIdList =null;
+    		
+    
+    
+    try{
+    	mdcpOrgIdList = db.doSelect(stmt, com.hp.ecc.ui.db.vo.DaxDataBeanGeneral.class,bean);
+    }
+    finally{
+    	db.finish(false);
+    }
+    
+    List arrayList = new ArrayList();
+    Iterator itr = mdcpOrgIdList.iterator();
+
+    while (itr.hasNext()) {
+
+            arrayList.add(((com.hp.ecc.ui.db.vo.DaxDataBeanGeneral) itr.next()).getMdcpOrgId());
+
+    }
+    
+    return arrayList;
+  }
+  
+  public static String doSelectMstCatMdcpId (Catalog catalog, String adbRegionToConnect) {  	  
+	  String mdcpOrgId = null; 
+	  
+	  com.hp.ecc.ui.db.vo.DaxDataBeanGeneral bean = new com.hp.ecc.ui.db.vo.DaxDataBeanGeneral();
+	  DaxMgr mgr = DaxMgr.getInstance ();  
+	  DaxParsedStmt stmt = mgr.makeParsedStmt(MST_CAT,MST_CAT_MDCP_ID, bean, null, null);
+	  DaxDB db = mgr.getDaxDB(adbRegionToConnect);
+	  List mdcpOrgIdList = null;
+	  
+	  bean.setString1(catalog.getCatMasterKey());
+	  
+	  try{
+		  mdcpOrgIdList = db.doSelect(stmt, com.hp.ecc.ui.db.vo.DaxDataBeanGeneral.class,bean);
+	  }
+	  finally
+	  {
+		  db.finish(false);
+	  }
+	  
+	  bean = (com.hp.ecc.ui.db.vo.DaxDataBeanGeneral) mdcpOrgIdList.get(0);
+
+      mdcpOrgId = bean.getMdcpOrgId();
+	  
+	  return mdcpOrgId;
+  }
+
+}

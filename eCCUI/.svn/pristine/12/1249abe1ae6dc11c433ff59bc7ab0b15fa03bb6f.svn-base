@@ -1,0 +1,44 @@
+<div class="row" id="customerAccountListCtrl" data-ng-init="pageLoads()">
+	<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+	<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+    <div class="customer_rows form-border">   
+    	<div class="customer_rows" style="margin-top:10px;">
+    		<div class="four columns">
+	            <div class="generals">
+	                 <span>Customer ID:</span>
+	                 <input type="text" id="customerId"  value="" maxlength="20" name="customerId" ng-model="custId" readonly></input>
+	            </div>
+	            <div class="generals">
+	                 <span>Customer DUN:</span>
+	                 <input type="text" id="customerDun"  value="" maxlength="300" name="customerDun" ng-model="custDun" readonly></input>
+	            </div>
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	                <span>Customer Name:</span>
+	                <input type="text" id="customerName"  value="" maxlength="300" name="customerName" ng-model="custName" readonly></input>
+	            </div>             	
+	        </div>
+	        <div class="four columns">
+	        	<div class="generals">
+	                <span>Customer Segment:</span>
+	                <input type="text" id="customerSegment"  value="" maxlength="300" name="customerSegment" ng-model="custSegment" readonly></input>
+	            </div>  
+	        </div>
+    	</div>
+    </div>
+    <div class="customer_rows" ng-show="dataLoad">
+   		<div class="twelve columns">
+    		<div id="ecc_hpegrid1" hpe-grid
+		         grd-data="grid.data"
+		         grd-header="grid.header"
+		         grd-col-defs="grid.colDefs"
+		         grd-sort="grid.sort"
+		         grd-col-view-by="grid.colViewBy" class="table-scroll">
+		    </div>
+   		</div>
+   </div>
+   <div class="search">
+       <a class="btn btn-inline" ng-click="close(false)">Close</a>
+   </div>
+ </div>

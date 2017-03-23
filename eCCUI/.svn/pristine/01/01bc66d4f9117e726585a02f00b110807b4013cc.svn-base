@@ -1,0 +1,29 @@
+<div class="row" id="myExchangeRate" ng-controller="CustomerExchangeRateRefCtrl" ng-init="init()">		
+				<!-- <h4>Product Line Descriptor</h4> -->
+		
+	<div class="customer_rows">
+		<h1 class="h1Underline">				
+			<span>Exchange Rate Reference</span>
+		</h1>
+	</div>
+   		<div class="customer_rows">
+   			<div class="four columns">
+	   			<div class="generals">
+	              <span>Customer Specific Exchange Rate</span>
+	          	</div>
+   			</div>
+   		</div>   
+	    <div class="customer_rows id-body" ng-show="dataLoad">
+	      		<div class="twelve columns">
+		      		<div id="ecc_hpegrid1" hpe-grid
+				         grd-data="grid.data"
+				         grd-header="grid.header"
+				         grd-col-defs="grid.colDefs"
+				         grd-sort="grid.sort"
+				         grd-col-view-by="grid.colViewBy">
+				     </div>
+	      		</div>
+	     </div>
+</div>
+
+

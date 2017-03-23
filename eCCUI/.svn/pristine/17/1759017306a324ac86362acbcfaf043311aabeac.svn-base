@@ -1,0 +1,61 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.common.constants;
+/**
+ * @author kn
+ *
+ */
+public interface IApplicationConstants {
+	
+	//Deal
+	public static final String CONST_DEAL_STMT_GRP_ID = "deal";
+	public final String GET_VIEW_DEAL_FOR_GLOBAL_CUST="getViewDealForGlobalCust";
+	public final String GET_VIEW_DEAL_GLOBALS="getViewDealForGlobalCust";
+	public final String GET_VIEW_DEAL_BY_CUSTID="getViewDealByCustID";
+	public static final String DEAL_ID = "dealID";
+	
+	//Role
+	public final String ROLE_STMT_GRP_ID="RoleGroup";
+	public final String GET_ACCESS_FOR_ACCOUNTID="getAllAccessForAccountID";	
+	public final String GET_ALL_ROLES="getAllRoles";
+	
+	
+	//User
+	public final String USER_STMT_GRP_ID="UserGroup";
+	public final String SEARCH_USER="searchUser";
+	public final String FETCH_ACCOUNT_ID="fetchAccountId";
+	public final String AUTHENTICATE_LOGIN_USER="loginUser";
+	public final String GET_USER_PROFILE="getUserProfile";
+	public final String GET_DEFAULT_REGION="GET_DEFAULT_REGION";
+	
+	//General
+	public final String ERROR = "ERROR";
+	public final String SCUCESS = "SCUCESS";
+	public final String WARNING = "WARNING";
+	public final String NOTFOUND = "NOTFOUND";
+	public final String HOME="HOME";
+	public final String HOME_DEFAULT_ROLE="HOME_DEFAULT_ROLE";
+	public final String TPL_DIRECTOR="TPL_DIRECTOR";
+	public final String FORWARD ="FORWARD";
+	public final String LOGIN="LOGIN";
+	public final String EUDefaultCatalogEmailPath = "comcat-config/EUDefaultCatalogManagerEmail";
+	
+	//Customer
+	public final String GSA_CUST_TYPE = "GD";
+	
+	//
+	public final String BE_CTX_CLASS_NAME="com.hp.ecc.ui.common.util.BeCTX";
+	
+	//Master catalog
+	public static final String GEN_CAT = "Gen_Catalog";
+	public static final String MST_CAT = "Master_Catalog";
+	 public static final String STD_CAT = "Std_Catalog";
+	 public static final String CUST_CAT = "Cust_Catalog";
+	 public static final String CAT_LIST = "GetCatalogList";
+	  public static final String DEL_ONE_CAT = "DelCatalog";
+	  public static final String GET_CAT = "GetCatalog";
+	  public static final String GET_PRICE_TIER_DETAILS_STMT = "getPriceTierDetails";
+	
+
+}//class

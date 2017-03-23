@@ -1,0 +1,123 @@
+/**
+ * This is the class for form "ProductListForm". It is a java bean which contains
+ * all the the field values for a form. Each action must have a form bean
+ * associated with it.
+ *
+ * @author 
+ * @version 1.0
+ */
+
+package com.hp.ecc.ui.view.beans;
+
+
+public class ManualOptionViewForm {
+
+	public ManualOptionViewForm() {
+	}
+
+	// task
+	public String getTask() {
+		return this.task;
+	}
+
+	public void setTask(String task) {
+		this.task = task;
+	}
+
+	// SKU
+	public void setSku(String sku) {
+		this.sku = sku;
+	}
+
+	public String getSku() {
+		return this.sku;
+	}
+
+	// prodNumber
+	public void setProdNumber(String prodNumber) {
+		this.prodNumber = prodNumber;
+	}
+
+	public String getProdNumber() {
+		return this.prodNumber;
+	}
+
+	// Category
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	public String getCategory() {
+		return this.category;
+	}
+
+	// source
+	public void setSource(String source) {
+		this.source = source;
+	}
+
+	public String getSource() {
+		return this.source;
+	}
+
+	// ListSelected
+	public void setListSelected(String[] listSelected) {
+		this.listSelected = listSelected;
+	}
+
+	public String[] getListSelected() {
+		return this.listSelected;
+	}
+
+	// isAddProductEnabled
+	public void setIsAddProductEnabled(String isAddProductEnabled) {
+		this.isAddProductEnabled = isAddProductEnabled;
+	}
+
+	public String getIsAddProductEnabled() {
+		return this.isAddProductEnabled;
+	}
+
+	// isEnableEditOption
+	public void setIsEnableEditOption(String isEnableEditOption) {
+		this.isEnableEditOption = isEnableEditOption;
+	}
+
+	public String getIsEnableEditOption() {
+		return this.isEnableEditOption;
+	}
+
+	
+	/**
+	 * Reset all properties to their default values.
+	 * 
+	 * @param mapping
+	 *            The mapping used to select this instance
+	 * @param request
+	 *            The servlet request we are processing
+	 */
+	public void reset() {
+		this.init();
+	}
+
+	private void init() {
+		this.category = null;
+		this.sku = null;
+		this.prodNumber = null;
+		this.source = null;
+		this.isAddProductEnabled = null;
+		this.isEnableEditOption = null;
+	}
+
+	private String task;
+
+	private String sku = "";
+	private String prodNumber = "";
+	private String category = "";
+	private String source = "";
+
+	private String[] listSelected;
+	private String isAddProductEnabled = "";
+	private String isEnableEditOption;
+
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<comcat-dax-config>
+      <stmt-group id="CUSTOMER_MDCP_MAPPING_GROUP_ID">
+			<stmt id="READ_CUSTOMER_MDCP_MAPPING">
+			
+			<![CDATA[	
+                        select {mdcp_org_id}:=mdcp_org_id
+                                        FROM cust_mdcp_mapping 
+                                        WHERE dmstc_ult_duns_nr IS NULL 
+                                        OR
+                                        dmstc_ult_duns_nr={?:domestic_ultimate_duns_number}
+                                       		]]>	
+		       	</stmt>	
+
+			<stmt id="UPDATE_CUSTOMER_MDCP_MAPPING">
+					update CUST_MDCP_MAPPING set
+						dmstc_ult_duns_nr={?:domestic_ultimate_duns_number},
+						mdcp_org_name={?:mdcp_org_name},
+						mdcp_org_cntry_cd={?:country_code}
+						where mdcp_org_id={?:mdcp_org_id}
+						</stmt>
+		
+     </stmt-group>
+</comcat-dax-config>

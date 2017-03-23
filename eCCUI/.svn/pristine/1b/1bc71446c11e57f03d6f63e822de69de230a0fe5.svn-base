@@ -1,0 +1,4 @@
+redis.host.name=g2t0831c.austin.hp.com
+redis.port.number=6379
+#time out in sec
+redis.key.timeout=1200

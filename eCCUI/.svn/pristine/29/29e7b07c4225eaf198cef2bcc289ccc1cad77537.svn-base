@@ -1,0 +1,22 @@
+package com.hp.ecc.ui.biz.publish;
+
+/**
+ * This exception will be thrown out if Merge fails for Batch Publishing.
+ *
+ * @author Sachin Raut
+ * @version 1.0
+ */
+public class MergeException extends Exception {
+  public MergeException () {
+    super ();
+  }
+
+  public MergeException ( String msg ) {
+    super ( msg );
+  }
+
+  public MergeException ( Exception e ) {
+    super ( "Error Merging Files for Batch Publishing. Catch exception: "
+            + e.toString () );
+  }
+}

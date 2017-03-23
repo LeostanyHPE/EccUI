@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?> 
+
+<!--                                                            
+  The ProgramKey is the value of PGM_KEY in CAT_PROGRAM table. 
+
+  Program key          Porgram Name
+  ===========          ============
+  1                    Standalone Product
+  
+  2                    Channel assembly Product
+  
+  3                    Product with context id
+
+  4                    Ecomcat Bundle [ With Components ]
+  
+  5                    Deal Bundle [ Without Configurations ]
+  
+  6                    Casual Buy Product
+  
+  7          Ecomcat Bundle [ Without Components ]
+  
+  8          Configurations
+  
+  
+  
+ 
+  
+  
+  The "CUSTOMERIZED" ProgramKey is defined for reference.  It includes all customerized program keys in
+  CAT_PROGRAM table.
+  
+  If the format is not defined in this file, It includes all program keys in 
+  CAT_PROGRAM table.
+  
+  The format is the value of FORMAT_NAME in FORAMT_INFO table.
+  
+  -->
+  
+  
+<CatProgram-Format>
+  <Format name="APD" program_id="MVC" />
+    
+  <Format name="ATCOST" program_id="MVC" />
+  
+  <Format name="Ariba CIF 2.1" program_id="MVC" />
+    
+  <Format name="Ariba CIF 3.0" program_id="MVC" />
+    
+  <Format name="C1 Buysite Catalog" program_id="MVC" />
+    
+  <Format name="C1 Buysite Catalog with Price" program_id="MVC" />
+  
+  <Format name="C1 Catalog" program_id="MVC" />
+  
+  <Format name="C1 Product with Price" program_id="MVC" />
+  
+  <Format name="CGBX" program_id="MVC" />
+  
+  <Format name="CXML" program_id="MVC" />
+      
+  <Format name="NIC" program_id="MVC" />
+  
+  <Format name="FEMSA" program_id="MVC" />
+  
+  <Format name="BMECAT" program_id="MVC" /> 
+        
+  <Format name="PROXCHANGE" program_id="MVC" />
+  
+  <Format name="Reseller Spreadsheet Template" program_id="MVC" />
+    
+  <Format name="OMIH" program_id="CUSTOMERIZED" />
+    
+  <Format name="CMG" program_id="CUSTOMERIZED" />
+  
+  <Format name="EPRIME" program_id="ALL"/>
+  <Format name="PIPERLITE" program_id="ALL"/>
+  <Format name="Easy Direct" program_id="ALL"/>
+  <Format name="Excel" program_id="ALL" />
+  <Format name="CUSTOMERIZED_FMT" program_id="DEFAULT" />
+  <Format name="WSA" program_id="ALL" />
+
+  <Program id="MVC">
+    <ProgramKey>1</ProgramKey>
+    <ProgramKey>2</ProgramKey>
+    <ProgramKey>7</ProgramKey>
+    <ProgramKey>4</ProgramKey>
+	<ProgramKey>5</ProgramKey>
+    <ProgramKey>6</ProgramKey>
+	<ProgramKey>9</ProgramKey>
+	<ProgramKey>10</ProgramKey>
+  </Program>
+  <Program id="CUSTOMERIZED">
+    <ProgramKey>4</ProgramKey>          
+  </Program>
+  <Program id="ALL">
+    <ProgramKey>1</ProgramKey>
+    <ProgramKey>2</ProgramKey>
+    <ProgramKey>3</ProgramKey>
+    <ProgramKey>4</ProgramKey>
+    <ProgramKey>5</ProgramKey>
+    <ProgramKey>6</ProgramKey>
+    <ProgramKey>8</ProgramKey>
+  
+  </Program>
+    
+        <Program id="DEFAULT">
+    <ProgramKey>1</ProgramKey>
+    <ProgramKey>2</ProgramKey>
+    <ProgramKey>7</ProgramKey>
+    <ProgramKey>5</ProgramKey>
+    <ProgramKey>6</ProgramKey>      
+  </Program>    
+  
+</CatProgram-Format>  
+  

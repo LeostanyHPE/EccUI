@@ -1,0 +1,62 @@
+/*
+ * Created on Aug 31, 2005
+ *
+ * To change the template for this generated file go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ */
+package com.hp.ecc.ui.biz.csog;
+
+/**
+ * @author mathewvi
+ *
+ * To change the template for this generated type comment go to
+ * Window&gt;Preferences&gt;Java&gt;Code Generation&gt;Code and Comments
+ */
+public class SogItemOption {
+  public void setItemOptionCode ( String itemOptionCode ) {
+    this.itemOptionCode = itemOptionCode;
+  }
+
+  public String getItemOptionCode () {
+    return itemOptionCode;
+  }
+
+  public void setItemKey ( String itemKey ) {
+    this.itemKey = itemKey;
+  }
+
+  public String getItemKey () {
+    return itemKey;
+  }
+
+  public void setItemOptionCodeValue ( String s_itemOptionCodeValue ) {
+    this.itemOptionCodeValue = s_itemOptionCodeValue;
+  }
+
+  public String getItemOptionCodeValue () {
+    return itemOptionCodeValue;
+  }
+
+  public void setDeleteFlag ( String deleteFlag ) {
+    this.deleteFlag = deleteFlag;
+  }
+
+  public String getDeleteFlag () {
+    return deleteFlag;
+  }
+
+  public void setLastModifiedBy ( String lastModifiedBy ) {
+    this.lastModifiedBy = lastModifiedBy;
+  }
+
+  public String getLastModifiedBy () {
+    return lastModifiedBy;
+  }
+
+
+  private String itemOptionCode;
+  private String itemKey;
+  private String itemOptionCodeValue;
+  private String deleteFlag;
+  private String lastModifiedBy;
+}

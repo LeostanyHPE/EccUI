@@ -1,0 +1,206 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.common.util;
+
+/**
+ * @author 
+ *
+ */
+
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.servlet.ServletContext;
+
+import org.apache.log4j.Category;
+
+/**
+ * @author 
+ * @version 1.0
+ */
+
+public class FeCTX extends CTX {
+	
+	ConfigBase fConfigDev = null;
+	FeConfig fConfig = null;
+	List fListenerTable;
+	long fTimestamp = 0;
+	static private FeCTX sCTX = null;
+	protected static ServletContext servletContext = null;
+	
+	
+
+	/**
+	 * Get the Runtime context
+	 * 
+	 * @return the runtime context
+	 */
+	static public FeCTX getFeCTX() {
+		return getFeCTX(false);
+	}
+
+	static public FeCTX getFeCTX(boolean reset) {
+
+		if (!reset && sCTX != null) {
+			return sCTX;
+		}
+
+		synchronized (FeCTX.class) {
+			if (!reset && sCTX != null) {
+				return sCTX;
+			}
+			try {
+				FeCTX ctx = new FeCTX();
+				sCTX = ctx;
+
+			} catch (RuntimeException e) {
+				// should never hasppen
+				e.printStackTrace();
+				// e.fillInStackTrace ();
+				throw e;
+			}
+			return sCTX;
+		}
+	}
+
+	/**
+	 * Get the config object
+	 * 
+	 * @retrun the config object
+	 */
+	public FeConfig getFeConfig() {
+		return this.fConfig;
+	}
+
+	
+	public void subscribeCTXUpdate(CTXListener listener) {
+		this.fListenerTable.add(listener);
+	}
+
+	private void publishCTXUpdate() {
+		// System.out.println("fListenerTable="+fListenerTable);
+		Iterator itr = this.fListenerTable.iterator();
+		while (itr.hasNext()) {
+			CTXListener listener = (CTXListener) itr.next();
+			listener.updateForCTX();
+		}
+	}
+
+	/**
+	 * private constructor
+	 */
+	protected FeCTX() {
+		super();
+		// System.out.println("initializing the FeCTX");
+		this.fTimestamp = System.currentTimeMillis();
+		System.out.println("Loading comcat config file " + configFile + " ...");
+		try {
+			this.fConfig = new FeConfig(new FileInputStream(configFile));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		super.config = fConfig;
+		super.init();
+		this.init();
+	}
+
+	/**
+	 * Perform first level initialization. At this level, Config and Log are
+	 * initialized and are ready to be used by other initializations.
+	 */
+	protected void init() {
+
+		// this.getConfigDev ();
+
+		/*String rpt = this.getConfigFile("comcat-reports-config.xml");
+		// String rpt = "WEB-INF/comcat-reports-config.xml";
+		System.out.println("Loading report config file " + rpt + " ...");
+		this.fRptConfig = new ReportConfig(this.getConfigStream(rpt));*/
+
+		Category log = this.getLog("init");
+
+		Category logx;
+		logx = Category
+				.getInstance(org.apache.commons.beanutils.BeanUtils.class);
+		logx.setPriority(org.apache.log4j.Priority.INFO);
+		logx = Category
+				.getInstance(org.apache.commons.beanutils.ConvertUtils.class);
+		logx.setPriority(org.apache.log4j.Priority.INFO);
+
+		/*String fn = this.getConfigFile("form-rules.xml");
+		log.debug("Initializing ReValidator based on " + fn + " ...");
+		ReValidator.setDebug(0);
+		ReValidator.configure(this.getConfigStream(fn));*/
+
+		log.debug("Notifying all CTX listeners ...");
+		fListenerTable = new LinkedList();
+		this.publishCTXUpdate();
+		log.debug("Comcat initialization done.");
+		
+		sCTX = this;
+		instance = sCTX;
+	}
+
+	public ConfigBase getConfigDev() {
+		if (this.fConfigDev != null) {
+			return this.fConfigDev;
+		}
+		System.out.println("configuring comcat-config-dev.xml");
+		String filePath = this.getConfigFile("comcat-config-dev.xml");
+		// String dir = this.fConfig.getConfigDir ();
+		InputStream is = this.getConfigStream(filePath);
+		if (is == null)
+			this.fConfigDev = null;
+		else
+			this.fConfigDev = new ConfigBase(is);
+		System.out.println("config dev is " + fConfigDev);
+		return this.fConfigDev;
+	}
+
+	public static ServletContext getServletContext() {
+		return servletContext;
+	}
+
+	public static void setServletContext(ServletContext sc) {
+		servletContext = sc;
+	}
+
+	public List<InputStream> getDaxFiles() {
+		ArrayList<InputStream> list = new ArrayList<InputStream>();
+		String basePath = config.getConfigDir();
+		File baseFolder = new File(basePath + File.separator + "dax");
+		File[] fileSet = baseFolder.listFiles();
+
+		try {
+			for (int i = 0; i < fileSet.length; i++) {
+				if (fileSet[i].getName().endsWith("-dax.xml")) {
+					list.add(new FileInputStream(fileSet[i]));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return list;
+	}
+
+	public InputStream getConfigStream(String fileName) {
+		FileInputStream is = null;
+		try {
+			is = new FileInputStream(fileName);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return is;
+	}
+
+		
+	
+}//class

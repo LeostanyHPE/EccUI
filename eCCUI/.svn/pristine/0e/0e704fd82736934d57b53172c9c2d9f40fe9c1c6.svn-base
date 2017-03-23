@@ -1,0 +1,1614 @@
+<table border=1 cellpadding=0 cellspacing=0 class="cat_tbl">
+ <tr>
+  <th>Product Line</th>
+  <th>Product Line Description</th>
+ </tr>
+ <tr>
+  <td>0</td>
+  <td>Product Line Default,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>1</td>
+  <td>Obstetrical Care</td>
+ </tr>
+ <tr>
+  <td>4</td>
+  <td>Precise Time &amp;
+  Frequency</td>
+ </tr>
+ <tr>
+  <td>6</td>
+  <td>Nt/Wintel Software
+  Sppt</td>
+ </tr>
+ <tr>
+  <td>7</td>
+  <td>Medical Access &amp;
+  Sply</td>
+ </tr>
+ <tr>
+  <td>8</td>
+  <td>Microwave Test Acces.</td>
+ </tr>
+ <tr>
+  <td>12</td>
+  <td>Signal Analyzers</td>
+ </tr>
+ <tr>
+  <td>13</td>
+  <td>Wireless Appliance</td>
+ </tr>
+ <tr>
+  <td>14</td>
+  <td>Rf/Mw Device Test</td>
+ </tr>
+ <tr>
+  <td>15</td>
+  <td>Signal Sources</td>
+ </tr>
+ <tr>
+  <td>17</td>
+  <td>Logic Systems</td>
+ </tr>
+ <tr>
+  <td>1A</td>
+  <td>Logic Analyzer/Scopes</td>
+ </tr>
+ <tr>
+  <td>1E</td>
+  <td>Printed Circuit
+  Boards</td>
+ </tr>
+ <tr>
+  <td>1G</td>
+  <td>Vlsi Test</td>
+ </tr>
+ <tr>
+  <td>1H</td>
+  <td>Semi Para Test</td>
+ </tr>
+ <tr>
+  <td>1L</td>
+  <td>Cocreate Solutions</td>
+ </tr>
+ <tr>
+  <td>1N</td>
+  <td>Inkjet Supplies</td>
+ </tr>
+ <tr>
+  <td>1R</td>
+  <td>Aed</td>
+ </tr>
+ <tr>
+  <td>1X</td>
+  <td>Unix Systems</td>
+ </tr>
+ <tr>
+  <td>1Y</td>
+  <td>Ent. Storage
+  Solutions Div</td>
+ </tr>
+ <tr>
+  <td>21</td>
+  <td>Handheld Info Prods</td>
+ </tr>
+ <tr>
+  <td>24</td>
+  <td>Boeblingen Verif.
+  Sol. Oper.</td>
+ </tr>
+ <tr>
+  <td>29</td>
+  <td>Liquid Phase Analysis</td>
+ </tr>
+ <tr>
+  <td>2C</td>
+  <td>Service Verification
+  Operation</td>
+ </tr>
+ <tr>
+  <td>2J</td>
+  <td>Network Systems Test
+  Div.</td>
+ </tr>
+ <tr>
+  <td>2M</td>
+  <td>Advanced Networks
+  Div.</td>
+ </tr>
+ <tr>
+  <td>2N</td>
+  <td>Service Test Division</td>
+ </tr>
+ <tr>
+  <td>2Q</td>
+  <td>Tntd Cns</td>
+ </tr>
+ <tr>
+  <td>2T</td>
+  <td>Photonic Systems</td>
+ </tr>
+ <tr>
+  <td>30</td>
+  <td>Wide Format Printing</td>
+ </tr>
+ <tr>
+  <td>33</td>
+  <td>Power Products</td>
+ </tr>
+ <tr>
+  <td>36</td>
+  <td>Component Test</td>
+ </tr>
+ <tr>
+  <td>39</td>
+  <td>Integrated Info Mgmt</td>
+ </tr>
+ <tr>
+  <td>3C</td>
+  <td>Cartridge Tape
+  Products</td>
+ </tr>
+ <tr>
+  <td>3D</td>
+  <td>Software Support</td>
+ </tr>
+ <tr>
+  <td>3E</td>
+  <td>Fiber Optic Test</td>
+ </tr>
+ <tr>
+  <td>3K</td>
+  <td>Medical Compl
+  Products</td>
+ </tr>
+ <tr>
+  <td>3P</td>
+  <td>Third Party Product
+  Line (Eclipse)</td>
+ </tr>
+ <tr>
+  <td>3Q</td>
+  <td>ECare</td>
+ </tr>
+ <tr>
+  <td>3R</td>
+  <td>Imaging And
+  Navigation</td>
+ </tr>
+ <tr>
+  <td>40</td>
+  <td>Resuscitation</td>
+ </tr>
+ <tr>
+  <td>41</td>
+  <td>Cardiography</td>
+ </tr>
+ <tr>
+  <td>42</td>
+  <td>Health Care Prof.
+  Services</td>
+ </tr>
+ <tr>
+  <td>44</td>
+  <td>Optocouplers</td>
+ </tr>
+ <tr>
+  <td>45</td>
+  <td>Precision Motion
+  Cntrl</td>
+ </tr>
+ <tr>
+  <td>47</td>
+  <td>Comm Wireless</td>
+ </tr>
+ <tr>
+  <td>48</td>
+  <td>Indicators &amp;
+  Displays</td>
+ </tr>
+ <tr>
+  <td>4D</td>
+  <td>Motion Control</td>
+ </tr>
+ <tr>
+  <td>4G</td>
+  <td>Net Mon Solutions</td>
+ </tr>
+ <tr>
+  <td>4J</td>
+  <td>Education Services</td>
+ </tr>
+ <tr>
+  <td>4K</td>
+  <td>Hp Consulting</td>
+ </tr>
+ <tr>
+  <td>4N</td>
+  <td>OnLine Storage
+  Devices</td>
+ </tr>
+ <tr>
+  <td>4P</td>
+  <td>Systems Solutions</td>
+ </tr>
+ <tr>
+  <td>4U</td>
+  <td>Internet Security</td>
+ </tr>
+ <tr>
+  <td>4W</td>
+  <td>Communications Eda</td>
+ </tr>
+ <tr>
+  <td>4X</td>
+  <td>Scanners</td>
+ </tr>
+ <tr>
+  <td>4Z</td>
+  <td>Firehunter</td>
+ </tr>
+ <tr>
+  <td>52</td>
+  <td>Calculators</td>
+ </tr>
+ <tr>
+  <td>55</td>
+  <td>Equip Mgmt. &amp;
+  Remktg.</td>
+ </tr>
+ <tr>
+  <td>56</td>
+  <td>Tapes And Libraries</td>
+ </tr>
+ <tr>
+  <td>57</td>
+  <td>Workgroup Laserjet
+  Division</td>
+ </tr>
+ <tr>
+  <td>58</td>
+  <td>Analytical Supplies</td>
+ </tr>
+ <tr>
+  <td>5E</td>
+  <td>Element Management
+  Sys</td>
+ </tr>
+ <tr>
+  <td>5K</td>
+  <td>Pm Info/Ntwks</td>
+ </tr>
+ <tr>
+  <td>5L</td>
+  <td>Bedsides/Meas</td>
+ </tr>
+ <tr>
+  <td>5M</td>
+  <td>AllInOne Division</td>
+ </tr>
+ <tr>
+  <td>5T</td>
+  <td>Laserjet Supplies
+  Operation</td>
+ </tr>
+ <tr>
+  <td>5X</td>
+  <td>Workstation Systems</td>
+ </tr>
+ <tr>
+  <td>5Y</td>
+  <td>Memory Test</td>
+ </tr>
+ <tr>
+  <td>5Z</td>
+  <td>Point Of Care
+  Diagnostics</td>
+ </tr>
+ <tr>
+  <td>61</td>
+  <td>Commercial Systems</td>
+ </tr>
+ <tr>
+  <td>6A</td>
+  <td>Network Peripheral
+  Solutions</td>
+ </tr>
+ <tr>
+  <td>6D</td>
+  <td>Software Products</td>
+ </tr>
+ <tr>
+  <td>6E</td>
+  <td>Federal Computer Ops</td>
+ </tr>
+ <tr>
+  <td>6G</td>
+  <td>Other Local Products</td>
+ </tr>
+ <tr>
+  <td>6H</td>
+  <td>Workgroup Networks</td>
+ </tr>
+ <tr>
+  <td>6J</td>
+  <td>Home Products</td>
+ </tr>
+ <tr>
+  <td>6L</td>
+  <td>Business Recovery
+  Services</td>
+ </tr>
+ <tr>
+  <td>6M</td>
+  <td>Multivendor Hw &amp;
+  Suppor</td>
+ </tr>
+ <tr>
+  <td>6N</td>
+  <td>Outsourcing Services</td>
+ </tr>
+ <tr>
+  <td>6P</td>
+  <td>Iim Services &amp;
+  Support</td>
+ </tr>
+ <tr>
+  <td>6R</td>
+  <td>Cables And
+  Accessories</td>
+ </tr>
+ <tr>
+  <td>6T</td>
+  <td>Microwave &amp; Rf</td>
+ </tr>
+ <tr>
+  <td>6Y</td>
+  <td>Outside Die Sales</td>
+ </tr>
+ <tr>
+  <td>6Z</td>
+  <td>Network Peripheral
+  Solut.</td>
+ </tr>
+ <tr>
+  <td>71</td>
+  <td>Psd OffSite</td>
+ </tr>
+ <tr>
+  <td>72</td>
+  <td>Business Infra. Sprt
+  Services</td>
+ </tr>
+ <tr>
+  <td>73</td>
+  <td>Product Support
+  Services</td>
+ </tr>
+ <tr>
+  <td>74</td>
+  <td>Support Services</td>
+ </tr>
+ <tr>
+  <td>76</td>
+  <td>Imaging</td>
+ </tr>
+ <tr>
+  <td>79</td>
+  <td>Complementary
+  Products</td>
+ </tr>
+ <tr>
+  <td>7A</td>
+  <td>Info. Storage
+  Supplies</td>
+ </tr>
+ <tr>
+  <td>7C</td>
+  <td>Low Cost Medical
+  Devices</td>
+ </tr>
+ <tr>
+  <td>7D</td>
+  <td>Display Products</td>
+ </tr>
+ <tr>
+  <td>7E</td>
+  <td>Software License
+  &amp; Update</td>
+ </tr>
+ <tr>
+  <td>7F</td>
+  <td>Commercial Desktop
+  Pcs</td>
+ </tr>
+ <tr>
+  <td>7G</td>
+  <td>Network Services</td>
+ </tr>
+ <tr>
+  <td>7J</td>
+  <td>Tmo Hardware Support</td>
+ </tr>
+ <tr>
+  <td>7K</td>
+  <td>System Uptime Support</td>
+ </tr>
+ <tr>
+  <td>7L</td>
+  <td>Commercial &amp;
+  Consumer Finance</td>
+ </tr>
+ <tr>
+  <td>7M</td>
+  <td>Product Support</td>
+ </tr>
+ <tr>
+  <td>7N</td>
+  <td>Digital Office
+  Solution</td>
+ </tr>
+ <tr>
+  <td>7R</td>
+  <td>Enterprise Financing</td>
+ </tr>
+ <tr>
+  <td>7T</td>
+  <td>Inkjet Business
+  Printers</td>
+ </tr>
+ <tr>
+  <td>80</td>
+  <td>Automatic Process
+  Test</td>
+ </tr>
+ <tr>
+  <td>83</td>
+  <td>Personal Inkjet
+  Printer</td>
+ </tr>
+ <tr>
+  <td>87</td>
+  <td>Open View Sw Div</td>
+ </tr>
+ <tr>
+  <td>89</td>
+  <td>Mass Spec</td>
+ </tr>
+ <tr>
+  <td>8A</td>
+  <td>Personal Laser
+  Printers</td>
+ </tr>
+ <tr>
+  <td>8B</td>
+  <td>Network Server</td>
+ </tr>
+ <tr>
+  <td>8F</td>
+  <td>Lightwave Instruments</td>
+ </tr>
+ <tr>
+  <td>8G</td>
+  <td>Appl. Services &amp;
+  Consult</td>
+ </tr>
+ <tr>
+  <td>8H</td>
+  <td>Custom Solutions</td>
+ </tr>
+ <tr>
+  <td>8K</td>
+  <td>Internet Services</td>
+ </tr>
+ <tr>
+  <td>8L</td>
+  <td>Telecom Products Unit</td>
+ </tr>
+ <tr>
+  <td>8M</td>
+  <td>Medical Parts</td>
+ </tr>
+ <tr>
+  <td>8P</td>
+  <td>Analytical Parts</td>
+ </tr>
+ <tr>
+  <td>8S</td>
+  <td>Openview Sw Supp
+  &amp; Serv.</td>
+ </tr>
+ <tr>
+  <td>8T</td>
+  <td>Tmo Parts</td>
+ </tr>
+ <tr>
+  <td>8X</td>
+  <td>Esnd</td>
+ </tr>
+ <tr>
+  <td>8Z</td>
+  <td>Department Laserjet
+  Division</td>
+ </tr>
+ <tr>
+  <td>91</td>
+  <td>Replacement Parts</td>
+ </tr>
+ <tr>
+  <td>93</td>
+  <td>Misc Sales</td>
+ </tr>
+ <tr>
+  <td>99</td>
+  <td>Win Intrnl Use
+  Only!!!</td>
+ </tr>
+ <tr>
+  <td>9E</td>
+  <td>Measurement Products</td>
+ </tr>
+ <tr>
+  <td>9Z</td>
+  <td>Portable Capture
+  &amp; Comm.</td>
+ </tr>
+ <tr>
+  <td>AA</td>
+  <td>Proprietary Inst Supp</td>
+ </tr>
+ <tr>
+  <td>AB</td>
+  <td>Lc Columns</td>
+ </tr>
+ <tr>
+  <td>AC</td>
+  <td>Gc Columns</td>
+ </tr>
+ <tr>
+  <td>AD</td>
+  <td>Tape Storage Products</td>
+ </tr>
+ <tr>
+  <td>AF</td>
+  <td>Video Products</td>
+ </tr>
+ <tr>
+  <td>AJ</td>
+  <td>Icpms</td>
+ </tr>
+ <tr>
+  <td>AK</td>
+  <td>Business Color Laser</td>
+ </tr>
+ <tr>
+  <td>AL</td>
+  <td>Infrared</td>
+ </tr>
+ <tr>
+  <td>AM</td>
+  <td>Digital Printing
+  Technologies</td>
+ </tr>
+ <tr>
+  <td>AN</td>
+  <td>Mobile Computing Prod</td>
+ </tr>
+ <tr>
+  <td>AP</td>
+  <td>Telecomm Microwave
+  Assy</td>
+ </tr>
+ <tr>
+  <td>AQ</td>
+  <td>Storage Area Network</td>
+ </tr>
+ <tr>
+  <td>AR</td>
+  <td>Test Sys Components</td>
+ </tr>
+ <tr>
+  <td>AS</td>
+  <td>Automotive Solutions</td>
+ </tr>
+ <tr>
+  <td>AT</td>
+  <td>Versatest</td>
+ </tr>
+ <tr>
+  <td>AU</td>
+  <td>Inkjet Media Products</td>
+ </tr>
+ <tr>
+  <td>AW</td>
+  <td>Automotive Exterior</td>
+ </tr>
+ <tr>
+  <td>AX</td>
+  <td>Chemchip Systems</td>
+ </tr>
+ <tr>
+  <td>AY</td>
+  <td>Korea Localized
+  Products</td>
+ </tr>
+ <tr>
+  <td>AZ</td>
+  <td>Chemical Solutions</td>
+ </tr>
+ <tr>
+  <td>B1</td>
+  <td>Mo/NonHp Products</td>
+ </tr>
+ <tr>
+  <td>B6</td>
+  <td>Mixed Signal Ic Test</td>
+ </tr>
+ <tr>
+  <td>B7</td>
+  <td>Apollo Products</td>
+ </tr>
+ <tr>
+  <td>B8</td>
+  <td>Cag Japan Local
+  Products</td>
+ </tr>
+ <tr>
+  <td>B9</td>
+  <td>Hp Realignment Costs,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>BC</td>
+  <td>Zorbax</td>
+ </tr>
+ <tr>
+  <td>BE</td>
+  <td>Mo SpinOff Expenses</td>
+ </tr>
+ <tr>
+  <td>BF</td>
+  <td>Network Attached
+  Storage</td>
+ </tr>
+ <tr>
+  <td>BG</td>
+  <td>SocTest</td>
+ </tr>
+ <tr>
+  <td>BH</td>
+  <td>AgilentHosted Hp
+  Activity</td>
+ </tr>
+ <tr>
+  <td>BI</td>
+  <td>HpHosted Agilent
+  Activity,Fo</td>
+ </tr>
+ <tr>
+  <td>BJ</td>
+  <td>Wireless Network
+  Solutions</td>
+ </tr>
+ <tr>
+  <td>BL</td>
+  <td>Sgdu Business</td>
+ </tr>
+ <tr>
+  <td>BM</td>
+  <td>Split At Products</td>
+ </tr>
+ <tr>
+  <td>BN</td>
+  <td>Solutions &amp;
+  Online EServ.</td>
+ </tr>
+ <tr>
+  <td>BO</td>
+  <td>Split Hp Products</td>
+ </tr>
+ <tr>
+  <td>BP</td>
+  <td>Rf Semiconductor Test</td>
+ </tr>
+ <tr>
+  <td>BQ</td>
+  <td>Digital Entertainment
+  Svcs</td>
+ </tr>
+ <tr>
+  <td>BR</td>
+  <td>Cibu Support And
+  Services</td>
+ </tr>
+ <tr>
+  <td>BS</td>
+  <td>Chai Financial
+  Reporting</td>
+ </tr>
+ <tr>
+  <td>BT</td>
+  <td>Personal Media</td>
+ </tr>
+ <tr>
+  <td>BU</td>
+  <td>Home Mobile
+  Appliances</td>
+ </tr>
+ <tr>
+  <td>BV</td>
+  <td>Publishing Services
+  Division</td>
+ </tr>
+ <tr>
+  <td>BW</td>
+  <td>Digital Workplace
+  Solutions</td>
+ </tr>
+ <tr>
+  <td>BX</td>
+  <td>Dazel</td>
+ </tr>
+ <tr>
+  <td>C1</td>
+  <td>Information Appliance
+  Oper</td>
+ </tr>
+ <tr>
+  <td>C2</td>
+  <td>Photo Printing</td>
+ </tr>
+ <tr>
+  <td>C3</td>
+  <td>Mcg Misc Activities</td>
+ </tr>
+ <tr>
+  <td>C4</td>
+  <td>Ctsg Misc Activities</td>
+ </tr>
+ <tr>
+  <td>C5</td>
+  <td>Business
+  Multifunction Laser</td>
+ </tr>
+ <tr>
+  <td>C7</td>
+  <td>Mpg Support Misc Act</td>
+ </tr>
+ <tr>
+  <td>C8</td>
+  <td>Eig Misc Activities</td>
+ </tr>
+ <tr>
+  <td>C9</td>
+  <td>Atg Misc Activities</td>
+ </tr>
+ <tr>
+  <td>CA</td>
+  <td>Cag Misc Activities</td>
+ </tr>
+ <tr>
+  <td>CB</td>
+  <td>Bioscience</td>
+ </tr>
+ <tr>
+  <td>CC</td>
+  <td>Mso Misc Pgm Activ</td>
+ </tr>
+ <tr>
+  <td>CE</td>
+  <td>Ww Order Fulfillment</td>
+ </tr>
+ <tr>
+  <td>CI</td>
+  <td>Agilent Financing</td>
+ </tr>
+ <tr>
+  <td>CK</td>
+  <td>Tmo Pca</td>
+ </tr>
+ <tr>
+  <td>CN</td>
+  <td>Encore Products Oper</td>
+ </tr>
+ <tr>
+  <td>CR</td>
+  <td>Loveland Final
+  Assembly</td>
+ </tr>
+ <tr>
+  <td>CT</td>
+  <td>Colorado Tech Cntr
+  Act</td>
+ </tr>
+ <tr>
+  <td>CV</td>
+  <td>Ssv Misc Activities</td>
+ </tr>
+ <tr>
+  <td>CW</td>
+  <td>Cw Tmsd Misc
+  Activities</td>
+ </tr>
+ <tr>
+  <td>CX</td>
+  <td>Consumer Bus. Misc
+  Activ. Fo</td>
+ </tr>
+ <tr>
+  <td>CZ</td>
+  <td>Ppg Misc Activities</td>
+ </tr>
+ <tr>
+  <td>D2</td>
+  <td>Paper Handling
+  Solutions</td>
+ </tr>
+ <tr>
+  <td>D3</td>
+  <td>EBusiness Solutions</td>
+ </tr>
+ <tr>
+  <td>D4</td>
+  <td>Tmo Misc Activities</td>
+ </tr>
+ <tr>
+  <td>D5</td>
+  <td>Tmo Technology Mgmt</td>
+ </tr>
+ <tr>
+  <td>D6</td>
+  <td>It Administration</td>
+ </tr>
+ <tr>
+  <td>DA</td>
+  <td>Asics</td>
+ </tr>
+ <tr>
+  <td>DB</td>
+  <td>Components Misc Activ</td>
+ </tr>
+ <tr>
+  <td>DD</td>
+  <td>Digital Document
+  Services</td>
+ </tr>
+ <tr>
+  <td>DE</td>
+  <td>Hcl</td>
+ </tr>
+ <tr>
+  <td>DF</td>
+  <td>Information Utility</td>
+ </tr>
+ <tr>
+  <td>DH</td>
+  <td>Esg Sites Residuals</td>
+ </tr>
+ <tr>
+  <td>DI</td>
+  <td>Global Application
+  Services</td>
+ </tr>
+ <tr>
+  <td>DJ</td>
+  <td>Mpg Misc Program</td>
+ </tr>
+ <tr>
+  <td>DL</td>
+  <td>Restructuring</td>
+ </tr>
+ <tr>
+  <td>DR</td>
+  <td>Fcbu Misc Pgm Act</td>
+ </tr>
+ <tr>
+  <td>DU</td>
+  <td>CsyLine Printers</td>
+ </tr>
+ <tr>
+  <td>DV</td>
+  <td>Esg Adjustments</td>
+ </tr>
+ <tr>
+  <td>DW</td>
+  <td>Ww Hps Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>E1</td>
+  <td>Cd Writer Solutions</td>
+ </tr>
+ <tr>
+  <td>E2</td>
+  <td>Apollo Goodwill</td>
+ </tr>
+ <tr>
+  <td>E3</td>
+  <td>Eso</td>
+ </tr>
+ <tr>
+  <td>E6</td>
+  <td>Sdo Adjusters</td>
+ </tr>
+ <tr>
+  <td>E7</td>
+  <td>C11 Allocations</td>
+ </tr>
+ <tr>
+  <td>E8</td>
+  <td>Measurement Finance</td>
+ </tr>
+ <tr>
+  <td>E9</td>
+  <td>Enclosures &amp;
+  Peripherals</td>
+ </tr>
+ <tr>
+  <td>EC</td>
+  <td>Electronic Commerce</td>
+ </tr>
+ <tr>
+  <td>EF</td>
+  <td>Ibu Support</td>
+ </tr>
+ <tr>
+  <td>EG</td>
+  <td>Eig China</td>
+ </tr>
+ <tr>
+  <td>EJ</td>
+  <td>Utility Pricing</td>
+ </tr>
+ <tr>
+  <td>EK</td>
+  <td>Korea Instrument
+  Oper.</td>
+ </tr>
+ <tr>
+  <td>EL</td>
+  <td>Financial Services</td>
+ </tr>
+ <tr>
+  <td>EM</td>
+  <td>Mfo Rentals</td>
+ </tr>
+ <tr>
+  <td>EN</td>
+  <td>Global
+  InfrastructureFunc.</td>
+ </tr>
+ <tr>
+  <td>EP</td>
+  <td>HpcsFo</td>
+ </tr>
+ <tr>
+  <td>EQ</td>
+  <td>Mass Storage</td>
+ </tr>
+ <tr>
+  <td>ER</td>
+  <td>Bpc Services</td>
+ </tr>
+ <tr>
+  <td>ET</td>
+  <td>Global Installations</td>
+ </tr>
+ <tr>
+  <td>EW</td>
+  <td>Csso Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>EY</td>
+  <td>Hpops Staff,Fo</td>
+ </tr>
+ <tr>
+  <td>FO</td>
+  <td>Fiber Optics</td>
+ </tr>
+ <tr>
+  <td>HA</td>
+  <td>Csg Financing</td>
+ </tr>
+ <tr>
+  <td>HB</td>
+  <td>Epsg Leasing</td>
+ </tr>
+ <tr>
+  <td>HC</td>
+  <td>Other Atg Leasing</td>
+ </tr>
+ <tr>
+  <td>HD</td>
+  <td>Ste
+  Cnslting,Training/Educatn</td>
+ </tr>
+ <tr>
+  <td>HE</td>
+  <td>Emt
+  Cnslting,Training/Educatn</td>
+ </tr>
+ <tr>
+  <td>HG</td>
+  <td>Cag Rental</td>
+ </tr>
+ <tr>
+  <td>HH</td>
+  <td>Global Infrastructure
+  Ser.</td>
+ </tr>
+ <tr>
+  <td>HI</td>
+  <td>Commercial Printing
+  Staff,Fo</td>
+ </tr>
+ <tr>
+  <td>HJ</td>
+  <td>Global Infrastructure
+  Oper.</td>
+ </tr>
+ <tr>
+  <td>HK</td>
+  <td>Pers Appl Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>HL</td>
+  <td>Eps President, Fo</td>
+ </tr>
+ <tr>
+  <td>HM</td>
+  <td>Digital Imaging
+  StaffFo</td>
+ </tr>
+ <tr>
+  <td>HN</td>
+  <td>Personal Printers Ink
+  Staff</td>
+ </tr>
+ <tr>
+  <td>HO</td>
+  <td>Ips Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>HP</td>
+  <td>Shared Printers Laser
+  Staff</td>
+ </tr>
+ <tr>
+  <td>HQ</td>
+  <td>Ips Bus Dev.,
+  Consumer</td>
+ </tr>
+ <tr>
+  <td>HR</td>
+  <td>Ij Supplies Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>HS</td>
+  <td>Lj Supplies Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>HT</td>
+  <td>Computing Utility</td>
+ </tr>
+ <tr>
+  <td>HU</td>
+  <td>Bsto Software Labs,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>HV</td>
+  <td>ClientsW/S Misc
+  Activts, Fo</td>
+ </tr>
+ <tr>
+  <td>HW</td>
+  <td>Software Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>HX</td>
+  <td>Storage Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>HY</td>
+  <td>Pco Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>IC</td>
+  <td>Worldwide Integration
+  Cn</td>
+ </tr>
+ <tr>
+  <td>IP</td>
+  <td>Lpo International
+  Prods</td>
+ </tr>
+ <tr>
+  <td>JA</td>
+  <td>Cs President, Fo</td>
+ </tr>
+ <tr>
+  <td>JB</td>
+  <td>Other Corporate
+  Activities,Fo</td>
+ </tr>
+ <tr>
+  <td>JC</td>
+  <td>Its President, Fo</td>
+ </tr>
+ <tr>
+  <td>JD</td>
+  <td>Sas Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>JE</td>
+  <td>Hp President, Fo</td>
+ </tr>
+ <tr>
+  <td>JF</td>
+  <td>Tech Semi, Fo</td>
+ </tr>
+ <tr>
+  <td>JG</td>
+  <td>Cs Group, Fo</td>
+ </tr>
+ <tr>
+  <td>JH</td>
+  <td>Corporate Legals
+  Spv'S, Fo</td>
+ </tr>
+ <tr>
+  <td>JJ</td>
+  <td>Hp Cfo NonBus.
+  Activts., Fo</td>
+ </tr>
+ <tr>
+  <td>JM</td>
+  <td>Personal Storage
+  Business</td>
+ </tr>
+ <tr>
+  <td>JN</td>
+  <td>Mission Crit. &amp;
+  Proactive Srv</td>
+ </tr>
+ <tr>
+  <td>JP</td>
+  <td>Commercial Printing
+  Pl</td>
+ </tr>
+ <tr>
+  <td>JQ</td>
+  <td>Ppo Parts &amp;
+  External</td>
+ </tr>
+ <tr>
+  <td>JR</td>
+  <td>Support &amp;
+  Outsourcing Fo</td>
+ </tr>
+ <tr>
+  <td>JS</td>
+  <td>ServersNt Misc
+  Activity</td>
+ </tr>
+ <tr>
+  <td>JT</td>
+  <td>ClientsBus Misc
+  Activity, Fo</td>
+ </tr>
+ <tr>
+  <td>JU</td>
+  <td>ClientsHome Misc
+  Activity,Fo</td>
+ </tr>
+ <tr>
+  <td>JV</td>
+  <td>ServersUnix Misc
+  Activity,Fo</td>
+ </tr>
+ <tr>
+  <td>JW</td>
+  <td>J&amp;W Products</td>
+ </tr>
+ <tr>
+  <td>JX</td>
+  <td>Bsto Hardware Labs,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>JY</td>
+  <td>Cs Prod GenTcd, Fo</td>
+ </tr>
+ <tr>
+  <td>KA</td>
+  <td>Cs Prod GenIsv, Fo</td>
+ </tr>
+ <tr>
+  <td>KB</td>
+  <td>Verifone, Fo</td>
+ </tr>
+ <tr>
+  <td>KC</td>
+  <td>Pwc Consulting</td>
+ </tr>
+ <tr>
+  <td>KD</td>
+  <td>Hp Fas 87 &amp; Other
+  Emp. Benfts</td>
+ </tr>
+ <tr>
+  <td>KE</td>
+  <td>Hp Investment Sales,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>KF</td>
+  <td>Hp Rl.Estate Sales
+  &amp; Rent, Fo</td>
+ </tr>
+ <tr>
+  <td>KG</td>
+  <td>Hp Sar, Fo</td>
+ </tr>
+ <tr>
+  <td>KH</td>
+  <td>Hp Real Estate Sales
+  &amp;Rental</td>
+ </tr>
+ <tr>
+  <td>KI</td>
+  <td>Hp Investment Sales,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>KJ</td>
+  <td>EEducation &amp;
+  EInclustion,Fo</td>
+ </tr>
+ <tr>
+  <td>KK</td>
+  <td>Middleware</td>
+ </tr>
+ <tr>
+  <td>KL</td>
+  <td>Ij Supplies Staff Fo</td>
+ </tr>
+ <tr>
+  <td>KM</td>
+  <td>Commer.
+  PrntngConslting &amp;Sol</td>
+ </tr>
+ <tr>
+  <td>KN</td>
+  <td>Digital Cameras &amp;
+  Videos</td>
+ </tr>
+ <tr>
+  <td>KP</td>
+  <td>Ips Bus
+  Develpmnt,Commercial</td>
+ </tr>
+ <tr>
+  <td>KQ</td>
+  <td>Personal Pg Category,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>KR</td>
+  <td>Shared Pg Category,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>KS</td>
+  <td>Supplies Pg Category,
+  Fo</td>
+ </tr>
+ <tr>
+  <td>KT</td>
+  <td>Connectivity, Fo</td>
+ </tr>
+ <tr>
+  <td>KU</td>
+  <td>Ips Category Ops, Fo</td>
+ </tr>
+ <tr>
+  <td>KV</td>
+  <td>Retail Notebooks</td>
+ </tr>
+ <tr>
+  <td>KW</td>
+  <td>Home Networking
+  Solutions</td>
+ </tr>
+ <tr>
+  <td>KX</td>
+  <td>Digital Entermnt
+  Solutions</td>
+ </tr>
+ <tr>
+  <td>LB</td>
+  <td>Ww Hps Staff, Fo</td>
+ </tr>
+ <tr>
+  <td>LC</td>
+  <td>Hp Consulting, Fo</td>
+ </tr>
+ <tr>
+  <td>LD</td>
+  <td>Eps Ww Mgt Hq, Fo</td>
+ </tr>
+ <tr>
+  <td>LE</td>
+  <td>ComdiscoBrs</td>
+ </tr>
+ <tr>
+  <td>LS</td>
+  <td>Solid State Lighting</td>
+ </tr>
+ <tr>
+  <td>MD</td>
+  <td>Microdisplays</td>
+ </tr>
+ <tr>
+  <td>PA</td>
+  <td>Cssd Appl Svcs &amp;
+  Cnsltg</td>
+ </tr>
+ <tr>
+  <td>PB</td>
+  <td>Cssd Support</td>
+ </tr>
+ <tr>
+  <td>PC</td>
+  <td>Gratings</td>
+ </tr>
+ <tr>
+  <td>PD</td>
+  <td>Physical Lyr Nwkg
+  Cmponents</td>
+ </tr>
+ <tr>
+  <td>PE</td>
+  <td>Hardcopy Solutions</td>
+ </tr>
+ <tr>
+  <td>PF</td>
+  <td>Telecom Fibre Optics</td>
+ </tr>
+ <tr>
+  <td>PG</td>
+  <td>Mobile Solutions</td>
+ </tr>
+ <tr>
+  <td>PH</td>
+  <td>Red Switch</td>
+ </tr>
+ <tr>
+  <td>PJ</td>
+  <td>Signaling Advisor</td>
+ </tr>
+ <tr>
+  <td>PK</td>
+  <td>Nstd</td>
+ </tr>
+ <tr>
+  <td>PL</td>
+  <td>Std Cable</td>
+ </tr>
+ <tr>
+  <td>PM</td>
+  <td>Psg Manageability</td>
+ </tr>
+ <tr>
+  <td>PN</td>
+  <td>Power &amp; Noise
+  Products</td>
+ </tr>
+ <tr>
+  <td>PQ</td>
+  <td>Business Mono Laser</td>
+ </tr>
+ <tr>
+  <td>PS</td>
+  <td>Philips/Hsg Split
+  Activity</td>
+ </tr>
+ <tr>
+  <td>PT</td>
+  <td>Wdm</td>
+ </tr>
+ <tr>
+  <td>PV</td>
+  <td>Optical System
+  Interconnect</td>
+ </tr>
+ <tr>
+  <td>PW</td>
+  <td>Std Scope</td>
+ </tr>
+ <tr>
+  <td>PX</td>
+  <td>Std Tablet</td>
+ </tr>
+ <tr>
+  <td>PY</td>
+  <td>Tntd I&amp;M</td>
+ </tr>
+ <tr>
+  <td>QA</td>
+  <td>Tntd Css</td>
+ </tr>
+ <tr>
+  <td>QC</td>
+  <td>Ssu Support
+  Calibration</td>
+ </tr>
+ <tr>
+  <td>QI</td>
+  <td>Epsg Infrastructure
+  Costs</td>
+ </tr>
+ <tr>
+  <td>QL</td>
+  <td>Sgdu Custom Solutions</td>
+ </tr>
+ <tr>
+  <td>QM</td>
+  <td>Cms Bu</td>
+ </tr>
+ <tr>
+  <td>QS</td>
+  <td>Css Bu</td>
+ </tr>
+ <tr>
+  <td>QT</td>
+  <td>Iscsi</td>
+ </tr>
+ <tr>
+  <td>QV</td>
+  <td>Ssu Support Voscal</td>
+ </tr>
+ <tr>
+  <td>QW</td>
+  <td>Custom Solutions</td>
+ </tr>
+ <tr>
+  <td>QX</td>
+  <td>Wcs</td>
+ </tr>
+ <tr>
+  <td>R4</td>
+  <td>Ips Support</td>
+ </tr>
+ <tr>
+  <td>R5</td>
+  <td>Chsd Parts</td>
+ </tr>
+ <tr>
+  <td>R6</td>
+  <td>Crm Support</td>
+ </tr>
+ <tr>
+  <td>R7</td>
+  <td>Computer Support</td>
+ </tr>
+ <tr>
+  <td>R8</td>
+  <td>Storage Services
+  &amp; Support</td>
+ </tr>
+ <tr>
+  <td>RA</td>
+  <td>Access Fibre</td>
+ </tr>
+ <tr>
+  <td>RC</td>
+  <td>Arcticooler</td>
+ </tr>
+ <tr>
+  <td>RH</td>
+  <td>Corporate M &amp; A</td>
+ </tr>
+ <tr>
+  <td>RI</td>
+  <td>Cssd Cts Services</td>
+ </tr>
+ <tr>
+  <td>RM</td>
+  <td>Emt Sys Uptime
+  Support Servcs</td>
+ </tr>
+ <tr>
+  <td>RO</td>
+  <td>Ont</td>
+ </tr>
+ <tr>
+  <td>RP</td>
+  <td>Comms Eda Service</td>
+ </tr>
+ <tr>
+  <td>RS</td>
+  <td>Ste Sys Uptime
+  Support Servcs</td>
+ </tr>
+ <tr>
+  <td>S1</td>
+  <td>Osi</td>
+ </tr>
+ <tr>
+  <td>TC</td>
+  <td>Thin Client Operation</td>
+ </tr>
+ <tr>
+  <td>TE</td>
+  <td>Ssu Customer
+  Education</td>
+ </tr>
+ <tr>
+  <td>TG</td>
+  <td>Ssu Consulting</td>
+ </tr>
+ <tr>
+  <td>TJ</td>
+  <td>Ssu Spprt.Repair
+  Rta&amp;Trd.Part</td>
+ </tr>
+ <tr>
+  <td>TK</td>
+  <td>Ssu Support Retail
+  Onsite</td>
+ </tr>
+ <tr>
+  <td>TM</td>
+  <td>Cardiography Products</td>
+ </tr>
+ <tr>
+  <td>TR</td>
+  <td>Multispecialty</td>
+ </tr>
+ <tr>
+  <td>TS</td>
+  <td>Poc Ultrasound</td>
+ </tr>
+ <tr>
+  <td>TW</td>
+  <td>Wireless Service</td>
+ </tr>
+ <tr>
+  <td>UM</td>
+  <td>Dsp Measurement Sys</td>
+ </tr>
+ <tr>
+  <td>VF</td>
+  <td>EPayment Solutions</td>
+ </tr>
+ <tr>
+  <td>VH</td>
+  <td>Appliance Systems</td>
+ </tr>
+ <tr>
+  <td>WC</td>
+  <td>Cns Bu</td>
+ </tr>
+ <tr>
+  <td>WI</td>
+  <td>Cssd Cts Support</td>
+ </tr>
+ <tr>
+  <td>WM</td>
+  <td>Wireless Misc</td>
+ </tr>
+ <tr>
+  <td>WN</td>
+  <td>Component Test</td>
+ </tr>
+ <tr>
+  <td>WP</td>
+  <td>Ccsd Cms Services</td>
+ </tr>
+ <tr>
+  <td>WS</td>
+  <td>Cssd Cms Support</td>
+ </tr>
+</table>

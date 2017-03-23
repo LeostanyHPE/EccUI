@@ -1,0 +1,508 @@
+/*
+ * <Donot modifiy this CVS Token>
+ *
+ * $RCSfile$
+ * Last added CVS $Log$
+ *
+ * Copyright (c) Hewlett Packard Company
+ * Palo Alto, California, U.S.A.
+ * All rights reserved.
+ */
+
+package com.hp.ecc.ui.biz.admin;
+
+//java imports
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.PurchaseAgreementBean;
+
+/**
+ * Struts form Class for storing the Purchase Agreement form values.
+ * @author     mankotid
+ * @version    $Revision$
+ */
+public class PurchaseAgreementForm {
+  private String fAddPAList;
+  private String fEditPAList;
+  private String fDeletePAList;
+  private List fTableRows;
+  private String fTask;
+  private List fPAList;
+  private String[] fCacCodesList;
+  private String[] fGeoCodesList;
+  private Customer fCustomer;
+  private String[] fPriceTermList;
+  public HashMap foperationTypeFlag;
+  private String[] fPriceDescriptorList;
+  private String[] fPAErrorList;
+  private String fRoleId;
+
+  public PurchaseAgreementForm () {
+
+  }
+
+  /**
+   * @return
+   */
+  public String getAddPAList () {
+    return fAddPAList;
+  }
+
+  /**
+   * @return
+   */
+  public String getDeletePAList () {
+    return fDeletePAList;
+  }
+
+  /**
+   * @return
+   */
+  public String getEditPAList () {
+    return fEditPAList;
+  }
+
+  /**
+   * @return
+   */
+  public List getTableRows () {
+    return fTableRows;
+  }
+
+  /**
+   * @return
+   */
+  public String getTask () {
+    return fTask;
+  }
+
+  /**
+   * @return
+   */
+  public List getPurchaseAgreementList () {
+    return fPAList;
+  }
+
+  /**
+   * @return
+   */
+  public String getPurchaseAgreementName ( int index ) {
+    String paName = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+      paName = paBean.getPurchaseAgreementName ();
+    }
+    return paName;
+  }
+  
+  /**
+   * @return
+   */
+  public String getPurchaseAgreementError ( int index ) {
+    String paError = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+    	paError = paBean.getErrorMessage ();
+    }
+    return paError;
+  }
+
+  /**
+   * @return
+   */
+  public String getCacCode ( int index ) {
+    String cacCode = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+      cacCode = paBean.getCacCode ();
+    }
+    return cacCode;
+
+  }
+
+  /**
+   * @return
+   */
+  public String getGeoCode ( int index ) {
+    String geoCode = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+      geoCode = paBean.getGeoCode ();
+    }
+    return geoCode;
+
+  }
+
+  /**
+   * @return
+   */
+  public String getPriceTerm ( int index ) {
+    String priceTerm = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+      priceTerm = paBean.getPriceTerm ();
+    }
+    return priceTerm;
+  }
+  
+  /**
+   * @return
+   */
+  public String getPriceDescriptor ( int index ) {
+    String priceDescriptor = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+    	priceDescriptor = paBean.getPriceDescriptor ();
+    }
+    return priceDescriptor;
+  }
+
+  /**
+   * @param string
+   */
+  public void setAddPAList ( String string ) {
+    fAddPAList = string;
+  }
+
+  /**
+   * @param string
+   */
+  public void setDeletePAList ( String string ) {
+    fDeletePAList = string;
+  }
+
+  /**
+   * @param string
+   */
+  public void setEditPAList ( String string ) {
+    fEditPAList = string;
+  }
+
+  /**
+   * @param list
+   */
+  public void setTableRows ( List list ) {
+    fTableRows = list;
+  }
+
+  /**
+   * @param string
+   */
+  public void setTask ( String string ) {
+    fTask = string;
+  }
+
+  /**
+   * @param string
+   */
+  public void setPurchaseAgreementName ( int index, String name ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setPurchaseAgreementName ( name );
+    }
+  }
+  
+  /**
+   * @param string
+   */
+  public void setPurchaseAgreementError ( int index, String name ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setErrorMessage ( name );
+    }
+  }
+
+  /**
+   * @param string
+   */
+  public void setCacCode ( int index, String cacCode ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setCacCode ( cacCode );
+    }
+  }
+
+  /**
+   * @param string
+   */
+  public void setGeoCode ( int index, String geoCode ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setGeoCode ( geoCode );
+    }
+  }
+
+  /**
+   * @param string
+   */
+  public void setPriceTerm ( int index, String priceTerm ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setPriceTerm ( priceTerm );
+
+    }
+  }
+  
+  /**
+   * @param string
+   */
+  public void setPriceDescriptor ( int index, String priceDescriptor ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setPriceDescriptor ( priceDescriptor );
+
+    }
+  }
+
+  /**Setter method for storig
+   * @param list
+   */
+  public void setPurchaseAgreementList ( List list ) {
+    fPAList = list;
+  }
+
+  /**
+   * @return
+   */
+  public String[] getCacCodesList () {
+    return fCacCodesList;
+  }
+
+  /**
+   * @return
+   */
+  public String[] getGeoCodesList () {
+    return fGeoCodesList;
+  }
+
+  /**
+   * @param strings
+   */
+  public void setCacCodesList ( String[] strings ) {
+    fCacCodesList = strings;
+  }
+
+  /**
+   * @param strings
+   */
+  public void setGeoCodesList ( String[] strings ) {
+    fGeoCodesList = strings;
+  }
+
+//	customer
+  public Customer getCustomer () {
+    return this.fCustomer;
+  }
+
+  public void setCustomer ( Customer cust ) {
+    this.fCustomer = cust;
+  }
+
+  /**
+   * Getter method for Price Term select List
+   * @return
+   */
+  public String[] getPriceTermList () {
+    return fPriceTermList;
+  }
+
+  /**
+   * Setter method for Price Term select List
+   * @param strings
+   */
+  public void setPriceTermList ( String[] strings ) {
+    fPriceTermList = strings;
+  }
+  
+  
+  /**
+   * Getter method for Price Descriptor select List
+   * @return
+   */
+  public String[] getPriceDescriptorList () {
+    return fPriceDescriptorList;
+  }
+
+  /**
+   * Setter method for Price Descriptor select List
+   * @param strings
+   */
+  public void setPriceDescriptorList ( String[] strings ) {
+    fPriceDescriptorList = strings;
+  }
+  
+  /**
+   * Getter method for Price Descriptor select List
+   * @return
+   */
+  public String[] getfPAErrorList () {
+    return fPAErrorList;
+  }
+
+  /**
+   * Setter method for Price Descriptor select List
+   * @param strings
+   */
+  public void setfPAErrorList ( String[] strings ) {
+    fPAErrorList = strings;
+  }
+
+
+  /**
+   * Stores all requested operation Types
+   * @return String
+   */
+
+  public HashMap getOperationsMap () {return foperationTypeFlag;
+  }
+
+  /**
+   * Getter method for operation Type of the PA row
+   * @return String
+   */
+  public String getOperationTypeFlag ( int index ) {
+    String operationType = ( String ) foperationTypeFlag.get ( new Integer (
+        index ) );
+    return operationType;
+
+  }
+
+  /**
+   * Setter method for operation Type of the PA row
+   * @param map
+   */
+  public void setOperationTypeFlag ( int index, String operationType ) {
+    foperationTypeFlag.put ( new Integer ( index ), operationType );
+  }
+
+  /**
+   * Getter method for Delete checkbox
+   * @param index
+   * @return
+   */
+  public String getDeleteFlag ( int index ) {
+    String operationType = ( String ) foperationTypeFlag.get ( new Integer (
+        index ) );
+    return operationType;
+
+  }
+
+  /**
+   * Setter method Delete CheckBox
+   * @param map
+   */
+  public void setDeleteFlag ( int index, String deleteFlag ) {
+    setOperationTypeFlag ( index, "D" );
+  }
+
+  /**
+   * @return
+   */
+  public String getCacCodeOld ( int index ) {
+    String cacCodeOld = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+      cacCodeOld = paBean.getCacCodeOld ();
+    }
+    return cacCodeOld;
+
+  }
+
+  /**
+   * @param string
+   */
+  public void setCacCodeOld ( int index, String cacCodeOld ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setCacCodeOld ( cacCodeOld );
+    }
+  }
+
+  /**
+   * @param string
+   */
+  public void setGeoCodeOld ( int index, String geoCodeOld ) {
+    PurchaseAgreementBean paBean = findElement ( index, true );
+    if ( paBean != null ) {
+      paBean.setGeoCodeOld ( geoCodeOld );
+    }
+  }/**
+   * @return
+   */
+  public String getGeoCodeOld ( int index ) {
+    String geoCodeOld = "";
+    PurchaseAgreementBean paBean = findElement ( index, false );
+    if ( paBean != null ) {
+      geoCodeOld = paBean.getGeoCodeOld ();
+    }
+    return geoCodeOld;
+
+  }/**
+   * Reset the form field values.
+   */
+  public void reset (  ) {
+
+    fAddPAList = null;
+    fEditPAList = null;
+    fDeletePAList = null;
+    fTableRows = null;
+    fTask = null;
+    fPAList = null;
+    fCacCodesList = null;
+    fGeoCodesList = null;
+    fCustomer = null;
+    fPriceTermList = null;
+    fPriceDescriptorList = null;
+    foperationTypeFlag = new HashMap ();
+
+  }
+
+  /**
+   * This method finds the PurchaseAgreement row for a given index. If
+   * not found creates a new PurchaseAgreement row and returns it else
+   * returns the reference
+   * @param index
+   * @param createNew
+   * @return PurchaseAgreementBean
+   */
+  private PurchaseAgreementBean findElement ( int index, boolean createNew ) {
+    PurchaseAgreementBean paRow = null;
+
+    if ( fPAList == null ) {
+      fPAList = new ArrayList ();
+    }
+
+    if ( fPAList.size () <= index && createNew ) {
+      PurchaseAgreementBean purchaseAgreement = null;
+
+      while ( fPAList.size () <= index ) {
+        purchaseAgreement = new PurchaseAgreementBean ();
+        fPAList.add ( purchaseAgreement );
+
+      }
+    }
+
+    if ( index < fPAList.size () ) {
+      Object obj = fPAList.get ( index );
+      paRow = ( PurchaseAgreementBean ) obj;
+
+    }
+
+    return paRow;
+  }
+
+  public String getRoleId()
+  {
+  	  return this.fRoleId;
+  }
+
+  public void setRoleId(String id)
+  {
+  	  this.fRoleId = id;
+  }
+}

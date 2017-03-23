@@ -1,0 +1,381 @@
+eccApp.controller('warningsByProductCrtl',['$scope','$http','webStorage','$routeParams','$rootScope','shareddata','dialog',
+  function($scope,$http,webStorage,$routeParams,$rootScope,shareddata,dialog) {
+	$scope.successMessage = '';
+	$scope.errorMessage = '';
+	$scope.addDataToTable=[];
+	$scope.dataLoad=false;
+
+	$scope.searchCatalog ='';
+	$scope.searchProduct='';
+	$scope.searchPriority = "All";
+	$scope.searchEndDate ='';
+	$scope.searchStartDate ='';
+	$scope.priorityList=["All","1","2","3","4"];
+
+	$scope.selectedForDelete=[];
+	
+	$scope.dataset;
+
+	$scope.separator=',';
+	$scope.filename='Maintain Reseller Margin';
+	$scope.exceldata=[];
+    $scope.disableexport=true;
+    $scope.disableadd=true;
+    
+    $scope.selectFlag=true;
+    $scope.viewAccess = false;
+    $scope.roleID = webStorage.local.get('userRoleId');
+
+    $scope.hideEdit = false;
+    
+	$scope.init = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Warnings By Product Task\"");
+
+		if($scope.roleID=='13'){
+			$scope.hideEdit = true;
+		}
+		$scope.currentPage = 0;
+        $scope.startIndex = 0;
+        $scope.endIndex = 10;
+        
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+		
+		$http.get("warnings/getWarningPermissions.htm").		
+		  success(function(data) {
+			  	if(data.VIEW=="NO"){
+				    $scope.errorMessage="The current user does not have permission to view warnings";	
+				    $scope.viewAccess = false;
+				    return;
+			  	} else{
+			  		$scope.viewAccess = true;
+					ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 10);
+			  	}
+		  });
+		
+	};
+	
+	$scope.searchItems = function(){
+		$scope.errorMessage='';
+		$scope.successMessage='';
+		ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 10);
+	};
+	
+	$scope.deletewarningsByProduct = function(selectedForDelete){
+		
+		$http({
+			url:"warnings/deleteWarnings.htm?"+"alert_keys="+$scope.selectedForDelete, 
+			method: 'POST', 
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+                "Cache-Control" : "no-cache",
+                "Pragma" : "no-cache",
+                "If-Modified-Since" : "0"
+			}}).		
+		  success(function(data) {
+			  ajaxGetResults($scope, $http, shareddata,0,$('table.goto tr td select[name=paginationLimit]').val() * 10);
+			  $scope.successMessage='Selected warning(s) deleted successfully';
+		  });
+       
+		
+	};
+	
+	$scope.deleteItems = function(){
+		var selectedForDelete = '';
+		$scope.selectedForDelete.length=0;
+		$scope.errorMessage='';
+		$scope.successMessage='';
+		
+		$('.delete_flag').each(function(){
+				if($(this).prop('checked')==true){
+					$scope.selectedForDelete.push(this.getAttribute('key'));
+				}
+		});
+		if($scope.selectedForDelete.length==0){
+			$scope.scrollToMessage();
+			$scope.errorMessage='You must at least select one warning to be deleted';
+			return;
+		}
+		
+		 dialog.show({
+	            template: '<div class="hpe-main-content" title="Are you sure you want to delete?">' +
+	                          '<span>Are you sure you want to delete?</span>' +
+	                          '<br />' +
+	                          '<br />' +
+	                          '<a class="btn btn-inline"   ng-click="close(true)"><span>YES</span></a>' +	                        
+	                          '<a class="btn btn-inline"   ng-click="close(false)"><span>NO</span></a>' +                          
+	                      '</div>',
+	            controller: 'warningsByProductCrtl',
+	            width: 400,
+	            draggable: true,
+	            title:'Warning'
+	        }).then(function (result) {
+	        	if(result==true){
+	        		$scope.deletewarningsByProduct(selectedForDelete);
+	        		$scope.scrollToMessage();
+	        	}else{
+	        		
+	        	}
+	        	
+	        });
+		
+	};
+
+	$(".startDate").datepicker({
+	     changeMonth: true,
+	     changeYear: true,
+	     showOn: "both",
+	     buttonImage: "resources/images/hp/calender.png",
+	     buttonImageOnly: true,
+	     buttonText: "",
+	     dateFormat: "dd-M-yy",
+	     onSelect : function(dateText, inst) {
+	    	$scope.searchStartDate = dateText;
+		}
+	});
+
+	$(".endDate").datepicker({
+	     changeMonth: true,
+	     changeYear: true,
+	     showOn: "both",
+	     buttonImage: "resources/images/hp/calender.png",
+	     buttonImageOnly: true,
+	     buttonText: "",
+	     dateFormat: "dd-M-yy",
+	     onSelect : function(dateText, inst) {
+	    	$scope.searchEndDate = dateText;
+		}
+	});
+	
+	$scope.openProduct = function(productId){
+		webStorage.session.add('PrevPage', '#/WarningsByProduct'); 
+		document.location.href="#/ManualProductDetail?ProductId="+ productId;
+	};
+	
+	$scope.selectdeselect = function(){
+		if($scope.selectFlag==true){
+			$scope.populateTable($scope.dataset,"checked");
+			$scope.selectFlag=false;
+		} else{
+			$scope.populateTable($scope.dataset,"");
+			$scope.selectFlag=true;
+		}
+	};
+	
+
+	
+	$scope.chkAllBoxes = function(){		
+		if(document.getElementById("selectAll").checked == true){
+			for(var i =0; i<$scope.form.bean.length;i++){
+				$scope.form.bean[i].chkflag=true;
+			}
+		}else{
+			for(var i =0; i<$scope.form.bean.length;i++){
+				$scope.form.bean[i].chkflag=false;
+			}
+		}
+	};
+    
+	  /* -----------Start Pagination Code----------- */
+	  
+	  $scope.showClmDropDown = false;
+	    
+	    $("#showhideclmDiv>a, #tinyDrop").mousedown(function(e) {
+	    	e.stopPropagation();
+	    });
+	    
+	    $scope.mouseDownHide = function mouseDownHide(id){
+			$("#"+id).hide(200);
+		};
+		
+		$scope.toggle = function toggle(id) {
+			$("#"+id).fadeToggle(200);
+		};
+		$scope.getData = ajaxGetResults;
+		$scope.getDataSorted = getDataWithPaginationAndSort;
+		
+		if($routeParams.searchCriteria){
+//			$('#Spinner').show();
+		}else{
+			toggleDisplay();
+		}
+		
+		
+		$scope.showDropDown = function(){
+			if($("#tinyDrop").is(":visible")){
+				$("#tinyDrop").hide();
+			}else{
+				$("#tinyDrop").show();
+			}
+		};
+			
+		$scope.scrollToMessage=function(){
+			$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+		};
+		
+		$scope.showHide = function(id) {
+			if($scope.selectedColumns.id == "true")
+				$scope.selectedColumns.id = "false";
+			else
+				$scope.selectedColumns.id = "true";
+		};
+		
+		$scope.showList = function() {
+			if($scope.showClmDropDown == "true")
+				$scope.showClmDropDown = "false";
+			else
+				$scope.showClmDropDown = "true";
+		};
+		
+		$scope.sortColumn = function($parent, colId, colName, locale, needSort) { 
+	        if (needSort!="false") {
+	            $parent.reverse=!$parent.reverse; 
+	            $scope.sortBy = colName;
+	            $scope.sortOrder = ($parent.reverse)?"DESC":"ASC";
+	            $scope.sortLocale = locale;
+	            $scope.requireSort = true;
+	            $scope.getDataSorted($scope, $scope.http,shareddata, 0, $scope.pageSize, 
+	            	$scope.sortBy, $scope.sortOrder, $scope.sortLocale);
+	            
+	            $scope.initToStart();
+	            
+	            if ( !$scope.sortedColumn ) $scope.sortedColumn = colId;
+	            $scope["sortedTD_"+$scope.sortedColumn] = "";
+	            $scope["sortedTD_"+colId] = "sorted";
+	            $scope.sortedColumn = colId;
+	        }
+	    };
+	    
+	    $scope.tablecolumns = [
+	 	                      {'id':'delete',			'value':'Delete',			"key":"delete",			'columnName':'NONE',		'sort':'true'},
+	 	                      {'id':'product',		'value':'Product',   	"key":"product",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'catalog',			'value':'Catalog',     	"key":"catalog",				'columnName':'ALERT_ID',		'sort':'true'},
+	 	                      {'id':'hash',		'value':'#',   	"key":"hash",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'customer',		'value':'Customer',   	"key":"customer",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'desc',		'value':'Product Description',   	"key":"desc",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'type',		'value':'Type',   	"key":"type",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'date',		'value':'Date',   	"key":"date",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'warnDate',		'value':'Warning Date',   	"key":"warnDate",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'priority',		'value':'Priority',   	"key":"priority",		'columnName':'CUST_KEY',	'sort':'true'},
+	 	                      {'id':'warnDesc',		'value':'Warning Description',   	"key":"warnDesc",		'columnName':'CUST_KEY',	'sort':'true'}		 	                      
+	 	                  ];
+	 	  
+	 	  $scope.selectedColumns = {
+	 				'product':'true',
+	 				'catalog':'true',
+	 				'hash':'true',
+	 				'customer':'true',
+	 				'desc':'true',
+	 				'type':'true',
+	 				'date':'true',
+	 				'warnDate':'true',
+	 				'priority':'true',
+	 				'warnDesc':'true'
+	 		};
+	 	  
+	 	  $scope.search = {
+	 			 // 	'status':'',
+	 				'product':''
+	 			//	'name':'',
+	 			 //   'custPart':'',
+	 			   // 'custID':'',
+	 			 //   'custName':'',
+	 			 //   'startDate':'',
+	 			 //   'endDate':'',
+	 			  //  'image':''
+	 		};
+	 	  
+	 	  function toggleDisplay(){
+
+	 			 $(document).off('click').on('click','h1 .w-toggle-visi, h1 .label-unit',function(){
+	 				var elementToToggle = $(this).parent().siblings('.id-body');
+	 		       if(elementToToggle.css('display')=='block'){
+	 		       	elementToToggle.slideUp(300);         	  
+	 		              $(this).parent().find('.w-toggle-visi').find('img').attr("src","resources/images/ecc/row_tb.png");
+	 		              $('#expandCollapseAll>a').html('Expand All').attr('data-mode', 'expandall');
+	 		              $('#qdexpcollAll').attr('src','img/open_all.png');
+	 		              
+	 		       }else {
+	 		              $(this).parent().find('.w-toggle-visi').find('img').attr("src","resources/images/ecc/row_tb_up.png");
+	 		              elementToToggle.slideDown(250);
+	 		              $('#expandCollapseAll>a').html('Collapse All').attr('data-mode', 'collapseall');
+	 		              $('#qdexpcollAll').attr('src','img/close_all.png');
+	 		       }
+	 			});
+	 		};
+	 		
+	 		$(document).mousedown(function(e) {
+	 			$("#tinyDrop").hide();
+	 		});
+	 		
+	 //////////////////////AJAX CALLS /////////////////////////////
+	 	  function ajaxGetResults($scope, $http, shareddata, recordsOnHand, recordsOnDemand) {
+	 	  	getDataWithPaginationAndSort($scope, $http, shareddata, recordsOnHand, recordsOnDemand, "", "");
+	 	  }
+
+	 	  function getDataWithPaginationAndSort($scope, $http, shareddata, recordsOnHand, recordsOnDemand, sortBy, sortOrder, sortLocale) {	
+	 	  	
+	 	  	$scope.loadTime = new Date().getTime();
+	 	  	
+	 	  	$scope.urlToUse = 
+	 	  		"warnings/searchByProductPagination.htm?product_id="+encodeURIComponent($scope.searchProduct)+"&start_date="+$scope.searchStartDate+"&end_date="+$scope.searchEndDate
+				+"&priority="+$scope.searchPriority +"&recordsOnHand=" + recordsOnHand + "&recordsOnDemand=" + recordsOnDemand;
+	 	  	
+	 	if (sortBy.length > 0 && sortOrder.length > 0) {
+	 		$scope.urlToUse += "&sortBy="+sortBy+"&sortOrder="+sortOrder;
+	 		if (sortLocale) {
+	 			$scope.urlToUse += "&sortLocale="+sortLocale;
+	 		}
+	 	}
+	 	  	
+	 	  	$http({
+	 			url: $scope.urlToUse,
+	 			method:"GET",
+	 			headers: {
+	                 "Accept": "application/json; charset=utf-8",
+	 				"Cache-Control" : "no-cache",
+	 				"Pragma" : "no-cache",
+	 				"If-Modified-Since" : "0"
+	             }
+	 		 }).success(function(data,status,header,config) {
+	 			 $scope.form = data;
+	 			 $scope.$emit('gotPageData',$http,$scope.form, $scope.form.bean);
+	 			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+	 		 }).error(function(data, status, headers, config) {
+	 			  ///	console.log("Session Expired please try to relogin.");
+	 				
+	 		 });
+	 	  	
+	 	  }	
+	 	 $(document).on("click",".accordion section h2",function(event){
+		        if ($(this).children().hasClass("icon-minus")) {
+		            $(this).next().slideUp();
+		            $(this).find(".accordion-icon").removeClass("icon-minus");
+		            $(this).find(".accordion-icon").addClass("icon-plus");
+		        }
+		        else if($(this).children().hasClass("icon-plus")){
+		            $(this).next().slideDown();
+		            $(this).find(".accordion-icon").removeClass("icon-plus");
+		            $(this).find(".accordion-icon").addClass("icon-minus");
+		        }
+		        var $accordionSections = $(this).parent().parent();
+		        var $controlAllIcon = $accordionSections.children(".control-accordion").children(".accordion-icon");
+		        if($accordionSections.children("section").find(".accordion-icon").hasClass("icon-plus") && 
+		            !$accordionSections.children("section").find(".accordion-icon").hasClass("icon-minus")){
+		            if($controlAllIcon.hasClass("icon-minus")){
+		                $controlAllIcon.removeClass("icon-minus");
+		                $controlAllIcon.addClass("icon-plus");
+		                $controlAllIcon.next("span").html("Expand All");
+		            }
+		        }
+		        if($accordionSections.children("section").find(".accordion-icon").hasClass("icon-minus") && 
+		            !$accordionSections.children("section").find(".accordion-icon").hasClass("icon-plus")){
+		            if($controlAllIcon.hasClass("icon-plus")){
+		                $controlAllIcon.removeClass("icon-plus");
+		                $controlAllIcon.addClass("icon-minus");
+		                $controlAllIcon.next("span").html("Collapse All");
+		            }
+		        }
+		    });  
+}]);

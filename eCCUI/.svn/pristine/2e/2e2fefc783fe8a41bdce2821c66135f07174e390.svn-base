@@ -1,0 +1,21 @@
+package com.hp.ecc.ui.biz.catalog;
+
+/**
+ * This exception will be thrown out if generation fails.
+ *
+ * @author Jane Chen
+ * @version 2.0
+ */
+public class FormattedGenerationException extends Exception {
+  public FormattedGenerationException () {
+    super ();
+  }
+
+  public FormattedGenerationException ( String msg ) {
+    super ( msg );
+  }
+
+  public FormattedGenerationException ( Exception e ) {
+    super ( "Error in catalog generation. Catch exception: " + e.toString () );
+  }
+}

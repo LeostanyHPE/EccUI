@@ -1,0 +1,57 @@
+package com.hp.ecc.ui.biz.validator;
+
+
+
+/**
+ * Cat Bundle validation info.
+ */
+
+public class AlertLog {
+
+  private String ALERT_ID = "alert_id";
+  private String ALERT_MSG = "alert_msg";
+  private String ALERT_PRIORITY = "alert_priority";
+  private String ALERT_LABEL = "alert_label";
+  private String ALERT_COLOR = "brown";
+  private String ALERT_ERROR_MSG = "";
+  
+public String getALERT_ERROR_MSG() {
+	return ALERT_ERROR_MSG;
+}
+  
+public void setALERT_ERROR_MSG(String aLERT_ERROR_MSG) {
+	ALERT_ERROR_MSG = aLERT_ERROR_MSG;
+}
+  
+public String getALERT_COLOR() {
+	return ALERT_COLOR;
+}
+public String getAlertId() {
+	return ALERT_ID;
+}
+public void setAlertId(String aLERT_ID) {
+	ALERT_ID = aLERT_ID;
+}
+public String getAlertMsg() {
+	return ALERT_MSG;
+}
+public void setAlertMsg(String aLERT_MSG) {
+	ALERT_MSG = aLERT_MSG;
+}
+public String getAlertPrioirty() {
+	return ALERT_PRIORITY;
+}
+public void setAlertPrioirty(String aLERT_PRIORITY) {
+	ALERT_PRIORITY = aLERT_PRIORITY;
+}
+public String getAlertLabel() {
+	return ALERT_LABEL;
+}
+public void setAlertLabel(String aLERT_LABEL) {
+	ALERT_LABEL = aLERT_LABEL;
+}
+
+
+
+}
+

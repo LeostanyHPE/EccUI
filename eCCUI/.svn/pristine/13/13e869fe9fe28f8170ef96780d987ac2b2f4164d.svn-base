@@ -1,0 +1,357 @@
+eccApp.controller('editHeaderInfoCtrl',['$scope', '$http','$routeParams','$timeout','shareddata','webStorage','dateParser','dialog',
+  function ($scope, $http,$routeParams, $timeout,shareddata,webStorage, dateParser,dialog) {
+	$scope.fileFormatKey=$routeParams.fileFormatKey;
+	$scope.sectionType = $routeParams.section;
+	$scope.pageScope=$routeParams.pageScope;	
+	$scope.keyIndexLength = 0;
+	$scope.validate = false;
+	$scope.validateFormat = false;
+	$scope.includedHeaderItemsLength = 0;
+	$scope.newLabelName="";
+	$scope.newDefaultValue="";
+    $scope.selgroup = "";
+    $scope.fieldlist="";
+    
+    $scope.successMessage='';
+	$scope.errorMessage='';
+	
+	$scope.init=function(){		
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Customize Header Task\"");
+
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		$scope.loadDetails();
+		$scope.loadHeaderElementsData();		
+	};
+	
+	$scope.loadDetails = function()	{
+	    $http({
+			url: 'format/CustomizeHeaderLoad.htm?pageScope='+$scope.pageScope+'&fileFormatKey='+$scope.fileFormatKey+'&section='+$scope.sectionType,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+            dataType: "json"
+		 }).success(function(data, status, headers, config) {
+			 $scope.loadTheGroups = data;
+		 }).error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error while getting option groups Service');
+		 });
+		
+	};
+	
+	$scope.loadHeaderElementsData=function(){
+		$http({
+			url: 'format/viewFileFormat.htm?pageScope='+$scope.pageScope+'&fileFormatKey='+$scope.fileFormatKey,
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            },
+            dataType: "json"
+		 }).success(function(data, status, headers, config) {
+			  	$scope.displayFileElementsData = data;
+			  	$scope.keyIndexLength = 0;
+			  	if($scope.displayFileElementsData.includedHeaderItems){
+			  		var keyIndex =0;
+			  		$scope.includedHeaderItemsLength = $scope.displayFileElementsData.includedHeaderItems.length;
+			  		angular.forEach($scope.displayFileElementsData.includedHeaderItems,function(item){
+			  			if(item.displayFlag == 'Y' ){
+			  				item.keyIndex = keyIndex;
+			  				keyIndex++;
+			  			}
+			  		});
+			  		$scope.keyIndexLength = keyIndex;
+			  	};
+			  	angular.forEach($scope.displayFileElementsData.includedHeaderItems,function(item){
+			  		console.log("includedHeaderItems --> item.keyIndex,  displayFlag: ",item.keyIndex,item.displayFlag);
+		  		});
+			  	
+			  	/*logic to display available header columns side by side*/
+			  	
+			  	if($scope.displayFileElementsData.optionalHeaderItems){
+			  		var count =0;
+			  		$scope.finalListHeader = [];
+			  		
+			  		var tempList = [];
+			  		angular.forEach($scope.displayFileElementsData.optionalHeaderItems,function(item,key){
+			  			if(count < 5 ){
+			  				var object ={"labelName":"","itemKey":""};
+			  				object.labelName = item.labelName;
+			  				object.itemKey = item.fileFormatItemKey;
+			  				tempList.push(object);
+			  				count++;
+			  			};
+			  			
+			  			if(count ==4 || $scope.displayFileElementsData.optionalHeaderItems.length-1==key){
+			  				$scope.finalListHeader.push({"data":tempList});
+			  				tempList = [];
+			  				count =0;
+			  			};
+			  			
+			  		});
+			  	};
+					$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+				}).error(function(data, status, headers, config) {
+					$scope.hideMsg();
+					$scope.showMsg('','Error while getting Header elements Service');
+			  });
+		
+	};
+	
+	$scope.getFieldList = function(selgroup) {
+	  	$http({
+			url: "format/CustomizeHeaderFieldsLoad.htm?section="+$scope.sectionType+"&selectedGroup="+selgroup.value,
+			method:"GET",
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+          },
+          dataType: "json"
+		 }).success(function(data, status, headers, config) {
+			  	
+			 $scope.loadTheGroupsData = data;
+			  	
+		 }).error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error while getting group fields header Service');
+		 });
+	};
+	
+	$scope.condtionalAlertDelete = function (header) {
+        dialog.show({
+            template: '<div class="hpe-main-content" title="Are you sure you want to delete?">' +
+                          '<span> Are you sure you want to delete?</span>' + 
+                          '<br>' +
+                          '<a class="btn btn-inline"   ng-click="close(true)" ><span>Yes</span></a>' +
+                          '<a class="btn btn-inline"   ng-click="close(false)"><span>No</span></a>' +
+                      '</div>',
+            controller: 'editHeaderInfoCtrl',
+            width: 600,
+            param: $scope,
+            draggable: true,
+            title:'Warning'
+        }).then(function (result) {
+            if(result == true) {
+            	$scope.deleteFileItem(header);
+            	$scope.scrollToMessage();
+            }
+           
+        });
+    };
+    
+	$scope.deleteFileItem = function(header){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		$http({
+			url: 'format/deleteFileItem.htm?pageScope='+$scope.pageScope+'&task=DeleteItem&fileFormatItemKey='+header.fileFormatItemKey+'&section='+$scope.sectionType,
+			method:"POST",
+			data:$scope.postdeldata,
+			
+		}).success(function(data, status, headers, config) {
+			 $scope.hideMsg();
+			 $scope.postdeldata = data;
+			 //call the below function again to populate the fresh data of  selected Header Columns
+			 $scope.loadHeaderElementsData();
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error while deleting the fileitem from db');
+			});
+	};
+	
+	$scope.editFileItem = function(header){	
+		if(header.defaultValue==null)
+			{
+			header.defaultValue="";
+			}
+		document.location.href="#/EditFileFormatItemInfo?pageScope="+$scope.pageScope+"&fileFormatItemKey="+header.fileFormatItemKey+"&fileFormatKey="+$scope.fileFormatKey+"&labelValue="+header.labelName+"&selGroupValue="+header.bizClassName+"&selFieldValue="+header.fieldName+"&defaultValue="+header.defaultValue+"&section="+$scope.sectionType;		
+	};
+	
+	$scope.insertInHeaderColumns= function(headercols){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		$http({
+			url: "format/InsertInSelHeadColumns.htm?pageScope="+$scope.pageScope+"&task=AddOption&fileFormatItemKey="+headercols.itemKey+"&fileFormatKey="+$scope.fileFormatKey+"&section="+$scope.sectionType,
+			method:"POST",
+			data:$scope.postdeldata,
+			
+		}).success(function(data, status, headers, config) {
+			 $scope.postlinkdata = data;
+			 $scope.loadHeaderElementsData();
+			
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			}).error(function(data, status, headers, config) {
+				$scope.hideMsg();
+				$scope.showMsg('','Error while click-insert');
+			});
+	};
+	$scope.addNewItem = function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		$http({
+			url: "format/addNewFieldItem.htm?pageScope="+$scope.pageScope+"&fileFormatKey="+$scope.fileFormatKey+"&newLabelName="+$scope.newLabelName+"&newDefaultValue="+$scope.newDefaultValue+"&selGroupValue="+$scope.selgroup.value+"&selFieldList="+$scope.fieldlist+"&section="+$scope.sectionType,
+			method:"POST",
+			data:$scope.postdata,
+			
+		}).success(function(data, status, headers, config) {
+			 $scope.postdata = data;
+			 //calling the below function again to populate the newly added selected Header Columns			 
+			 $scope.loadHeaderElementsData();
+			 if(data == "added"){				
+				 $scope.showMsg('New file format item '+$scope.newLabelName+' has been added successfully','');
+			 }
+			 if(data == "errorNonsysAtt"){				
+				 $scope.showMsg('','Can not add this Field!!! Can not add a Non-system attribute if system attributes already exist');
+			 }
+			  	
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			$scope.hideMsg();
+			$scope.showMsg('','Error while adding the new item into db');				
+		});
+	};
+	
+	$scope.clickCancel = function(){
+		$scope.validate = "validate";
+   	    $scope.validateFormat = "validateFormat";
+   	    $scope.cancelText = false;
+   	    document.location.href='#/ViewFileFormat?pageScope='+$scope.pageScope+'&fileFormatKey='+$scope.fileFormatKey;
+	};
+	
+	$scope.saveAll = function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		$scope.validate = "validate";
+   	    $scope.validateFormat = "validateFormat";
+   	    $scope.cancelText = false;
+   		
+   	    var arr = [];
+		if($scope.displayFileElementsData.includedHeaderItems.length) {
+	          var chkId = '';
+	          var fileFormatItemKeys = '';
+	          angular.forEach($scope.displayFileElementsData.includedHeaderItems,function(item){
+	          	if(item.keyIndex != undefined){
+	            chkId += item.fileFormatItemKey + ",";
+	          }
+	          });
+	          chkId =  chkId.slice(0,-1);
+	          arr = chkId.split(",");
+		}
+		fileFormatItemKeys = arr;
+   	 	$http({
+			url: "format/saveFileItem.htm?&pageScope"+$scope.pageScope+"&task=SaveItems&fileFormatKey="+$scope.fileFormatKey+"&pids="+fileFormatItemKeys+"&section="+$scope.sectionType,
+			method:"POST",
+			data:$scope.displayToEditBData,
+
+		}).success(function(data, status, headers, config) {
+			 document.location.href='#/ViewFileFormat?pageScope='+$scope.pageScope+'&fileFormatKey='+$scope.fileFormatKey;
+			 $("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).error(function(data, status, headers, config) {
+			$scope.hideMsg();
+			$scope.showMsg('','Error while saving the edited file data into db Service');
+			
+		});
+
+	};
+	
+	$scope.scrollToMessage=function(){
+		$('html,body').animate({scrollTop: $('#messageDiv').offset().top-70},'600');
+	};
+	
+	$scope.showMsg=function(success, error){
+     	$scope.successMessage=success;
+     	$scope.errorMessage=error;
+     };
+     $scope.hideMsg=function(){
+     	$scope.successMessage='';
+     	$scope.errorMessage='';
+     };
+     
+     $scope.changeHeaderUp = function(){
+	 if($scope.keyIndexLength == 0){
+  		 alert("Please select the items you want to move");
+  		  return;
+  	  }
+	  var selectAnyFlag = 0;
+      var selectedIndex = [];
+   	  var index = 0;
+   	  angular.forEach($scope.displayFileElementsData.includedHeaderItems, function(item){
+	  	  if(item.keyIndex != undefined){
+   		  	  // check if selected
+   	          if ( item.chkFlag ) {
+   	             selectedIndex.push(index);
+   	             selectAnyFlag++ ;
+   	          }
+   	          index++;
+          }
+   	  });
+   	  if(selectAnyFlag == 0){
+ 		  alert("Please select the items you want to move");
+ 		  return;
+ 	  }
+        angular.forEach(selectedIndex, function(index){
+           if(index != 0){
+               var temp = $scope.displayFileElementsData.includedHeaderItems[index];
+               $scope.displayFileElementsData.includedHeaderItems[index] = $scope.displayFileElementsData.includedHeaderItems[index - 1];
+               $scope.displayFileElementsData.includedHeaderItems[index - 1] = temp;
+           }else{
+        	   alert("A selected item is already at the top");
+           }
+        });
+  };
+  
+  $scope.changeHeaderDown = function(){
+	  if($scope.keyIndexLength == 0){
+   		 alert("Please select the items you want to move");
+   		  return;
+   	  }
+	  var selectAnyFlag = 0;
+	  var selectedIndex = [];
+	  var index = 0;
+	  angular.forEach($scope.displayFileElementsData.includedHeaderItems, function(item){
+          //check for the displayFlag == 'Y'
+	  	  if(item.keyIndex != undefined){
+	  		  // check if selected
+	          if ( item.chkFlag ) {
+	             selectedIndex.push(index);
+	             selectAnyFlag++ ;
+	          }
+	          index++;
+	  	  }
+               selectedIndex.sort(function(a, b){return b-a } );
+	  });
+	  if(selectAnyFlag == 0){
+   		  alert("Please select the items you want to move");
+   		  return;
+   	  }
+     angular.forEach(selectedIndex, function(index){
+        if(index != $scope.keyIndexLength-1){
+            var temp = $scope.displayFileElementsData.includedHeaderItems[index];
+            $scope.displayFileElementsData.includedHeaderItems[index] = $scope.displayFileElementsData.includedHeaderItems[index + 1];
+            $scope.displayFileElementsData.includedHeaderItems[index + 1] = temp;
+        }else{
+     	   alert("A selected item is already at the bottom");
+        }
+     });
+  };
+  
+}]);

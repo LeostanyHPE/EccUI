@@ -1,0 +1,140 @@
+package com.hp.ecc.ui.biz.admin;
+
+import hp.comcat.dax.fwk.common.web.util.pagination.Pagination;
+import hp.comcat.dax.fwk.common.web.util.sort.SortInfo;
+
+import java.util.List;
+import java.util.Vector;
+
+public class RankingForm {
+
+  private String[] selectedList;
+  private Vector categorizationVector = null;
+  private List rankingList = null;
+  private Vector categoryList = null;
+  private String task;
+  private String errorMsg;
+  private String custKey;
+  private String viewAllowed;
+  //Added by kamalakkannan for JIR-Category Ranking-chardonay.
+  private List myCtglist;
+  private String myCategoryId;
+  private String myRegionCode;
+  private boolean mySMBcustomer;
+
+  public List getRankingList () {
+    return rankingList;
+  }
+
+  public void setRankingList ( List newRankingList ) {
+    this.rankingList = newRankingList;
+  }
+
+  public int getRankingListSize () {
+    if ( this.rankingList == null || this.rankingList.size () == 0 ) {
+      return 0;
+    }
+    else {
+      return this.rankingList.size ();
+    }
+  }
+
+  public String[] getSelectedList () {
+    return selectedList;
+  }
+
+  public void setSelectedList ( String[] selectedList ) {
+    this.selectedList = selectedList;
+  }
+
+  public Vector getCategorizationVector () {
+    return categorizationVector;
+  }
+
+
+  public void setCategorizationVector ( Vector categorizationVector ) {
+    this.categorizationVector = categorizationVector;
+  }
+
+
+  public String getTask () {
+    return this.task;
+  }
+
+
+  public void setTask ( String task ) {
+    this.task = task;
+  }
+
+  public String getCustKey () {
+    return this.custKey;
+  }
+
+
+  public void setCustKey ( String custkey ) {
+    this.custKey = custkey;
+  }
+
+  public String getIsViewAllowed () {
+    return this.viewAllowed;
+  }
+
+
+  public void setIsViewAllowed ( String allow ) {
+    this.viewAllowed = allow;
+  }
+  public Vector getCategoryList () {
+    return categoryList;
+  }
+
+  public void setCategoryList ( Vector categoryList ) {
+    this.categoryList = categoryList;
+  }
+
+  public String getErrorMsg () {
+    return errorMsg;
+  }
+
+  public void setErrorMsg ( String errorMsg ) {
+    this.errorMsg = errorMsg;
+  }
+  //Added by kamalakkannan for JIR-Category Ranking-chardonay.
+  public String getCategoryId() {
+		return myCategoryId;
+  }
+
+  public void setCategoryId(String categoryId) {
+		this.myCategoryId = categoryId;
+  }
+
+  public List getCtglist() {
+		return myCtglist;
+  }
+
+  public void setCtglist(List ctglist) {
+		this.myCtglist = ctglist;
+  }
+
+  public String getRegionCode() {
+		return myRegionCode;
+  }
+
+  public void setRegionCode(String regionCode) {
+		this.myRegionCode = regionCode;
+  }
+
+  public boolean getSMBcustomer() {
+		return mySMBcustomer;
+  }
+
+  public void setSMBcustomer(boolean bcustomer) {
+	  mySMBcustomer = bcustomer;
+  }  
+  //--------------END------------------//
+  
+  private static Pagination f_Pagination = null; // pagination support
+  private static SortInfo f_SortInfo = null; // pagination support
+
+
+
+}

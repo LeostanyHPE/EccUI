@@ -1,0 +1,42 @@
+package com.hp.ecc.ui.biz.admin;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
+import hp.comcat.dax.fwk.common.util.BizObject;
+
+public class EPrimeFTPQueue extends BizObject {
+	
+	private DateFormat dateFormat;
+	
+	public EPrimeFTPQueue() {
+		super();
+		dateFormat = new SimpleDateFormat("yyyy-MM-dd hh mm ss");
+	}
+
+	public static final String FILE_NAME = "file_name";
+	public static final String LOAD_TYPE="load_type";
+	public static final String CATALOG_ID = "catalog_id";
+	public static final String DISPLAY_SOURCE ="display_source";
+	public static final String VERSION = "version";
+	public static final String INCREMENTAL = "incremental";
+	public static final String STDTYPEVALUE = "stdTypeValue";
+	public static final String PRICE_DESCRIPTOR = "price_descriptor";
+	public static final String EVF_PROP_EVENT_ID="evf_prop_event_id";
+	public static final String PUBSTATUS="pubstatus";
+	public static final String LASTMODIFIEDTIMESTAMP="lastModifiedTimeStamp";
+	public static final String PUBLISHER ="publisher";
+	
+	
+//	public void setLoadType(String loadType) {
+//		// this.id = id;
+//		setValue(QueueListBean.LOADTYPE, loadType);
+//	}
+//
+//	public String getLoadType() {
+//		// return this.id;
+//		return (String) getValue(QueueListBean.LOADTYPE);
+//	}
+//	
+	
+}

@@ -1,0 +1,42 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.db.dao;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.google.gson.Gson;
+import com.hp.ecc.ui.biz.admin.LocaleLangCodeMap;
+
+/**
+ * @author reddvino
+ *
+ */
+public class CategoryContentMgmtDao {
+	
+	 public JSONArray getAllLocaleLangCode (String adbRegionToConnect) {
+		 JSONObject jSONObject = new JSONObject();
+		 LocaleLangCodeMap bean = new LocaleLangCodeMap ();
+		 DaxMgr daxMgr = DaxMgr.getInstance();
+		 DaxDB daxDb =  daxMgr.getDaxDB(adbRegionToConnect);
+		 DaxParsedStmt pstmt = null;
+		 pstmt = daxMgr.makeParsedStmt ( "ContentSearch", "getAllLocaleHpLangCode",LocaleLangCodeMap.class, null, null );
+		 JSONArray result = daxDb.doSelectJson ( pstmt, LocaleLangCodeMap.class, bean );
+		 if ( result == null ) {
+		      result = new JSONArray ();
+		 }
+		 jSONObject.put("java_lang_cd", "ww_WW");
+		 jSONObject.put("lang_cd", "99");
+		 result.add ( 0, jSONObject);///. new LocaleLangCodeMap ( "ww_WW", "99" ) );
+		 return result;
+	 }///getAllLocaleLangCode
+
+}

@@ -1,0 +1,36 @@
+<div class="row" ng-controller="viewBundleCrtl" id="viewBundleDetails" ng-init="initSearch()">
+<div modal="genericModel" ng-click="close(false)" class="dialogCloseBtn" ><img src="resources/images/hp/Critical.png"></img></div>
+		<div class="alert success" ng-show="successMessage!=''">{{successMessage}} </div>
+		<div class="alert error" ng-show="errorMessage!=''"><span >{{errorMessage}}</span></div>
+				      	
+      	<div class="customer_rows form-border">
+      		<div class="customer_rows"> 
+      			<div class="four columns">
+	               <div class="generals">
+	                   <span>Config ID:</span>
+	                   <input type="text" id="configId"  value="" maxlength="300" name="configId" ng-model="configId" ng-disabled="true" ></input>
+	               </div>
+	            </div>
+	            
+	            <div class="two columns">
+		            <div class="search">
+		               <a class="btn btn-inline" ng-click="close(false)" >Close</a>
+		            </div>
+	            </div>
+      		</div>
+      	</div>
+
+      	
+	    <div class="customer_rows id-body" ng-show="dataLoad">
+	      		<div class="twelve columns">
+		      		<div id="ecc_hpegrid1" hpe-grid
+				         grd-data="grid.data"
+				         grd-header="grid.header"
+				         grd-col-defs="grid.colDefs"
+				         grd-sort="grid.sort"
+				         grd-col-view-by="grid.colViewBy" 
+				         class="table-scroll">
+				     </div>
+	      		</div>
+	      	</div>
+      </div>

@@ -1,0 +1,50 @@
+eccApp.controller('manualProductDetailCtrl',['$scope', '$http', '$routeParams', '$timeout', 'shareddata', 'webStorage',
+  function ($scope, $http, $routeParams, $timeout, shareddata, webStorage) {
+	$scope.successMessage	=	'';
+	$scope.errorMessage		=	'';
+	$scope.productId=$routeParams.ProductId;
+		
+	$scope.loadManualProductDetails=function(){
+		$("#loadTime").html("");
+		$scope.hideMsg();
+		$scope.loadTime = new Date().getTime();
+		
+		$http({
+			url: "manual/manualProductDetail.htm?task=&ProductId="+encodeURIComponent($scope.productId),
+			method:"GET",
+			headers: {
+                "Accept": "application/json; charset=utf-8",	                
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).
+		success(function(data, status, headers, config) {
+		  	$scope.form = JSON.parse(data.formData);
+		  	$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		}).
+		error(function(data, status, headers, config) {
+		  	console.log("Error in service");
+		});
+	};
+	$scope.returnTo_manualProductDetailCtrl = webStorage.session.get('PrevPage');
+	$scope.cancelManualProductDetail = function(){
+		document.location.href=webStorage.session.get('PrevPage');
+	};
+	$scope.openImage = function(image){
+		window.open(image,'','left=300,top=200,width=600,height=300,toolbar=yes,menubar=yes,scrollbars=yes,resizable=yes');
+		return false;
+	};
+	      
+   	
+	$scope.showMsg=function(success, error){
+      	$scope.successMessage=success;
+      	$scope.errorMessage=error;
+    };
+    
+    $scope.hideMsg=function(){
+      	$scope.successMessage='';
+      	$scope.errorMessage='';
+    };
+	
+}]);

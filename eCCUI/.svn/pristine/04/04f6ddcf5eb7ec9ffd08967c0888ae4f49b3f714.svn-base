@@ -1,0 +1,32 @@
+package com.hp.ecc.ui.biz.archive;
+
+/**
+ * @version 1.0
+ */
+
+public interface CatalogArchiveFields {
+	/**
+	 * Fields are defined as follows.
+	 */
+
+	final public static String KEY = "archive_key";
+	final public static String BATCH_KEY = "batch_archive_key";
+	final public static String TASK_KEY = "task_key";
+	final public static String SCHEDULE_KEY = "schedule_key";
+	final public static String NAME = "archive_name";
+	final public static String STATUS = "archive_status";
+	final public static String CATALOG_ID = "catalog_id";
+	final public static String TIME_CREATED = "time_created";
+	final public static String TIME_PUBLISHED = "time_published";
+	final public static String PRODUCT_TOTAL = "product_total";
+	final public static String IS_APPROVED = "approve_flag";
+	final public static String IS_AUTO_UPLOAD = "auto_upload_flag";
+	final public static String IS_INCREMENTAL = "incremental_flag";
+	final public static String TARGET_HOST = "target_host";
+	final public static String BASE_ARCHIVE_KEY = "base_archive_key";
+	final public static String CREATOR = "archive_creator";
+	final public static String FILE_FORMAT = "file_format";
+	final public static String FILE_NAMES = "file_names";
+	final public static String FOLDER_PATH = "folder_path";
+
+}

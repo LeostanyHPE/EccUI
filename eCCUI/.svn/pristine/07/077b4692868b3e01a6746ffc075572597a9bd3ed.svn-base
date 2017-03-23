@@ -1,0 +1,110 @@
+package com.hp.ecc.ui.biz.processor.catalog;
+
+import java.util.HashMap;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.catalog.CatListHolder;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogDaxUtil;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.db.dao.StdCatalogListDao;
+import com.hp.ecc.ui.util.StrUtil;
+
+@Service
+public class StdCatalogListProcessor {
+	private static final Logger logger = LoggerFactory.getLogger(StdCatalogListProcessor.class);
+	
+	@Autowired
+	StdCatalogListDao stdCatalogListDao;
+
+	public List processRetrieveStdCatalog(String regionCode, String adbRegionToConnect,String tenantCode) {
+		Catalog cat = new Catalog();
+		cat.setRegionCode(regionCode);
+		cat.setCatalogType(Catalog.STD_CATLAOG);
+		cat.setTenantCode(tenantCode);
+		CatalogMgr mgr = new CatalogMgr();
+		List stdCatList = stdCatalogListDao.getStdCatalogsByRegion(cat, adbRegionToConnect);
+		return stdCatList; 
+	}
+	
+	
+	public HashMap<String, Object> processDeleteStdCatalog(List stdCatToDelete, String userId, String adbRegionToConnect) {
+		CatalogMgr mgr = new CatalogMgr ();
+	    boolean asyncFlagForStdCat = mgr.getAsyncFlagForStdCatDelete ();
+	    HashMap<String, Object> msg = new HashMap<String, Object>();
+		if (asyncFlagForStdCat) {
+				String updateCatalogDLC = mgr.stdCatDelete(stdCatToDelete, "STD_DELETE", userId);
+				if(updateCatalogDLC!=null && updateCatalogDLC.length()>0){
+					if(updateCatalogDLC.equalsIgnoreCase("DBException")||updateCatalogDLC.startsWith("Err-")) {
+						msg.put("errorMsg","Failed to put the Standard Catalog(s) into propagation queue for deletion.");
+						logger.debug("Failed to put the Standard Catalog(s) into propagation queue for deletion.");
+					} else {
+						msg.put("errorMsg","Failed to put the Standard Catalog(s): "+ updateCatalogDLC+ "  into propagation queue for deletion.");
+						logger.debug("Failed to put the Standard Catalog(s): "+ updateCatalogDLC+ "  into propagation queue for deletion.");
+					}
+				} else {
+					msg.put("successMsg","Standard Catalog(s): "+ StrUtil.joinListEndFree(stdCatToDelete, ",")+ "  have been put into propagation queue successfully for deletion.");
+					logger.debug("Standard Catalog(s): "+ StrUtil.joinListEndFree(stdCatToDelete, ",")+ "  have been put into propagation queue successfully for deletion.");
+				}
+	    } else {
+	    	CatListHolder ret = mgr.deleteCatalogs ( stdCatToDelete, adbRegionToConnect );
+	        String[] okList = ret.getSucceededList ();
+	        if ( okList != null && okList.length > 0 ) {
+	          msg.put("errorMsg","Delete catalog(s): " + StrUtil.joinEndFree ( okList, "," ) + " OK." );
+	          logger.debug("Delete catalog(s): " + StrUtil.joinEndFree ( okList, "," ) + " OK.");
+	        }
+	        String[] failList = ret.getFailedList ();
+	        if ( failList != null && failList.length > 0 ) {
+	          msg.put("errorMsg","Fail to Delete catalog(s): "+ StrUtil.joinEndFree ( failList, "," ) + "." );
+	          logger.debug("Fail to Delete catalog(s): "+ StrUtil.joinEndFree ( failList, "," ) + ".");
+	        }
+	    }
+		return msg;
+	}
+
+
+
+	public HashMap<String, Object> processPropagateStdCatalog(List propagateStdCatList, String userId, String adbRegionToConnect) {
+		HashMap<String, Object> msg = new HashMap<String, Object>();
+		String successCatalogs = "";
+		String failCatalogs = "";
+		String catalogPropagatedList = "";
+		
+		for(Object loopCatalogId:propagateStdCatList) {
+		    String catalogId = (String) loopCatalogId;
+		    boolean propagationSucess = false;
+			propagationSucess = CatalogDaxUtil.propagateCatalog(catalogId, "STANDARD_FULL", userId, adbRegionToConnect);
+
+			if(propagationSucess) {
+				successCatalogs  =  successCatalogs + "," + catalogId;
+			} else {
+				failCatalogs = failCatalogs + "," +catalogId;
+			}
+		    
+		}
+		
+		catalogPropagatedList = successCatalogs.substring(1).replace(',', '|');
+		CatalogDaxUtil.populateSUAudit(catalogPropagatedList, 2, userId, adbRegionToConnect);
+		
+		// Remove the extra "," from the catalog list
+		if (!StrUtil.isEmpty(successCatalogs)) {
+			successCatalogs = successCatalogs.substring(1);
+			msg.put("successMsg","The standard catalog(s): "+ successCatalogs+ " were successfully added to the propagation queue.");
+			logger.debug("The standard catalog(s): "+ successCatalogs+ " were successfully added to the propagation queue.");
+		}
+
+		if (!StrUtil.isEmpty(failCatalogs)) {
+			failCatalogs = failCatalogs.substring(1);
+			msg.put("errorMsg","Failed to add standard catalog(s): " + failCatalogs+ "to the propagation queue");
+			logger.debug("Failed to add standard catalog(s): " + failCatalogs+ "to the propagation queue");
+		}
+		
+		return msg;
+	}
+	
+}

@@ -1,0 +1,76 @@
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+
+	<annotation-driven/> 
+	<resources mapping="/resources/**" location="/resources/*" />
+
+	<beans:bean id="viewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/"/>
+		<beans:property name="suffix" value=".html"/>
+	</beans:bean>
+
+
+	<beans:bean id="contextProperties" class="com.hp.ecc.ui.common.beans.ContextProperties">
+        <beans:property name="comcat_config" value="C:/Oracle/Middleware/oepe_11.1.1.8.0/workspace/eCC_GPCO_Ph2/conf/comcat-config.xml"/>
+		<beans:property name="comcat_config_dir" value="C:/Oracle/Middleware/oepe_11.1.1.8.0/workspace/eCC_GPCO_Ph2/conf/"/>
+		<beans:property name ="comcat_ctx" value="com.hp.ecc.ui.common.util.FeCTX"/>
+		<beans:property name ="comcat_home" value="C:/Oracle/Middleware/oepe_11.1.1.8.0/workspace/eCC_GPCO_Ph2/"/>
+		<beans:property name ="comcat_log" value="C:/Oracle/Middleware/oepe_11.1.1.8.0/workspace/eCC_GPCO_Ph2/conf/log4j.properties"/>
+	</beans:bean>
+	
+	<!-- <beans:bean id="contextProperties" class="com.hp.ecc.ui.common.beans.ContextProperties">
+        <beans:property name="comcat_config" value="/opt/sasuapps/ecomcat/shared/applications_itg/eCCUI/conf/comcat-config.xml"/>
+		<beans:property name="comcat_config_dir" value="/opt/sasuapps/ecomcat/shared/applications_itg/eCCUI/conf/"/>
+		<beans:property name ="comcat_ctx" value="com.hp.ecc.ui.common.util.FeCTX"/>
+		<beans:property name ="comcat_home" value="/opt/sasuapps/ecomcat/shared/applications_itg/eCCUI/"/>		
+	</beans:bean>  -->
+
+	<beans:bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+	
+	<beans:bean id="jndiTemplate" class="org.springframework.jndi.JndiTemplate">
+	    <beans:property name="environment">
+	        <beans:props>
+	            <beans:prop key="java.naming.factory.initial">weblogic.jndi.WLInitialContextFactory</beans:prop>
+	        </beans:props>
+	    </beans:property>
+	</beans:bean>
+	
+	<beans:bean id="connectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean">
+	    <beans:property name="jndiTemplate" ref="jndiTemplate" />
+	    <beans:property name="jndiName" value="JMS_FACTORY" />
+	</beans:bean>
+	
+	<beans:bean id="destination" class="org.springframework.jndi.JndiObjectFactoryBean">
+	    <beans:property name="jndiTemplate" ref="jndiTemplate" />
+	    <beans:property name="jndiName" value="UPLOAD_QUEUE" />
+	</beans:bean>
+	
+	<beans:bean id="messageListener" class="com.hp.ecc.ui.upload.UploadMessageListener" />
+	
+	<beans:bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+	    <beans:property name="connectionFactory" ref="connectionFactory"/>
+	    <beans:property name="destination" ref="destination"/>
+	    <beans:property name="messageListener" ref="messageListener" />
+	</beans:bean>	
+	
+	<context:component-scan base-package="com.hp.ecc.ui" />	
+
+<interceptors>		
+		<interceptor>
+			<mapping path="/Login.htm" />
+			<beans:bean class="com.hp.ecc.ui.common.web.LoginInterceptor"></beans:bean> 
+		</interceptor>
+        <interceptor>
+            <mapping path="/*.htm" />                
+            <beans:bean class="com.hp.ecc.ui.common.web.CatBaseInterceptor"></beans:bean>
+        </interceptor>
+    </interceptors> 
+    
+</beans:beans>

@@ -1,0 +1,365 @@
+package com.hp.ecc.ui.biz.product;
+
+/**
+ * @author
+ * @version 1.0 Added fields for netPriceSource -
+ */
+
+public interface ProductFields {
+	/**
+	 * Fields are defined as follows.
+	 */
+	public static final String ID = "id";
+	public static final String PROD_ID = "prod";
+	public static final String PROD_W_OPTION = "prod_w_option";
+	public static final String SHORT_DESC = "short_desc";
+
+	// Newly added ModNumber by RaviShankar as a part of Poppy requirement
+	public static final String MOD_NUMBER = "mod_number";
+	public static final String MOD_DATE = "mod_date";
+
+	public static final String REGION_SHORT_DESC = "region_short_desc";
+	public static final String PROD_FMLY_CD = "prod_fmly_cd";
+	public static final String LAST_MODIFIED_BY = "last_modified_by";
+	public static final String LAST_MODIFIED_DATE = "last_modified_date";
+	public static final String UOM = "uom";
+	public static final String IMAGE_NAME = "image_name";
+	public static final String SRT = "srt";
+	public static final String MFG_PART_ID = "mfg_part_id";
+	public static final String SUPPLIER_PART_ID = "supplier_part_id";
+	public static final String DATA_SHEET_NAME = "datasheet_name";
+	public static final String SUPPLIER_ID = "supplier_id";
+	public static final String SUPPLIER_NAME = "supplier_name";
+	public static final String SUPPLIER_URL = "supplier_url";
+	public static final String MFG = "mfg";
+	public static final String MFG_URL = "mfg_url";
+	public static final String LONG_DESC = "long_desc";
+	public static final String REGION_LONG_DESC = "region_long_desc";
+	public static final String CATEGORY_ID = "category_id";
+	public static final String MAIN_CATEGORY_ID = "main_category_id";
+	public static final String CATEGORY_NAME = "category_description";
+	public static final String UNSPSC = "unspsc";
+	// Added as a part of publishing UNDP code in MVC catalogs for Chardonnay
+	public static final String UNDP = "undp";
+	public static final String LEASING_CATEGORY = "leasing_category";
+	public static final String PRODUCT_LINE = "pl";
+	public static final String SOURCE = "source";
+	public static final String THIRD_PARTY_PROD_FLAG = "third_party_prod_flag";
+	public static final String LOCAL_ACTIVITY_FLAG = "local_activity_flag";
+	public static final String WARR_CD = "warr_cd";
+	public static final String WARR_INFO = "warr_info";
+	public static final String PROD_TYPE = "prod_type";
+	public static final String PPC = "ppc";
+	public static final String PRICE_DESCRIPTOR = "price_descriptor";
+	public static final String PROD_EXPIRE_DATE = "prod_expire_date";
+	public static final String OPTIONS = "options";
+	public static final String REASON_CODE = "reason_code";
+
+	// public static final String OPTIONS = "COP_LOCALIZE_PROD";
+	public static final String LOCAL_PRICE = "local_price";
+	public static final String PRICE_EFF_DATE = "price_eff_date";
+	public static final String PRICE_END_DATE = "price_end_date";
+	public static final String NET_PRICE = "net_price";
+
+	// Field for Net price source
+	public static final String NET_PRICE_SOURCE = "price_src_id";
+	public static final String DEAL_PRICE = "deal_price";
+	public static final String BIG_DEAL_PRICE = "big_deal_price";
+	public static final String DOWN_GRADE_PRICE = "downgrade_price";
+	public static final String DOWN_GRADE_OPTION = "downgrade_option";
+	public static final String LINE_NR = "line_nr";
+	public static final String PRICE_INFO = "price_info";
+	public static final String BOM_FLAG = "bom_flag";
+	public static final String SPECIAL_PROD_FLAG = "special_prod_flag";
+	public static final String BUNDLE_FLAG = "bundle_flag";
+	public static final String CASUAL_BUY_FLAG = "contract_identifier";
+	public static final String FIXED_PRICE_FLAG = "fixed_price_flag";
+	public static final String PROD_LINE = "pl";
+	public static final String PROD_DISC = "prod_disc";
+	public static final String FINAL_DISC_APPLIED = "final_disc_applied";
+	public static final String PROD_DISC_TYPE = "discount_type_cd";
+	public static final String LINE_TYPE = "line_type";
+	public static final String QUANTITY = "qty";
+	public static final String CONTEXT_ID = "context_id";
+
+	// public static final String CONTEXT_DESC = "context_desc";
+	public static final String BASE_COMPONENT_FLAG = "base_component_flag";
+	public static final String DIFF_OPERATION = "operation";
+	public static final String CATALOG_ID = "catalog_id";
+
+	// public static final String PRICEBOOK_MASTER_ID = "pb_id";
+	// public static final String PROD_MASTER_ID = "prod_master_id";
+	public static final String MOS_ID = "mos_id";
+	public static final String ITEM_TYPE = "item_type";
+	public static final String HP_LANG_CODE = "hp_lang_cd";
+	public static final String JAVA_LANG_CODE = "java_lang_code";
+	public static final String ISO_CURR_CODE = "iso_curr_code";
+	public static final String ISO_CNTRY_CODE = "iso_cntry_code";
+	public static final String DELETE_FLAG = "delete_flag";
+	public static final String MODIFY_FLAG = "modify_flag";
+	public static final String BUNDLE_ID = "bundle_id";
+	public static final String BUNDLE_DESC = "bundle_desc";
+	public static final String BUNDLE_PRICE = "bundle_price";
+	public static final String BOM_NUMBER = "bom_number";
+	public static final String ARTICLE_TYPE = "article_type";
+	public static final String PROD_BD_ID = "bd_id";
+	public static final String CONTEXT_NAME = "context_name";
+	public static final String CAT_MASTER_KEY = "cat_master_key";
+	public static final String PART_TYPE = "part_type";
+	public static final String ATCOST_OPTION_GROUP = "option_group_code";
+	public static final String ATCOST_CATEGORY_ID = "atcost_category_id";
+	public static final String PRICE_CHANGE_REASON = "price_change_reason";
+	public static final String BUNDLE_KEY = "bundle_key";
+	public static final String SHOW_HIDE_FLAG = "show_hide_flag";
+	public static final String SHOW_HIDE_PRICE_FLAG = "show_hide_price_flag";
+	public static final String BUNDLE_BASE_PROD_FLAG = "bundle_base_prod_flag";
+	public static final String BUNDLE_FIXED_FLAG = "bundle_fixed_flag";
+	public static final String BUNDLE_ITEM_SEQ = "bundle_item_seq";
+	public static final String BUNDLE_OPT_GRP_KEY = "bundle_opt_grp_key";
+	public static final String BUNDLE_PARENT_KEY = "bundle_parent_key";
+	public static final String ASK_COMPAQ_LINK = "ask_compaq_link";
+	public static final String RESLR_CAT_HEIR = "reslrcategoryhierarchy";
+
+	// for invalid flag and invalid reason
+	public static final String VALIDATION_STATUS = "status";
+	public static final String INVALID_REASON = "failure_reason";
+
+	public static final String PRODUCT_CATEGORY = "product_category";
+	public static final String BUNDLE_LDESC_OVWT_FLAG = "bundle_ldesc_ovwt_flag";
+	public static final String BUNDLE_PRICE_OVWT_FLAG = "bundle_price_ovwt_flag";
+	public static final String BUNDLE_STATE = "bundle_state";
+	public static final String BUNDLE_START_DATE = "bundle_start_date";
+	public static final String BUNDLE_END_DATE = "bundle_end_date";
+
+	// for reslr
+	public static final String PROD_OVERRIDE = "prod_override";
+	public static final String PRICE_OVERRIDE = "price_override";
+	public static final String ACRP_PRICE = "avg_cust_retl_price";
+	public static final String ILP_PRICE = "int_list_price";
+
+	// for B2Bi
+	public static final String CURRENCY = "currency";
+
+	// for Reseller_catalgo_item table only
+	public static final String CAT_LEVEL1 = "cat_level1";
+	public static final String CAT_LEVEL2 = "cat_level2";
+	public static final String CAT_LEVEL3 = "cat_level3";
+	public static final String CAT_LEVEL4 = "cat_level4";
+	public static final String CAT_LEVEL5 = "cat_level5";
+	public static final String CAT_LEVEL6 = "cat_level6";
+
+	public static final String PGM_KEY = "pgm_key";
+	public static final String FFS_ID = "fs_id";
+	public static final String BD_NUMBER = "bd_number";
+
+	public static final String CROSS_SELL_AVAIL = "cross_sell_avail_flag";
+	public static final String PFSM = "pfsm_code";
+
+	public static final String MIME_TYPE_DATASHEET = "mime_type_datasheet";
+	public static final String MIME_TYPE_IMAGE = "mime_type_image";
+	public static final String BASE_PROD = "base_prod";
+
+	public static final String ADDED_FROM = "added_from";
+	public static final String EXCLUDE_FLAG = "cit_exclude_flag";
+	public static final String CONFIG_SRC = "config_src";
+	public static final String QTY = "qty";
+
+	public static final String BUNDLE_NAME = "bundle_name";
+	public static final String CONFIG_ID = "config_id";
+	public static final String LOC_OPT_FLAG = "loc_opt_flag";
+
+	public static final String TX_CURRENCY_CODE = "tx_currency_code";
+	public static final String CPM_SVC_PROVIDER_EMAILS = "cpm_svc_provider_emails";
+
+	public static final String PRE_CRC = "pre-crc";
+	public static final String POST_CRC = "post-crc";
+	public static final String WEIGHT = "weight";
+
+	public static final String PGM_NAME = "pgm_name";
+	public static final String FFS_NAME = "ffs_name";
+	public static final String SLA = "sla";
+	public static final String CONSUME_INVENTORY_FLAG = "ci_flag";
+
+	public static final String BUNDLE_SLA = "bundleSla";
+
+	// added for 4.1 rel
+	public static final String PRC_END_DATE = "prc_end_date";
+	public static final String CAT_ITEM_KEY = "cat_item_key";
+	public static final String TOTAL_COUNT = "totalCount";
+	public static final String INV_PROD_COUNT = "invProdCount";
+	public static final String STRING1 = "string1";
+	public static final String PRICE_MERGE_ID = "priceMergeId";
+	public static final String NODE_ID = "node_id";
+	public static final String REGION_CODE = "region_code";
+	public static final String COP_LOCALIZE_PROD = "opt.COP_LOCALIZE_PROD";
+	public static final String COP_CNTRY_CODE = "opt.COP_CNTRY_CODE";
+
+	public static final String EOL = "end_of_life";
+	public static final String EOL_DB_ATTR = "ctg_prod_att.eol_date";
+
+	public static final String LAST_MOD_DB_ATTR = "cat_item.cit_last_modified_date";
+
+	public static final String NET_PRICE_DB_ATTR = "cat_item_price.cip_net_price";
+	/*
+	 * incuded this field to fix HPeZilla Bug 55063 - Raghavendra
+	 */
+	public static final String NET_PRICE_DB_ATTR_PIP = "profile_item_price.pip_net_price";
+
+	public static final String ZONE_PRICE_DESCRIPTOR = "zone_descriptor";
+
+	public static final String XMS_WARRANTY_DESC = "xms_warranty_desc";
+
+	public static final String OPTIONS_LIST = "options_list";
+
+	public static final String RETURN_STATUS = "return_status";
+
+	public static final String RETURN_MESSAGE = "return_message"; // The error
+																	// message
+																	// that
+																	// needs to
+																	// be
+																	// displayed.(Added
+																	// for Vista
+																	// Special
+																	// pricing
+																	// module)
+
+	public static final String DISCONTINUE_DATE = "discontinue_date";
+	// Added for Chianti - Vinod
+	public static final String ES_DATE = "es_date";
+	public static final String GA_DATE = "ga_date";
+	public static final String DISCONTINUE_DATE_DB_ATTR = "ctg_prod_att.discontinue_date";
+
+	public static final String ACTIVITY_FLAG = "activity_flag";
+	public static final String AUTHORIZATION_CODE = "authorization_code";
+
+	public static final String CIT_SRC_PROD = "item.CIT_SRC_PROD";
+
+	public static final String SRC_PROD = "src_prod";
+	public static final String OPT_BASE_MODEL = "opt_base_model";
+	public static final String OPT_LOCALIZE_PROD = "opt_localize_prod";
+	public static final String RB_OPTIONS_MAP = "rebBlueOptionsMap";
+	public static final String BORG_ID = "borg_id";
+
+	public static final String NODE_PATH = "node_path";
+
+	// For GSA catalog only
+	// mod_no and promotion_no are no more required.
+	// public static final String PROMOTION_NO = "promotion_no";
+	// public static final String MOD_NO = "mod_no";
+	public static final String COO = "coo";
+	public static final String SIN = "sin";
+	public static final String WARR_NUMBER = "warr_number";
+	public static final String WARR_PERIOD = "warr_period";
+	public static final String MFG_NAME = "mfg_name";
+	// public static final String IMAGE_NAME = "image_name";
+
+	public static final String AUTH_MODEL = "auth_model";
+	public static final String STOCK_CODE = "stock_code";
+	public static final String ACTIVITY_CODE = "activity_code";
+	public static final String VISION_FLAG = "vision_flag";
+	public static final String BUNDLE_TYPE = "bundle_type";
+	public static final String LEVEL_PRICE_FLAG = "level_price_flag";
+	public static final String COST_BASE = "cost_base";
+
+	// For CQ6 Configuration only
+	public static final String CONFIG_REPLACEMENT_STATUS = "config_replacement_status";
+	public static final String CONFIG_REPLACED_BY_STRING = "config_replaced_by_string";
+
+	// Flag for finding out if there are any localization options available for
+	// a product to show BLUE or GREY arrow.
+	public static final String ZERO_PRICE_OPT_FLAG = "zeroPriceOptFlag";
+
+	// added by Merlot
+	public static final String ACCESS_MODE = "accessMode";
+	public static final String FUSION_VALIDATION = "";
+	public static final String FUSION_SKIP_VALIDATION = "";
+	public static final String FUSION_OVRT_VALIDATION = "";
+
+	public static final String SHIP_WEIGHT_IMPERIAL = "ship_weight_imperial";
+	public static final String SHIP_WEIGHT_METRIC = "ship_weight_metric";
+	public static final String SHIP_WEIGHT_IMPERIAL_UOM = "ship_weight_imperial_uom";
+	public static final String SHIP_WEIGHT_METRIC_UOM = "ship_weight_metric_uom";
+	public static final String STREET_PRICE = "street_price";
+
+	// Added for cabernet by Deepak Mankotia - Begin
+	public static final String RECYCLABLE_FLAG = "recyclable_flag";
+	public static final String INTANGIBLE_FLAG = "intangible_flag";
+	public static final String CAREPACK_FLAG = "carepack_flag";
+	// Added for cabernet by Deepak Mankotia - End
+	public static final String CONFIG_FLAG = "configFlag";
+	public static final String CALL_CENTER_FLAG = "item.cc_flag";
+
+	// Added by keshav for SASS
+	public static final String TANGIBLE_FLAG = "tangible_flag";
+	public static final String PRICE_TYPE = "cit_contract_identifier";
+	public static final String PRICE_SOURCE_TYPE = "cip_price_src_type";
+	public static final String DEAL_TYPE = "cip_deal_type";
+	public static final String OTHER_UNSPSC = "other_unspsc";
+	public static final String BID_PRICE = "cip_deal_price";
+	public static final String UNSPSC_PROD = "unspsc_prod";
+	public static final String CURRENCY_CD = "cip_tx_curr_cd";
+	public static final String BD_ID = "cip_price_src_id";
+
+	public static final String PRODUCT_COUNT = "totalCount";
+
+	// Added by Sivakumar on 19-Oct-2007
+	public static final String CUST_KEY = "cust_key";
+
+	// Added by Sivakumar on 22-Oct-2007 for LOCAL_PRICE
+	public static final String SKU_ID = "sku_id";
+	public static final String PROD_CURRENCY_CD = "curr_cd";
+	public static final String COUNTRY_CD = "cntry_cd";
+	public static final String PRC_TERM_CD = "prc_term_cd";
+	public static final String LIST_PRICE = "list_price";
+	public static final String UPDATE_FLAG = "update_flag";
+	public static final String PROD_INTRO_DATE = "prod_intro_dt";
+	public static final String LOW_LOCAL_PRICE = "low_local_price";
+	public static final String PE_FLAG = "pe_flag";
+	public static final String ORDERABLE_FLAG = "orderable_flag";
+	public static final String PUBLISH_FLAG = "publish_flag";
+
+	// Added by Sivakumar on 23-Oct-2007 for PRODUCT_SKU_XREF
+	public static final String PROVIDER = "provider";
+
+	// Added by Sivakumar on 23-Oct-2007 for RESELLER_CATALOG_ITEM
+	public static final String CUST_PRICE = "cust_price";
+	public static final String DATA_SHEET_URL = "datasheet_url";
+	public static final String TP_FLAG = "tp_flag";
+	public static final String TOSS_PRICE = "toss_price";
+	public static final String PART_DIRECT_PRICE = "part_direct_price";
+	public static final String DEALER_BUY_PRICE = "dealer_buy_price";
+
+	// Added for EESY
+
+	public static final String MIN_VALUE = "cia.cia_min_qty";
+	public static final String MAX_VALUE = "cia.cia_max_qty";
+	public static final String ROUTING_FLAG = "cia.cia_routing_flag";
+	public static final String ACTIVE = "cia.cia_active_flag";
+	public static final String ORDERABLE = "cia.orderable";
+	public static final String APPROVAL_FLAG = "cia.approval_flag";
+
+	// public static final String CLIN_NUMBER="mfg_part_id";
+
+	public static final String PULL_FLAG = "pull_flag";
+	public static final String PRODID = "prodId";
+
+	public final static String PROP_ACROSS_ALL = "A";
+	public final static String PROP_ACROSS_SELECTED = "S";
+
+	// Added for EPEAT
+	public static final String EPEAT_DESG = "EPEAT_DESG";
+	public static final String ENERGY_STAR = "ENERGY_STAR";
+
+	// Added for PLc
+	public static final String PL = "PRODUCT_LINE";
+	public static final String DATE = "DATES";
+	public static final String SKU = "SKU";
+	public static final String CUSTOMERID = "CUSTOMERID";
+	public static final String COUNTRY = "COUNTRY";
+
+	public static final String MANUFACTURER = "MANUFACTURER";
+	
+	public static final String TENANT_CD = "TENANT_CD";
+
+}

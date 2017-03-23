@@ -1,0 +1,297 @@
+/**
+ * 
+ */
+package com.hp.ecc.ui.biz.processor.catalog;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.log4j.Category;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.hp.ecc.ui.biz.ResponseStatus;
+import com.hp.ecc.ui.biz.ResponseStatusInfo;
+import com.hp.ecc.ui.biz.catalog.CatUtil;
+import com.hp.ecc.ui.biz.catalog.Catalog;
+import com.hp.ecc.ui.biz.catalog.CatalogMgr;
+import com.hp.ecc.ui.biz.category.CtgMgr;
+import com.hp.ecc.ui.biz.format.CatalogFormatMgr;
+import com.hp.ecc.ui.biz.misc.CountryMgr;
+import com.hp.ecc.ui.biz.misc.RegionFields;
+import com.hp.ecc.ui.biz.misc.SupplierMgr;
+import com.hp.ecc.ui.biz.offer.CustOfferUtil;
+import com.hp.ecc.ui.biz.offersetup.PurchaseTermBean;
+import com.hp.ecc.ui.common.util.FeCTX;
+import com.hp.ecc.ui.db.dao.StandardCatalogDao;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.StandardCatalogBean;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+/**
+ * @author dholakia
+ *
+ */
+@Service
+public class CreateStandardCatalogProcessor {
+	
+	private static final Logger logger = LoggerFactory.getLogger(CreateStandardCatalogProcessor.class);
+	private Category log  = FeCTX.getCTX ().getLog ();
+	
+	@Autowired
+	StandardCatalogDao standardCatalogDao;
+	
+	public List getPlcLclpOmValues(String regionCode, String adbRegionToConnect) {
+
+		 return standardCatalogDao.getPlcLclpOmValues(regionCode, adbRegionToConnect);
+	 }
+	
+	public JSONArray getCountryListByRegion(String regionCode, String adbRegionToConnect) {
+		return CatUtil.getCountryListByRegion(regionCode, "r-"+regionCode, adbRegionToConnect);
+	}
+	
+	public JSONArray getLocalesList(String adbRegionToConnect) {
+		return CatUtil.getLocales(adbRegionToConnect);
+	}
+	
+	public JSONArray getPriceProfiles(String adbRegionToConnect,String tenantCode) {
+		return CatUtil.getPriceProfileListStdCatalog(adbRegionToConnect,tenantCode);
+	}
+	
+	public JSONArray getNamedSuppliers ( String regionCode, String adbRegionToConnect) {
+	
+		SupplierMgr supplierMgr = SupplierMgr.getSupplierMgr ();
+		JSONArray suppliers = null;
+		//For global region get all the suppliers, for other retrive their region specific
+		if ( regionCode != null && regionCode.equalsIgnoreCase ( RegionFields.CONST_GL_REGION ) ) {
+			suppliers = supplierMgr.getAllSuppliers ( adbRegionToConnect);
+		}
+		else {
+			suppliers = supplierMgr.getSupplierByRegion ( regionCode ,adbRegionToConnect);
+		
+		}
+		return suppliers;	
+	}
+	
+	public JSONArray getFormatList(String regionCode ,String tenantCode) {
+		CatalogFormatMgr mgr = CatalogFormatMgr.getCatalogFormatMgr();
+		 
+		return mgr.getAvaliableCatalogFormatInfosForRegionWithoutEprime(regionCode,tenantCode);
+	}
+
+	public JSONArray getCategorizationList(String adbRegionToConnect) {
+		return CtgMgr.getMasterCategorizations(adbRegionToConnect);
+	}
+	
+	public JSONArray getAllDefLocOptOriList(String regionCode, String adbRegionToConnect) {
+		String[] arr = {};
+		return CatUtil.getAllDefLocOptOriList(regionCode, arr, adbRegionToConnect);
+	}
+	
+	public JSONArray getPriceDescriptors(List countryCodesList, String regionCode, String rRegionCode, String adbRegionToConnect) {
+		CatUtil.removeAllCountriesFromSelectedCountryList(countryCodesList, regionCode, rRegionCode); 
+		return CatUtil.getPriceDescriptorListByCountrys(countryCodesList, regionCode, rRegionCode, adbRegionToConnect);
+	}
+	
+	public static void initForm (StandardCatalogBean form, String regionCode, String adbRegionToConnect) {
+		String[] selCountryArray = form.getSelectedCountryList();
+		/*if(selCountryArray!=null && selCountryArray.length>0) {
+			form.setAPRegionSaleCountry(false);
+			form.setEURegionSaleCountry(false);
+			for (int i = 0; i < selCountryArray.length; i++) {
+				String reg = PagesUtil.getRegion(selCountryArray[i], adbRegionToConnect);
+				if("AP".equalsIgnoreCase(reg)) {
+					form.setAPRegionSaleCountry(true);
+				} else if ("EU".equalsIgnoreCase(reg)) {
+					form.setEURegionSaleCountry(true);
+				}
+			}
+		}*/
+		List selCountryList = null;
+		if (selCountryArray != null) {
+			selCountryList = Arrays.asList(selCountryArray);
+		}
+		String ctryCDFirst = null;
+		if (selCountryList != null && selCountryList.size() > 0) {
+			boolean apSet = false;
+			boolean euSet = false;
+			for (int i = 0; i < selCountryList.size(); i++) {
+				ctryCDFirst = (String) selCountryList.get(i);
+				if( ctryCDFirst != null && ctryCDFirst.contains("r-")) 
+				{
+					int startindx = ctryCDFirst.indexOf("-");
+					ctryCDFirst = ctryCDFirst.substring(startindx+1,ctryCDFirst.length());
+				}
+				if( ctryCDFirst != null && ctryCDFirst.equalsIgnoreCase("GL")){
+					form.setAPRegionSaleCountry(true);
+					form.setEURegionSaleCountry(true);
+					break;
+				}
+				else
+				{
+					String reg = PagesUtil.getRegion(ctryCDFirst,adbRegionToConnect);
+					if(reg != null )
+					{
+						if (reg.equalsIgnoreCase("AP")) {
+							form.setAPRegionSaleCountry(true);
+							apSet  =true;
+						}else if (reg.equalsIgnoreCase("EU")) {
+							form.setEURegionSaleCountry(true);
+							euSet = true;
+						}
+						if( apSet && euSet)
+						{
+							break;
+						}
+					}
+				}
+			}
+		}
+		form.setAllCountriesInRegionStr(CountryMgr.getCountryMgr().getAllCountryCodeStrByRegion(regionCode, adbRegionToConnect));
+		
+	}
+	
+	public static void copyFormToCatalogObj ( String op, StandardCatalogBean form
+            , Catalog cat, String user, String regionCode, String rRegionCode ) {
+		//if ( op.equalsIgnoreCase(CONST_STR_OP_CREATE))
+	    //{
+	    if ( form.getSelectedPriceDescriptorList () != null
+	         && form.getSelectedPriceDescriptorList ().length > 0 ) {
+	      List ll = StrUtil.strArrayToList ( form.getSelectedPriceDescriptorList () );
+	      for ( int i = 0; i < ll.size (); i++ ) {
+	        if ( ( ( String ) ll.get ( i ) ).length () != 7 ) {
+	          ll.remove ( i );
+	        }
+	      }
+	      form.setSelectedPriceDescriptorList ( StrUtil.listToStrArray ( ll ) );
+	    }
+	    // remove 'None' option from the list if it is selected in the form
+	    if( form.getSelectedPriceProfileList()!=null &&
+	    	form.getSelectedPriceProfileList().length >0 ){
+	    	List ppl = StrUtil.strArrayToList(form.getSelectedPriceProfileList());
+	    	try{
+	    		ppl.remove(ppl.indexOf("-1"));
+	    	}catch(IndexOutOfBoundsException iobe){
+	    		;// Ignore this exception. This will be thrown when list doesn't contain the element "-1"
+	    	}
+	    	form.setSelectedPriceProfileList ( StrUtil.listToStrArray ( ppl ) );
+	    }
+	
+	    if ( !op.equalsIgnoreCase ( "create" ) ) {
+	      cat.setId ( form.getCatalogID ().trim () );
+	
+	    }
+	
+	    cat.setCatalogName ( form.getCatalogName () != null
+	                         ? form.getCatalogName ().trim () : null );
+	    cat.setCatalogType ( Catalog.STD_CATLAOG );
+	    cat.setRegionCode ( regionCode );
+		//cat.setLastModifiedBy ( PagesUtil.geLoginUserID ( request ) );
+	    //cat.setModifyBy ( PagesUtil.geLoginUserID ( request ) );
+	    /*	HEMANTH - lastmodifiedby size in DB is 20 chars, 
+	    	so it should be trimmed incase, if exceeds more.*/
+	    //String user = PagesUtil.geLoginUserID ( request );
+	    if (user.length() > 20 ) {
+	    	cat.setModifyBy ( user.substring(0, 20) );
+	    	cat.setLastModifiedBy ( user.substring(0, 20) );
+	    } else {
+	    	cat.setModifyBy ( user );
+	    	cat.setLastModifiedBy ( user );
+	    }
+	    cat.setSupplierId ( form.getSupplierID () != null
+	                        ? form.getSupplierID ().trim () : null );
+	
+	    //cat.setCntryList(form.getSelectedCountryList());
+	
+	    /*if ( form.getSelectedCountryList () != null
+	         && form.getSelectedCountryList ().length == 1
+	         && ( form.getSelectedCountryList () )[0].equalsIgnoreCase ( rRegionCode ) ) {
+	      //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country list length: " + form.getSelectedCountryList().length);
+	      //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country : " + (form.getSelectedCountryList())[0]);
+	    }
+	    else {
+	      //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country list length: " + form.getSelectedCountryList().length);
+	      //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country : " + (form.getSelectedCountryList())[0]);
+	      cat.setCntryList ( form.getSelectedCountryList () );
+	    }*/
+	    
+	    if ( form.getSelectedCountryList () != null
+	            && form.getSelectedCountryList ().length == 1
+	            && ( form.getSelectedCountryList () )[0].contains("r-") ) 
+	    {
+	         //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country list length: " + form.getSelectedCountryList().length);
+	         //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country : " + (form.getSelectedCountryList())[0]);
+	       	if( form.getAllCountriesInRegionStr() != null ) 
+	       		cat.setCntryList (  form.getAllCountriesInRegionStr().split(","));
+	       }
+	       else {
+	         //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country list length: " + form.getSelectedCountryList().length);
+	         //FeCTX.getCTX().getLog().debug(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Country : " + (form.getSelectedCountryList())[0]);
+	         cat.setCntryList ( form.getSelectedCountryList () );
+	       }
+	    cat.setPriceDescritproList ( form.getSelectedPriceDescriptorList () );
+	    cat.setStatus ( form.getStatus () != null ? form.getStatus ().trim () : null );
+	    cat.setLangCode ( form.getSelectedLocaleList () != null
+	                      ? form.getSelectedLocaleList () : null );
+	    cat.setFormatKey ( form.getCatalogFormat () != null
+	                       ? form.getCatalogFormat ().trim () : null );
+	    cat.setProdCtgID ( form.getCtgID () != null ? form.getCtgID ().trim () : null );
+	
+	    cat.setBizModel ( form.getBizModelCode () != null
+	                      ? form.getBizModelCode ().trim () : null );
+	    cat.setExpireDate ( form.getExpiryDate () );
+	    cat.setOptionCategory ( form.getLocalSelHidden() != null
+	                            ? form.getLocalSelHidden ().trim () : null );
+	    cat.setOptions ( form.getOptions () != null ? form.getOptions ().trim () : null );
+	    cat.setOptCountries ( form.getOptCateCountries () );
+	  //for testing start
+	    /*if( form.getOptCateCountries() != null && form.getOptCateCountries ().length() > 500 )
+	    {
+	    	String optCatCntries = form.getOptCateCountries().substring(0,497);
+	    	cat.setOptCountries (optCatCntries);
+	    }*/
+	    //for testnig end
+	    System.out.println("Comments : "+form.getComments());
+	    cat.setComments ( form.getComments () != null ? form.getComments ().trim () : null );
+	    System.out.println("Set in obj Comments : "+cat.getComments());
+	    //cat.setFusionOrderabilityFlag ( form.getFusionOrderabilityFlag () );
+		cat.setFusionOrderabilityFlag ( form.isOmCheck()?"Y":"N" );
+	    //Added for Chianti - vinod
+	    cat.setOrderCheckFlag(form.isLclpCheck()?"Y":"N");
+	    cat.setPlcCheck(form.isPlcCheck()?"Y":"N");
+	    //End
+	    cat.setEmailWarning ( form.isEmailWarnings ()?"Y":"N" );
+	    cat.setPriceProfileList( form.getSelectedPriceProfileList());
+	    cat.setPurchaseTerm(form.getPurchaseTerm() != null? form.getPurchaseTerm(): null );
+	    cat.setTenantCode(form.getTenantCode());
+	}
+
+	public void saveCreateCatalog(Catalog catalog, JSONObject retObj, String adbRegionToConnect) {
+		CatalogMgr mgr = new CatalogMgr ();
+		ResponseStatus rs = mgr.add(catalog, adbRegionToConnect);
+		if ( rs != null && rs.getType () == ResponseStatusInfo.OK ) {
+			Catalog catRet = (Catalog)rs.getBizObj();
+			String catID = catRet.getId();
+			retObj.put("id", catID);
+			retObj.put("successMsg", rs.getMessage());
+			logger.debug("saveCreateCatalog(): "+ rs.getMessage());
+		} else {
+			retObj.put("errorMsg", rs.getMessage());
+			logger.debug("saveCreateCatalog(): "+ rs.getMessage());
+		}
+	}
+	
+	public JSONArray getAllPurchasingTerm(String regionCode, String adbRegionToConnect) {
+		if("AP".equalsIgnoreCase(regionCode) || "GL".equalsIgnoreCase(regionCode)) {
+			return CustOfferUtil.getOfferDetails(
+					 "offerSetup", "getAllPurchaseTerm", PurchaseTermBean.class, adbRegionToConnect);
+		}
+		return null;
+	}
+
+
+}

@@ -1,0 +1,87 @@
+package com.hp.ecc.ui.common.util;
+
+import java.util.Hashtable;
+
+public class HtmlCharsConverter {
+
+  public static String convertToHtmlChars ( String input, Hashtable charMapping ) {
+    if ( input == null ) {
+      return null;
+    }
+    if ( charMapping == null ) {
+      return input;
+    }
+    char c;
+    String output;
+    int length = input.length ();
+    StringBuffer out = new StringBuffer ();
+    for ( int i = 0; i < length; i++ ) {
+      c = input.charAt ( i );
+      output = ( String ) charMapping.get ( new Integer ( ( int ) c ) );
+      if ( output == null ) {
+        out.append ( c );
+      }
+      else {
+        out.append ( output );
+      }
+    }
+//      System.out.println(out);
+    return out.toString ();
+  }
+
+  public static String convertFromHtmlChars ( String input ) {
+    if ( input == null ) {
+      return null;
+    }
+    int count = 0;
+    while ( true ) {
+      int index = input.indexOf ( "&", count );
+      if ( index == -1 ) {
+        break;
+      }
+      else {
+        count = index;
+      }
+      index = input.indexOf ( ";", count );
+      if ( index == -1 ) {
+        break;
+      }
+      else if ( index < count ) {
+        break;
+      }
+      else {
+        String sub = input.substring ( count + 1, index );
+        if ( sub.equals ( "lt" ) ) {
+          sub = "<";
+        }
+        else if ( sub.equals ( "gt" ) ) {
+          sub = ">";
+        }
+        else if ( sub.equals ( "quot" ) ) {
+          sub = "\"";
+        }
+        else if ( sub.equals ( "amp" ) ) {
+          sub = "&";
+        }
+        else if ( sub.equals ( "#0174" ) ) {
+          sub = "®";
+        }
+        else if ( sub.equals ( "#0169" ) ) {
+          sub = "©";
+        }
+        if ( index == input.length () - 1 ) {
+          index--;
+        }
+        input = input.substring ( 0, count ) + sub
+                + input.substring ( index + 1 );
+        count = index;
+      }
+    }
+    return input;
+  }
+
+  public static void main ( String[] args ) {
+    String s = "4040Racks & Cabinets";
+    //s = convertToHtmlChars(s);
+  }
+}

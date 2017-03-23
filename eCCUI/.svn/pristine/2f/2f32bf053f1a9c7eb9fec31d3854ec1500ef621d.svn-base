@@ -1,0 +1,104 @@
+eccApp.controller('editRulesCrtl',['$scope','$http','webStorage','$routeParams','$rootScope',
+  function($scope,$http,webStorage,$routeParams,$rootScope) {
+	$scope.successMessage = '';
+	$scope.errorMessage = '';
+
+	$scope.allowEolProducts = '';
+	$scope.preserveComponents = '';
+	
+	$scope.ruleslist = '';
+
+	$scope.selected={};
+	$scope.enablelog={};
+	$scope.lastmodifiedby={};
+	$scope.lastmodifieddate={};
+	
+	$scope.cust_key=$routeParams.cust_key;
+			
+	$scope.formData={};
+
+	$scope.init = function() {
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"Edit Rules Task\"");
+
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+		$http.get("customer/retrieveCustomerRules.htm?cust_key="+$scope.cust_key).
+		  success(function(data) {	
+			  $scope.ruleslist = data;
+			  bind($scope.ruleslist);  
+		});
+	};
+
+	function bind(data){
+
+		  for(var i=0;i<data.customer.length;i++){
+			  $scope.selected[data.customer[i].ruleid]=data.customer[i].checked;
+			  $scope.enablelog[data.customer[i].ruleid]=data.customer[i].enablelog;
+			  $scope.lastmodifiedby[data.customer[i].ruleid]=data.customer[i].lastmodifiedby;
+			  $scope.lastmodifieddate[data.customer[i].ruleid]=data.customer[i].lastmodifieddate;
+		  }
+	}
+	
+	$scope.save= function(){
+		var urltext="customer/saveCustomerRules.htm?cust_key="+$scope.cust_key;
+		
+		for (var i = 0; i < $scope.ruleslist.customer.length; i++) {
+			urltext = urltext+"&"+$scope.ruleslist.customer[i].ruleid+"="+$scope.selected[$scope.ruleslist.customer[i].ruleid];
+		}
+		$http({
+			url : urltext,
+	        method : 'GET',
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"}
+	    }).success(function(data) {	
+			  $scope.ruleslist = data;
+			  bind(data);
+	          $scope.successMessage='Rules saved successfully';
+	        }).error(function(response){
+	        	$scope.errorMessage='Error while saving';
+	        });
+	};
+	
+	$scope.cancel = function() {
+		webStorage.session.add('PrevB4DisplayPage', '#/EditRules?cust_key='+$scope.cust_key);
+		document.location.href="#/CustomerProf?cust_key="+$scope.cust_key;
+	};
+	
+	$scope.setOutput = function(ruleid, $index, value) {
+		$scope.selected[ruleid] = $scope.outputs[ruleid] || [];
+	    $scope.selected[ruleid][$index] = value;
+	};
+	
+	$scope.defaultToRegionSetting = function() {
+		
+		$http({
+			url : "customer/resetCustomerRules.htm?cust_key="+$scope.cust_key,
+	        method : 'GET',
+			headers: {
+				"Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"}
+	    }).success( function(data){
+	       bind(data);
+	       $scope.successMessage='Regional rules set as default successfully';
+	        }).error(function(response){
+	        	$scope.errorMessage='Error while saving';
+	        });
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+	};
+	
+	$scope.showMsg = function(success, error) {
+		$scope.successMessage = success;
+		$scope.errorMessage = error;
+	};
+	$scope.hideMsg = function() {
+		$scope.successMessage = '';
+		$scope.errorMessage = '';
+	};
+}]);

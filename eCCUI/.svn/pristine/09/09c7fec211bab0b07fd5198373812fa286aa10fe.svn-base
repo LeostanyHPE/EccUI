@@ -1,0 +1,358 @@
+eccApp.controller('sogStandardCatalogExceptionCtrl',['$scope', '$http', '$timeout', 'webStorage', '$routeParams', 
+  function ($scope, $http, $timeout, webStorage, $routeParams) {
+	$scope.successMessage='';
+	$scope.errorMessage='';
+	
+	$scope.form = {};
+	$scope.addDataToTable=[];
+		
+	$scope.showStandardCatalogExceptionGridDiv = false;
+	$scope.sogStandardCatalogExceptionGridDiv  = false;
+	
+	$scope.loadSogStandardCatalogException = function(){
+		$scope.custLoginDetails = webStorage.local.get('userAccountId')+"-"+webStorage.local.get('userRegion')+"-"+webStorage.local.get('userRoleId');
+		console.log($scope.custLoginDetails+" \"SOG Standard Catalog Exception Task\"");
+		
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		$scope.form.sogID = $routeParams.sogId;
+		$scope.form.sogName = $routeParams.sogName;
+		$scope.form.sogStdCatalogID = $routeParams.stdCatalogID;
+		$scope.form.sogStdCatalogName = $routeParams.stdCatalogName;
+		
+		$http({
+			url: 'csog/sogStdCatalogException.htm',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {
+			$scope.CountryList = JSON.parse(data.countryList);
+			$scope.form.sogCatCountries = $scope.CountryList[0].countryCode;
+			
+			$scope.PriceDescriptorList = JSON.parse(data.priceDescList);
+			$scope.PriceDescriptorList.unshift({price_descriptor : "Select Price Descriptor"});
+			$scope.form.sogCatPriceDescriptor = $scope.PriceDescriptorList[0].price_descriptor;
+			
+			$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");			
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+				
+		 });
+	};
+	
+	$scope.changePriceDesc = function(){
+		if($scope.form.fCountry == -1){
+			$scope.form.fPrcDescriptor = $scope.form.fPriceDescriptorList[0].price_descriptor;
+			return;
+		}else if($scope.form.fCountry == 0)
+			$scope.form.fCountry = "";
+		
+		$http({
+			url: 'csog/sogStdCatalogException.htm',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {
+			$scope.form.fCountryList = JSON.parse(data.countryList);
+			
+			$scope.PriceDescriptorList = JSON.parse(data.priceDescList);
+			$scope.PriceDescriptorList.unshift({price_descriptor : "Select Price Descriptor"});
+			$scope.form.sogCatPriceDescriptor = $scope.PriceDescriptorList[0].price_descriptor;
+			
+			if($scope.form.sogCatCountries == 'US')
+				$scope.form.sogCatPriceDescriptor = 'USUSDDP';	
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+				
+		 });
+	};
+	
+	$scope.searchCatalogBundles = function(){
+		$("#loadTime").html("");
+		$scope.loadTime = new Date().getTime();
+		if($scope.form.sogStdCatCountries == undefined && $scope.form.sogStdCatPriceDescriptor == undefined && $scope.form.sogCustID == undefined && $scope.form.sogCustName == undefined && $scope.form.sogMasterCatalogID == undefined && $scope.form.sogMasterCatalogName == undefined){
+			$scope.hideMsg();
+			$scope.showMsg('','Please enter atleast one parameter in form to proceed search');
+			return;
+		}
+		$scope.hideMsg();	
+		$scope.sogStandardCatalogExceptionGridDiv = false;
+		$scope.form.retrievedFieldsFromDB = [];
+		
+		$http({
+			url: 'csog/sogStdCatalogException.htm?task=search',
+			method:"POST",
+			data:$scope.form,
+			headers: {
+                "Accept": "application/json; charset=utf-8",
+				"Cache-Control" : "no-cache",
+				"Pragma" : "no-cache",
+				"If-Modified-Since" : "0"
+            }
+		 }).success(function(data,status,header,config) {
+			 if(data.masterCatList == undefined || data.masterCatList == null){
+				 $scope.hideMsg();
+				 $scope.showMsg('','No Catalog found');
+				 return false;
+			 }
+			 $scope.hideMsg();
+			 $scope.masterCatalogList = JSON.parse(data.masterCatList);
+				$scope.addDataToTable=[];
+				$scope.addDataToTable.length = 0;
+				
+				angular.forEach($scope.masterCatalogList, function(catalog){	
+			  		catalog.chkFlag = false;
+		  		   	$scope.addDataToTable.push([
+		  		   	     0,
+		        	     "<input type='checkbox' id='"+catalog.masterCatalogID+"' onClick=angular.element(document.getElementById('sogStandardCatalogException')).scope().setCheckedFlag('"+catalog.masterCatalogID+"') "+ $scope.getChecked(catalog)+"/>",
+		        	     catalog.masterCatalogID,
+		        	     catalog.priceDescriptor,
+		        	     catalog.customerID,
+		        	     catalog.customerName,
+		        	     $scope.getInclusionModes(catalog)
+		        	 ]);  
+		  		  $scope.form.retrievedFieldsFromDB.push(catalog.masterCatalogID + '^' + catalog.assignFlag + '^' + catalog.includeExcludeFlag + '^' + catalog.statusFlag + '^' + catalog.sogItemKey + '^' + catalog.sogExceptionKey + '^' + catalog.sogCustKey + '^' + catalog.inclusionMode);
+			    });	
+				
+				if ($scope.addDataToTable.length >0){
+	              	 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+	              	 $('#search_result').dataTable().fnClearTable();
+					  $('#search_result').dataTable().fnAddData($scope.addDataToTable);
+	              	 
+			  	 }else{
+			  		$scope.hideMsg();
+			  		$scope.showMsg('','no catalogs found');
+			  	 }
+			
+				$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+		 }).error(function(data, status, headers, config) {
+			  ///	console.log("Session Expired please try to relogin.");
+				
+		 });
+		
+	};
+	
+	$scope.setCheckedFlag = function(catalogId){
+        angular.forEach($scope.masterCatalogList, function(catalog){               
+        	if(catalog.masterCatalogID == catalogId){
+                if(document.getElementById(catalogId).checked == true)
+                	catalog.chkFlag = true;
+                else
+                	catalog.chkFlag = false;
+        	}                        
+         });        
+	};
+	
+		$scope.checkAll = function(){
+			
+			if(document.getElementById('chkAllFlag').checked == true){
+				 angular.forEach($scope.masterCatalogList, function(catalog){                
+		        	 if(document.getElementById(catalog.masterCatalogID) != null){
+		        		 document.getElementById(catalog.masterCatalogID).checked = true;
+		        		 catalog.chkFlag = true;
+		        	 }
+		        });
+			}else{
+				angular.forEach($scope.masterCatalogList, function(catalog){                
+		        	 if(document.getElementById(catalog.masterCatalogID) != null){
+		        		 document.getElementById(catalog.masterCatalogID).checked = false;
+		        		 catalog.chkFlag = false;
+		        	 }
+		        });
+			}
+		};
+		
+		$scope.getChecked = function(catalog){
+			if(catalog.exceptionFlag != 'Y'){
+				catalog.chkFlag = true;
+				return "checked";
+			}else
+				return "";
+		};
+		
+		$scope.getInclusionModes = function(item){
+			var selectStr = "<select id='"+ item.masterCatalogID+"-inclusionModes' value='"+ item.inclusionMode+"' onchange=angular.element(document.getElementById('sogStandardCatalogException')).scope().changeMode(this)> ";
+				selectStr += "<option value='C' "+getSelected(item,'C')+">General Catalog</option>";
+				selectStr += "<option value='G' "+getSelected(item,'G')+">General Catalog (Including Generic Price Products)</option>";
+				
+				if($scope.regionCode == 'US')
+					selectStr += "<option value='A' "+getSelected(item,'A')+">General Catalog (Customer's Authorized Products)</option>";
+				selectStr += "</select>";
+				
+				return selectStr;
+				
+		};
+		
+		function getSelected(item,optionVal){
+			return item.inclusionMode == optionVal ? "selected" : "";
+		}
+		
+		$scope.changeMode = function(elem){
+			angular.forEach($scope.masterCatalogList, function(catalog){	
+		  		if(elem.id == catalog.masterCatalogID + '-inclusionModes')
+		  			catalog.inclusionMode = elem.options[elem.selectedIndex].value;
+		    });	
+		};
+		
+		$scope.updateStdCatException = function(){
+			$("#loadTime").html("");
+			$scope.loadTime = new Date().getTime();
+			$scope.form.catalogSelectionInForm = [];
+			$scope.form.inclusionModesInForm = [];
+			
+			angular.forEach($scope.masterCatalogList, function(catalog){	
+				if(catalog.chkFlag == true)
+					$scope.form.catalogSelectionInForm.push(catalog.masterCatalogID);
+				$scope.form.inclusionModesInForm.push(catalog.inclusionMode);
+		    });	
+			
+			
+			$http({
+				url: 'csog/sogStdCatalogException.htm?task=update',
+				method:"POST",
+				data:$scope.form,
+				headers: {
+	                "Accept": "application/json; charset=utf-8",
+					"Cache-Control" : "no-cache",
+					"Pragma" : "no-cache",
+					"If-Modified-Since" : "0"
+	            }
+			 }).success(function(data,status,header,config) {
+				 if(data.masterCatList == undefined || data.masterCatList == null){
+					 $scope.hideMsg();
+					 $scope.showMsg('','No Catalog found');
+					 return false;
+				 }
+				 $scope.form.retrievedFieldsFromDB = [];
+				 $scope.hideMsg();
+				 if(data.errorMsg){
+					 $scope.showMsg('',data.errorMsg);
+				 }else{
+					 $scope.showMsg('Update Successful...','');
+				 }
+				 $scope.masterCatalogList = JSON.parse(data.masterCatList);
+					$scope.addDataToTable=[];
+					$scope.addDataToTable.length = 0;
+					
+					angular.forEach($scope.masterCatalogList, function(catalog){	
+				  		catalog.chkFlag = false;
+			  		   	$scope.addDataToTable.push([
+			  		   	     0,
+			        	     "<input type='checkbox' id='"+catalog.masterCatalogID+"' onClick=angular.element(document.getElementById('sogStandardCatalogException')).scope().setCheckedFlag('"+catalog.masterCatalogID+"') "+ $scope.getChecked(catalog)+"/>",
+			        	     catalog.masterCatalogID,
+			        	     catalog.priceDescriptor,
+			        	     catalog.customerID,
+			        	     catalog.customerName,
+			        	     $scope.getInclusionModes(catalog)
+			        	 ]);  
+			  		  $scope.form.retrievedFieldsFromDB.push(catalog.masterCatalogID + '^' + catalog.assignFlag + '^' + catalog.includeExcludeFlag + '^' + catalog.statusFlag + '^' + catalog.sogItemKey + '^' + catalog.sogExceptionKey + '^' + catalog.sogCustKey + '^' + catalog.inclusionMode);
+				    });	
+					
+					if ($scope.addDataToTable.length >0){
+		              	 $scope.globalCodeToGenertaeDataGrid('search_result', $scope.addDataToTable);
+		              	 $('#search_result').dataTable().fnClearTable();
+						  $('#search_result').dataTable().fnAddData($scope.addDataToTable);
+		              	 
+				  	 }else{
+				  		$scope.hideMsg();
+				  		$scope.showMsg('','no catalogs found');
+				  	 }
+						
+					$("#loadTimeSpan").html( "Page Load Time &nbsp;:"+ (new Date().getTime() - $scope.loadTime)+" milli seconds");
+			 }).error(function(data, status, headers, config) {
+				  ///	console.log("Session Expired please try to relogin.");
+					
+			 });
+			
+		};
+	
+		$scope.globalCodeToGenertaeDataGrid = function(tableId,aaData){
+			$.fn.dataTableExt.oJUIClasses.sSortJUI ="css_right icon-sort";
+			$.fn.dataTableExt.oJUIClasses.sSortJUIAsc ="css_right icon-sort-up";
+			$.fn.dataTableExt.oJUIClasses.sSortJUIDesc ="css_right icon-sort-down";
+			oTable = $("table#"+tableId+"").DataTable({
+				"sEcho": 4,
+					"aaData": aaData,
+					"sPaginationType" : "commonStandard",
+					"bAutoWidth" : false,
+					"bPaginate" :true,
+					"bJQueryUI": true,
+					"bRetrieve": true,
+					"bDestroy": true,
+					"bSortable":false,
+					"processing": false,
+			        "serverSide": true,
+					"sDom": '<"t_header"RrClf><"t_body"t><"t_footer"pi>',
+					"bSort": true,
+					//"aaSorting":[ [2,'asc']] ,
+					"aaSortingFixed":[ [0,'desc']] ,
+					"aoColumnDefs": [
+					{ "sWidth": "250px", "aTargets": [ 2,3,4 ] },
+					{ "sWidth": "450px", "aTargets": [ 6 ] },
+					{ "sClass": "center unsortable", "aTargets": [ 1 ] },
+					{ "sClass": "unsortable", "aTargets": [ 4] },
+					{ "sClass": "editable", "aTargets": [ 3,4] },
+					{ "bVisible": false, "aTargets": [ 0 ] },
+					{ "bSortable": false, "aTargets": [ 1 ] }
+					],
+					"oColReorder": {
+					"iFixedColumns": 2 // Define fixed column and checkbox column can not be dragged.
+					},
+					"oLanguage": {
+					"sLengthMenu": "<div class='sLengthText'>View Results of</div> _MENU_ ",
+					"sInfo": "<span class='number_highlight'>_TOTAL_</span> items, <span class='number_highlight'>_TOTALPAGE_</span> pages",
+					"sSearch": "Filter:",
+					"sInfoFiltered": "",
+					"sInfoEmpty":"<span class='number_highlight'>0</span> items, <span class='number_highlight'>0</span> pages",
+					"oPaginate": {
+					"sFirst": "<i class='icon-double-angle-left'></i>",
+					"sLast": "<i class='icon-double-angle-right'></i>",
+					"sNext": "<i class='icon-angle-right'></i>",
+					"sPrevious": "<i class='icon-angle-left'></i>"}
+					},
+					"oColVis": {
+					"buttonText": 'View By <i class="icon-chevron-down"></i>',
+					"aiExclude": [ 0,1 ],
+					"bShowAll": true,
+					"sShowAll": "Show All",
+					"sAlign":"left"
+			        }
+			});
+			if(!$("#"+tableId+"_length select").next().hasClass("selecter")){
+			$("#"+tableId+"_length select").selecter();
+			}
+		 	$scope.sogStandardCatalogExceptionGridDiv = true;
+		 	$("#sogStandardCatalogExceptionButtons").css({"display":'block'});
+		 	
+		 	
+		};
+	
+	$scope.Cancel = function(){
+		document.location.href="#/sogStandardCatalog?sogID="+$scope.form.sogID;
+	};
+	
+	$scope.done = function(){
+		document.location.href="#/sogStandardCatalog?sogID="+$scope.form.sogID;
+	};
+	
+	 $scope.showMsg=function(success, error){
+		   	$scope.successMessage=success;
+		   	$scope.errorMessage=error;
+		};
+		
+	$scope.hideMsg=function(){
+		   	$scope.successMessage='';
+		   	$scope.errorMessage='';
+		};
+	
+}]);

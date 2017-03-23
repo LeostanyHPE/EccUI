@@ -1,0 +1,235 @@
+package com.hp.ecc.ui.biz.deal;
+
+
+import com.hp.ecc.ui.common.biz.BizObject;
+
+public class DealUpload extends BizObject 
+{
+	public DealUpload () {
+	    super ();
+	  }
+
+	  // Get and Set method for custId.
+	  public String getCustId () {
+	    return ( String ) getValue ( DealUploadFields.CUST_ID );
+	  }
+
+	  public void setCustId ( String cust_id ) {
+	    setValue ( DealUploadFields.CUST_ID, cust_id );
+	  }
+
+	  // Get and Set method for custName.
+	  public String getCustName () {
+	    return ( String ) getValue ( DealUploadFields.CUST_NAME );
+	  }
+
+	  public void setCustName ( String cust_name ) {
+	    setValue ( DealUploadFields.CUST_NAME, cust_name );
+	  }
+
+	  // Get and Set method for CNTRY_CD.
+	  public String getCntryCd () {
+	    return ( String ) getValue ( DealUploadFields.CNTRY_CD );
+	  }
+
+	  public void setCntryCd ( String cntry_cd ) {
+	    setValue ( DealUploadFields.CNTRY_CD, cntry_cd );
+	  }
+
+	  // Get and Set method for user
+	  public String getUser () {
+	    return ( String ) getValue ( DealUploadFields.USER );
+	  }
+
+	  public void setUser ( String user ) {
+	    setValue ( DealUploadFields.USER, user );
+	  }
+
+
+	  // Get and Set method for priceTermCd.
+	  public String getPriceTermCd () {
+	    return ( String ) getValue ( DealUploadFields.PRICE_TERM_CD );
+	  }
+
+	  public void setPriceTermCd ( String price_term_cd ) {
+	    setValue ( DealUploadFields.PRICE_TERM_CD, price_term_cd );
+	  }
+
+	  // Get and Set method for currCd.
+	  public String getCurrCd () {
+	    return ( String ) getValue ( DealUploadFields.CURR_CD );
+	  }
+
+	  public void setCurrCd ( String curr_cd ) {
+	    setValue ( DealUploadFields.CURR_CD, curr_cd );
+	  }
+
+	  // Get and Set method for langCd
+	  public String getLangCd () {
+	    return ( String ) getValue ( DealUploadFields.LANG_CD );
+	  }
+
+	  public void setLangCd ( String lang_cd ) {
+	    setValue ( DealUploadFields.LANG_CD, lang_cd );
+	  }
+
+	  // Get and Set method for reginCd
+	  public String getRegionCd () {
+	    return ( String ) getValue ( DealUploadFields.REGION_CD );
+	  }
+
+	  public void setRegionCd ( String region_cd ) {
+	    setValue ( DealUploadFields.REGION_CD, region_cd );
+	  }
+
+	  // Get and Set method for exchangeRateOptionCd
+	  public String getExchangeRateOptionCd () {
+	    return ( String ) getValue ( DealUploadFields.EXCHANGE_RATE_OPTION_CD );
+	  }
+
+	  public void setExchangeRateOptionCd ( String exchange_rate_option_cd ) {
+	    setValue ( DealUploadFields.EXCHANGE_RATE_OPTION_CD
+	               , exchange_rate_option_cd );
+	  }
+
+	  // Get and Set method for begDt
+	  public String getBegDt () {
+	    return ( String ) getValue ( DealUploadFields.BEG_DATE );
+	  }
+
+	  public void setBegDt ( String beg_dt ) {
+	    setValue ( DealUploadFields.BEG_DATE, beg_dt );
+	  }
+
+	  // Get and Set method for endDt.
+	  public String getEndDt () {
+	    return ( String ) getValue ( DealUploadFields.END_DATE );
+	  }
+
+	  public void setEndDt ( String end_dt ) {
+	    setValue ( DealUploadFields.END_DATE, end_dt );
+	  }
+
+	  // Get and Set method for deleteFlag
+	  public String getDeleteFlag () {
+	    return ( String ) getValue ( DealUploadFields.DELETE_FLAG );
+	  }
+
+	  public void setDeleteFlag ( String delete_flag ) {
+	    setValue ( DealUploadFields.DELETE_FLAG, delete_flag );
+	  }
+
+	  //Get and Set method for validation mesage
+	  public String getValidationMsg () {
+	    return ( String ) getValue ( DealUploadFields.VALIDATION_MSG );
+	  }
+
+	  public void setValidationMsg ( String valMsg ) {
+	    setValue ( DealUploadFields.VALIDATION_MSG, valMsg );
+	  }
+
+	  /*New fields for Lava*/
+	  public String getPreSalesId () {
+	    return ( String ) getValue ( DealUploadFields.PRE_SALES_ID );
+	  }
+
+	  public void setPreSalesId ( String salesId ) {
+	    setValue ( DealUploadFields.PRE_SALES_ID, salesId );
+	  }
+
+	  public String getOmsId () {
+	    return ( String ) getValue ( DealUploadFields.OMS_ID );
+	  }
+
+	  public void setOmsId ( String omsId ) {
+	    setValue ( DealUploadFields.OMS_ID, omsId );
+	  }
+
+	  public String getCustSeg () {
+	    return ( String ) getValue ( DealUploadFields.CUST_SEG );
+	  }
+
+	  public void setCustSeg ( String custSeg ) {
+	    setValue ( DealUploadFields.CUST_SEG, custSeg );
+	  }
+
+	  public String getIndVer () {
+	    return ( String ) getValue ( DealUploadFields.IND_VER );
+	  }
+
+	  public void setIndVer ( String indVer ) {
+	    setValue ( DealUploadFields.IND_VER, indVer );
+	  }
+
+	  public String getPreSalesSrc () {
+	    return ( String ) getValue ( DealUploadFields.PRE_SALES_SRC );
+	  }
+
+	  public void setPreSalesSrc ( String preSalesSrc ) {
+	    setValue ( DealUploadFields.PRE_SALES_SRC, preSalesSrc );
+	  }
+
+	  public String getSaleCntryCd () {
+	    return ( String ) getValue ( DealUploadFields.SALE_CNTRY_CD );
+	  }
+
+	  public void setSaleCntryCd ( String saleCntryCd ) {
+	    setValue ( DealUploadFields.SALE_CNTRY_CD, saleCntryCd );
+	  }
+
+	  public String getReqName () {
+	    return ( String ) getValue ( DealUploadFields.REQ_NAME );
+	  }
+
+	  public void setReqName ( String regName ) {
+	    setValue ( DealUploadFields.REQ_NAME, regName );
+	  }
+
+	  public String getReqEmail () {
+	    return ( String ) getValue ( DealUploadFields.REQ_EMAIL );
+	  }
+
+	  public void setReqEmail ( String regEmail ) {
+	    setValue ( DealUploadFields.REQ_EMAIL, regEmail );
+	  }
+
+	  public String getCustDun () {
+	    return ( String ) getValue ( DealUploadFields.CUST_DUN );
+	  }
+
+	  public void setCustDun ( String custDun ) {
+	    setValue ( DealUploadFields.CUST_DUN, custDun );
+	  }
+
+	  public String getDealId () {
+	    return ( String ) getValue ( DealUploadFields.DEAL_ID );
+	  }
+
+	  public void setDealId ( String dealId ) {
+	    setValue ( DealUploadFields.DEAL_ID, dealId );
+	  }
+
+	  public String getDealSeq () {
+	    return ( String ) getValue ( DealUploadFields.DEAL_SEQ );
+	  }
+
+	  public void setDealSeq ( String dealSeq ) {
+	    setValue ( DealUploadFields.DEAL_SEQ, dealSeq );
+	  }
+
+	  public String getBdId () {
+	    return ( String ) getValue ( DealUploadFields.BD_ID );
+	  }
+
+	  public void setBdId ( String bdId ) {
+	    setValue ( DealUploadFields.BD_ID, bdId );
+	  }
+	  
+	  public String getTenantCode() {
+		 return (String) getValue(DealUploadFields.TENANT_CD);
+	  }
+
+	  public void setTenantCode(String tenantCode) {
+		 setValue(DealUploadFields.TENANT_CD, tenantCode);
+	  }
+}

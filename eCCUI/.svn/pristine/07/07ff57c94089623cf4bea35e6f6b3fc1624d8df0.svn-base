@@ -1,0 +1,138 @@
+package com.hp.ecc.ui.biz.category;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDataCollector;
+import hp.comcat.dax.fwk.common.db.dax.DaxResultSetToBeanConvertor;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+import org.apache.log4j.Category;
+
+import com.hp.ecc.ui.biz.product.ProductContent;
+import com.hp.ecc.ui.biz.orderability.OrderabilityMgr;
+import com.hp.ecc.ui.biz.product.Product;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+
+/*
+ * Author : reddvino
+ */
+public class ProductContentDaxCollector implements DaxDataCollector {
+	private OrderabilityMgr ordMgr;
+	private String priceDescriptors[];
+	private String priceDescriptorCountries[];
+	private String noPriceDescriptorCountries[];
+	private ResultSetFilter filter;
+	private Category logger;
+	private HashMap productMap;
+	private boolean isCurrentProductFilteredOut;
+
+	public ProductContentDaxCollector(String noPriceDescriptorCountries[],
+			String priceDescriptors[]) {
+		ordMgr = OrderabilityMgr.getOrderabilityMgr();
+		this.priceDescriptors = priceDescriptors;
+		if (priceDescriptors != null) {
+			priceDescriptorCountries = new String[priceDescriptors.length];
+			for (int i = 0; i < priceDescriptors.length; i++) {
+				priceDescriptorCountries[i] = priceDescriptors[i].substring(0,
+						2);
+			}
+		}
+		this.noPriceDescriptorCountries = noPriceDescriptorCountries;
+		logger = Category.getInstance(this.getClass());
+		productMap = new HashMap();
+	}
+
+	public void setFilter(ResultSetFilter filter) {
+		this.filter = filter;
+	}
+
+	/*
+	 * Products with same prod ID may appear more than once in the result due to
+	 * different localization, discontinue date, node path etc. (especially in
+	 * product pool serach). Collate these multiple products into one
+	 * ProductContent object for GUI.
+	 */
+	public boolean isNewBean(ResultSet row) {
+		try {
+			isCurrentProductFilteredOut = false;
+
+			/* First do filtering by set filters if any */
+			while (filter != null) {
+				if (filter.skipProduct(row)) {
+					isCurrentProductFilteredOut = true;
+					return false;
+				}
+				filter = filter.getParentFilter();
+			}
+
+			/* Check if the product is new only if it's not filtered out earlier */
+			String prodID = row.getString("prod");
+			if (productMap.containsKey(prodID)) {
+				return false;
+			}
+
+			/* Current product IS NOT filtered out and IS new. */
+			return true;
+		} catch (SQLException sqlEx) {
+			logger.error(
+					"Error in ProductOrderabilityDaxCollector.isNewBean()",
+					sqlEx);
+			throw new CatRuntimeException(sqlEx);
+		}
+	}
+
+	public void addBean(ResultSet row, DaxResultSetToBeanConvertor cvt) {
+		if (!isCurrentProductFilteredOut) {
+			Product currentProduct = new Product();
+			cvt.resultSetRecordToBean(currentProduct, row);
+
+			ProductContent prodCtnt = null;
+			if (!productMap.containsKey(currentProduct.getProdId())) {
+				prodCtnt = new ProductContent(currentProduct);
+				productMap.put(prodCtnt.getProdId(), prodCtnt);
+				Map orderabilityMap = ordMgr.getOrderablilityByPrcDescAndCntry(
+						prodCtnt.getProdId(), noPriceDescriptorCountries,
+						priceDescriptors, "default");
+				for (int i = 0; i < priceDescriptorCountries.length; i++) {
+					Boolean orderable = (Boolean) orderabilityMap
+							.get(priceDescriptorCountries[i]);
+					prodCtnt.setOrderability(priceDescriptorCountries[i],
+							orderable.booleanValue());
+				}
+				for (int i = 0; i < noPriceDescriptorCountries.length; i++) {
+					Boolean orderable = (Boolean) orderabilityMap
+							.get(noPriceDescriptorCountries[i]);
+					prodCtnt.setOrderability(noPriceDescriptorCountries[i],
+							orderable.booleanValue());
+				}
+			} else {
+				prodCtnt = (ProductContent) productMap.get(currentProduct
+						.getProdId());
+			}
+
+			String nodePath = currentProduct.getNodePath();
+			if ((nodePath != null) && (nodePath.trim().length() > 0)) {
+				prodCtnt.addNodePath ( nodePath );
+			}
+
+			String cntryCode = currentProduct.getCntryCode();
+			java.util.Date dcDate = currentProduct.getDiscontinueDate();
+			if ((cntryCode != null) && (cntryCode.trim().length() > 0)
+					&& (dcDate != null)) {
+				prodCtnt.setDiscontinueDate(cntryCode, dcDate);
+			}
+		}
+	}
+
+	public List getDataList() {
+		Set keys = productMap.keySet();
+		ArrayList results = new ArrayList(keys.size());
+		Iterator itr = keys.iterator();
+		while (itr.hasNext()) {
+			String prodID = (String) itr.next();
+			results.add(productMap.get(prodID));
+		}
+		return results;
+	}
+}

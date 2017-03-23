@@ -1,0 +1,3017 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<comcat-dax-config>
+
+<stmt-group id="GROUP_BDL_UPDATE">
+
+        <stmt id="CREATE_BDL_TEMPLATE">
+                call FE_BUNDLE.create_bundle_template(
+                        {o:bundleTemplateID},
+                        {i:customerPartID},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:image},
+                        {i:datasheet},
+                        {i:programNum},
+                        {i:startDate},
+                        {i:endDate},
+                        {i:sysGenLongDescFlag},
+                        {i:sysGenDatasheetFlag},
+                        {i:custID},
+                        'STANDARD',
+                        'Y',
+                        'N',
+                        {i:regionCode},
+                        {i:lastModifiedBy},
+						{i:genProgramNum},
+						 {i:tenantCode}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BDL_TEMPLATE">
+                call FE_BUNDLE.save_bundle_template(
+                        {i:bundleTemplateID},
+                        {i:customerPartID},
+                        {i:programNum},
+                        {i:startDate},
+                        {i:endDate},
+                        {i:sysGenLongDescFlag},
+                        {i:sysGenDatasheetFlag},
+                        {i:custFlag},
+                        {i:lastModifiedBy},
+                        {i:genProgramNum}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BDL_TEMPLATE_CONTENT">
+                call FE_BUNDLE.save_template_content(
+                        {i:bundleTemplateID},
+                        {i:hpLangCode},
+                        {i:bundleCompType},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:baseModelImageFlag},
+                        {i:image},
+                        {i:datasheet},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="DELETE_BDL_TEMPLATE">
+                call FE_BUNDLE.delete_bundle_template(
+                        {i:bundleTemplateID}
+                        )
+        </stmt> 
+
+        <stmt id="SAVE_BDL">
+                call FE_BUNDLE.save_catalog_bundle(
+                        {i:bundleID},
+                        {i:catalogID},
+                        {i:customerPartID},
+                        {i:programNum},
+                        {i:startDate},
+                        {i:endDate},
+                        {i:SLA},
+                        {i:fullfilmentSite},
+                        {i:txCurrCode},
+                        {i:serviceProviderEmails},
+						{i:supplierPartID},
+						{i:supplierURL},
+						{i:manufacturer},
+                        {i:localizationStr},
+                        {i:locCountryStr},
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BDL_CONTENT">
+                call FE_BUNDLE.save_bundle_content(
+                        {i:catalogID},
+                        {i:bundleID},
+                        '',
+                        {i:hpLangCode},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:baseModelImageFlag},
+                        {i:image},
+                        {i:datasheet},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="DELETE_BDL">
+                call FE_BUNDLE.delete_catalog_bundle(
+                        {i:catalogID},
+                        {i:bundleID}
+                        )
+        </stmt>
+
+
+        <stmt id="SAVE_OPTION_GROUP_RANK">
+                update BDL_TEMPLATE_GROUPS
+                   set BTG_RANK = {?:rankNum},
+					   BTG_LAST_MODIFIED_BY = {?:lastModifiedBy},
+					   BTG_LAST_MODIFIED_DATE = sysdate
+                where  BTG_COMP_ID = {?:bundleCompID}
+        </stmt>
+
+
+        <stmt id="CREATE_BDL_GROUP_TEMPLATE">
+                call FE_BUNDLE.create_bundle_group_template(
+                        {i:bundleTemplateID},
+                        {o:bundleCompID},
+                        {i:parentBundleCompID},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:image},
+                        {i:datasheet},
+                        {i:bundleCompType},
+                        {i:min},
+                        {i:max},
+                        {i:quantity},
+                        {i:deltaPriceFlag},
+                        {io:rankNum},
+                        {io:levelNum},
+                        {i:requiredFlag},
+			{i:preselectFlag},
+			{i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:custFlag},            
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+
+        <stmt id="SAVE_BDL_GROUP_TEMPLATE">
+                call FE_BUNDLE.save_bundle_group_template(
+                        {i:bundleCompID},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:image},
+                        {i:datasheet},
+                        {i:min},
+                        {i:max},
+                        {i:quantity},
+                        {i:deltaPriceFlag},
+                        {i:requiredFlag},
+			{i:preselectFlag},
+			{i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:custFlag},              
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+	<stmt id="COPY_BDL_GROUP_TEMPLATE">
+                call FE_BUNDLE.copy_bundle_group_template(
+                        {i:bundleTemplateID}, 
+                        {i:parentBundleCompID},
+                        {io:bundleCompID},
+                        {i:shortDesc},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BDL_GROUP_TEMPLATE_CONTENT">
+                call FE_BUNDLE.save_template_content(
+                        {i:bundleCompID},
+                        {i:hpLangCode},
+                        {i:bundleCompType},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        'N',
+                        {i:image},
+                        {i:datasheet},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+
+        <stmt id="DELETE_BDL_GROUP_TEMPLATE">
+                update BDL_TEMPLATE_GROUPS set btg_modified_flag = 'D' where BTG_COMP_ID = {?:bundleCompID} or PARENT_COMP_ID = {?:bundleCompID}
+        </stmt>
+
+
+        <stmt id="UPDATE_PRESELECTED_FLAG">
+                 update BDL_TEMPLATE_GROUPS set btg_preselect_flag = {?:preselectFlag} where BTG_COMP_ID = {?:bundleCompID} 
+				</stmt>
+
+
+	<stmt id="GET_INSTANCE_OPTION_PACKS">
+	      select cbg.BDT_ID, btc.BDC_SHORT_DESC, 
+	      from CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_CONTENT btc
+	      where cbg.cat_catalog_id = {?:catalogID} 
+	      	and cbg.CBD_ID = {?:bundleID}
+	      	and  btc.BDC_COMP_ID = cbg.BTG_COMP_ID 
+	      	and btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+
+	</stmt>
+        <stmt id="CREATE_BDL_GROUP">
+                call FE_BUNDLE.create_catalog_bundle_group(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {o:bundleCompID},
+                        {i:parentBundleCompID},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:image},
+                        {i:datasheet},
+                        {i:bundleCompType},
+                        {i:min},
+                        {i:max},
+                        {i:quantity},
+                        {i:deltaPriceFlag},
+                        {io:rankNum},
+                        {io:levelNum},
+                        {i:requiredFlag},
+			{i:preselectFlag},
+			{i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+
+        <stmt id="SAVE_BDL_GROUP">
+                call FE_BUNDLE.save_catalog_bundle_group(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {i:bundleCompID},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        {i:image},
+                        {i:datasheet},
+                        {i:min},
+                        {i:max},
+                        {i:quantity},
+                        {i:deltaPriceFlag},
+                        {i:requiredFlag},
+			{i:preselectFlag},
+			{i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+	<stmt id="COPY_BDL_GROUP">
+                call FE_BUNDLE.copy_bundle_group_instance(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {io:bundleCompID},
+                        {i:shortDesc},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BDL_GROUP_CONTENT">
+                call FE_BUNDLE.save_bundle_content(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {i:bundleCompID},
+                        {i:hpLangCode},
+                        {i:shortDesc},
+                        {i:longDesc},
+                        'N',
+                        {i:image},
+                        {i:datasheet},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+
+        <stmt id="DELETE_BDL_GROUP">
+                call FE_BUNDLE.delete_catalog_bundle_group(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {i:bundleCompID},
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BUNDLE_PROD_RANK">
+                update BDL_TEMPLATE_PRODS
+                   set BTP_RANK = {?:rankNum},
+                           BTP_LAST_MODIFIED_BY = {?:lastModifiedBy},
+                           BTP_LAST_MODIFIED_DATE = sysdate
+                where  BTP_COMP_ID = {?:bundleCompID}
+        </stmt>
+
+
+        <stmt id="CREATE_BDL_PROD_TEMPLATE">
+                call FE_BUNDLE.create_bundle_prod_template(
+                        {i:bundleTemplateID},
+                        {o:bundleCompID},
+                        {i:parentBundleCompID},
+                        {i:sourceProd},
+                        {i:configID},
+                        {i:configSource},
+                        {i:contextID},
+                        {i:quantity},
+                        {i:variableQtyFlag},
+                        {o:rankNum},
+                        {o:levelNum},
+                        {i:specialPriceFlag},
+                        {i:baseProdFlag},
+                        {i:localizeFlag},
+                        {i:requiredFlag},
+                        {i:preselectFlag},
+                        {i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:inTheBoxFlag},
+                        {i:shipTogetherFlag},
+                        {i:custFlag},              
+                        {i:lastModifiedBy},
+                        {i:dealId}
+                        )
+        </stmt>
+
+
+        <stmt id="SAVE_BDL_PROD_TEMPLATE">
+                call FE_BUNDLE.update_bundle_prod_template(
+                        {i:bundleCompID},
+                        {i:quantity},
+                        {i:variableQtyFlag},
+                        {i:baseProdFlag},
+                        {i:localizeFlag},
+                        {i:requiredFlag},
+                        {i:preselectFlag},
+                        {i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:inTheBoxFlag},
+                        {i:shipTogetherFlag},
+                        {i:chargeShippingFlag},
+                        {i:lastModifiedBy},
+                        {i:dealId},
+                        {i:configID},
+                        {i:contextID},
+                        {i:configSource},
+                        {i:custFlag}                        
+                        )
+           </stmt>
+
+        <stmt id="CHANGE_LOCAL_BDL_PROD_TEMPLATE">
+        	update BDL_TEMPLATE_PRODS
+        	set btp_src_prod = {?:sourceProd},
+        	    btp_localize_flag = 'N',
+        	    btp_modified_flag = 'L',
+        	    btp_last_modified_by = {?:lastModifiedBy},
+        	    btp_last_modified_date = sysdate,
+				btp_item_key = {?:itemKey}
+        	where btp_comp_id = {?:bundleCompID}	
+        </stmt>
+        
+        <stmt id="DELETE_BDL_PROD_TEMPLATE">
+                update BDL_TEMPLATE_PRODS set btp_modified_flag = 'D' where BTP_COMP_ID = {?:bundleCompID}
+        </stmt>
+
+         <stmt id="UPDATE_BDL_TEMPLATE_CUST_FLAG">
+                update BDL_TEMPLATE_INFO set bdt_cust_flag ='Y' where BDT_ID = {?:bundleTemplateID}  
+        </stmt>
+
+        <stmt id="CREATE_BDL_PROD">
+                call FE_BUNDLE.create_catalog_bundle_prod(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {o:bundleCompID},
+                        {i:parentBundleCompID},
+                        {i:sourceProd},
+                        {i:configID},
+                        {i:configSource},
+                        {i:contextID},
+                        {i:quantity},
+                        {i:variableQtyFlag},
+                        {o:rankNum},
+                        {o:levelNum},
+                        {i:specialPriceFlag},
+                        {i:localizeFlag},
+                        {i:requiredFlag},
+                        {i:preselectFlag},
+                        {i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:inTheBoxFlag},
+                        {i:shipTogetherFlag},
+                        NULL,
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="SAVE_BDL_PROD">
+                call FE_BUNDLE.save_catalog_bundle_prod(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {i:bundleCompID},
+                        {i:quantity},
+                        {i:variableQtyFlag},
+                        {i:localizeFlag},
+                        {i:requiredFlag},
+                        {i:preselectFlag},
+                        {i:hideFlag},
+                        {i:priceHideFlag},
+                        {i:inTheBoxFlag},
+                        {i:shipTogetherFlag},
+                        {i:chargeShippingFlag},
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="CHANGE_LOCAL_BDL_PROD">
+                call FE_BUNDLE.update_cat_bdl_prod_loc(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {i:bundleCompID},
+                        {i:localizedProd},
+                        {i:lastModifiedBy},
+						{i:itemKey}
+                        )
+        </stmt>
+
+        <stmt id="DELETE_BDL_PROD">
+                call FE_BUNDLE.delete_catalog_bundle_prod(
+                        {i:catalogID},
+                        {i:bundleID},
+                        {i:bundleCompID},
+                        {i:custFlag},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="CREATE_BUNDLE_FROM_TEMPLATE">
+                call FE_BUNDLE.create_bundle_instance(
+                        {i:catalogID},
+                        {i:bundleTemplateID},
+                        {i:shortDesc},
+                        {i:programNum},
+                        {i:localizationStr},
+                        {i:locCountryStr},
+                        {o:bundleID},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="PROPAGATE_BDL_TEMPLATE_CHANGES">
+                call FE_BUNDLE.propagate_template(
+                        {i:bundleTemplateID},
+                        {o:affectedBundleIDs|CBD_ID_TBL},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>
+
+        <stmt id="COPY_BUNDLE_TEMPLATE">
+                call FE_BUNDLE.copy_template(
+						{i:bundleTemplateID},
+						{o:bundleTemplateID},
+                        {i:customerPartID},
+                        {i:programNum},
+                        {i:startDate},
+                        {i:endDate},
+                        {i:sysGenLongDescFlag},
+                        {i:sysGenDatasheetFlag},
+                        {i:baseModelImageFlag},
+                        {i:custID},
+                        {i:lastModifiedBy},
+                        {i:genProgramNum},
+                         {i:tenantCode}
+                        )
+        </stmt>
+
+        <stmt id="QUICK_MANAGE_DEL_TEMPLATE_PRODS">
+        	update BDL_TEMPLATE_PRODS
+        	set btp_modified_flag = 'D',
+        	    btp_last_modified_by = {?:lastModifiedBy},
+        	    btp_last_modified_date = sysdate
+        	where bdt_id in ({@q:selectedBundle})
+        	  and btp_src_prod in ({@q:prodIDsToDelete})
+        </stmt>
+
+        <stmt id="QUICK_MANAGE_REPLACE_PROD">
+			call FE_BUNDLE.replace_bundle_prod_template(
+					{i:templateId},
+					{i:originalProd},
+					{i:replaceProd},
+					{i:lastModifiedBy},
+					{i:dealId},
+					{i:eclipseId},
+					{i:contextId},
+					{i:configSource}
+					)
+        </stmt>
+
+        <stmt id="QUICK_MANAGE_UPDATE_END_DATE">
+        	update BDL_TEMPLATE_INFO
+        	set bdt_modified_flag = 'M',
+        	    bdt_end_date = {?:endDate},
+        	    bdt_last_modified_by = {?:lastModifiedBy},
+        	    bdt_last_modified_date = sysdate
+        	where bdt_id in ({@q:selectedBundle})
+        </stmt>
+        <stmt id="BDL_PROD_FUSION_ALERT">
+	        call be_bundle_alert.bdl_prod_fusion_alert(
+	        {i:catalogID},
+	        {i:bundleID}
+	        )
+        </stmt>
+		<stmt id="ADD_EPRIME_PRODUCT">
+			call BE_LOAD.add_new_eprime_product(
+					{i:bundleID},
+					TRUE
+					)
+        </stmt>
+
+        
+        
+        <stmt id="UPDATE_LOCAL_CAT_PROD">
+                call fe_bundle.update_catbundle_prod_local(
+			{i:catalogID},
+			{i:bundleID},
+                        {i:bundleCompID},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>      
+        
+        
+       <stmt id="UPDATE_BASE_PROD">
+                call fe_bundle.update_template_base_prod(
+			{i:bundleTemplateID},
+                        {i:baseModel},
+                        {i:lastModifiedBy}
+                        )
+        </stmt>      
+        
+        
+</stmt-group>
+
+<stmt-group id="GROUP_BDL_QUERY">
+
+    <stmt id="getCtoBundleDescriptions">
+           <![CDATA[ 
+            select
+			{bundleId}:=bundle_id, 
+			{description}:=BUNDLE_DESC			
+		    from BUNDLE_DESCRIPTION_INFO where 
+		    ( BUNDLE_ID,VERSION) IN 
+		    (select BUNDLE_ID,BUNDLE_VERSION from BUNDLE_CONFIG_MAPPING   
+		     where ORIG_ASSET_CONFIG_ID in ('{string1}') and EFFECTIVE_DATE<=SYSDATE and ( EXPIRY_DATE is null OR EXPIRY_DATE>=SYSDATE ) )
+		     ]]> 		  
+    </stmt>
+    
+    <stmt id="validateBundlePlc">
+              call localize_product.VALIDATE_BUNDLE_CATALOG_PLC (               
+           {i:bundleID},
+           {i:catalogID},
+           {o:returnStatus},
+           {o:returnMessage}
+           )
+    </stmt>
+    
+   <stmt id="validateBundleLclp">
+              call localize_product.VALIDATE_BUNDLE_CATALOG_LCLP (               
+           {i:bundleID},
+           {i:catalogID},
+           {o:returnStatus},
+           {o:returnMessage}
+           )
+    </stmt>
+    
+    
+   <stmt id="validateBundleFusion">
+              call localize_product.VALIDATE_BUNDLE_CATALOG_FUSION (               
+           {i:bundleID},
+           {i:catalogID},
+           {o:returnStatus},
+           {o:returnMessage}
+           )
+    </stmt>
+    <stmt id="validateBundleOverallStatus">
+              call be_bundle_validate.validate_bundle (               
+           {i:catalogID},
+    	   {i:bundleID},
+           {o:returnStatus},
+           {o:returnMessage}
+           )
+    </stmt>  
+	<!-- Added for getting price for option pack in the bundle instances when Price Profile id is null -->
+	<stmt id="GET_OPTION_PACK_PRICE">
+	 	call be_bundle_price.get_option_pack_price(
+	 	    {i:catalogID},
+	 	    {i:bundleID},
+	 	    {i:bundleCompID},
+	 	    {i:priceDescriptor},
+	 	    {o:price})
+	</stmt>
+	<!-- Added for getting price for option pack in the bundle instances when Price Profile Id in NOT null -->
+	<stmt id="GET_OPTION_PACK_PROF_PRICE">
+	 	call be_bundle_price.GET_OPTION_PACK_PROF_PRICE(
+	 	    {i:catalogID},
+	 	    {i:bundleID},
+	 	    {i:bundleCompID},
+	 	    {i:priceDescriptor},
+	 	    {i:priceProfile},
+	 	    {o:price})
+	</stmt>	
+
+	<stmt id="GET_DEAL_FOR_GL_CUST">
+	<![CDATA[ SELECT {dealId}:=X.deal_id deal,
+	{price}:=nvl(X.big_deal_price,0) price,
+	{priceDescriptor}:=X.price_descriptor pricedescriptor,
+	{configID}:=X.config_id configid,
+	{contextID}:=X.context_id contextid,
+	{configSource}:=X.config_src configsource FROM (
+	SELECT /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  a.deal_id, b.big_deal_price,a.price_descriptor,b.context_id,c.config_id,c.config_src
+	FROM all_deal_info a, customer c1, all_deal_content_detail b,all_deal_bundle_info c
+	WHERE prod = {?:string2}
+	AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+	and b.bd_id = c.bd_id(+)
+	AND b.line_nr = c.line_nr(+) 
+	AND(( ((a.cust_id LIKE '%{string1}%') 
+	OR (a.amid_global_account_id LIKE '%{string1}%')
+	OR (a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+	)
+	AND ( a.region_code = 'GL' )
+	AND a.cust_key = c1.cust_key
+	AND a.bd_id = b.bd_id
+	)
+	OR (a.global_account_fl = 'Y'
+	AND ( ( a.region_code <> 'GL')
+	AND a.cust_key = c1.cust_key
+	AND a.bd_id = b.bd_id
+	)
+	AND (a.amid_global_account_id LIKE '%{string1}%' OR a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+	)
+	OR ( a.region_code = 'AP'
+	AND deal_category = 'P'
+	AND a.cust_key = c1.cust_key
+	AND a.bd_id = b.bd_id
+	AND ( affliate_flag = 'N'
+	OR ( affliate_flag = 'Y'
+	AND deal_id IN (
+	SELECT da.da_deal_id
+	FROM deal_affiliates da, customer c2
+	WHERE da.da_cust_id = c2.cust_id
+	AND c2.parent_cust_key LIKE
+	'{string3}%')
+	)
+	)
+	))
+	union
+	SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index (b, IDX_ADCD1) */ a.deal_id, b.big_deal_price,a.price_descriptor,'' context_id, '' config_id,'' config_src
+	FROM all_deal_info a, customer c1, all_deal_content_detail b
+	WHERE prod = {?:string2}
+	AND NVL (context_id, 'X') = 'X'
+	AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+	AND b.bundle_flag = 'S'
+	AND(( ((a.cust_id LIKE '%{string1}%') 
+	OR (a.amid_global_account_id LIKE '%{string1}%')
+	OR (a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+	)
+	AND ( a.region_code = 'GL' )
+	AND a.cust_key = c1.cust_key
+	AND a.bd_id = b.bd_id
+	)
+	OR (a.global_account_fl = 'Y'
+	AND ( ( a.region_code <> 'GL' )
+	AND a.cust_key = c1.cust_key
+	AND a.bd_id = b.bd_id
+	)
+	AND (a.amid_global_account_id LIKE '%{string1}%' OR a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+	)
+	OR ( a.region_code = 'AP'
+	AND deal_category = 'P'
+	AND a.cust_key = c1.cust_key
+	AND a.bd_id = b.bd_id
+	AND ( affliate_flag = 'N'
+	OR ( affliate_flag = 'Y'
+	AND deal_id IN (
+	SELECT da.da_deal_id
+	FROM deal_affiliates da, customer c2
+	WHERE da.da_cust_id = c2.cust_id
+	AND c2.parent_cust_key LIKE
+	'{string3}%')
+	)
+	)
+	))
+	union
+	SELECT /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  a.deal_id, b.big_deal_price,a.price_descriptor,b.context_id,c.config_id,c.config_src
+	FROM all_deal_info a, additional_cust_eclipse_deals c1, all_deal_content_detail b,all_deal_bundle_info c
+	WHERE prod = {?:string2}
+	AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+	and b.bd_id = c.bd_id(+)
+	AND b.line_nr = c.line_nr(+)
+	AND a.bd_id = b.bd_id
+	AND c1.deal_id=a.deal_id
+	and c1.cust_key={?:string3}
+	union
+	SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index (b, IDX_ADCD1) */ a.deal_id, b.big_deal_price,a.price_descriptor,'' context_id, '' config_id,'' config_src
+	FROM all_deal_info a, additional_cust_eclipse_deals c1, all_deal_content_detail b
+	WHERE prod = {?:string2}
+	AND NVL (context_id, 'X') = 'X'
+	AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+	AND b.bundle_flag = 'S'
+	AND a.bd_id = b.bd_id
+	AND c1.deal_id=a.deal_id
+	and c1.cust_key={?:string3}
+	)X ]]>
+	</stmt>
+ <!-- Koppala Krishna Ravi Shankar -->
+ <!-- Code fix done for QC issue to increase the performance for StandalonePage and when adding bundle components       for eclipse -->
+	<stmt id="GET_DEAL_DETAILS">
+<![CDATA[SELECT
+{dealId}:=X.deal_id dealid,
+{price}:=nvl(X.big_deal_price, 0) price,
+{priceDescriptor}:=X.price_descriptor pricedescriptor,
+{configID}:=X.config_id configid,
+{contextID}:=X.context_id contextid,
+{configSource}:=X.config_src configsource
+  FROM (SELECT a.deal_id, b.big_deal_price, a.price_descriptor, '' config_id,
+               '' context_id, '' config_src
+          FROM all_deal_info a, all_deal_content_detail b, customer c
+         WHERE a.bd_id = b.bd_id
+           AND prod = {q:baseProd}
+           AND NVL (context_id, 'X') = 'X'
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND b.bundle_flag = 'S'
+           AND ((    NVL (c.orig_cust_key, c.cust_key) = a.cust_key
+                 AND c.cust_key LIKE '%{custID}%'
+                )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, '' config_id,
+               '' context_id, '' config_src
+          FROM all_deal_info a, all_deal_content_detail b
+         WHERE a.bd_id = b.bd_id
+           AND prod = {q:baseProd}
+           AND NVL (context_id, 'X') = 'X'
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND b.bundle_flag = 'S'
+           AND (    a.region_code = {q:regionCode}
+                AND deal_category = 'P'
+                AND (   affliate_flag = 'N'
+                     OR (    affliate_flag = 'Y'
+                         AND deal_id IN (SELECT da_deal_id
+                                           FROM deal_affiliates da
+                                          WHERE da.da_cust_id = {q:custID})
+                        )
+                    )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, c.config_id,
+               b.context_id, c.config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               all_deal_bundle_info c,
+               customer d
+         WHERE a.bd_id = b.bd_id
+           AND b.bd_id = c.bd_id(+)
+           AND b.line_nr = c.line_nr(+)
+           AND prod ={q:baseProd}
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND ((    NVL (d.orig_cust_key, d.cust_key) = a.cust_key
+                 AND d.cust_key LIKE '%{custID}%'
+                )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, c.config_id,
+               b.context_id, c.config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               all_deal_bundle_info c
+         WHERE a.bd_id = b.bd_id
+           AND b.bd_id = c.bd_id(+)
+           AND b.line_nr = c.line_nr(+)
+           AND prod = {q:baseProd}
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND ((    a.region_code = {q:regionCode}
+                 AND deal_category = 'P'
+                 AND (   affliate_flag = 'N'
+                      OR (    affliate_flag = 'Y'
+                          AND deal_id IN (
+                                        (SELECT da_deal_id
+                                           FROM deal_affiliates da
+                                          WHERE da.da_cust_id = {q:custID}))
+                         )
+                     )
+                )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, '' config_id,
+               '' context_id, '' config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               additional_cust_eclipse_deals c
+         WHERE a.bd_id = b.bd_id
+           AND prod = {q:baseProd}
+           AND NVL (context_id, 'X') = 'X'
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND b.bundle_flag = 'S'
+           AND a.deal_id = c.deal_id
+           AND c.cust_key LIKE '%{custID}%'
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, c.config_id,
+               b.context_id, c.config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               all_deal_bundle_info c,
+               additional_cust_eclipse_deals d
+         WHERE a.bd_id = b.bd_id
+           AND b.bd_id = c.bd_id(+)
+           AND b.line_nr = c.line_nr(+)
+           AND a.deal_id = d.deal_id
+           AND d.cust_key LIKE '%{custID}%'
+           AND prod ={q:baseProd}
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y') x ]]>
+		   </stmt>
+	
+<stmt id="GET_DEAL_FOR_US_CUST">
+<![CDATA[SELECT
+{dealId}:=X.deal_id dealid,
+{price}:=nvl(X.big_deal_price, 0) price,
+{priceDescriptor}:=X.price_descriptor pricedescriptor,
+{configID}:=X.config_id configid,
+{contextID}:=X.context_id contextid,
+{configSource}:=X.config_src configsource
+  FROM  (SELECT a.deal_id, b.big_deal_price, a.price_descriptor, '' config_id,
+               '' context_id, '' config_src
+          FROM all_deal_info a, all_deal_content_detail b, customer c
+         WHERE a.bd_id = b.bd_id
+           AND prod = {q:baseProd}
+           AND NVL (context_id, 'X') = 'X'
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND b.bundle_flag = 'S'
+           AND ((    NVL (c.orig_cust_key, c.cust_key) = a.cust_key
+                 AND (   a.cust_id = {q:custID}
+                      OR a.amid_global_account_id = {q:custID}
+                      OR a.amid_cntry_account_id = {q:custID}
+                     )
+                )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, '' config_id,
+               '' context_id, '' config_src
+          FROM all_deal_info a, all_deal_content_detail b
+         WHERE a.bd_id = b.bd_id
+           AND prod = {q:baseProd}
+           AND NVL (context_id, 'X') = 'X'
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND b.bundle_flag = 'S'
+           AND (    a.region_code = {q:regionCode}
+                AND deal_category = 'P'
+                AND (   affliate_flag = 'N'
+                     OR (    affliate_flag = 'Y'
+                         AND deal_id IN (SELECT da_deal_id
+                                           FROM deal_affiliates da
+                                          WHERE da.da_cust_id = {q:custID})
+                        )
+                    )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, c.config_id,
+               b.context_id, c.config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               all_deal_bundle_info c,
+               customer d
+         WHERE a.bd_id = b.bd_id
+           AND b.bd_id = c.bd_id(+)
+           AND b.line_nr = c.line_nr(+)
+           AND prod = {q:baseProd}
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND ((    NVL (d.orig_cust_key, d.cust_key) = a.cust_key
+                 AND (   a.cust_id = {q:custID}
+                      OR a.amid_global_account_id = {q:custID}
+                      OR a.amid_cntry_account_id = {q:custID}
+                     )
+                )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, c.config_id,
+               b.context_id, c.config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               all_deal_bundle_info c
+         WHERE a.bd_id = b.bd_id
+           AND b.bd_id = c.bd_id(+)
+           AND b.line_nr = c.line_nr(+)
+           AND prod = {q:baseProd}
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND ((    a.region_code = {q:regionCode}
+                 AND deal_category = 'P'
+                 AND (   affliate_flag = 'N'
+                      OR (    affliate_flag = 'Y'
+                          AND deal_id IN (
+                                         (SELECT da_deal_id
+                                            FROM deal_affiliates da
+                                           WHERE da.da_cust_id = {q:custID}))
+                         )
+                     )
+                )
+               )
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, '' config_id,
+               '' context_id, '' config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               additional_cust_eclipse_deals c
+         WHERE a.bd_id = b.bd_id
+           AND prod = {q:baseProd}
+           AND NVL (context_id, 'X') = 'X'
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+           AND b.bundle_flag = 'S'
+           AND a.deal_id = c.deal_id
+           AND c.cust_key LIKE '%{custID}%'
+        UNION
+        SELECT a.deal_id, b.big_deal_price, a.price_descriptor, c.config_id,
+               b.context_id, c.config_src
+          FROM all_deal_info a,
+               all_deal_content_detail b,
+               all_deal_bundle_info c,
+               additional_cust_eclipse_deals d
+         WHERE a.bd_id = b.bd_id
+           AND b.bd_id = c.bd_id(+)
+           AND b.line_nr = c.line_nr(+)
+           AND a.deal_id = d.deal_id
+           AND d.cust_key LIKE '%{custID}%'
+           AND prod = {q:baseProd}
+           AND NVL (sos_bdl_filter_flag, 'N') <> 'Y') x ]]>
+		   </stmt>
+
+<!--End Code fix done for QC issue to increase the performance for StandalonePage and when adding bundle components     for eclipse -->
+	<stmt id="CHECK_DEAL_FOR_GL_CUST">
+		<![CDATA[ SELECT 
+		{prodId}:=X.prod prodid,
+		{bdID}:=X.bd_id bdid
+		FROM 
+		(SELECT /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */ b.prod,b.bd_id,c.config_id
+		FROM all_deal_info a, customer c1, all_deal_content_detail b,all_deal_bundle_info c
+		WHERE prod in ({string2})
+		AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+		and b.bd_id = c.bd_id(+)
+		AND b.line_nr = c.line_nr(+) 
+		AND(( ((a.cust_id LIKE '%{string1}%') 
+		OR (a.amid_global_account_id LIKE '%{string1}%')
+		OR (a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+		)
+		AND ( a.region_code = 'GL' )
+		AND a.cust_key = c1.cust_key
+		AND a.bd_id = b.bd_id
+		)
+		OR (a.global_account_fl = 'Y'
+		AND ( ( a.region_code <> 'GL')
+		AND a.cust_key = c1.cust_key
+		AND a.bd_id = b.bd_id
+		)
+		AND (a.amid_global_account_id LIKE '%{string1}%' OR a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+		)
+		OR ( a.region_code = 'AP'
+		AND deal_category = 'P'
+		AND a.cust_key = c1.cust_key
+		AND a.bd_id = b.bd_id
+		AND ( affliate_flag = 'N'
+		OR ( affliate_flag = 'Y'
+		AND deal_id IN (
+		SELECT da.da_deal_id
+		FROM deal_affiliates da, customer c2
+		WHERE da.da_cust_id = c2.cust_id
+		AND c2.parent_cust_key LIKE
+		'{string3}%')
+		)
+		)
+		))
+		union
+		SELECT /*+ ordered index(a, DX_ADI_DEAL_ID) index (b, IDX_ADCD1) */ b.prod,b.bd_id,'' config_id
+		FROM all_deal_info a, customer c1, all_deal_content_detail b
+		WHERE prod in ({string2})
+		AND NVL (context_id, 'X') = 'X'
+		AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+		AND b.bundle_flag = 'S'
+		AND(( ((a.cust_id LIKE '%{string1}%') 
+		OR (a.amid_global_account_id LIKE '%{string1}%')
+		OR (a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+		)
+		AND ( a.region_code = 'GL'  )
+		AND a.cust_key = c1.cust_key
+		AND a.bd_id = b.bd_id
+		)
+		OR (a.global_account_fl = 'Y'
+		AND ( ( a.region_code <> 'GL' )
+		AND a.cust_key = c1.cust_key
+		AND a.bd_id = b.bd_id
+		)
+		AND (a.amid_global_account_id LIKE '%{string1}%' OR a.AMID_CNTRY_ACCOUNT_ID LIKE '%{string1}%')
+		)
+		OR ( a.region_code = 'AP'
+		AND deal_category = 'P'
+		AND a.cust_key = c1.cust_key
+		AND a.bd_id = b.bd_id
+		AND ( affliate_flag = 'N'
+		OR ( affliate_flag = 'Y'
+		AND deal_id IN (
+		SELECT da.da_deal_id
+		FROM deal_affiliates da, customer c2
+		WHERE da.da_cust_id = c2.cust_id
+		AND c2.parent_cust_key LIKE
+		'{string3}%')
+		)
+		)
+		))
+		union
+		SELECT /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */ b.prod,b.bd_id,c.config_id
+		FROM all_deal_info a, additional_cust_eclipse_deals c1, all_deal_content_detail b,all_deal_bundle_info c
+		WHERE prod in ({string2})
+		AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+		and b.bd_id = c.bd_id(+)
+		AND b.line_nr = c.line_nr(+)
+		AND a.bd_id = b.bd_id
+		AND c1.deal_id=a.deal_id
+		and c1.cust_key={?:string3}
+		union
+		SELECT /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */ b.prod,b.bd_id,'' config_id
+		FROM all_deal_info a, additional_cust_eclipse_deals c1, all_deal_content_detail b
+		WHERE prod in ({string2})
+		AND NVL (context_id, 'X') = 'X'
+		AND NVL (sos_bdl_filter_flag, 'N') <> 'Y'
+		AND b.bundle_flag = 'S'
+		AND a.bd_id = b.bd_id
+		AND c1.deal_id=a.deal_id
+		and c1.cust_key = {?:string3}
+		)X ]]>
+	</stmt>
+	
+	<stmt id="GET_OPTION_PACK_TEMPLATE_PRICE">
+		call fe_bundle.option_pack_pricing(
+		{i:bundleTemplateID},
+		{i:bundleCompID},
+		{o:message},
+		{o:price}
+		)
+	</stmt>
+
+	<stmt id="GET_TEMPLATE_PRICE">
+		call fe_bundle.template_pricing(
+			{i:bundleTemplateID},
+			{o:priceDescriptor},
+			{o:message},
+			{o:priceAsStr}
+			)
+        </stmt>
+
+	<stmt id="GET_BDL_TEMPLATE">
+		select
+				{bundleTemplateID}:=bdt.BDT_ID,
+				{shortDesc}:=btc.BDC_SHORT_DESC,
+				{longDesc}:=btc.BDC_LONG_DESC,
+				{datasheet}:=btc.BDC_DATASHEET_URL,
+				{image}:=btc.BDC_IMAGE_URL,
+				{customerPartID}:=bdt.BDT_CUST_PART_ID,
+				{baseProd}:=bdt.BDT_BASE_PROD,
+				{program}:=nvl(bdt.BDT_PROGRAM,-1),
+				{programName}:=pgm.PGM_NAME,
+				{startDate}:=bdt.BDT_START_DATE,
+				{endDate}:=bdt.BDT_END_DATE,
+				{sysGenLongDescFlag}:=bdt.BDT_SYS_GEN_LDESC_FLAG,
+				{sysGenDatasheetFlag}:=bdt.BDT_SYS_GEN_DSHT_FLAG,
+				{baseModelImageFlag}:=btc.BDC_BASE_MODEL_IMG_FLAG,
+				{custID}:=bdt.CUST_KEY,
+				{custKey}:=cust.CUST_ID,
+				{custName}:=cust.CUST_NAME,
+				{regionCode}:=bdt.BDT_REGION_CODE,
+				{validity}:=bdt.BDT_VALIDITY,
+				{modificationFlag}:=bdt.BDT_MODIFIED_FLAG,
+				{bundleType}:=bdt.BDT_TYPE,
+				{custFlag}:=bdt.BDT_CUST_FLAG,
+				{autoFlag}:=bdt.BDT_AUTO_FLAG,
+				{lastModifiedDate}:=bdt.BDT_LAST_MODIFIED_DATE,
+				{lastModifiedBy}:=bdt.BDT_LAST_MODIFIED_BY,
+				{genericProgramId}:=nvl(bdt.BDT_GEN_PROGRAM,-1),
+				{genericProgram}:=gpgm.PGM_NAME
+		from    BDL_TEMPLATE_INFO bdt, BDL_TEMPLATE_CONTENT btc, CUSTOMER cust, CAT_PROGRAM pgm, CAT_PROGRAM gpgm
+		where   bdt.BDT_ID = {?:bundleTemplateID}
+		  and   btc.BDC_COMP_ID = bdt.BDT_ID
+		  and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+		  and   bdt.CUST_KEY = cust.CUST_KEY(+)
+		  and   bdt.BDT_PROGRAM = pgm.PGM_KEY(+)
+		  and   bdt.bdt_gen_program = gpgm.pgm_key(+)
+	</stmt>
+
+	<stmt id="GET_BDL_TEMPLATE_CONTENT">
+		select
+				{bundleTemplateID}:=btc.BDC_COMP_ID,
+				{hpLangCode}:=btc.BDC_HP_LANG_CODE,
+				{shortDesc}:=btc.BDC_SHORT_DESC,
+				{longDesc}:=btc.BDC_LONG_DESC,
+				{baseModelImageFlag}:=btc.BDC_BASE_MODEL_IMG_FLAG,
+				{datasheet}:=btc.BDC_DATASHEET_URL,
+				{image}:=btc.BDC_IMAGE_URL,
+				{lastModifiedDate}:=btc.BDC_LAST_MODIFIED_DATE,
+				{lastModifiedBy}:=btc.BDC_LAST_MODIFIED_BY
+		from    BDL_TEMPLATE_CONTENT btc
+        where   btc.BDC_COMP_ID = {?:bundleTemplateID}
+          and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+    </stmt>
+
+	<stmt id="GET_CHILD_GROUP_TEMPLATES">
+		select
+				{bundleTemplateID}:=btg.BDT_ID,
+				{bundleCompID}:=btg.BTG_COMP_ID,
+				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+				{shortDesc}:=btc.BDC_SHORT_DESC,
+				{longDesc}:=btc.BDC_LONG_DESC,
+				{datasheet}:=btc.BDC_DATASHEET_URL,
+				{image}:=btc.BDC_IMAGE_URL,
+				{bundleCompType}:=btg.BTG_COMP_TYPE,
+				{quantity}:=btg.BTG_QTY,
+				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+				{rankNum}:=btg.BTG_RANK,
+				{levelNum}:=btg.BTG_LEVEL,
+				{min}:=btg.BTG_MIN_COMP,
+				{max}:=btg.BTG_MAX_COMP,
+				{requiredFlag}:=btg.BTG_REQ_FLAG,
+				{preselectFlag}:=btg.BTG_PRESELECT_FLAG,
+				{hideFlag}:=btg.BTG_HIDE_FLAG,
+				{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG,
+				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE
+		from    BDL_TEMPLATE_GROUPS btg, BDL_TEMPLATE_CONTENT btc
+        where   btg.BDT_ID = {?:bundleTemplateID}
+          and   nvl(btg.PARENT_COMP_ID,'ROOT') = {?:bundleCompID}
+          and   btg.btg_modified_flag != 'D'
+          and   btc.BDC_COMP_ID = btg.BTG_COMP_ID
+          and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+    </stmt>
+
+	<stmt id="GET_TEMPLATE_OPTION_PACKS">
+	      select
+	    	{bundleTemplateID}:=btg.BDT_ID bundleTemplateID,
+	    	{bundleCompID}:=btg.BTG_COMP_ID bundleCompID,
+	    	{parentBundleCompID}:=btg.PARENT_COMP_ID parentBundleCompID,
+	        {shortDesc}:=btc.BDC_SHORT_DESC shortDesc,
+	      	{longDesc}:=btc.BDC_LONG_DESC longDesc,
+	      	{datasheet}:=btc.BDC_DATASHEET_URL datasheet,
+	      	{image}:=btc.BDC_IMAGE_URL image,
+	      	{bundleCompType}:=btg.BTG_COMP_TYPE bundleCompType,
+	      	{quantity}:=btg.BTG_QTY quantity,
+	      	{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG deltaPriceFlag,
+	      	{rankNum}:=btg.BTG_RANK rankNum,
+	      	{levelNum}:=btg.BTG_LEVEL levelNum,
+	      	{min}:=btg.BTG_MIN_COMP min,
+	      	{max}:=btg.BTG_MAX_COMP max,
+	      	{modificationFlag}:=btg.BTG_MODIFIED_FLAG modificationFlag,
+		    {lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY lastModifiedBy,
+	      	{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE lastModifiedDate,
+	      	{requiredFlag}:=btg.BTG_REQ_FLAG requiredFlag,
+	      	{preselectFlag}:=btg.BTG_PRESELECT_FLAG preselectFlag,
+	      	{hideFlag}:=btg.BTG_HIDE_FLAG hideFlag,
+	      	{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG priceHideFlag
+	      from    BDL_TEMPLATE_GROUPS btg, BDL_TEMPLATE_CONTENT btc	      
+	      where   btg.BDT_ID = {?:bundleTemplateID}	  
+	        and   btg.BTG_COMP_TYPE = {?:bundleCompType}
+	        and   btg.btg_modified_flag != 'D'
+	        and   btc.BDC_COMP_ID = btg.BTG_COMP_ID
+                and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+	</stmt>
+	
+	<stmt id="GET_PROMO_COUNT">
+	select {promoCount}:=count(1) from bdl_template_prods where 
+	parent_comp_id={?:bundleCompID} and btp_context_id is not null
+	</stmt>
+	
+	<stmt id="GET_CHILD_GROUP_TEMPLATES_BY_TYPE">
+		select
+				{bundleTemplateID}:=btg.BDT_ID,
+				{bundleCompID}:=btg.BTG_COMP_ID,
+				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+				{shortDesc}:=btc.BDC_SHORT_DESC,
+				{longDesc}:=btc.BDC_LONG_DESC,
+				{datasheet}:=btc.BDC_DATASHEET_URL,
+				{image}:=btc.BDC_IMAGE_URL,
+				{bundleCompType}:=btg.BTG_COMP_TYPE,
+				{quantity}:=btg.BTG_QTY,
+				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+				{rankNum}:=btg.BTG_RANK,
+				{levelNum}:=btg.BTG_LEVEL,
+				{min}:=btg.BTG_MIN_COMP,
+				{max}:=btg.BTG_MAX_COMP,
+				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE,
+				{requiredFlag}:=btg.BTG_REQ_FLAG,
+				{preselectFlag}:=btg.BTG_PRESELECT_FLAG,
+				{hideFlag}:=btg.BTG_HIDE_FLAG,
+				{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG
+		from    BDL_TEMPLATE_GROUPS btg, BDL_TEMPLATE_CONTENT btc
+        where   btg.BDT_ID = {?:bundleTemplateID}
+          and   nvl(btg.PARENT_COMP_ID,'ROOT') = {?:bundleCompID}
+          and   btg.BTG_COMP_TYPE = {?:bundleCompType}
+          and   btg.btg_modified_flag != 'D'
+          and   btc.BDC_COMP_ID = btg.BTG_COMP_ID
+          and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+    </stmt>
+
+	<stmt id="GET_CHILD_PROD_TEMPLATES">
+		select
+				{bundleTemplateID}:=btp.BDT_ID bundleTemplateID,
+				{dealId}:=btp.DEAL_ID dealId,
+				{bundleCompID}:=btp.BTP_COMP_ID bundleCompID,
+				{parentBundleCompID}:=btp.PARENT_COMP_ID parentBundleCompID,
+				{bundleCompType}:='S' bundleCompType,
+				{sourceProd}:=btp.BTP_SRC_PROD sourceProd,
+				{baseModel}:=btp.BTP_BASE_MODEL baseModel,
+				{configID}:=btp.BTP_CONFIG_ID configID,
+				{configSource}:=btp.BTP_CONFIG_SRC configSource,
+				{contextID}:=btp.BTP_CONTEXT_ID contextID,
+				{shortDesc}:=DECODE(BDT_TYPE, 'PROMO', DECODE(btp.PARENT_COMP_ID, NULL,DECODE(ctx.CTP_COMP_MSG, NULL, prod.short_desc, prod.short_desc || ' - ' || ctx.CTP_COMP_MSG), prod.short_desc), prod.short_desc) shortDesc,
+				{longDesc}:=prod.long_desc longDesc,
+				{datasheet}:=prod.datasheet_name datasheet,
+				{image}:=prod.image_name image,
+				{quantity}:=btp.BTP_QTY quantity,
+				{levelNum}:=btp.BTP_LEVEL levelNum,
+				{rankNum}:=btp.BTP_RANK rankNum,
+				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N') baseProdFlag,
+				{variableQtyFlag}:=btp.BTP_VARIABLE_QTY_FLAG variableQtyFlag,
+				{inTheBoxFlag}:=btp.BTP_IN_BOX_FLAG inTheBoxFlag,
+				{shipTogetherFlag}:=btp.BTP_SHIP_TOGETHER_FLAG shipTogetherFlag,
+				{chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG chargeShippingFlag,
+				{localizeFlag}:=btp.BTP_LOCALIZE_FLAG localizeFlag,
+				{requiredFlag}:=btp.BTP_REQ_FLAG requiredFlag,
+				{preselectFlag}:=btp.BTP_PRESELECT_FLAG preselectFlag,
+				{specialPriceFlag}:=btp.BTP_SPECIAL_PRICE_FLAG specialPriceFlag,
+				{hideFlag}:=btp.BTP_HIDE_FLAG hideFlag,
+				{priceHideFlag}:=btp.BTP_PRICE_HIDE_FLAG priceHideFlag,
+				{modificationFlag}:=btp.BTP_MODIFIED_FLAG modificationFlag,
+				{lastModifiedBy}:=btp.BTP_LAST_MODIFIED_BY lastModifiedBy,
+				{lastModifiedDate}:=btp.BTP_LAST_MODIFIED_DATE lastModifiedDate
+		from    BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, PROD_LOCAL_LANG prod, CONTEXT_BUNDLE_PRODS ctx
+        where   btp.BDT_ID = {?:bundleTemplateID}
+          and   bdt.bdt_id = btp.bdt_id
+          and   nvl(btp.PARENT_COMP_ID,'ROOT') = {?:bundleCompID}
+          and   btp.btp_modified_flag != 'D'
+          and   prod.PROD = btp.BTP_SRC_PROD
+          and   prod.HP_LANG_CD = {?:hpLangCode}
+          and   btp.BTP_CONTEXT_ID = ctx.CTI_CONTEXT_ID(+)
+          and   btp.BTP_SRC_PROD = ctx.CTP_PROD(+)
+	</stmt>
+
+	<stmt id="GET_ALL_CHILD_PROD_TEMPLATES">
+		select
+				{bundleTemplateID}:=btp.BDT_ID,
+				{bundleCompID}:=btp.BTP_COMP_ID,
+				{parentBundleCompID}:=btp.PARENT_COMP_ID,
+				{bundleCompType}:='S',
+				{sourceProd}:=btp.BTP_SRC_PROD,
+				{baseModel}:=btp.BTP_BASE_MODEL,
+				{configID}:=btp.BTP_CONFIG_ID,
+				{configSource}:=btp.BTP_CONFIG_SRC,
+				{contextID}:=btp.BTP_CONTEXT_ID,
+				{shortDesc}:=prod.short_desc,
+				{longDesc}:=prod.long_desc,
+				{datasheet}:=prod.datasheet_name,
+				{image}:=prod.image_name,
+				{quantity}:=btp.BTP_QTY,
+				{levelNum}:=btp.BTP_LEVEL,
+				{rankNum}:=btp.BTP_RANK,
+				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+				{variableQtyFlag}:=btp.BTP_VARIABLE_QTY_FLAG,
+				{inTheBoxFlag}:=btp.BTP_IN_BOX_FLAG,
+				{shipTogetherFlag}:=btp.BTP_SHIP_TOGETHER_FLAG,
+				{chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG,
+				{localizeFlag}:=btp.BTP_LOCALIZE_FLAG,
+				{requiredFlag}:=btp.BTP_REQ_FLAG,
+				{preselectFlag}:=btp.BTP_PRESELECT_FLAG,
+				{specialPriceFlag}:=btp.BTP_SPECIAL_PRICE_FLAG,
+				{hideFlag}:=btp.BTP_HIDE_FLAG,
+				{priceHideFlag}:=btp.BTP_PRICE_HIDE_FLAG,
+				{modificationFlag}:=btp.BTP_MODIFIED_FLAG,
+				{lastModifiedBy}:=btp.BTP_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btp.BTP_LAST_MODIFIED_DATE
+		from    BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, PROD_LOCAL_LANG prod
+        where   btp.BDT_ID = {?:bundleTemplateID}
+          and   bdt.bdt_id = btp.bdt_id
+          and   btp.btp_modified_flag != 'D'
+          and   prod.PROD = btp.BTP_SRC_PROD
+          and   prod.HP_LANG_CD = {?:hpLangCode}
+	</stmt>
+
+	<stmt id="GET_OPTION_GROUP_TEMPLATE">
+		select
+				{bundleTemplateID}:=btg.BDT_ID,
+				{bundleCompID}:=btg.BTG_COMP_ID,
+				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+				{shortDesc}:=btc.BDC_SHORT_DESC,
+				{longDesc}:=btc.BDC_LONG_DESC,
+				{datasheet}:=btc.BDC_DATASHEET_URL,
+				{image}:=btc.BDC_IMAGE_URL,
+				{bundleCompType}:=btg.BTG_COMP_TYPE,
+				{quantity}:=btg.BTG_QTY,
+				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+				{rankNum}:=btg.BTG_RANK,
+				{levelNum}:=btg.BTG_LEVEL,
+				{min}:=btg.BTG_MIN_COMP,
+				{max}:=btg.BTG_MAX_COMP,
+				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE
+		from    BDL_TEMPLATE_GROUPS btg, BDL_TEMPLATE_CONTENT btc
+        where   btg.BTG_COMP_ID = {?:bundleCompID}
+          and   btc.BDC_COMP_ID = btg.BTG_COMP_ID
+          and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+    </stmt>
+
+	<stmt id="GET_OPTION_GROUP_TEMPLATE_CONTENT">
+		select
+				{bundleTemplateID}:=btc.BDC_COMP_ID,
+				{hpLangCode}:=btc.BDC_HP_LANG_CODE,
+				{shortDesc}:=btc.BDC_SHORT_DESC,
+				{longDesc}:=btc.BDC_LONG_DESC,
+				{datasheet}:=btc.BDC_DATASHEET_URL,
+				{image}:=btc.BDC_IMAGE_URL,
+				{lastModifiedDate}:=btc.BDC_LAST_MODIFIED_DATE,
+				{lastModifiedBy}:=btc.BDC_LAST_MODIFIED_BY
+		from    BDL_TEMPLATE_CONTENT btc
+        where   btc.BDC_COMP_ID = {?:bundleCompID}
+          and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+    </stmt>
+
+	<stmt id="GET_PROD_TEMPLATE">
+		select
+				{bundleTemplateID}:=btp.BDT_ID,
+				{bundleCompID}:=btp.BTP_COMP_ID,
+				{parentBundleCompID}:=btp.PARENT_COMP_ID,
+				{bundleCompType}:='S',
+				{sourceProd}:=btp.BTP_SRC_PROD,
+				{baseModel}:=btp.BTP_BASE_MODEL,
+				{configID}:=btp.BTP_CONFIG_ID,
+				{configSource}:=btp.BTP_CONFIG_SRC,
+				{contextID}:=btp.BTP_CONTEXT_ID,
+				{shortDesc}:=prod.short_desc,
+				{longDesc}:=prod.long_desc,
+				{datasheet}:=prod.datasheet_name,
+				{image}:=prod.image_name,
+				{quantity}:=btp.BTP_QTY,
+				{levelNum}:=btp.BTP_LEVEL,
+				{rankNum}:=btp.BTP_RANK,
+				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+				{localizeFlag}:=btp.BTP_LOCALIZE_FLAG,
+				{variableQtyFlag}:=btp.BTP_VARIABLE_QTY_FLAG,
+				{inTheBoxFlag}:=btp.BTP_IN_BOX_FLAG,
+				{shipTogetherFlag}:=btp.BTP_SHIP_TOGETHER_FLAG,
+				{chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG,
+				{requiredFlag}:=btp.BTP_REQ_FLAG,
+				{preselectFlag}:=btp.BTP_PRESELECT_FLAG,
+				{specialPriceFlag}:=btp.BTP_SPECIAL_PRICE_FLAG,
+				{hideFlag}:=btp.BTP_HIDE_FLAG,
+				{priceHideFlag}:=btp.BTP_PRICE_HIDE_FLAG,
+				{modificationFlag}:=btp.BTP_MODIFIED_FLAG,
+				{lastModifiedBy}:=btp.BTP_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btp.BTP_LAST_MODIFIED_DATE,
+				{itemKey}:=btp.BTP_ITEM_KEY
+		from    BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, PROD_LOCAL_LANG prod
+        where   btp.BTP_COMP_ID = {?:bundleCompID}
+          and   btp.bdt_id = bdt.bdt_id(+)
+          and   prod.PROD = btp.BTP_SRC_PROD
+          and   prod.HP_LANG_CD = {?:hpLangCode}
+   </stmt>
+<!-- 	added 'bundleTemplateId' in the following query to fix eZilla #59935
+	as there 2 getters for bundle Template ID. one in BundlePart.java
+	and other in CatalogBundle.java -->
+
+
+     
+ <stmt id="GET_BDL">
+		select  /*+ ORDERED USE_NL(cat, cust, cbd, cit, cip, cop, prod, pgm) */
+				{bundleTemplateID}:=cbd.BDT_TEMPLATE_ID bundleTemplateID,
+				{bundleTemplateId}:=cbd.BDT_TEMPLATE_ID bundleTemplateId,
+				{catalogID}:=cat.cat_catalog_id catalogID,
+				{catalogName}:=cat.cat_catalog_name catalogName,
+				{bundleID}:=cbd.CBD_ID bundleID,
+				{priceDescriptor}:=cip.CIP_PRICE_DESCRIPTOR priceDescriptor,
+				{baseProd}:=cbd.CBD_BASE_PROD baseProd,
+				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbd.CBD_ID) shortDesc,
+				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, cbd.CBD_ID) longDesc,
+				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, cbd.CBD_ID) datasheet,
+				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbd.CBD_ID) image,
+				{customerPartID}:=cbd.CBD_CUST_PART_ID customerPartID,
+				{programNum}:= CIT_PGM_KEY programNum,
+				{programName}:=pgm.PGM_NAME programName,
+				{startDate}:=cbd.CBD_START_DATE startDate,
+				{endDate}:=cbd.CBD_END_DATE endDate,
+				{custID}:=cat.CUST_KEY custID,
+				{custName}:=cust.CUST_NAME custName,
+				{supplierPartID}:=prod.supplier_part_id supplierPartID,
+				{supplierURL}:=prod.supplier_url supplierURL,
+				{manufacturer}:=prod.mfg manufacturer,
+				{configSla}:=cip.cip_sla configSla,
+				{SLA}:=DECODE(NVL(cip.cip_df_sla,'N'), 'Y', cip.cip_sla,'N',(SELECT ci2.cip_sla FROM cat_item_price ci2 WHERE ci2.cit_src_prod = cbd.cbd_base_prod AND ci2.cat_catalog_id = cbd.CAT_CATALOG_ID AND ROWNUM = 1)) sla,
+				{price}:=nvl(cip.CIP_NET_PRICE,0) price,
+				{fullfilmentSite}:=cip.CIP_FFS_ID fullfilmentSite,
+				{txCurrCode}:=cip.CIP_TX_CURR_CD txCurrCode,
+				{serviceProviderEmails}:=cit.cit_cpm_svc_prov_emails serviceProviderEmails,
+				{localizationStr}:=cbd.CBD_OPTION_CODES localizationStr,
+				{locCountryStr}:=cbd.CBD_COUNTRIES locCountryStr,
+				{configSource}:=cbd.CBD_CONFIG_SRC configSource,
+				{configID}:=cbd.CBD_CONFIG_ID configID,
+				{bundleType}:=cbd.CBD_TYPE_FLAG bundleType,
+				{bundleState}:=cbd.CBD_STATE bundleState,
+				{validity}:=cop.COP_VALID_STATUS validity,
+				{preserveFlag}:=cbd.CBD_PRESERV_FLAG preserveFlag,
+				{configBdlReplacementStatus}:=DECODE(cbd.CBD_REPLACED_BY, NULL,DECODE(cbd.CBD_REPLACEMENT_FOR, NULL,'NA','RT'),'R') configBdlReplacementStatus,
+				{lastModifiedDate}:=cbd.CBD_LAST_MODIFIED_DATE lastModifiedDate,
+				{lastModifiedBy}:=cbd.CBD_LAST_MODIFIED_BY lastModifiedBy,
+				{prodFusionOrdStatus}:=cop.cop_fusn_ord_status prodFusionOrdStatus,
+				{catFusionOrdStatus}:=cat.CAT_FUSN_ORD_FL catFusionOrdStatus,
+				{catPlcOrdStatus}:=cat.CAT_PLC_ORD_FLG catPlcOrdStatus,
+				{catLclpOrdStatus}:=cat.partnum_ordcheck_flag catLclpOrdStatus,
+				{isTiedToPriceTier}:=cat_util.is_associated_to_price_tier(cat.CAT_CATALOG_ID) isTiedToPriceTier,
+				{genericProgram}:=pgm.PGM_NAME genericProgram,
+				{genProgramNum}:=CIT_PGM_KEY genProgramNum
+		from    CAT_INFO cat, CAT_BUNDLE_INFO cbd, CAT_ITEM cit, cat_item_options cop, CAT_ITEM_PRICE cip,
+				PRODUCTS prod, CUSTOMER cust, CAT_PROGRAM pgm
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbd.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbd.CBD_ID = {?:bundleID}
+		  and   cit.CAT_CATALOG_ID = cat.CAT_CATALOG_ID
+		  and   cit.CIT_SRC_PROD = cbd.CBD_ID
+		  and   cit.CIT_BUNDLE_FLAG = 'B'
+		  and   cop.CAT_ITEM_KEY = cit.CIT_ITEM_KEY
+		  and   cip.CIT_PRICE_ITEM_KEY = cit.CIT_PRICE_ITEM_KEY
+		  and	cip.CIP_PRICE_DESCRIPTOR = {?:priceDescriptor}
+		  and   NVL(cip.CIP_ZONE_DESCRIPTOR, 0) = NVL({?:zonePriceDescriptor},0)
+		  and   prod.PROD = cbd.CBD_ID
+		  and   cat.CUST_KEY = cust.CUST_KEY(+)
+		  and   cit.CIT_PGM_KEY = pgm.PGM_KEY(+)
+    </stmt>
+    
+    <stmt id="GET_CONFIG_DETAIL">
+		select  /*+ ORDERED USE_NL(cat, cust, cbd, cit, cip, cpi, cop, prod, pgm) */
+				{bundleTemplateID}:=cbd.BDT_TEMPLATE_ID,
+				{bundleTemplateId}:=cbd.BDT_TEMPLATE_ID,
+				{catalogID}:=cat.cat_catalog_id,
+				{catalogName}:=cat.cat_catalog_name,
+				{bundleID}:=cbd.CBD_ID,
+				{priceDescriptor}:=cip.CIP_PRICE_DESCRIPTOR,
+				{baseProd}:=nvl(cpi.BASE_PRODUCT_ID,cbd.CBD_BASE_PROD) baseProd,
+				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbd.CBD_ID),
+				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, cbd.CBD_ID),
+				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, cbd.CBD_ID),
+				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbd.CBD_ID),
+				{customerPartID}:=cbd.CBD_CUST_PART_ID,
+				{programNum}:= CIT_PGM_KEY,
+				{programName}:=pgm.PGM_NAME,
+				{startDate}:=nvl(cpi.PRICE_START_DATE,cbd.CBD_START_DATE) startDate,
+				{endDate}:=nvl(cpi.PRICE_END_DATE,cbd.CBD_END_DATE) endDate,
+				{custID}:=cat.CUST_KEY,
+				{custName}:=cust.CUST_NAME,
+				{supplierPartID}:=prod.supplier_part_id,
+				{supplierURL}:=prod.supplier_url,
+				{manufacturer}:=prod.mfg,
+				{configSla}:=cip.cip_sla,
+				{SLA}:=DECODE(NVL(cip.cip_df_sla,'N'), 'Y', cip.cip_sla,'N',(SELECT ci2.cip_sla FROM cat_item_price ci2 WHERE ci2.cit_src_prod = cbd.cbd_base_prod AND ci2.cat_catalog_id = cbd.CAT_CATALOG_ID AND ROWNUM = 1)) sla,
+				{price}:=nvl(cpi.NET_PRICE,0),
+				{fullfilmentSite}:=cip.CIP_FFS_ID,
+				{txCurrCode}:=cip.CIP_TX_CURR_CD,
+				{serviceProviderEmails}:=cit.cit_cpm_svc_prov_emails,
+				{localizationStr}:=cbd.CBD_OPTION_CODES,
+				{locCountryStr}:=cbd.CBD_COUNTRIES,
+				{configSource}:=cbd.CBD_CONFIG_SRC,
+				{configID}:=cbd.CBD_CONFIG_ID,
+				{bundleType}:=cbd.CBD_TYPE_FLAG,
+				{bundleState}:=cbd.CBD_STATE,
+				{validity}:=NVL(cpi.overall_status, DECODE( NVL(cop.COP_VALID_STATUS, 'X'), 'P', 'P', 'U')) cop_valid_status,
+				{preserveFlag}:=cbd.CBD_PRESERV_FLAG,
+				{configBdlReplacementStatus}:=DECODE(cbd.CBD_REPLACED_BY, NULL,DECODE(cbd.CBD_REPLACEMENT_FOR, NULL,'NA','RT'),'R'),
+				{lastModifiedDate}:=cbd.CBD_LAST_MODIFIED_DATE,
+				{lastModifiedBy}:=cbd.CBD_LAST_MODIFIED_BY,
+				{prodFusionOrdStatus}:=cop.cop_fusn_ord_status,
+				{catFusionOrdStatus}:=cat.CAT_FUSN_ORD_FL,
+				{catPlcOrdStatus}:=cat.CAT_PLC_ORD_FLG, 
+				{catLclpOrdStatus}:=cat.partnum_ordcheck_flag,
+				{isTiedToPriceTier}:=cat_util.is_associated_to_price_tier(cat.CAT_CATALOG_ID),
+				{genericProgram}:=pgm.PGM_NAME,
+				{genProgramNum}:=CIT_PGM_KEY
+		from    CAT_INFO cat, CAT_BUNDLE_INFO cbd, CAT_ITEM cit, cat_item_options cop, CAT_ITEM_PRICE cip,
+				PRODUCTS prod, CUSTOMER cust, CAT_PROGRAM pgm, CONFIG_PERMUTATION_INFO cpi
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbd.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbd.CBD_ID = {?:bundleID}
+		  and   cit.CAT_CATALOG_ID = cat.CAT_CATALOG_ID
+		  and   cit.CIT_SRC_PROD = cbd.CBD_ID
+		  and   cit.CIT_BUNDLE_FLAG = 'B'
+		  and   cop.CAT_ITEM_KEY = cit.CIT_ITEM_KEY
+		  and   cip.CIT_PRICE_ITEM_KEY = cit.CIT_PRICE_ITEM_KEY
+		  and	cip.CIP_PRICE_DESCRIPTOR = {?:priceDescriptor}
+		  and   NVL(cip.CIP_ZONE_DESCRIPTOR, 0) = NVL({?:zonePriceDescriptor},0)
+		  and   prod.PROD = cbd.CBD_ID
+		  and   cat.CUST_KEY = cust.CUST_KEY(+)
+		  and   cit.CIT_PGM_KEY = pgm.PGM_KEY(+)
+		  AND 	cpi.price_id(+) = {?:priceMergeId}
+		  and   cip.CIT_SRC_PROD = cpi.config_prod_id(+)		  
+	 	  and   cip.cip_price_descriptor=cpi.price_descriptor(+) 
+    </stmt> 
+
+    <stmt id="GET_CONFIG_COMPONENTS">
+		SELECT 
+				{componentID}:=cpi.cci_product_id,
+				{quantity}:=cpi.cci_qty,
+				{price}:=cpi.pi_net_price,
+				{startPointFlag}:=cpi.cci_starting_point_flag,
+				{glpListPrice}:=cpi.pi_glp_list_price,
+				{exchangeRate}:=cpi.pi_exchg_rate,
+				{tbaRateBs}:=cpi.pi_tba_bs,
+				{tbaRateVr}:=cpi.pi_tba_vr,
+				{glpLandedNetPrice}:=cpi.pi_glp_landed_net_price,
+				{paNetPrice}:=cpi.pi_pa_net_price
+		FROM config_comp_price_info cpi
+		WHERE UPPER( cpi.cpi_price_id ) = {?:priceMergeId} 
+			AND cpi.cpi_bundle_id = {?:bundleID}
+			AND cpi.cpi_price_descriptor = {?:priceDescriptor}
+			{searchClause}
+    </stmt> 
+
+    <stmt id="GET_CONFIG_CMP_COUNT">
+		SELECT {count}:= count(1)
+		FROM config_comp_price_info cpi
+		WHERE UPPER( cpi.cpi_price_id ) = {?:priceMergeId}
+			AND cpi.cpi_bundle_id = {?:bundleID}
+			AND cpi.cpi_price_descriptor = {?:priceDescriptor}
+			{searchClause}
+    </stmt> 
+    
+    <!-- for eZilla #57208 - Raghavendra -->
+    <!-- added 'bundleTemplateId' in the following query to fix eZilla #59935
+	 as there 2 getters for bundle Template ID. one in BundlePart.java
+	 and other in CatalogBundle.java -->    
+    <stmt id="GET_BDL_WITH_PROFILE">
+    	SELECT	{bundleTemplateID}:=cbd.BDT_TEMPLATE_ID,
+    		{bundleTemplateId}:=cbd.BDT_TEMPLATE_ID,
+    		{catalogID}:=cat.cat_catalog_id,
+    		{catalogName}:=cat.cat_catalog_name,
+    		{bundleID}:=cbd.CBD_ID,
+    		{priceDescriptor}:=pip.pip_price_descriptor,
+    		{baseProd}:=cbd.CBD_BASE_PROD,
+    		{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbd.CBD_ID),
+    		{longDesc}:=pll.long_desc,
+    		{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, cbd.CBD_ID),
+    		{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbd.CBD_ID),
+    		{customerPartID}:=cbd.CBD_CUST_PART_ID,
+    		{programNum}:= CIT_PGM_KEY,
+    		{programName}:=pgm.PGM_NAME, 
+    		{startDate}:=cbd.CBD_START_DATE,
+    		{endDate}:=cbd.CBD_END_DATE,
+    		{custID}:=cat.CUST_KEY,
+    		{custName}:=cust.CUST_NAME,
+    		{supplierPartID}:=prod.supplier_part_id,
+    		{supplierURL}:=prod.supplier_url,
+    		{manufacturer}:=prod.mfg,
+    		{configSla}:=NULL, 
+    		{SLA}:=NULL sla,
+    		{price}:=NVL (pip.pip_net_price, 0), 
+    		{fullfilmentSite}:='US_DIRECT', 
+    		{txCurrCode}:=NULL,
+    		{serviceProviderEmails}:=cit.cit_cpm_svc_prov_emails,
+    		{localizationStr}:=cbd.CBD_OPTION_CODES,
+    		{locCountryStr}:=cbd.CBD_COUNTRIES,
+    		{configSource}:=cbd.CBD_CONFIG_SRC,
+    		{configID}:=cbd.CBD_CONFIG_ID,
+    		{bundleType}:=cbd.CBD_TYPE_FLAG,
+    		{bundleState}:=cbd.CBD_STATE,
+    		{validity}:=cop.COP_VALID_STATUS,
+    		{preserveFlag}:=cbd.CBD_PRESERV_FLAG,
+    		{configBdlReplacementStatus}:=DECODE (cbd.cbd_replaced_by,
+    			NULL, DECODE (cbd.cbd_replacement_for, NULL, 'NA', 'RT'),
+    			'R'
+    			),
+    		{lastModifiedDate}:=cbd.CBD_LAST_MODIFIED_DATE,
+    		{lastModifiedBy}:=cbd.CBD_LAST_MODIFIED_BY,
+    		{prodFusionOrdStatus}:=cop.cop_fusn_ord_status,
+    		{catFusionOrdStatus}:=cat.CAT_FUSN_ORD_FL,
+    		{catPlcOrdStatus}:=cat.CAT_PLC_ORD_FLG,
+    		{catLclpOrdStatus}:=cat.partnum_ordcheck_flag,
+    		{isTiedToPriceTier}:=cat_util.is_associated_to_price_tier(cat.CAT_CATALOG_ID),
+			{genericProgram}:=pgm.PGM_NAME,
+			{genProgramNum}:=CIT_PGM_KEY
+    	FROM 	cat_info cat,
+    		cat_bundle_info cbd,
+    		cat_item cit,
+    		cat_item_options cop,
+    		profile_item_price pip,
+    		products prod,
+    		customer cust,
+    		cat_program pgm,
+    		prod_local_lang pll
+    	WHERE	cat.cat_catalog_id = {?:catalogID}
+    		AND cbd.cat_catalog_id =
+    			NVL (cat.cat_parent_catalog_id, cat.cat_catalog_id)
+    		AND cbd.cbd_id = {?:bundleID}
+    		AND cit.cat_catalog_id = cat.cat_catalog_id
+    		AND cit.cit_src_prod = cbd.cbd_id
+    		AND cit.cit_bundle_flag = 'B'
+    		AND cop.cat_item_key = cit.cit_item_key
+    		AND pip.pip_key =
+    		cat_util.make_profile_item_price_key ( {?:priceProfile},
+    						    cbd.cbd_id,
+    						    '',
+    						    'B',
+    						    {?:priceDescriptor}
+    						   )
+    		AND pll.prod = cbd.cbd_id
+    		AND pll.hp_lang_cd = cat.cat_hp_lang_code
+    		AND prod.prod = cbd.cbd_id
+    		AND cat.cust_key = cust.cust_key(+)
+    		AND cit.cit_pgm_key = pgm.pgm_key(+)
+    </stmt>
+    
+    <stmt id="GET_BDL_TEMPLATE_NAME">
+    
+    	SELECT distinct
+			{bundleTemplateName}:=bdl.bdc_short_Desc
+		FROM BDL_TEMPLATE_CONTENT bdl	
+		WHERE bdl.bdc_comp_id = {?:bundleTemplateId}
+		AND bdl.BDC_HP_LANG_CODE = {?:hpLangCode}
+			
+    </stmt>
+
+	<stmt id="GET_ALLBDL_CATALOG">
+    		select
+		{bundleTemplateID}:=cbd.BDT_TEMPLATE_ID,
+		{catalogID}:=cat.cat_catalog_id,
+		{bundleID}:=cbd.CBD_ID,
+		{priceDescriptor}:=cip.CIP_PRICE_DESCRIPTOR,
+		{baseProd}:=cbd.CBD_BASE_PROD,
+		{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbd.CBD_ID),
+		{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, cbd.CBD_ID),
+		{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, cbd.CBD_ID),
+		{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbd.CBD_ID),
+		{customerPartID}:=cbd.CBD_CUST_PART_ID,
+		{programNum}:= CIT_PGM_KEY,
+		{programName}:=pgm.PGM_NAME,
+		{startDate}:=cbd.CBD_START_DATE,
+		{endDate}:=cbd.CBD_END_DATE,
+		{custID}:=cat.CUST_KEY,
+		{custName}:=cust.CUST_NAME,
+		{supplierPartID}:=prod.supplier_part_id,
+		{supplierURL}:=prod.supplier_url,
+		{manufacturer}:=prod.mfg,
+		{SLA}:=cip.CIP_SLA,
+		{price}:=nvl(cip.CIP_NET_PRICE,0),
+		{fullfilmentSite}:=cip.CIP_FFS_ID,
+		{txCurrCode}:=cip.CIP_TX_CURR_CD,
+		{dealID}:=cit.CIT_DEAL_ID,
+		{serviceProviderEmails}:=cit.cit_cpm_svc_prov_emails,
+		{localizationStr}:=cbd.CBD_OPTION_CODES,
+		{locCountryStr}:=cbd.CBD_COUNTRIES,
+		{configSource}:=cbd.CBD_CONFIG_SRC,
+		{configID}:=cbd.CBD_CONFIG_ID,
+		{bundleType}:=cbd.CBD_TYPE_FLAG,
+		{bundleState}:=cbd.CBD_STATE,
+		{validity}:=cop.COP_VALID_STATUS,
+		{preserveFlag}:=cbd.CBD_PRESERV_FLAG,
+		{lastModifiedDate}:=cbd.CBD_LAST_MODIFIED_DATE,
+		{lastModifiedBy}:=cbd.CBD_LAST_MODIFIED_BY
+    		from    CAT_INFO cat, CAT_PRICE_DESCRIPTOR pd, CAT_BUNDLE_INFO cbd, CAT_ITEM cit, cat_item_options cop, CAT_ITEM_PRICE cip,
+    				PRODUCTS prod, CUSTOMER cust, CAT_PROGRAM pgm
+    		where   cat.CAT_CATALOG_ID = {?:catalogID} 
+    		  AND   pd.cat_catalog_id = cat.cat_catalog_id
+    		  and   cbd.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+    		  and   cit.CAT_CATALOG_ID = cat.CAT_CATALOG_ID
+    		  and   cit.CIT_SRC_PROD = cbd.CBD_ID
+    		  and   cit.CIT_BUNDLE_FLAG = 'B'
+    		  and   cop.CAT_ITEM_KEY = cit.CIT_ITEM_KEY
+    		  and   cip.CIT_PRICE_ITEM_KEY = cit.CIT_PRICE_ITEM_KEY
+    		  and	cip.CIP_PRICE_DESCRIPTOR = pd.CPD_PRICE_DESCRIPTOR
+    		  and   prod.PROD = cbd.CBD_ID
+    		  and   prod.BUNDLE_FLAG = 'B'
+    		  and   cat.CUST_KEY = cust.CUST_KEY(+)
+    		  and   cit.CIT_PGM_KEY = pgm.PGM_KEY(+)
+        </stmt>
+
+
+
+	<stmt id="GET_BDL_CONTENT">
+		select
+				{catalogID}:=ctd.CAT_CATALOG_ID,
+				{bundleID}:=ctd.CTD_PROD,
+				{hpLangCode}:=ctd.CTD_HP_LANG_CODE,
+				{shortDesc}:=ctd.CTD_SHORT_DESC,
+				{longDesc}:=ctd.CTD_LONG_DESC,
+				{datasheet}:=ctd.CTD_DATASHEET_URL,
+				{image}:=ctd.CTD_IMAGE_URL,
+				{baseModelImageFlag}:=ctd.CTD_BASE_MODEL_IMG_FLAG,
+				{lastModifiedDate}:=ctd.CTD_LAST_MODIFIED_DATE,
+				{lastModifiedBy}:=ctd.CTD_LAST_MODIFIED_BY
+		from    CAT_CONTENT_DIFF ctd
+        where   ctd.CAT_CATALOG_ID = {?:catalogID}
+          and   ctd.CTD_PROD = {?:bundleID}
+          and   ctd.CTD_HP_LANG_CODE = {?:hpLangCode}
+          and   ctd.CTD_SKU_FLAG = 1
+    </stmt>
+
+    <!-- <stmt id="UPDATE_CTC_IMAGE_CUST_FLAG">
+		UPDATE cat_content_cache ctc
+		       set CTC_IMAGE_CUST_FLAG = 'Y' 
+		 WHERE ctc.cat_catalog_id = {?:catalogID}
+		 AND ctc.ctc_prod = {?:bundleID}
+		 AND ctc.ctc_hp_lang_code = {?:hpLangCode}
+    </stmt>
+    -->
+    
+	<stmt id="GET_CHILD_GROUPS">
+		select
+				{bundleTemplateID}:=btg.BDT_ID,
+				{bundleID}:=cbg.CBD_ID,
+				{catalogID}:=cbg.CAT_CATALOG_ID,
+				{bundleCompID}:=btg.BTG_COMP_ID,
+				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{bundleCompType}:=btg.BTG_COMP_TYPE,
+				{quantity}:=btg.BTG_QTY,
+				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+				{rankNum}:=btg.BTG_RANK,
+				{levelNum}:=btg.BTG_LEVEL,
+				{min}:=btg.BTG_MIN_COMP,
+				{max}:=btg.BTG_MAX_COMP,
+				{requiredFlag}:=btg.BTG_REQ_FLAG,
+				{preselectFlag}:=btg.BTG_PRESELECT_FLAG,
+				{hideFlag}:=btg.BTG_HIDE_FLAG,
+				{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG,
+				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE
+		from    CAT_INFO cat, CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_GROUPS btg
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbg.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbg.CBD_ID = {?:bundleID}
+		  and   cbg.BTG_COMP_ID = btg.BTG_COMP_ID
+		  and   nvl(btg.PARENT_COMP_ID,'ROOT') = {?:bundleCompID}
+		  and   btg.BTG_MODIFIED_FLAG != 'D'
+   </stmt>
+
+
+  <stmt id="GET_BUNDLE_ALLCHILD_GROUPS">
+  		select
+  				{bundleTemplateID}:=btg.BDT_ID,
+  				{bundleID}:=cbg.CBD_ID,
+  				{catalogID}:=cbg.CAT_CATALOG_ID,
+  				{bundleCompID}:=btg.BTG_COMP_ID,
+  				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+  				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, btg.BTG_COMP_ID),
+  				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, btg.BTG_COMP_ID),
+  				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, btg.BTG_COMP_ID),
+  				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, btg.BTG_COMP_ID),
+  				{bundleCompType}:=btg.BTG_COMP_TYPE,
+  				{quantity}:=btg.BTG_QTY,
+  				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+  				{rankNum}:=btg.BTG_RANK,
+  				{levelNum}:=btg.BTG_LEVEL,
+  				{min}:=btg.BTG_MIN_COMP,
+  				{max}:=btg.BTG_MAX_COMP,
+  				{requiredFlag}:=btg.BTG_REQ_FLAG,
+  				{preselectFlag}:=btg.BTG_PRESELECT_FLAG,
+  				{hideFlag}:=btg.BTG_HIDE_FLAG,
+  				{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG,
+  				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+  				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+  				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE
+  		from    CAT_INFO cat, CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_GROUPS btg
+  		where   cat.CAT_CATALOG_ID = {?:catalogID}
+  		  and   cbg.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+  		  and   cbg.CBD_ID = {?:bundleID}
+  		  and   cbg.BTG_COMP_ID = btg.BTG_COMP_ID
+     </stmt>
+
+
+   <stmt id="GET_CHILD_GROUPS_BY_TYPE">
+		select
+				{bundleTemplateID}:=btg.BDT_ID,
+				{bundleID}:=cbg.CBD_ID,
+				{catalogID}:=cbg.CAT_CATALOG_ID,
+				{bundleCompID}:=btg.BTG_COMP_ID,
+				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, btg.BTG_COMP_ID),
+				{bundleCompType}:=btg.BTG_COMP_TYPE,
+				{quantity}:=btg.BTG_QTY,
+				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+				{rankNum}:=btg.BTG_RANK,
+				{levelNum}:=btg.BTG_LEVEL,
+				{min}:=btg.BTG_MIN_COMP,
+				{max}:=btg.BTG_MAX_COMP,
+				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE,
+				{requiredFlag}:=btg.BTG_REQ_FLAG,
+				{preselectFlag}:=btg.BTG_PRESELECT_FLAG,
+				{hideFlag}:=btg.BTG_HIDE_FLAG,
+				{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG
+		from    CAT_INFO cat, CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_GROUPS btg
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbg.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbg.CBD_ID = {?:bundleID}
+		  and   cbg.BTG_COMP_ID = btg.BTG_COMP_ID
+		  and   nvl(btg.PARENT_COMP_ID,'ROOT') = {?:bundleCompID}
+		  and   btg.BTG_COMP_TYPE = {?:bundleCompType}
+		  and btg.BTG_MODIFIED_FLAG != 'D'
+   </stmt>
+
+<stmt id="GET_INSTANCE_OPTION_PACK">
+		select
+		{bundleTemplateID}:=btg.BDT_ID bundleTemplateID,
+		{bundleID}:=cbg.CBD_ID bundleID,
+		{catalogID}:=cbg.CAT_CATALOG_ID catalogID,
+		{bundleCompID}:=btg.BTG_COMP_ID bundleCompID,
+		{parentBundleCompID}:=btg.PARENT_COMP_ID parentBundleCompID,
+		{shortDesc}:=btc.BDC_SHORT_DESC shortDesc,
+		{longDesc}:=btc.BDC_LONG_DESC longDesc,
+		{bundleCompType}:=btg.BTG_COMP_TYPE bundleCompType,
+		{quantity}:=btg.BTG_QTY quantity,
+		{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG deltaPriceFlag,
+		{rankNum}:=btg.BTG_RANK rankNum,
+		{levelNum}:=btg.BTG_LEVEL levelNum,
+		{min}:=btg.BTG_MIN_COMP min,
+		{max}:=btg.BTG_MAX_COMP max,
+		{modificationFlag}:=btg.BTG_MODIFIED_FLAG modificationFlag,
+		{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY lastModifiedBy,
+		{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE lastModifiedDate,
+		{requiredFlag}:=btg.BTG_REQ_FLAG requiredFlag,
+		{preselectFlag}:=btg.BTG_PRESELECT_FLAG preselectFlag,
+		{hideFlag}:=btg.BTG_HIDE_FLAG hideFlag,
+		{priceHideFlag}:=btg.BTG_PRICE_HIDE_FLAG priceHideFlag
+                from    CAT_INFO cat,  CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_GROUPS btg, BDL_TEMPLATE_CONTENT btc
+                where   cat.CAT_CATALOG_ID = {?:catalogID}
+                  and    cbg.CAT_CATALOG_ID = nvl(cat.cat_parent_catalog_id, cat.cat_catalog_id)
+		  and   cbg.CBD_ID = {?:bundleID}
+		  and   cbg.BTG_COMP_ID = btg.BTG_COMP_ID		  
+		  and   btg.BTG_COMP_TYPE = {?:bundleCompType}
+		  and   btc.BDC_COMP_ID = cbg.BTG_COMP_ID 
+		  and   btc.BDC_HP_LANG_CODE = {?:hpLangCode}
+		  and   btg.btg_modified_flag != 'D'
+		
+   </stmt>
+   
+	<stmt id="GET_CHILD_PRODS">
+		select
+				{bundleTemplateID}:=btp.BDT_ID bundleTemplateID,
+				{bundleID}:=cbp.CBD_ID bundleID,
+				{catalogID}:=cbp.CAT_CATALOG_ID catalogID,
+				{priceDescriptor}:=cpr.CPR_PRICE_DESCRIPTOR priceDescriptor,
+				{price}:=nvl(cpr.CPR_PRICE,0) price,
+				{priceAsStr}:=cpr.CPR_PRICE priceAsStr,
+				{bundleCompID}:=btp.BTP_COMP_ID bundleCompID,
+				{parentBundleCompID}:=btp.PARENT_COMP_ID parentBundleCompID,
+				{bundleCompType}:='S' bundleCompType,
+				{sourceProd}:=btp.BTP_SRC_PROD sourceProd,
+				{baseModel}:=btp.BTP_BASE_MODEL baseModel,
+				{localizedProd}:=cbp.CBP_LOCALIZE_PROD localizedProd,
+				{configID}:=btp.BTP_CONFIG_ID configID,
+				{configSource}:=btp.BTP_CONFIG_src configSource,
+				{contextID}:=btp.BTP_CONTEXT_ID contextID,
+				{productSourceID}:=cpr.CPR_SOURCE_ID productSourceID,
+				{productSourceType}:=cpr.CPR_SOURCE_TYPE productSourceType,
+				{softDeleteFlag}:=cbp.CBP_SOFT_DELETE_FLAG softDeleteFlag,
+				{shortDesc}:=DECODE(BDT_TYPE, 'PROMO',DECODE(btp.PARENT_COMP_ID, NULL, DECODE(ctx.CTP_COMP_MSG, NULL, BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod), BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) || ' - ' || ctx.CTP_COMP_MSG), BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod)),BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod)) shortDesc,
+				{longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) longDesc,
+				{datasheet}:=BE_CONTENT_FALLBACK.get_bdl_prod_datasheet_url(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) datasheet,
+				{image}:=BE_CONTENT_FALLBACK.get_bdl_prod_image_url(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) image,
+				{quantity}:=btp.BTP_QTY quantity,
+				{levelNum}:=btp.BTP_LEVEL levelNum,
+				{rankNum}:=btp.BTP_RANK rankNum,
+				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N') baseProdFlag,
+				{localizeFlag}:=btp.BTP_LOCALIZE_FLAG localizeFlag,
+				{variableQtyFlag}:=btp.BTP_VARIABLE_QTY_FLAG variableQtyFlag,
+				{inTheBoxFlag}:=btp.BTP_IN_BOX_FLAG inTheBoxFlag,
+				{shipTogetherFlag}:=btp.BTP_SHIP_TOGETHER_FLAG shipTogetherFlag,
+				{chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG chargeShippingFlag,
+				{requiredFlag}:=btp.BTP_REQ_FLAG requiredFlag,
+				{preselectFlag}:=btp.BTP_PRESELECT_FLAG preselectFlag,
+				{specialPriceFlag}:=btp.BTP_SPECIAL_PRICE_FLAG specialPriceFlag,
+				{hideFlag}:=btp.BTP_HIDE_FLAG hideFlag,
+				{priceHideFlag}:=btp.BTP_PRICE_HIDE_FLAG priceHideFlag,
+				{validity}:=cbp.CBP_VALIDITY validity,
+				{lastModifiedBy}:=btp.BTP_LAST_MODIFIED_BY lastModifiedBy,
+				{lastModifiedDate}:=btp.BTP_LAST_MODIFIED_DATE lastModifiedDate,
+				{fusionOrderStatus}:=cbp.CBP_FUSN_ORD_STATUS fusionOrderStatus
+		from    CAT_INFO cat, CAT_BUNDLE_PRODS cbp, BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, CAT_BUNDLE_PRICE cpr, CONTEXT_BUNDLE_PRODS ctx
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbp.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbp.CBD_ID = {?:bundleID}
+		  and   cbp.BTP_COMP_ID = btp.BTP_COMP_ID
+		  and   btp.bdt_id = bdt.bdt_id(+)
+		  and   nvl(btp.PARENT_COMP_ID,'ROOT') = {?:bundleCompID}
+		  and   cpr.cpr_key = cbp.cpr_key
+		  and   cpr.CPR_PRICE_DESCRIPTOR = {?:priceDescriptor}
+		  and   btp.BTP_CONTEXT_ID = ctx.CTI_CONTEXT_ID(+)
+		  and   btp.BTP_SRC_PROD = ctx.CTP_PROD(+)
+   </stmt>
+   <!-- for eZilla #57208 - Raghavendra 
+   	modified following query to fix eZilla #60662 
+   	added fields shortDesc, longDesc-->
+   <stmt id="GET_CHILD_PRODS_WITH_PROFILE">
+		SELECT {catalogID}:=cbp.cat_catalog_id,
+		       {itemKey}:=pip.pip_key, 
+		       {localPrice}:=pip.pip_local_price,
+		       {price}:=NVL (pip.pip_net_price, 0),
+		       {priceAsStr}:=pip.pip_net_price,
+		       {priceDescriptor}:=pip.pip_price_descriptor,
+		       {priceProfile}:=pip.pip_profile_id,
+		       {productSourceID}:=btp.btp_src_prod,
+		       {requiredFlag}:=btp.btp_req_flag,
+		       {bundleTemplateID}:=btp.bdt_id,
+		       {bundleID}:=cbp.cbd_id,
+		       {bundleCompID}:=btp.btp_comp_id,
+		       {parentBundleCompID}:=btp.parent_comp_id,
+		       {bundleCompType}:='S',
+		       {sourceProd}:=btp.btp_src_prod,
+		       {baseModel}:=btp.btp_base_model,
+		       {localizedProd}:=cbp.cbp_localize_prod,
+		       {configID}:=btp.btp_config_id,
+		       {configSource}:=btp.btp_config_src,
+		       {contextID}:=btp.btp_context_id,
+		       {shortDesc}:=DECODE (bdt_type, 'PROMO', DECODE (btp.parent_comp_id, NULL, DECODE (ctx.ctp_comp_msg, NULL, BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod), BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) || ' - ' || ctx.ctp_comp_msg ), BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) ), BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod) ),
+		       {longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+		       {datasheet}:=BE_CONTENT_FALLBACK.get_bdl_prod_datasheet_url(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+		       {image}:=BE_CONTENT_FALLBACK.get_bdl_prod_image_url(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),       
+		       {quantity}:=btp.btp_qty,
+		       {levelNum}:=btp.btp_level,
+		       {rankNum}:=btp.btp_rank,
+		       {localizeFlag}:=btp.btp_localize_flag,
+		       {variableQtyFlag}:=btp.btp_variable_qty_flag,
+		       {inTheBoxFlag}:=btp.btp_in_box_flag,
+		       {shipTogetherFlag}:=btp.btp_ship_together_flag,
+		       {chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG,
+		       {requiredFlag}:=btp.btp_req_flag,
+		       {preselectFlag}:=btp.btp_preselect_flag,
+		       {specialPriceFlag}:=btp.btp_special_price_flag,
+		       {hideFlag}:=btp.btp_hide_flag,
+		       {priceHideFlag}:=btp.btp_price_hide_flag,
+		       {validity}:=cbp.cbp_validity,
+		       {lastModifiedBy}:=btp.btp_last_modified_by,
+		       {lastModifiedDate}:=btp.btp_last_modified_date,
+		       {fusionOrderStatus}:=cbp.cbp_fusn_ord_status,
+		       {baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N')
+		  FROM profile_item_price pip,
+		       bdl_template_prods btp,
+		       cat_info cat,
+		       cat_bundle_prods cbp,
+		       context_bundle_prods ctx,
+		       bdl_template_info bdt,
+		       products prd
+		 WHERE cat.CAT_CATALOG_ID = {?:catalogID}
+		   and cbp.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		   AND cbp.cbd_id = {?:bundleID}
+		   AND NVL (btp.parent_comp_id, 'ROOT') = {?:bundleCompID}
+		   AND cbp.btp_comp_id = btp.btp_comp_id
+		   AND pip.pip_profile_id = {?:priceProfile}
+		   AND pip_prod =
+		          DECODE (btp.btp_localize_flag,
+		                  'N', DECODE (btp.btp_config_src,
+		                               'PRS', DECODE(prd.rb_flag, 'R', btp.btp_src_prod, btp.btp_base_model),
+		                               btp.btp_src_prod
+		                              ),
+		                  btp.btp_src_prod
+		                 )
+		   AND pip_price_descriptor = {?:priceDescriptor}
+		   AND NVL (btp.btp_context_id, ' ') = NVL (pip.pip_context_id, ' ')
+		   AND btp.btp_src_prod = prd.prod
+		   AND btp.bdt_id = bdt.bdt_id(+)
+		   AND btp.btp_context_id = ctx.cti_context_id(+)
+		   AND btp.btp_src_prod = ctx.ctp_prod(+)
+   		   AND btp.bdt_id = bdt.bdt_id(+)
+   </stmt>
+
+<!-- Chardornney: Removed the PLC fallback logic.- DKMankotia -->
+   <stmt id="GET_BDL_PRODS_STATUS">
+   		select
+   				{bundleTemplateID}:=btp.BDT_ID,
+   				{bundleID}:=cbp.CBD_ID,
+   				{catalogID}:=cbp.CAT_CATALOG_ID,
+   				{bundleCompID}:=btp.BTP_COMP_ID,
+   				{parentBundleCompID}:=btp.PARENT_COMP_ID,
+   				{sourceProd}:=btp.BTP_SRC_PROD,
+   				{baseModel}:=btp.BTP_BASE_MODEL,
+   				{localizedProd}:=cbp.CBP_LOCALIZE_PROD,
+   				{shortDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+   				{longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+   				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+   				{localizeFlag}:=btp.BTP_LOCALIZE_FLAG,
+   				{lclpStatus}:=cbp.CBP_LCLP_ORD_STATUS,
+   				{plcStatus}:=cbp.CBP_PLC_ORD_STATUS,
+   				{lclpSkipFlag}:=cbp.CBP_SKIP_LCLP_ORD,
+   				{omSkipFlag}:=cbp.CBP_SKIP_FUSN_ORD,
+   				{fusionOrderStatus}:=cbp.CBP_FUSN_ORD_STATUS,
+   				{plcSkipFlag}:=cbp.CBP_SKIP_PLC_ORD,
+   				{validity}:=cbp.CBP_VALIDITY,
+   				{peDate}:=(select to_Char(END_OF_LIFE_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod), 
+   				{emDate}:=(select to_char(DISCONTINUED_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+   				{esDate}:=(select to_Char(MARKETING_OBSOLETE_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+   				{gaDate}:=(select to_Char(PRODUCT_RELEASE_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+   				{repProdInfo}:=(select REPLACEMENT_PRODUCT from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+   				{priceStatus}:=cprice.CPR_PRS_STATUS,
+   				{dchaincode}:=om.OM_DCHAIN_CODE,
+   				{description}:=fcd.DESCRIPTION 
+   				from    CAT_INFO cat, CAT_BUNDLE_PRODS cbp, BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, 
+   			cat_bundle_price cprice,
+   			ORDERABILITY_MASTER om,
+   			FUSION_CONSTRAINT_DETAILS fcd
+   		where   cat.CAT_CATALOG_ID = {?:catalogID}
+   		  and   cbp.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+   		  and   cbp.CBD_ID = {?:bundleID}
+   		  and   cbp.BTP_COMP_ID = btp.BTP_COMP_ID
+   		  and   btp.bdt_id = bdt.bdt_id(+)
+   		  and   btp.BTP_MODIFIED_FLAG != 'D'
+          and   cprice.cpr_key = cbp.cpr_key   		  
+		  and   cbp.cbp_localize_prod = om.om_prod(+)
+		  and 	om.OM_CNTRY_CD(+) = 
+		      	decode({q:regionCode},
+		      	'GL', 
+     			decode( cat_util.get_region_for_cntry(substr({?:priceDescriptor},1,2)), 'EU', 'EU', substr({?:priceDescriptor},1,2)), 
+     		        'EU', 
+     			{q:regionCode},
+     			substr({?:priceDescriptor},1,2))
+   		and fcd.CONSTRAINT_CODE(+) = om.OM_DCHAIN_CODE
+      </stmt>
+      
+	<!-- for eZilla #57208 - Raghavendra -->
+	<!-- Chardornney: Removed the PLC fallback logic.- DKMankotia -->
+      
+      <stmt id="GET_BDL_PRODS_STATUS_WITH_PROFILE">
+	  select
+	       {bundleTemplateID}:=btp.BDT_ID,
+	       {bundleID}:=cbp.CBD_ID,
+	       {catalogID}:=cbp.CAT_CATALOG_ID,
+	       {bundleCompID}:=btp.BTP_COMP_ID,
+	       {parentBundleCompID}:=btp.PARENT_COMP_ID,
+	       {sourceProd}:=btp.BTP_SRC_PROD,
+	       {baseModel}:=btp.BTP_BASE_MODEL,
+	       {localizedProd}:=cbp.CBP_LOCALIZE_PROD,
+	       {shortDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+	       {longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+	       {baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+	       {localizeFlag}:=btp.BTP_LOCALIZE_FLAG,
+	       {lclpStatus}:=cbp.CBP_LCLP_ORD_STATUS,
+	       {plcStatus}:=cbp.CBP_PLC_ORD_STATUS,
+	       {lclpSkipFlag}:=cbp.CBP_SKIP_LCLP_ORD,
+	       {omSkipFlag}:=cbp.CBP_SKIP_FUSN_ORD,
+	       {fusionOrderStatus}:=cbp.CBP_FUSN_ORD_STATUS,
+	       {plcSkipFlag}:=cbp.CBP_SKIP_PLC_ORD,
+	       {validity}:=cbp.CBP_VALIDITY,
+		{peDate}:=(select to_Char(END_OF_LIFE_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod), 
+		{emDate}:=(select to_char(DISCONTINUED_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+		{esDate}:=(select to_Char(MARKETING_OBSOLETE_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+		{gaDate}:=(select to_Char(PRODUCT_RELEASE_DATE,'DD-Mon-YYYY') from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+		{repProdInfo}:=(select REPLACEMENT_PRODUCT from PLC_INHERITANCE_MERGE where country_code=SUBSTR( {?:priceDescriptor} , 1,2) and product_number=btp.btp_src_prod),
+	       {priceStatus}:=cprice.PIP_STATUS
+	  from    CAT_INFO cat, CAT_BUNDLE_PRODS cbp, BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, 
+	      profile_item_price cprice, products prd
+	  where   cat.CAT_CATALOG_ID = {?:catalogID}
+	       and   cbp.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+	       and   cbp.CBD_ID = {?:bundleID}
+	       and   cbp.BTP_COMP_ID = btp.BTP_COMP_ID
+	       and   btp.bdt_id = bdt.bdt_id(+)
+	       and   btp.btp_src_prod = prd.prod
+	       and   btp.BTP_MODIFIED_FLAG != 'D'
+	       and   cprice.pip_key = cat_util.make_profile_item_price_key({?:priceProfile}, DECODE(btp.btp_localize_flag, 'N', DECODE(btp.BTP_config_src, 'PRS', DECODE(prd.rb_flag, 'R', btp.btp_src_prod, btp.btp_base_model), btp.btp_src_prod), btp.btp_src_prod), btp_context_id, 'S', {?:priceDescriptor})
+      </stmt>
+      
+      <stmt id="GET_BDL_GROUPS_STATUS">
+      	select
+      	  		{bundleTemplateID}:=btg.BDT_ID, 
+      	  		{bundleID}:=cbg.CBD_ID, 
+      	  		{catalogID}:=cbg.CAT_CATALOG_ID, 
+      	  		{bundleCompID}:=btg.BTG_COMP_ID,
+        		{parentBundleCompID}:=btg.PARENT_COMP_ID,
+        		{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, btg.BTG_COMP_ID), 
+        		{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, btg.BTG_COMP_ID), 
+        		{bundleCompType}:=btg.BTG_COMP_TYPE       				
+        		from    CAT_INFO cat, CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_GROUPS btg
+        		where   cat.CAT_CATALOG_ID = {?:catalogID}
+        		  and   cbg.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+        		  and   cbg.CBD_ID = {?:bundleID}
+        		  and   cbg.BTG_COMP_ID = btg.BTG_COMP_ID
+			  and   btg.btg_modified_flag != 'D'
+		 
+		  
+	</stmt>
+	
+	<stmt id="SAVE_BDL_PROD_STATUS">
+			 update CAT_BUNDLE_PRODS SET
+				CBP_SKIP_LCLP_ORD ={?:lclpSkipFlag}, 
+				CBP_SKIP_FUSN_ORD ={?:omSkipFlag}, 
+				CBP_SKIP_PLC_ORD ={?:plcSkipFlag},
+				CBP_OVRT_FUSN_SKIP='Y',
+				CBP_OVRT_LCLP_SKIP='Y',
+				CBP_OVRT_PLC_SKIP='Y',
+				cbp_last_modified_by = {?:lastModifiedBy},
+	     		cbp_last_modified_date = sysdate
+			   where 
+			   CAT_CATALOG_ID ={?:catalogID}
+			   and CBD_ID = {?:bundleID}
+			   and BTP_COMP_ID = {?:bundleCompID}
+	</stmt>
+
+   <stmt id="GET_BUNDLE_ALLCHILD_PRODS">
+   		select
+   				{bundleTemplateID}:=btp.BDT_ID,
+   				{bundleID}:=cbp.CBD_ID,
+   				{catalogID}:=cbp.CAT_CATALOG_ID,
+   				{priceDescriptor}:=cpr.CPR_PRICE_DESCRIPTOR,
+   				{price}:=nvl(cpr.CPR_PRICE,0),
+   				{priceAsStr}:=cpr.CPR_PRICE,
+   				{bundleCompID}:=btp.BTP_COMP_ID,
+   				{parentBundleCompID}:=btp.PARENT_COMP_ID,
+   				{bundleCompType}:='S',
+   				{sourceProd}:=btp.BTP_SRC_PROD,
+   				{baseModel}:=btp.BTP_BASE_MODEL,
+   				{localizedProd}:=cbp.CBP_LOCALIZE_PROD,
+   				{configID}:=btp.BTP_CONFIG_ID,
+   				{configSource}:=btp.BTP_CONFIG_src,
+   				{contextID}:=btp.BTP_CONTEXT_ID,
+   				{productSourceID}:=cpr.CPR_SOURCE_ID,
+   				{productSourceType}:=cpr.CPR_SOURCE_TYPE,
+   				{softDeleteFlag}:=cbp.CBP_SOFT_DELETE_FLAG,
+   				{shortDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+   				{longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.cbd_id, cbp.cob_localize_prod),
+   				{datasheet}:=BE_CONTENT_FALLBACK.get_bdl_prod_datasheet_url(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+   				{image}:=BE_CONTENT_FALLBACK.get_bdl_prod_image_url(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+   				{quantity}:=btp.BTP_QTY,
+   				{levelNum}:=btp.BTP_LEVEL,
+   				{rankNum}:=btp.BTP_RANK,
+   				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+   				{localizeFlag}:=btp.BTP_LOCALIZE_FLAG,
+   				{variableQtyFlag}:=btp.BTP_VARIABLE_QTY_FLAG,
+   				{inTheBoxFlag}:=btp.BTP_IN_BOX_FLAG,
+   				{shipTogetherFlag}:=btp.BTP_SHIP_TOGETHER_FLAG,
+   				{chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG,
+   				{requiredFlag}:=btp.BTP_REQ_FLAG,
+   				{preselectFlag}:=btp.BTP_PRESELECT_FLAG,
+   				{specialPriceFlag}:=btp.BTP_SPECIAL_PRICE_FLAG,
+   				{hideFlag}:=btp.BTP_HIDE_FLAG,
+   				{priceHideFlag}:=btp.BTP_PRICE_HIDE_FLAG,
+   				{validity}:=cbp.CBP_VALIDITY,
+   				{lastModifiedBy}:=btp.BTP_LAST_MODIFIED_BY,
+   				{lastModifiedDate}:=btp.BTP_LAST_MODIFIED_DATE,
+                {localPrice}:=cpr.CPR_LOCAL_PRICE   
+   		from    CAT_INFO cat, CAT_BUNDLE_PRODS cbp, BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, CAT_BUNDLE_PRICE cpr
+   		where   cat.CAT_CATALOG_ID = {?:catalogID}
+   		  and   cbp.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+   		  and   cbp.CBD_ID = {?:bundleID}
+   		  and   cbp.BTP_COMP_ID = btp.BTP_COMP_ID
+   		  and   btp.bdt_id = bdt.bdt_id(+)
+   		  and   cpr.cpr_key = cbp.cpr_key
+   		  and   cpr.CPR_PRICE_DESCRIPTOR = {?:priceDescriptor}   		  
+      </stmt>
+
+
+   <!-- APIs below will work correctly for eComcat Bundles only. Price related data is not retrieved -->
+   <stmt id="GET_ALL_BUNDLE_CATALOGS">
+   		select {string1}:=cat.CAT_CATALOG_ID,
+   			   {string2}:=nvl(cat.CAT_PARENT_CATALOG_ID,cat.CAT_CATALOG_ID)
+   		from   CAT_BUNDLE_INFO cbd, CAT_INFO cat
+   		where  cbd.CBD_ID = {?:bundleID}
+   		  and  cbd.CBD_TYPE_FLAG = 'C'
+   		  and  (cat.CAT_CATALOG_ID = cbd.CAT_CATALOG_ID  OR
+   		        cat.CAT_PARENT_CATALOG_ID = cbd.CAT_CATALOG_ID)
+   </stmt>
+	<stmt id="GET_ALL_CHILD_PRODS">
+		select
+				{bundleID}:=cbp.CBD_ID,
+				{sourceProd}:=btp.BTP_SRC_PROD,
+				{baseModel}:=btp.BTP_BASE_MODEL,
+				{localizedProd}:=cbp.CBP_LOCALIZE_PROD,
+				{configID}:=btp.BTP_CONFIG_ID,
+				{configSource}:=btp.BTP_CONFIG_src,
+				{contextID}:=btp.BTP_CONTEXT_ID,
+				{shortDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+				{longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+				{datasheet}:=BE_CONTENT_FALLBACK.get_bdl_prod_datasheet_url(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+				{image}:=BE_CONTENT_FALLBACK.get_bdl_prod_image_url(cat.cat_catalog_id, cbp.cbd_id, cbp.cbp_localize_prod),
+				{quantity}:=btp.BTP_QTY,
+				{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+				{hideFlag}:=btp.BTP_HIDE_FLAG
+		from    CAT_BUNDLE_PRODS cbp, BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, CAT_INFO cat
+		where   cbp.CBD_ID = {?:bundleID}
+		  and 	cbp.CBP_SOFT_DELETE_FLAG = 'N'
+		  and   cbp.BTP_COMP_ID = btp.BTP_COMP_ID
+		  and   btp.bdt_id = bdt.bdt_id(+)
+		  and   cat.cat_catalog_id = {?:catalogID}
+   </stmt>
+
+   	<stmt id="GET_COMCAT_BDL_CONTENT">
+   		select
+   				{catalogID}:=cat.CAT_CATALOG_ID,
+   				{bundleID}:=cbd.cbd_id,
+   				{sysGenDatasheetFlag}:=bdt.BDT_SYS_GEN_DSHT_FLAG,
+   				{hpLangCode}:=cat.CAT_HP_LANG_CODE,
+   				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbd.cbd_id),
+   				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, cbd.cbd_id),
+   				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, cbd.cbd_id),
+   				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbd.cbd_id)
+   		from    CAT_BUNDLE_INFO cbd, BDL_TEMPLATE_INFO bdt, CAT_INFO cat
+           where   cbd.CBD_ID = {?:bundleID}
+           	 and   cbd.BDT_TEMPLATE_ID = bdt.BDT_ID
+             and   cbd.CBD_TYPE_FLAG = 'C'
+             and   cat.CAT_CATALOG_ID = {?:catalogID}
+             and   rownum = 1
+    </stmt>
+    <!--- Comcat bundle specific API end -->
+
+   <stmt id="GET_BDL_GROUP">
+		select
+				{bundleTemplateID}:=btg.BDT_ID,
+				{catalogID}:=cbg.CAT_CATALOG_ID,
+				{bundleID}:=cbg.CBD_ID,
+				{bundleCompID}:=cbg.BTG_COMP_ID,
+				{parentBundleCompID}:=btg.PARENT_COMP_ID,
+				{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbg.btg_comp_id),
+				{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, cbg.btg_comp_id),
+				{datasheet}:=BE_CONTENT_FALLBACK.get_datasheet_url(cat.cat_catalog_id, cbg.btg_comp_id),
+				{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbg.btg_comp_id),
+				{bundleCompType}:=btg.BTG_COMP_TYPE,
+				{quantity}:=btg.BTG_QTY,
+				{deltaPriceFlag}:=btg.BTG_DELTA_PRICE_FLAG,
+				{rankNum}:=btg.BTG_RANK,
+				{levelNum}:=btg.BTG_LEVEL,
+				{min}:=btg.BTG_MIN_COMP,
+				{max}:=btg.BTG_MAX_COMP,
+				{modificationFlag}:=btg.BTG_MODIFIED_FLAG,
+				{lastModifiedBy}:=btg.BTG_LAST_MODIFIED_BY,
+				{lastModifiedDate}:=btg.BTG_LAST_MODIFIED_DATE
+		from    CAT_INFO cat, CAT_BUNDLE_GROUPS cbg, BDL_TEMPLATE_GROUPS btg
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbg.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbg.CBD_ID = {?:bundleID}
+		  and   cbg.BTG_COMP_ID = {?:bundleCompID}
+		  and   cbg.BTG_COMP_ID = btg.BTG_COMP_ID
+	</stmt>
+
+	<stmt id="GET_BDL_GROUP_CONTENT">
+		select
+			{bundleID}:=ctd.CAT_CATALOG_ID,
+			{bundleCompID}:=ctd.CTD_PROD,
+			{hpLangCode}:=ctd.CTD_HP_LANG_CODE,
+			{shortDesc}:=ctd.CTD_SHORT_DESC,
+			{longDesc}:=ctd.CTD_LONG_DESC,
+			{datasheet}:=ctd.CTD_DATASHEET_URL,
+			{image}:=ctd.CTD_IMAGE_URL,
+			{lastModifiedDate}:=ctd.CTD_LAST_MODIFIED_DATE,
+			{lastModifiedBy}:=ctd.CTD_LAST_MODIFIED_BY
+		from    CAT_CONTENT_DIFF ctd
+		where   ctd.CAT_CATALOG_ID = {?:catalogID}
+		  and   ctd.CTD_PROD = {?:bundleCompID}
+		  and   ctd.CTD_HP_LANG_CODE = {?:hpLangCode}
+		  and   ctd.CTD_SKU_FLAG = 3
+    </stmt>
+
+	<stmt id="GET_BDL_PROD">
+		select
+			{bundleTemplateID}:=btp.BDT_ID,
+			{bundleID}:=cbp.CBD_ID,
+			{catalogID}:=cbp.CAT_CATALOG_ID,
+			{priceDescriptor}:=cpr.CPR_PRICE_DESCRIPTOR,
+			{price}:=nvl(cpr.CPR_PRICE,0),
+			{bundleCompID}:=btp.BTP_COMP_ID,
+			{parentBundleCompID}:=btp.PARENT_COMP_ID,
+			{parentBundleCompID}:=btp.PARENT_COMP_ID,
+			{bundleCompType}:='S',
+			{sourceProd}:=btp.BTP_SRC_PROD,
+			{baseModel}:=btp.BTP_BASE_MODEL,
+			{localizedProd}:=cbp.CBP_LOCALIZE_PROD,
+			{configID}:=btp.BTP_CONFIG_ID,
+			{configSource}:=btp.BTP_CONFIG_SRC,
+			{contextID}:=btp.BTP_CONTEXT_ID,
+			{productSourceID}:=cpr.CPR_SOURCE_ID,
+			{productSourceType}:=cpr.CPR_SOURCE_TYPE,
+			{softDeleteFlag}:=cbp.CBP_SOFT_DELETE_FLAG,
+			{shortDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_short_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+			{longDesc}:=BE_CONTENT_FALLBACK.get_bdl_prod_long_desc(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+			{datasheet}:=BE_CONTENT_FALLBACK.get_bdl_prod_datasheet_url(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+			{image}:=BE_CONTENT_FALLBACK.get_bdl_prod_image_url(cat.cat_catalog_id, cbp.CBD_ID, cbp.cbp_localize_prod),
+			{quantity}:=btp.BTP_QTY,
+			{levelNum}:=btp.BTP_LEVEL,
+			{rankNum}:=btp.BTP_RANK,
+			{baseProdFlag}:=decode(btp.BTP_SRC_PROD, bdt.BDT_BASE_PROD,'Y','N'),
+			{localizeFlag}:=btp.BTP_LOCALIZE_FLAG,
+			{variableQtyFlag}:=btp.BTP_VARIABLE_QTY_FLAG,
+			{inTheBoxFlag}:=btp.BTP_IN_BOX_FLAG,
+			{shipTogetherFlag}:=btp.BTP_SHIP_TOGETHER_FLAG,
+			{chargeShippingFlag}:=btp.BTP_CHARGE_SHIP_FLAG,
+			{requiredFlag}:=btp.BTP_REQ_FLAG,
+			{preselectFlag}:=btp.BTP_PRESELECT_FLAG,
+			{specialPriceFlag}:=btp.BTP_SPECIAL_PRICE_FLAG,
+			{hideFlag}:=btp.BTP_HIDE_FLAG,
+			{priceHideFlag}:=btp.BTP_PRICE_HIDE_FLAG,
+			{validity}:=cbp.CBP_VALIDITY,
+			{lastModifiedBy}:=btp.BTP_LAST_MODIFIED_BY,
+			{lastModifiedDate}:=btp.BTP_LAST_MODIFIED_DATE,
+			{itemKey}:=cbp.CBP_ITEM_KEY
+		from    CAT_INFO cat, CAT_BUNDLE_PRODS cbp, BDL_TEMPLATE_PRODS btp, BDL_TEMPLATE_INFO bdt, CAT_BUNDLE_PRICE cpr
+		where   cat.CAT_CATALOG_ID = {?:catalogID}
+		  and   cbp.CAT_CATALOG_ID = nvl(cat.CAT_PARENT_CATALOG_ID, cat.CAT_CATALOG_ID)
+		  and   cbp.CBD_ID = {?:bundleID}
+		  and   cbp.BTP_COMP_ID = {?:bundleCompID}
+		  and   btp.BTP_COMP_ID = cbp.BTP_COMP_ID
+		  and   btp.bdt_id = bdt.bdt_id(+)
+		  and   cbp.cpr_key = cpr.cpr_key
+		  and   cpr.CPR_PRICE_DESCRIPTOR = {?:priceDescriptor}
+   </stmt>
+
+   <stmt id="GET_RELATED_BUNDLES">
+		select /*+ ORDERED USE_NL(cbd,cat,cit,cip,cop,prod,cust,pgm) */
+			{bundleTemplateID}:=cbd.BDT_TEMPLATE_ID,
+			{bundleID}:=cbd.CBD_ID,
+			{catalogID}:=cbd.CAT_CATALOG_ID,
+			{baseProd}:=cbd.CBD_BASE_PROD,
+			{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cbd.CBD_ID),
+			{longDesc}:=BE_CONTENT_FALLBACK.get_long_desc(cat.cat_catalog_id, cbd.CBD_ID),
+			{datasheet}:=null,
+			{image}:=BE_CONTENT_FALLBACK.get_image_url(cat.cat_catalog_id, cbd.CBD_ID),
+			{customerPartID}:=cbd.CBD_CUST_PART_ID,
+			{programNum}:= cit.CIT_PGM_KEY,
+			{programName}:=pgm.PGM_NAME,
+			{startDate}:=cbd.CBD_START_DATE,
+			{endDate}:=cbd.CBD_END_DATE,
+			{custID}:=cat.CUST_KEY,
+			{custName}:=cust.CUST_NAME,
+			{supplierPartID}:=prod.supplier_part_id,
+			{supplierURL}:=prod.supplier_url,
+			{manufacturer}:=prod.mfg,
+			{SLA}:=cip.CIP_SLA,
+			{price}:=nvl(cip.CIP_NET_PRICE,0),
+			{priceDescriptor}:=cip.CIP_PRICE_DESCRIPTOR,
+			{fullfilmentSite}:=cip.CIP_FFS_ID,
+			{txCurrCode}:=cip.CIP_TX_CURR_CD,
+			{serviceProviderEmails}:=cit.cit_cpm_svc_prov_emails,
+			{localizationStr}:=cbd.CBD_OPTION_CODES,
+			{locCountryStr}:= (select CPD_OB_PRICE_DESCRIPTOR from cat_price_descriptor where cat_price_descriptor.cat_catalog_id = cbd.CAT_CATALOG_ID and rownum =1),
+			{configSource}:=cbd.CBD_CONFIG_SRC,
+			{configID}:=cbd.CBD_CONFIG_ID,
+			{configSource}:=cbd.CBD_CONFIG_SRC,
+			{bundleType}:=cbd.CBD_TYPE_FLAG,
+			{bundleState}:=cbd.CBD_STATE,
+			{validity}:=cop.COP_VALID_STATUS,
+			{preserveFlag}:=cbd.CBD_PRESERV_FLAG,
+			{lastModifiedDate}:=cbd.CBD_LAST_MODIFIED_DATE,
+			{lastModifiedBy}:=cbd.CBD_LAST_MODIFIED_BY
+		from   CAT_BUNDLE_INFO cbd, CAT_INFO cat, CAT_ITEM cit, CAT_ITEM_PRICE cip, CAT_ITEM_OPTIONS cop,
+			   PRODUCTS prod, CUSTOMER cust, CAT_PROGRAM pgm
+		where   cbd.BDT_TEMPLATE_ID = {?:bundleTemplateID}
+		  and   cat.CAT_CATALOG_ID = cbd.CAT_CATALOG_ID
+		  and   cit.CIT_SRC_PROD = cbd.CBD_ID
+		  and   cit.CAT_CATALOG_ID = cat.CAT_CATALOG_ID
+		  and   cit.CIT_BUNDLE_FLAG = 'B'
+		  and   cop.CAT_ITEM_KEY = cit.CIT_ITEM_KEY
+		  and   cip.CIT_PRICE_ITEM_KEY = cit.CIT_PRICE_ITEM_KEY
+		  and   cat.CUST_KEY = cust.CUST_KEY(+)
+		  and   cit.CIT_PGM_KEY = pgm.PGM_KEY(+)
+		  and   prod.PROD = cbd.CBD_ID
+		  and   prod.BUNDLE_FLAG = 'B'
+	</stmt>	
+	
+	<stmt id="SEARCH_BDL_TEMPLATES">
+	select * from
+		(
+		select a.*,rownum as ttt from (
+		select
+		{bundleTemplateID}:=bdt.BDT_ID,
+		{shortDesc}:=bdc.BDC_SHORT_DESC,
+		{longDesc}:=bdc.BDC_LONG_DESC,
+		{datasheet}:=bdc.BDC_DATASHEET_URL,
+		{image}:=bdc.BDC_IMAGE_URL,
+		{customerPartID}:=bdt.BDT_CUST_PART_ID,
+		{baseProd}:=bdt.BDT_BASE_PROD,
+		{program}:=nvl(bdt.BDT_PROGRAM,-1),
+		{programName}:=pgm.PGM_NAME,
+		{startDate}:=bdt.BDT_START_DATE,
+		{endDate}:=bdt.BDT_END_DATE,
+		{custID}:=bdt.CUST_KEY,
+		{custName}:=cust.CUST_NAME,
+		{regionCode}:=bdt.BDT_REGION_CODE,
+		{validity}:=bdt.BDT_VALIDITY,
+		{modificationFlag}:=bdt.BDT_MODIFIED_FLAG,
+		{lastModifiedDate}:=bdt.BDT_LAST_MODIFIED_DATE,
+		{lastModifiedBy}:=bdt.BDT_LAST_MODIFIED_BY
+		from    BDL_TEMPLATE_INFO bdt, BDL_TEMPLATE_CONTENT bdc, CUSTOMER cust, CAT_PROGRAM pgm
+		where bdt.tenant_cd  {tenantCode} and {templateSearchWhereClause} ) a 
+		) b
+		where {sortByAndSortOrder} 
+	</stmt>
+	
+	<stmt id="SEARCH_BDL_TEMPLATES_COUNT">
+         select {count}:= count(*) from  BDL_TEMPLATE_INFO bdt, BDL_TEMPLATE_CONTENT bdc, CUSTOMER cust, CAT_PROGRAM pgm where bdt.tenant_cd  {tenantCode} and {templateSearchWhereClause} and {sortByAndSortOrder}
+    </stmt>
+    
+	<stmt id="SEARCH_BDL_BUNDLES">
+		select
+			{catalogID}:= ci.CAT_CATALOG_ID,
+			{bundleTemplateID}:=templ.BDT_ID,
+			{shortDesc}:=BE_CONTENT_FALLBACK.get_short_desc(ci.cat_catalog_id, bun.CBD_ID) CTC_SHORT_DESC,
+			{customerPartID}:=bun.CBD_CUST_PART_ID,
+			{startDate}:=bun.CBD_START_DATE,
+			{endDate}:=bun.CBD_END_DATE,
+			{custID}:=cs.cust_id,
+			{custName}:=cs.CUST_NAME,
+			{validity}:=cop.cop_valid_status,
+			{locCountryStr}:=bun.CBD_COUNTRIES,
+			{localizationStr}:=bun.CBD_OPTION_CODES,
+			{priceDescriptor}:=cp.CPD_PRICE_DESCRIPTOR,
+			{priceProfile}:=nvl(cpm.PROFILE_ID, '-1') profile_id,
+			{profileDesc}:=nvl((SELECT prof.PROFILE_DESC FROM price_profile prof where  prof.profile_id = cpm.PROFILE_ID), 'None') profile_desc,
+			{bundleID}:=bun.CBD_ID
+		from  	cat_bundle_info bun,bdl_template_info templ, customer cs ,
+			cat_price_descriptor cp, cat_profile_mapping cpm, cat_item_options cop,cat_info  ci
+		where  templ.tenant_cd  {tenantCode} and	{bundleSearchWhereClause}
+		order by bun.cbd_id, cpm.PROFILE_ID, cp.CPD_PRICE_DESCRIPTOR
+	</stmt>
+
+
+	<stmt id="GET_BDL_TEMPLATES_FOR_CUST">
+		select
+			{bundleTemplateID}:=bdt.BDT_ID,
+			{shortDesc}:=btc.BDC_SHORT_DESC,
+			{longDesc}:=btc.BDC_LONG_DESC,
+			{datasheet}:=btc.BDC_DATASHEET_URL,
+			{image}:=btc.BDC_IMAGE_URL,
+			{customerPartID}:=bdt.BDT_CUST_PART_ID,
+			{baseProd}:=bdt.BDT_BASE_PROD,
+			{program}:=nvl(bdt.BDT_PROGRAM,-1),
+			{programName}:=pgm.PGM_NAME,
+			{startDate}:=bdt.BDT_START_DATE,
+			{endDate}:=bdt.BDT_END_DATE,
+			{custID}:=bdt.CUST_KEY,
+			{custName}:=cust.CUST_NAME,
+			{regionCode}:=bdt.BDT_REGION_CODE,
+			{validity}:=bdt.BDT_VALIDITY,
+			{modificationFlag}:=bdt.BDT_MODIFIED_FLAG,
+			{lastModifiedDate}:=bdt.BDT_LAST_MODIFIED_DATE,
+			{lastModifiedBy}:=bdt.BDT_LAST_MODIFIED_BY
+		from    BDL_TEMPLATE_INFO bdt, BDL_TEMPLATE_CONTENT btc, CUSTOMER cust, CAT_PROGRAM pgm
+		where   bdt.CUST_KEY = {?:custID}
+		  and   bdt.bdt_validity = 'V'
+		  and   btc.BDC_COMP_ID = bdt.BDT_ID
+		  and   btc.BDC_HP_LANG_CODE = '99'
+		  and   bdt.CUST_KEY = cust.CUST_KEY(+)
+		  and   bdt.BDT_PROGRAM = pgm.PGM_KEY(+)
+	</stmt>
+
+	<stmt id="GET_BDL_TEMPLATES_FOR_REGION">
+		select
+			{bundleTemplateID}:=bdt.BDT_ID,
+			{shortDesc}:=btc.BDC_SHORT_DESC,
+			{longDesc}:=btc.BDC_LONG_DESC,
+			{datasheet}:=btc.BDC_DATASHEET_URL,
+			{image}:=btc.BDC_IMAGE_URL,
+			{customerPartID}:=bdt.BDT_CUST_PART_ID,
+			{baseProd}:=bdt.BDT_BASE_PROD,
+			{program}:=nvl(bdt.BDT_PROGRAM,-1) programkey,
+			{programName}:=pgm.PGM_NAME,
+			{startDate}:=bdt.BDT_START_DATE,
+			{endDate}:=bdt.BDT_END_DATE,
+			{custID}:=bdt.CUST_KEY,
+			{custName}:=cust.CUST_NAME,
+			{regionCode}:=bdt.BDT_REGION_CODE,
+			{validity}:=bdt.BDT_VALIDITY,
+			{modificationFlag}:=bdt.BDT_MODIFIED_FLAG,
+			{lastModifiedDate}:=bdt.BDT_LAST_MODIFIED_DATE,
+			{lastModifiedBy}:=bdt.BDT_LAST_MODIFIED_BY,
+			{genericProgramId}:=nvl(bdt_gen_program,-1),
+			{genericProgram}:=gpgm.PGM_NAME
+		from    BDL_TEMPLATE_INFO bdt, BDL_TEMPLATE_CONTENT btc, CUSTOMER cust, CAT_PROGRAM pgm, CAT_PROGRAM gpgm
+		where   bdt.BDT_REGION_CODE = {?:regionCode}
+		  and   bdt.TENANT_CD  {tenantCode}
+		  and   bdt.CUST_KEY is null
+		  and   bdt.bdt_validity = 'V'
+		  and   btc.BDC_COMP_ID = bdt.BDT_ID
+		  and   btc.BDC_HP_LANG_CODE = '99'
+		  and   bdt.CUST_KEY = cust.CUST_KEY(+)
+		  and   bdt.BDT_PROGRAM = pgm.PGM_KEY(+)
+		  and   bdt.bdt_gen_program = gpgm.pgm_key(+)
+	</stmt>
+
+	
+	<stmt id="GET_BDL_TEMPLATES_FOR_REGION_AND_CUSTOMER">
+		select
+			{bundleTemplateID}:=bdt.BDT_ID,
+			{shortDesc}:=btc.BDC_SHORT_DESC,
+			{longDesc}:=btc.BDC_LONG_DESC,
+			{datasheet}:=btc.BDC_DATASHEET_URL,
+			{image}:=btc.BDC_IMAGE_URL,
+			{customerPartID}:=bdt.BDT_CUST_PART_ID,
+			{baseProd}:=bdt.BDT_BASE_PROD,
+			{program}:=nvl(bdt.BDT_PROGRAM,-1) programkey,
+			{programName}:=pgm.PGM_NAME,
+			{startDate}:=bdt.BDT_START_DATE,
+			{endDate}:=bdt.BDT_END_DATE,
+			{custID}:=bdt.CUST_KEY,
+			{custName}:=cust.CUST_NAME,
+			{regionCode}:=bdt.BDT_REGION_CODE,
+			{validity}:=bdt.BDT_VALIDITY,
+			{modificationFlag}:=bdt.BDT_MODIFIED_FLAG,
+			{lastModifiedDate}:=bdt.BDT_LAST_MODIFIED_DATE,
+			{lastModifiedBy}:=bdt.BDT_LAST_MODIFIED_BY,
+			{genericProgramId}:=nvl(bdt.bdt_gen_program, -1) pgm_key,
+			{genericProgram}:=gpgm.pgm_name
+		from    BDL_TEMPLATE_INFO bdt, BDL_TEMPLATE_CONTENT btc, CUSTOMER cust, CAT_PROGRAM pgm, CAT_PROGRAM gpgm
+		where  ((bdt.BDT_REGION_CODE = {?:regionCode} and bdt.CUST_KEY is null and bdt.tenant_cd {tenantCode})
+		     	 or (bdt.CUST_KEY = {?:custID}))
+		  and   bdt.bdt_validity = 'V'
+		  and   btc.BDC_COMP_ID = bdt.BDT_ID
+		  and   btc.BDC_HP_LANG_CODE = '99'
+		  and   bdt.CUST_KEY = cust.CUST_KEY(+)
+		  and   bdt.BDT_PROGRAM = pgm.PGM_KEY(+)
+		  and   bdt.bdt_gen_program = gpgm.pgm_key (+)
+	</stmt>
+	
+      <stmt id="GET_BDL_BY_MASTER_CAT_AND_PROGRAM">
+               select   {prodID}:= cit.cit_src_prod,
+			            {catItemKey}:= cit.cit_item_key,
+                        {bundleFlag}:=cit.cit_bundle_flag,
+						{masterCatPriceDesc}:=cpd.cpd_price_descriptor,
+			            {customerPartID}:=cbd.cbd_cust_part_id,
+						{bundleTemplateID}:=cbd.cbd_id,
+			            {validateFlag}:=cop.cop_valid_status,
+                    	{startDate}:=cbd.cbd_start_date,
+                    	{endDate}:=cbd.cbd_end_date,
+						{shortDesc}:=NVL(BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cop.cop_localize_prod),BE_CONTENT_FALLBACK.get_short_desc(cat.cat_catalog_id, cit.cit_src_prod)) short_desc,
+						{catalogID}:=cat.cat_catalog_id
+                  FROM
+				  cat_item cit, cat_bundle_info cbd
+				  , cat_item_options cop, cat_info cat, cat_price_descriptor cpd
+		          WHERE {string1}
+	</stmt>
+
+ 	<stmt id="GET_ECLIPSE_BUNDLES_FOR_CUSTOMER">
+ 	      select
+ 	      {prod}:=a.prod,
+ 	      {bundleId}:=nvl(b.bundle_id, 0), 
+               {dealId}:=c.deal_id,
+ 	      {contextId}:=a.context_id,
+ 	      {bigDealPrice}:=a.big_deal_price,
+ 	      {shortDesc}:=a.short_desc,
+ 	      {bundleDesc}:=b.bundle_desc,
+ 	      {sosBdlFilterFlag}:= NVL(a.sos_bdl_filter_flag,'N'),
+ 	      {configId}:=b.config_id,
+ 	      {configSource}:=b.config_src,
+ 	      {validateFlag}:=b.validate_flag,
+ 	      {bigDealCurrency}:=a.currency_cd,
+		  {component}:=d.component
+ 	      from all_deal_content_detail a, all_deal_bundle_info b, all_deal_info c, all_deal_bundle_detail d
+ 	      where
+ 	      c.bd_id IN
+ 		  ( select bd_id from all_deal_info where cust_key =
+ 		    (select NVL(orig_cust_key,cust_key) from customer where cust_key={?:custKey})
+			   <!--Koppala Krishna Ravi Shankar -->
+			 <!-- Code fix done for QC issue to increase the performance when adding bundle components for eclipse -->	
+ 		      UNION 
+                  SELECT bd_id
+                    FROM all_deal_info
+                   WHERE (region_code = {?:regionCode} AND deal_category = 'P' AND
+ 			      (affliate_flag = 'N'
+ 			       OR (affliate_flag = 'Y' 
+ 			       AND deal_id IN (SELECT da_deal_id FROM DEAL_AFFILIATES da WHERE da.DA_CUST_ID = {?:custID} ) ) ) )
+ 		  )
+ 	      and a.bd_id = c.bd_id 
+ 	      and a.deal_key = b.deal_key(+)
+ 	      and ( a.context_id is not null AND a.context_id not like ' ')
+		  and d.bundle_id(+)= NVL (b.bundle_id, 0)
+		  and d.base_prod_flag(+) = 'Y'
+		  and c.tenant_cd  {tenantCode}
+ 	      order by context_id, NVL(a.sos_bdl_filter_flag,'N') desc
+	</stmt> 
+	
+	<stmt id="GET_ECLIPSE_BUNDLES_FOR_US_CUSTOMER">
+		 	      select
+		 	      {prod}:=a.prod,
+		 	      {bundleId}:=nvl(b.bundle_id, 0), 
+		               {dealId}:=c.deal_id,
+		 	      {contextId}:=a.context_id,
+		 	      {bigDealPrice}:=a.big_deal_price,
+		 	      {shortDesc}:=a.short_desc,
+		 	      {bundleDesc}:=b.bundle_desc,
+		 	      {sosBdlFilterFlag}:= NVL(a.sos_bdl_filter_flag,'N'),
+		 	      {configId}:=b.config_id,
+		 	      {configSource}:=b.config_src,
+		 	      {validateFlag}:=b.validate_flag,
+		 	      {bigDealCurrency}:=a.currency_cd,
+                  {component}:=d.component
+		 	      from all_deal_content_detail a, all_deal_bundle_info b, all_deal_info c, all_deal_bundle_detail d
+		 	      where
+		 	      a.bd_id IN
+		 		  ( select bd_id from all_deal_info where cust_key =
+		 		    (select NVL(orig_cust_key,cust_key) from customer where cust_key={?:custKey})
+		 		     OR(deal_id in (SELECT deal_id
+		                                  FROM deal_merge dm
+		                                 WHERE dm.GROUP_ID = {?:custID}))
+										  <!--Koppala Krishna Ravi Shankar -->
+			 <!-- Code fix done for QC issue to increase the performance when adding bundle components for eclipse -->
+		 		UNION 
+                  SELECT bd_id
+                    FROM all_deal_info
+                   WHERE  (region_code = {?:regionCode} AND deal_category = 'P' AND
+		 			      (affliate_flag = 'N'
+		 			       OR (affliate_flag = 'Y' 
+		 			       AND deal_id IN (SELECT da_deal_id FROM DEAL_AFFILIATES da WHERE da.DA_CUST_ID = {?:custID} ) ) ) )
+		 		  )
+		 	      and a.bd_id = c.bd_id 
+		 	      and a.deal_key = b.deal_key(+)
+		 	      and ( a.context_id is not null AND a.context_id not like ' ')
+				  and d.bundle_id(+)= NVL (b.bundle_id, 0)
+				  AND d.base_prod_flag(+) = 'Y'
+				  and c.tenant_cd  {tenantCode}
+		 	      order by context_id, NVL(a.sos_bdl_filter_flag,'N') desc
+	</stmt> 
+
+	<stmt id="GET_ECLIPSE_BUNDLES_FOR_GL_CUSTOMER">
+	
+		<![CDATA[    SELECT {prod}:=x.prod,
+		{bundleId}:=nvl(x.bundle_id, 0),
+		{dealId}:=x.deal_id,
+		{contextId}:=x.context_id,
+		{bigDealPrice}:=nvl(x.big_deal_price,0),
+		{shortDesc}:=x.short_desc,
+		{bundleDesc}:=x.bundle_desc,
+		{sosBdlFilterFlag}:=x.sos_bdl_filter_flag,
+		{configId}:=nvl(x.config_id, x.context_id), 
+		{configSource}:=x.config_src,
+		{validateFlag}:=x.validate_flag, 
+		{bigDealCurrency}:=x.currency_cd,
+		{component}:=x.component from (
+		SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  b.prod, 
+		NVL (c.bundle_id, 0) bundle_id, a.deal_id, b.context_id,
+			 b.big_deal_price, b.short_desc, c.bundle_desc,
+			 NVL (b.sos_bdl_filter_flag, 'N') sos_bdl_filter_flag, c.config_id, c.config_src,
+			 c.validate_flag, b.currency_cd, e.component
+		    FROM all_deal_info a,
+			 all_deal_content_detail b,
+			 all_deal_bundle_info c,
+			 customer d,
+			 all_deal_bundle_detail e
+		   WHERE a.bd_id = b.bd_id
+		     AND b.bd_id = c.bd_id(+)
+		     AND b.deal_key = c.deal_key(+)
+		     AND a.cust_key = d.cust_key
+			 and a.amid_global_account_id LIKE '%{custID}%'  AND a.region_code <> 'GL'
+			 AND trim(b.context_id) IS NOT NULL	 
+			 AND e.bundle_id(+) = NVL (c.bundle_id, 0)
+             AND e.base_prod_flag(+) = 'Y' 
+             and a.tenant_cd {tenantCode}
+			 union 
+			 SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  b.prod, NVL (c.bundle_id, 0) bundle_id, a.deal_id, b.context_id,
+			 b.big_deal_price, b.short_desc, c.bundle_desc,
+			 NVL (b.sos_bdl_filter_flag, 'N') sos_bdl_filter_flag, c.config_id, c.config_src,
+			 c.validate_flag, b.currency_cd, e.component
+		    FROM all_deal_info a,
+			 all_deal_content_detail b,
+			 all_deal_bundle_info c,
+			 customer d,
+			 all_deal_bundle_detail e
+		   WHERE a.bd_id = b.bd_id
+		     AND b.bd_id = c.bd_id(+)
+		     AND b.deal_key = c.deal_key(+)
+		     AND a.cust_key = d.cust_key 
+			 and a.region_code = 'GL' and  d.parent_cust_key like '{custKey}%'
+			 AND trim(b.context_id) IS NOT NULL
+			 AND e.bundle_id(+) = NVL (c.bundle_id, 0)
+             AND e.base_prod_flag(+) = 'Y' 
+             and a.tenant_cd  {tenantCode}
+			 union 
+			 SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  b.prod, NVL (c.bundle_id, 0) bundle_id, a.deal_id, b.context_id,
+			 b.big_deal_price, b.short_desc, c.bundle_desc,
+			 NVL (b.sos_bdl_filter_flag, 'N') sos_bdl_filter_flag, c.config_id, c.config_src,
+			 c.validate_flag, b.currency_cd, e.component
+		    FROM all_deal_info a,
+			 all_deal_content_detail b,
+			 all_deal_bundle_info c,
+			 customer d,
+			 all_deal_bundle_detail e
+		   WHERE a.bd_id = b.bd_id
+		     AND b.bd_id = c.bd_id(+)
+		     AND b.deal_key = c.deal_key(+)
+		     AND a.cust_key = d.cust_key 
+			 and a.region_code = 'GL' and nvl(d.ORIG_CUST_KEY,d.cust_key) like '{custKey}%'
+			 AND trim(b.context_id) IS NOT NULL
+			 AND e.bundle_id(+) = NVL (c.bundle_id, 0)
+             AND e.base_prod_flag(+) = 'Y' 
+             and a.tenant_cd  {tenantCode}
+			 union  	 
+		   SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  b.prod, NVL (c.bundle_id, 0) bundle_id, a.deal_id, b.context_id,
+			 b.big_deal_price, b.short_desc, c.bundle_desc,
+			 NVL (b.sos_bdl_filter_flag, 'N') sos_bdl_filter_flag, c.config_id, c.config_src,
+			 c.validate_flag, b.currency_cd, e.component
+		    FROM all_deal_info a,
+			 all_deal_content_detail b,
+			 all_deal_bundle_info c,
+			 customer d,
+			 all_deal_bundle_detail e
+		   WHERE a.bd_id = b.bd_id
+		     AND b.bd_id = c.bd_id(+)
+		     AND b.deal_key = c.deal_key(+)
+		     AND a.cust_key = d.cust_key
+			 and a.region_code = 'AP' AND affliate_flag = 'N' AND deal_category = 'P'
+			 AND trim(b.context_id) IS NOT NULL
+			 AND e.bundle_id(+) = NVL (c.bundle_id, 0)
+             AND e.base_prod_flag(+) = 'Y' 
+             and a.tenant_cd  {tenantCode}
+		  union 	 
+		   SELECT  /*+ ordered index(a, DX_ADI_DEAL_ID) index(c,BD_ID_IDX) index (b, IDX_ADCD1) */  b.prod, NVL (c.bundle_id, 0) bundle_id, a.deal_id, b.context_id,
+			 b.big_deal_price, b.short_desc, c.bundle_desc,
+			 NVL (b.sos_bdl_filter_flag, 'N') sos_bdl_filter_flag, c.config_id, c.config_src,
+			 c.validate_flag, b.currency_cd, e.component
+		    FROM all_deal_info a,
+			 all_deal_content_detail b,
+			 all_deal_bundle_info c,
+			 customer d,
+			 all_deal_bundle_detail e
+		   WHERE a.bd_id = b.bd_id
+		     AND b.bd_id = c.bd_id(+)
+		     AND b.deal_key = c.deal_key(+)
+		     AND a.cust_key = d.cust_key
+			 and a.region_code = 'AP' AND    affliate_flag = 'Y' AND deal_category = 'P'
+			 AND trim(b.context_id) IS NOT NULL
+		     AND deal_id IN (SELECT da.da_deal_id
+						FROM deal_affiliates da, customer c2
+					       WHERE da.da_cust_id = c2.cust_id
+						 AND c2.parent_cust_key LIKE '{custKey}%')
+			 AND e.bundle_id(+) = NVL (c.bundle_id, 0)
+             AND e.base_prod_flag(+) = 'Y' 
+             and a.tenant_cd  {tenantCode}
+		     ORDER BY 4, 5 DESC)x ]]>
+		</stmt> 
+
+
+         <stmt id="GET_BASE_PROD_BUNDLE">
+	select {prod}:=a.component from all_deal_bundle_detail a where a.bundle_id={?:bundleId} and a.base_prod_flag = 'Y'
+	</stmt>
+
+	<stmt id="GET_BASE_MODEL_IMAGE">
+		select {string1}:=image_name 
+		 FROM prod_local_lang 
+		 WHERE PROD IN ( select  bdt_base_prod  from bdl_template_info where bdt_id ={?:bundleTemplateID})
+		 AND  HP_LANG_CD = {?:hpLangCode}
+	</stmt>
+
+	<stmt id="GET_TEMPLATE_INSTANCE_COUNT">
+		select {int1}:=count(*)
+		from  cat_bundle_info
+		where cat_catalog_id = {?:catalogID}
+		  and bdt_template_id = {?:bundleTemplateID}
+	</stmt>
+	
+	<!--
+	Rownum=1 is not required in case of master catalog, but for standard catalogs there can be multiple price descriptors per bundle
+	-->
+	<stmt id="pre_LOAD_BNDL">
+		 SELECT {catalogID}:=cpd.cat_catalog_id, 
+			{priceDescriptor}:=cpd.cpd_price_descriptor, 
+			{zonePriceDescriptor}:=cpd.cpd_zone_descriptor
+		   FROM cat_bundle_info bdl, cat_price_descriptor cpd
+		  WHERE bdl.cbd_id = {?:bundleID}
+		    AND bdl.cat_catalog_id = cpd.cat_catalog_id
+		    AND ROWNUM = 1
+	</stmt>
+</stmt-group>
+
+<stmt-group id="CUST_SEARCH">
+	<stmt id="CUST_SEARCH_FOR_REGION">
+		select
+			{custName}:=cust.cust_Name,
+			{custId}:=cust.cust_Id,
+			{custKey}:=cust.cust_key,
+			{region}:= cust.REGION_CODE
+		from CUSTOMER cust
+		where upper(cust.CUST_NAME) LIKE {?:custName}
+		  and upper(cust.CUST_ID) LIKE {?:custId}
+		  and cust.REGION_CODE = {?:region}
+		  and cust.PRICE_TIER_FLAG = 'N'
+	</stmt>
+</stmt-group>
+
+
+<stmt-group id="GROUP_BDL_UPLOAD">
+
+	<stmt id="uploadBundle">
+	    call Fe_Bundle_Upload.upload_bundle(
+		{i:uploadID},
+		{i:lastModifiedBy},
+		{i:custKey},
+		{o:retCode},
+		{o:retMsg}
+		)
+	</stmt>
+
+	<stmt id="seqUploadBdlID">
+		select  {upbdlLoadID}:=UPBDL_LOAD_ID_SEQ.NEXTVAL
+		from   dual		
+	</stmt>
+
+	<stmt id="registerEvent">
+		{o:evfDataLoadID} = call evf_data_load_p.add_data_load(
+			                        {i:sourceSystem},
+			                        {i:processingState}
+		)
+	</stmt>
+
+	<stmt id="dobundlediff">
+					call BUNDLE_UPLOAD_DIFF({i:evfDataLoadID})
+	</stmt>
+
+	<stmt id="insertBundleInfo">
+		insert into UPLOAD_CAT_BUNDLE
+				(EVF_DATA_LOAD_EVENT_ID,
+				EVF_DATA_LOAD_ID,
+				EVF_DATA_CHANGE_CODE,
+				EVF_SOURCE_SYSTEM,
+				EVF_PROCESSING_STATUS,
+				EVF_CREATED_DATE,
+				EVF_CREATED_BY,
+				EVF_LAST_MODIFIED_DATE,
+				EVF_LAST_MODIFIED_BY,
+				upload_id,
+				cat_catalog_id,
+				upbdl_delete_flag,
+				upbdl_bundle_id,
+				upbdl_cust_bundle_id,
+				upbdl_bundle_name,
+				upbdl_category_id,
+				upbdl_pgm_key,
+				upbdl_cust_part_id,
+				upbdl_supplier_part_id,
+				upbdl_supplier_url,
+				upbdl_sla,
+				upbdl_srt,
+				upbdl_start_date,
+				upbdl_end_date,
+				upbdl_image_url,
+				upbdl_datasheet_url,
+				upbdl_tx_curr_cd,
+				upbdl_cpm_svc_prov_emails,
+				upbdl_ffs_id,
+				upbdl_bundle_long_desc)
+			values ({?:upbdlLoadID},
+				{?:evfDataLoadID},
+				{?:dataChangeCode},
+				{?:sourceSystem},
+				{?:processingState},
+				sysdate,
+				{?:createdBy},
+				sysdate,
+				{?:updatedBy},
+				{?:uploadID},
+				{?:masterCatID},				
+				{?:deleteFlag},
+				{?:bndlID},
+				{?:extBndlID},
+				{?:bndlName},
+				{?:categoryID},
+				{?:program},
+				{?:custPartID} ,
+				{?:supplierPartID},
+				{?:supplierURL},
+				{?:bundleSLA},
+				{?:SRT},
+				{?:startDate},
+				{?:endDate},
+				{?:imageURL},
+				{?:datasheetURL},
+				{?:transactionCurrCode} ,
+				{?:serviceProviderEmails},
+				{?:fulfillmentSite},
+				{?:bundleLongDesc})
+	</stmt>
+
+
+	<stmt id="insertBundleItem">
+		insert into UPLOAD_CAT_BUNDLE_ITEM
+			values ({?:upbdlLoadID},
+				{?:products},
+				{?:contextID},
+				{?:required},
+				{?:preSelected},
+				{?:hideProduct},
+				{?:hidePrice},
+				{?:quantity} ,
+				{?:baseProductFlag},
+				{?:manfName})
+	</stmt>
+ </stmt-group>
+<stmt-group id="QUICK_MANAGE">
+	<stmt id="GET_PROD_COUNT">
+	SELECT {count}:=count(1) FROM PRODUCTS WHERE PROD={?:prodId} AND TENANT_CD {tenantCode}
+	</stmt>
+	
+	<stmt id="GET_PROD_DETAILS">
+	<![CDATA[ SELECT 
+		{dealId}:=x.deal_id, 
+		{price}:=nvl(x.big_deal_price,0), 
+		{priceDescriptor}:=x.price_descriptor, 
+		{configID}:=x.config_id, 
+		{contextID}:=x.context_id,
+		{configSource}:=x.config_src 
+	FROM 
+	( 
+	SELECT  
+		a.deal_id,
+		b.big_deal_price,
+		a.price_descriptor,
+		'' config_id,
+		'' context_id,
+		'' config_src 
+	FROM 
+		all_deal_info a, 
+		all_deal_content_detail b, 
+		customer c,
+		bdl_template_info d 
+	WHERE 
+		a.bd_id = b.bd_id 
+		AND prod={?:sourceProd}
+		AND NVL(context_id, 'X') = 'X' 
+		AND NVL(sos_bdl_filter_flag, 'N') <> 'Y' 
+		AND NVL(c.orig_cust_key,c.cust_key)=a.cust_key AND b.bundle_flag='S'
+		AND c.cust_key=d.cust_key and d.bdt_id={?:bundleTemplateID}
+	UNION
+	SELECT 
+		a.deal_id, 
+		b.big_deal_price, 
+		a.price_descriptor, 
+		c.config_id,  
+		b.context_id,
+		c.config_src
+	FROM 
+		all_deal_info a, 
+		all_deal_content_detail b, 
+		all_deal_bundle_info c, 
+		customer d, 
+		bdl_template_info e 
+	WHERE 
+		a.bd_id = b.bd_id 
+		AND a.bd_id = c.bd_id 
+		AND b.line_nr = c.line_nr 
+		AND NVL(d.orig_cust_key,d.cust_key)=a.cust_key 
+		AND d.cust_key=e.cust_key 
+		AND e.bdt_id={?:bundleTemplateID}
+		AND prod={?:sourceProd}
+		AND  NVL(sos_bdl_filter_flag, 'N') <> 'Y'
+	)x ]]>
+	
+	</stmt>
+</stmt-group>
+
+<stmt-group id="PROMO_BUNDLE">
+	
+	<stmt id="SEARCH_PROMO_BUNDLES">
+	SELECT {contextId}:=B.CTI_CONTEXT_ID,
+	{baseProdFlag}:=NVL(B.CTP_BASE_PROD_FLAG,'N'),
+	{partNo}:=B.CTP_PROD,
+	{description}:=C.SHORT_DESC,
+	{group}:=B.CTP_GROUP_ID,
+	{minQty}:=B.CTP_MIN_QTY,
+	{maxQty}:=B.CTP_MAX_QTY,
+	{reqdFlag}:=B.CTP_REQ_FLAG,
+	{preselectFlag}:=NVL(B.CTP_PRESELECT_FLAG,'N'),
+	{promoHeaderMsg}:=A.CTI_SHORT_DESC,
+	{promoComponentMsg}:=B.CTP_COMP_MSG,
+	{startDate}:=to_char(A.CTI_START_DT,'DD-MON-YYYY'),
+	{endDate}:=to_char(A.CTI_END_DT,'DD-MON-YYYY')
+	FROM CONTEXT_BUNDLE_INFO A, CONTEXT_BUNDLE_PRODS B,PROD_LOCAL_LANG C
+		WHERE B.CTI_CONTEXT_ID = A.CTI_CONTEXT_ID 
+		AND C.HP_LANG_CD(+)='99'
+		AND B.CTP_PROD = C.PROD(+)
+		{string1}
+	</stmt>
+		
+	
+	<stmt id="FIND_SEL_PROMO_BUNDLES">
+	SELECT {contextId}:=DISTINCT BTP_CONTEXT_ID FROM BDL_TEMPLATE_INFO A,BDL_TEMPLATE_PRODS B 
+	WHERE  A.BDT_ID = {q:string1}
+	AND A.BDT_TYPE='PROMO'
+	AND A.BDT_ID=B.BDT_ID
+	AND B.BTP_CONTEXT_ID IS NOT NULL 
+	</stmt>
+	
+	<stmt id="MANAGE_PROMO_BUNDLES">
+	call FE_BUNDLE.manage_contextual_promo(
+	{i:strArray1|PROMO_ARRAY},
+	{i:strArray2|PROMO_ARRAY},
+	{i:string1},
+	{o:int1}
+	)
+	</stmt>
+
+	<stmt id="GET_TEMPLATE_DETAILS">
+	SELECT 
+	{bundleType}:=BDT_TYPE,
+	{autoFlag}:=BDT_AUTO_FLAG,
+	{custFlag}:=BDT_CUST_FLAG	
+	FROM BDL_TEMPLATE_INFO WHERE BDT_ID={q:string1}
+	</stmt>
+
+	
+</stmt-group>
+
+</comcat-dax-config>

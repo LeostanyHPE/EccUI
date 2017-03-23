@@ -1,0 +1,2121 @@
+package com.hp.ecc.ui.view.controller;
+
+import hp.comcat.dax.fwk.common.db.dax.DaxDB;
+import hp.comcat.dax.fwk.common.db.dax.DaxMgr;
+import hp.comcat.dax.fwk.common.db.dax.DaxParsedStmt;
+import hp.comcat.dax.fwk.common.util.RandomNum;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Category;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.hp.ecc.ui.biz.AuthCodeMgr;
+import com.hp.ecc.ui.biz.ResponseStatus;
+import com.hp.ecc.ui.biz.ResponseStatusInfo;
+import com.hp.ecc.ui.biz.misc.CatalogPriceSourceLocaleMgr;
+import com.hp.ecc.ui.biz.category.Categorization;
+import com.hp.ecc.ui.biz.category.CategorizationMgr;
+import com.hp.ecc.ui.biz.category.CustCatFormatMgr;
+import com.hp.ecc.ui.biz.customer.CustCatFormatBean;
+import com.hp.ecc.ui.biz.customer.CustProdFilterBean;
+import com.hp.ecc.ui.biz.customer.CustProdFilterMgr;
+import com.hp.ecc.ui.biz.customer.Customer;
+import com.hp.ecc.ui.biz.customer.CustomerFields;
+import com.hp.ecc.ui.biz.customer.CustomerMgr;
+import com.hp.ecc.ui.biz.customer.CustomerReport;
+import com.hp.ecc.ui.biz.format.CatalogFormatInfo;
+import com.hp.ecc.ui.biz.format.CatalogFormatMgr;
+import com.hp.ecc.ui.biz.misc.CatalogPriceSourceMgr;
+import com.hp.ecc.ui.biz.misc.LanguageMgr;
+import com.hp.ecc.ui.biz.misc.RegionMgr;
+import com.hp.ecc.ui.biz.misc.SupplierMgr;
+import com.hp.ecc.ui.biz.pricelogic.PriceLogicBean;
+import com.hp.ecc.ui.biz.pricelogic.PriceLogicMgr;
+import com.hp.ecc.ui.biz.processor.customer.CustomerProcessor;
+import com.hp.ecc.ui.biz.user.User;
+import com.hp.ecc.ui.biz.user.UserMgr;
+import com.hp.ecc.ui.common.biz.admin.PermissionCode;
+import com.hp.ecc.ui.common.biz.role.Role;
+import com.hp.ecc.ui.common.exceptions.CatRuntimeException;
+import com.hp.ecc.ui.common.ses.Session;
+import com.hp.ecc.ui.common.ses.SessionMgr;
+import com.hp.ecc.ui.common.util.FeCTX;
+import com.hp.ecc.ui.util.StrUtil;
+import com.hp.ecc.ui.view.beans.AddToPropQueueBean;
+import com.hp.ecc.ui.view.beans.CustomerProfileEditForm;
+import com.hp.ecc.ui.view.beans.CustomerProfileForm;
+import com.hp.ecc.ui.view.beans.LangCountryCodeBean;
+import com.hp.ecc.ui.web.util.CustomerProfileWebUtil;
+import com.hp.ecc.ui.web.util.PagesUtil;
+
+@Controller
+public class CustomerProfileController {
+	
+	@Autowired
+	CustomerProcessor customerProcessor;
+	
+	private Category log;
+
+	private String fCustKey = null;
+
+	final String CONST_RESELLER_NAME = "Reseller";
+
+	final String GLOBAL_REGION_CODE = "GL";
+
+	private static final String CUST_ID_PREFIX = "CN";
+	
+	@RequestMapping(value = "/admin/searchCustomer.htm", headers = "Accept=*/*", method = RequestMethod.GET)
+	public @ResponseBody
+	String searchSelectCustomer(HttpServletRequest request) {
+		String cust_name = request.getParameter("customerName");
+		String cust_id = request.getParameter("customerId");
+		JSONObject outJson = new JSONObject();
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+		if (ses.isAuthorized(PermissionCode.CREATE_CUSTOMER_PROFILE)) {
+			outJson.put("enableEditCustomer", "true");
+		} else {
+			outJson.put("enableEditCustomer", "false");
+		}
+
+		User user = ses.getUser();
+		String regionCode = user.getRegion_code();
+		String cust_type = user.getCust_type();
+		String tenantCode = PagesUtil.getTenantCode(request);
+		JSONArray jArray = customerProcessor.searchCustomer(cust_id, cust_name, cust_type, regionCode, PagesUtil.getDbRegionToConnect(request), tenantCode);
+		JSONArray custList = new JSONArray();
+		JSONObject jObj = null;
+		String custType = null;
+		for(int i=0;i<jArray.size();i++){
+			jObj = (JSONObject) jArray.get(i);
+			custType = jObj.get("cust_type").toString();
+			jObj.put("cust_type", setCustType(custType));
+			jObj.put("eprime_cust_id", getEprimeCustID(jObj));
+			custList.add(jObj);			
+		}
+		outJson.put("custList", custList);
+		return outJson.toJSONString();
+	}// searchCustomer
+	
+	@SuppressWarnings({"rawtypes", "unchecked" })
+	@RequestMapping(value = "/admin/customerProfile/processRetrieval.htm", method = RequestMethod.GET, produces=MediaType.APPLICATION_JSON_VALUE)
+	public @ResponseBody CustomerProfileEditForm createCustomerProcessRetrieval(Model model, CustomerProfileEditForm form0, HttpServletRequest request){
+	
+		log = FeCTX.getCTX ().getLog ();
+
+	    CustomerProfileEditForm form = (CustomerProfileEditForm)form0;
+	    String task = form.getTask ();
+	    
+		form.setUserRoleID(PagesUtil.getLoginUserRole(request));	    
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+        //Added for plc reports
+        String regionCode=ses.getUserRegionCode();
+        form.setRegionCode(regionCode);
+        
+        CustomerMgr customerMgr = new CustomerMgr ();
+        String regionAccForPlc =customerMgr.getCustReportDefAccess(regionCode, PagesUtil.getDbRegionToConnect(request));
+        form.setRegionDef(regionAccForPlc);
+        //Ended for plc reports
+
+        form.setRoleId(PagesUtil.getLoginUserRole(request));
+ 
+	    this.fCustKey = getCustomerKey ( form, request );
+
+		//Added the code for genesis flag to be auto selected on first time load of the page
+		//Added for Chianti on 27th April 2006 by Tausief
+		String custKey = ( String ) request.getParameter ( "customer_key" );
+		if(custKey.equalsIgnoreCase("create") && "US".equalsIgnoreCase(regionCode) ){
+			form.setGenesisCustomer(true);		
+		}
+		//Changes end
+
+	    // get Account IDs of catalog managers
+
+	    UserMgr userMgr = new UserMgr ();
+	    userMgr.setRegionCode ( regionCode );
+	    List users = userMgr.getUserList ( null, Role.ROLE_ID_CATALOG_MGR, null, PagesUtil.getDbRegionToConnect(request) );
+	    //request.setAttribute ( "CustomerProfileEditForm.optionsManagers", users );
+	    if(users != null){
+		    for(int i=0; i < users.size(); i++){
+				((JSONObject) users.get(i)).put("fullname",
+						((JSONObject) users.get(i)).get("accountid") + "-"
+								+ ((JSONObject) users.get(i)).get("name"));
+		    }
+	    }
+	    form.setOptionsManagers(users);
+
+	    // get Supplier IDs
+
+	    SupplierMgr supplierMgr = SupplierMgr.getSupplierMgr ();
+	    JSONArray suppliers = null;
+
+	    //For global region get all the suppliers, for other retrive their region specific
+	    if ( regionCode != null && regionCode.equalsIgnoreCase ( GLOBAL_REGION_CODE ) ) {
+	      suppliers = supplierMgr.getAllSuppliers (PagesUtil.getDbRegionToConnect(request) );
+	    }
+	    else {
+	      suppliers = supplierMgr.getSupplierByRegion ( regionCode, PagesUtil.getDbRegionToConnect(request)  );
+	    }
+	    List namedSuppliers = CustomerProfileWebUtil.getNamedSuppliers ( suppliers );
+	    //request.setAttribute ( "CustomerProfileEditForm.optionsSuppliers", namedSuppliers );
+	    form.setOptionsSuppliers(namedSuppliers);	    
+
+	    if ( task == null )
+	    {
+	      processPopulate ( form, request, false );
+	    }
+		return form;
+	}// createCustomer	
+	
+	@RequestMapping(value = "/admin/customerProfile/processCustomer.htm", headers="Accept=*/*", method = RequestMethod.POST )
+	public @ResponseBody
+	String customerProcessor(Model model,
+			HttpServletRequest request,
+			@RequestBody String formStr) {
+		
+		ObjectMapper mapper = new ObjectMapper();
+		CustomerProfileEditForm form=null;
+		try {
+			form = mapper.readValue(formStr, CustomerProfileEditForm.class);
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		String task = form.getTask();
+		
+		if( "searchCategory".equals(task) ){
+			processPopulate (form, request, true );
+		}
+	    else if ( "create".equals ( task ) )
+	    {
+	    	processCreate (form, request );
+	    }
+	    else if ( "update".equals ( task ) )
+	    {
+	    	processUpdate (form, request );
+	    }
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try {
+			mapper.writeValue(baos, form);
+			
+		} catch (JsonParseException e) {
+			e.printStackTrace();
+		} catch (JsonMappingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return baos.toString();
+		
+		//return form;
+	}
+	
+	private void processPopulate(CustomerProfileEditForm form,	HttpServletRequest request,	boolean isValidation)
+	{
+		// get Region Name
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+		RegionMgr regionMgr = RegionMgr.getRegionMgr();
+		String regionCode = PagesUtil.getRegionCode(request);
+		
+		/*
+		 * CustomerMgr custMgr = new CustomerMgr ();
+		 * System.out.println("region in edit pop"+regionCode); CustomerReport
+		 * customerReport1 =custMgr.getCustomerReportDefAccess(regionCode);
+		 * form.setRegionDef(customerReport1.getDefRegionAcc());
+		 * System.out.println(" form.setRegionDef"+
+		 * customerReport1.getDefRegionAcc());
+		 */
+
+		// form.setRegionDef(custMgr.getRegDefAccess(regionCode));
+		//String custKey = (String) request.getParameter("customer_key");
+		String custKey = form.getCustomer_key();
+
+		log.debug(" custKey : " + custKey);
+
+		// FormatMgr formatMgr = new FormatMgr();
+
+		// List formatListDisplay = formatMgr.getDefaultOutputFormatList();
+
+		// System.out.println(" size of formatListDisplay list: " +
+		// formatListDisplay.size());
+
+		CatalogFormatMgr catalogformatMgr = CatalogFormatMgr
+				.getCatalogFormatMgr();
+
+		List formatListDisplay = catalogformatMgr
+				.getAvaliableCatalogFormatInfosForCustomer(regionCode, custKey);
+
+		AuthCodeMgr authCodeMgr = AuthCodeMgr.getAuthCodeMgr();
+
+		List authCodeBList = authCodeMgr.getAuthcodeList();
+
+		PriceLogicMgr pricelogicmgr = PriceLogicMgr.getPriceLogicMgr();
+
+		List priceLogicList = pricelogicmgr.getPriceLogicList(PagesUtil.getDbRegionToConnect(request) );
+
+		PriceLogicBean priceLogicByRegion = pricelogicmgr
+				.getPriceLogicByRegion(regionCode, PagesUtil.getDbRegionToConnect(request) );
+
+		// String custKey = (String)request.getParameter("customer_key");
+		CustomerMgr customerMgr = new CustomerMgr();
+
+		if (!this.fCustKey.equalsIgnoreCase("create")) {
+
+			form.setAction("Edit Customer");
+
+			// get detail for this Customer
+
+			Customer customer = customerMgr.getCustomer(this.fCustKey, PagesUtil.getDbRegionToConnect(request) );
+
+			if (regionCode.equals("AP")) {
+				boolean fusionFlag = customer.getFusionOrderableFlag().equals(
+						"Y") ? true : false;
+				form.setFusionOrderabilityCheck(fusionFlag);
+				// form.setFusionOrderabilityCheck(true);
+			}
+			if (regionCode.equals("GL")) {
+				boolean fusionFlag = customer.getFusionOrderableFlag().equals(
+						"Y") ? true : false;
+				form.setFusionOrderabilityCheck(fusionFlag);
+			}
+
+			modifyFormatList(formatListDisplay, customer.getPriceSource());
+
+			form.setCustomerName(customer.getCustName());
+
+			// form.setCustomerType(customer.getCustType());
+
+			form.setCustomerTypeDesc(Customer.customerTypeToLable(customer
+					.getCustType()));
+			form.setCustType(customer.getCustType());
+
+			User loginUser = PagesUtil.getLoginUser(request);
+
+			form.setCustomerType(loginUser.getCust_type());
+
+			if (!isValidation)
+
+			{
+
+				// populate fields
+
+				// form.setCustomerName(customer.getCustName());
+
+				// for cabernet 3831 by Ravi n
+				// is genesis customer
+
+				form.setGenesisCustomer(customer.getGenesisCustomer());
+				
+				form.setGlpAccountFlag(customer.getGlpAccountFlag());
+
+				form.setCustomerID(customer.getCustID());
+
+				form.setDun(customer.getCustDUN());
+
+				form.setLocation(customer.getCustLoc());
+
+				form.setSupplier(customer.getSupplierID());
+
+				// form.setCatalogManager ( customer.getManagerId () );
+				System.out.println("indside cust profile edit populate");
+				// System.out.println( "customer.getManagerId ()"+
+				// customer.getManagerId ());
+				form.setCatalogManager(customer.getManager());
+				form.setCatalogManager(customer.getManagerId());
+				System.out.println("customer.getManager ()"
+						+ customer.getManager());
+				System.out.println("customer.getManagerId ()"
+						+ customer.getManagerId());
+
+				// form.setBackupCatalogManager(customer.getBackupManager());
+
+				form.setPurchaseAgreement(customer.getPaNo());
+
+				form.setReleasePoint(customer.getReleasePoint());
+
+				form.setRegionName(regionMgr
+						.getRegion(customer.getRegionCode(), PagesUtil.getDbRegionToConnect(request)).getRegionName());
+
+				form.setRegion(customer.getRegionCode());
+
+				// #36087 Code Changes Start
+
+				form.setorderPhoneNo(customer.getorderPhoneNo());
+
+				form.setorderFAXNo(customer.getorderFAXNo());
+
+				form.setorderEmail(customer.getorderEmail());
+
+				form.setsupportURL(customer.getsupportURL());
+
+				form.setcrManagerName(customer.getcrManagerName());
+
+				form.setcrManagerPhoneNo(customer.getcrManagerPhoneNo());
+
+				form.setcrManagerFAXNo(customer.getcrManagerFAXNo());
+
+				form.setcrManagerEmail(customer.getcrManagerEmail());
+
+				form.setsinNo1(customer.getsinNo1());
+
+				form.setsinNo2(customer.getsinNo2());
+				// #36087 Code Changes End
+
+				form.setChannelTypesArray(customer.getChannelTypesArray());
+
+				form.setCharacterEncoding(customer.getISOEncoding());
+
+				// form.setPriceDescriptor(customer.getPriceDescriptor());
+
+				// form.setAtCostPlusCustDun(customer.getAtCostPlusCustomerID());
+
+				// form.setLocale(customer.getLocale());
+
+				form.setExchangeRate(customer.getAccRateFlag());
+
+				// setup backup manager list
+
+				String backupManager = customer.getBackupManager();
+
+				ArrayList backupList = StrUtil.split(backupManager, ",");
+
+				String[] backStrList = new String[backupList.size()];
+
+				for (int i = 0; i < backupList.size(); i++) {
+
+					backStrList[i] = (String) backupList.get(i);
+
+				}
+				form.setBackupCatalogManagerList(backStrList);
+
+				form.setBackupCatalogManager(backupManager);
+
+				// setup output format list
+
+				// for 4.1
+
+				List ChoosenCatList = customer.getOutPutFormatList();
+
+				String[] formatKeyStrList = new String[ChoosenCatList.size()];
+
+				for (int i = 0; i < ChoosenCatList.size(); i++) {
+
+					formatKeyStrList[i] = ((CatalogFormatInfo) ChoosenCatList
+							.get(i)).getCatFormatKey();
+
+				}
+
+				form.setOutputFormatKeyList(formatKeyStrList);
+
+				form.setOutputFormat(customer.getOutPutFormat());
+
+				// for 4.1
+
+				// for 4.2
+				String eprimeCustID = customer.getEprimeCustID();
+				form.setEprimeCustID(eprimeCustID);
+				form.setEditEprimeDUNType("true"); // always set true to display
+													// Eprime cust Id
+
+				/*
+				 * 4.2 String eprimeCustDUN = customer.getEprimeCustDUN(); if (
+				 * StrUtil.isEmpty(eprimeCustDUN) )
+				 * form.setEditEprimeDUNType("false"); else
+				 * form.setEditEprimeDUNType("true");
+				 * log.debug(" form.setEditEprimeDUNType: " +
+				 * form.getEditEprimeDUNType());
+				 * form.setEprimeCustDUN(customer.getEprimeCustDUN());
+				 */
+				// end 4.2
+
+				form.setEprimeCustType(customer.getEprimeCustType());
+				// HEMANTH
+				//form.setOptionEprimeCustType(new String[]{customer.getEprimeCustType()});
+
+				// form.setLocale(customer.getLocale());
+
+				form.setLanguageCode(customer.getDefaultLangCode());
+
+				// form.setDefaultCategorySource(customer.getDefaultCategoryType());
+
+				String cateType = customer.getDefaultCategoryType();
+
+				String cateName = customer.getCategoryName();
+
+				String cateID = customer.getCategorizationID();
+				form.setDefaultCategorySource(cateID);
+
+				// 4.1
+				// form.setDefaultCategorySource(PagesUtil.composeCategoryValue(cateType,
+				// cateName, cateID));
+
+				CatalogPriceSourceMgr sMgr = CatalogPriceSourceMgr
+						.getCatalogPriceSourceMgr();
+
+				form.setPriceSource(sMgr.getSourceDescription(
+						CatalogPriceSourceLocaleMgr.PRICE_SOURCE_NAME,
+						customer.getPriceSource()));
+
+				form.setPrimaryCatalogSource(sMgr.getSourceDescription(
+						CatalogPriceSourceLocaleMgr.CATALOG_SOURCE_NAME,
+						customer.getCatalogSource()));
+
+				// form.setPrimaryCatalogSource(customer.getDefaultCategoryType());
+
+				form.setBuyerTPName(customer.getBuyTPName());
+
+				form.setBuyerTPShortName(customer.getBuyTPShortName());
+
+				form.setSupplierTPShortName(customer.getSupTPShortName());
+
+				if (customer.getDefaultApprovalReqFlag().equalsIgnoreCase("Y")) {
+
+					form.setApprovalEnableFlag(true);
+
+				} else {
+
+					form.setApprovalEnableFlag(false);
+
+					// for 4.1
+
+					// set the casual buy/cross sell flags
+
+					/*
+					 * if (customer.getCBIncludeFlag().equalsIgnoreCase("Y") )
+					 * form.setCBIncludeFlag(true);
+					 * 
+					 * else
+					 * 
+					 * form.setCBIncludeFlag(false);
+					 */
+
+				}
+				form.setCbIncludeFlag(customer.getCBIncludeFlag());
+
+				if (customer.getCSIncludeFlag().equalsIgnoreCase("Y")) {
+
+					form.setCSIncludeFlag(true);
+
+				} else {
+
+					form.setCSIncludeFlag(false);
+
+					/*
+					 * if (customer.getNDIncludeFlag().equalsIgnoreCase("Y") )
+					 * form.setNDIncludeFlag(true);
+					 * 
+					 * else
+					 * 
+					 * form.setNDIncludeFlag(false);
+					 */
+					// for 4.1
+
+				}
+				/*
+				 * Added for Chianti -Bundle Management - Set Auto Create Sales
+				 * Bundle Flag value in form from customer bean Default value is
+				 * false for all regions except AP
+				 */
+				if ("AP".equalsIgnoreCase(regionCode)) {
+					boolean autoCreateFlag = "N".equalsIgnoreCase(customer
+							.getAutoCreateSalesBdlFlag()) ? false : true;
+					form.setAutoCreateSalesBdlFlag(autoCreateFlag);
+				} else {
+					boolean autoCreateFlag = "Y".equalsIgnoreCase(customer
+							.getAutoCreateSalesBdlFlag()) ? true : false;
+					form.setAutoCreateSalesBdlFlag(autoCreateFlag);
+				}
+
+				if (customer.getPriceRuleID().equals(""))
+
+				{
+
+					form.setPriceLogic(priceLogicByRegion.getRuleID());
+
+					form.setPriceLogicText(priceLogicByRegion.getRuleDesc());
+
+				}
+
+				else
+
+				{
+
+					form.setPriceLogic(customer.getPriceRuleID());
+
+					List pricelogicbeanlist = pricelogicmgr
+							.getPriceLogicListByID(customer.getPriceRuleID());
+
+					form.setPriceLogicText(((PriceLogicBean) pricelogicbeanlist
+							.get(0)).getRuleDesc());
+
+				}
+
+				form.setProdAuthCodeText(customer.getProdAuthCodeText(PagesUtil.getDbRegionToConnect(request)));
+
+				form.setProdAuthCodeList(customer.getProdAuthCodeList(PagesUtil.getDbRegionToConnect(request)));
+
+				form.setVisionFlagList(customer.getVisionFlagList(PagesUtil.getDbRegionToConnect(request)));
+
+				form.setActivityCodeList(customer.getActivityCodeList(PagesUtil.getDbRegionToConnect(request)));
+
+				form.setStockCodeList(customer.getStockCodeList(PagesUtil.getDbRegionToConnect(request)));
+
+				if (customer.getOrderCheckFlag().equalsIgnoreCase("Y")) {
+
+					form.setOrderCheckFlag(true);
+
+				} else {
+
+					form.setOrderCheckFlag(false);
+
+				}
+
+				if (customer.getOfferAllOrdFlag().equalsIgnoreCase("Y")) {
+
+					form.setOfferAllOrdFlag(true);
+
+				} else {
+
+					form.setOfferAllOrdFlag(false);
+
+				}
+
+				if (customer.getOfferEquivFlag().equalsIgnoreCase("Y")) {
+
+					form.setOfferEquivFlag(true);
+
+				} else {
+
+					form.setOfferEquivFlag(false);
+
+				}
+
+				form.setCustSegment(customer.getCustSegment());
+
+				// END OF 4.1
+			}
+
+			fillInLocaleList(form, PagesUtil.getDbRegionToConnect(request));
+
+			if (form.getCustomerType() != null && form.getCustomerType().equalsIgnoreCase(
+					Customer.CUSTOMER_TYPE_ECATE)) {
+
+				fillCataPriceNameDescList("EDIT", form);
+
+			}
+
+			fillInCategoryList("EDIT", form, request);
+
+			// 4.2
+			List visionFlagList = customerMgr.getFilterListByType(custKey,
+					CustomerMgr.CONST_VISION_FLAG,PagesUtil.getDbRegionToConnect(request));
+			// if (StrUtil.isListEmpty(visionFlagList) )
+			// customer.setVisionFlagArray(customerMgr.getPresetVisionFlagArray());
+			// else
+			customer.setVisionFlagArray(customerMgr
+					.convertFilterCodeListToValueArray(visionFlagList));
+
+			List stockCodeList = customerMgr.getFilterListByType(custKey,
+					CustomerMgr.CONST_STOCK_CODE,PagesUtil.getDbRegionToConnect(request));
+			// if ( StrUtil.isListEmpty(stockCodeList) )
+			// customer.setStockCodeArray(customerMgr.getPresetStockCodeArray());
+			// else
+			customer.setStockCodeArray(customerMgr
+					.convertFilterCodeListToValueArray(stockCodeList));
+
+			List activityCodeList = customerMgr.getFilterListByType(custKey,
+					CustomerMgr.CONST_ACTIVITY_CODE, PagesUtil.getDbRegionToConnect(request));
+			// if (StrUtil.isListEmpty(activityCodeList) )
+			// customer.setActivityCodeArray(customerMgr.getPresetActivityCodeArray());
+			// else
+			customer.setActivityCodeArray(customerMgr
+					.convertFilterCodeListToValueArray(activityCodeList));
+
+			customer.setAuthCodesStr(customerMgr.getAuthCodeStrForGrp(
+					customer.getCustID(), customer.getCustSegment(), PagesUtil.getDbRegionToConnect(request)));
+
+			form.setCustomer(customer);
+
+			if (form.getAuthCheckFlag() == null) {
+				form.setAuthCheckFlag(customer.getAuthCheckFlag());
+				// end of 4.2
+
+				// for 4.3.1 TBA -- Quest ticket (ASP000006315413)
+			}
+			form.setApplyElc(customer.getApplyElcFlag().equals("Y") ? true
+					: false);
+
+			// Added for plc reports
+
+			CustomerReport customerReport = customerMgr
+					.getCustomerReport(custKey, PagesUtil.getDbRegionToConnect(request));
+			if (customerReport != null) {
+				form.setCustRep(customerReport.getCustNameRep().equals("Y") ? true
+						: false);
+				form.setEolRep(customerReport.getEolProdRep().equals("Y") ? true
+						: false);
+				form.setStdcatRep(customerReport.getStdCatRep().equals("Y") ? true
+						: false);
+				form.setPrtierRep(customerReport.getPtDealsRep().equals("Y") ? true
+						: false);
+			}
+			// Ended for plc reports
+
+			// for Lava -- focus changes
+			form.setPresalesCustId(customer.getPresalesCustId());
+			form.setPresalesSource(customer.getPresalesSource());
+			form.setEucIndustryNm(customer.getEucIndustryNm());
+			// form.setPromotionCd(customer.getPromotionCd());
+			// form.setCustSatFl(customer.getCustSatFl());
+			form.setCustSegment(customer.getCustSegment());
+			form.setIndustrySegment(customer.getIndustrySegment());
+			form.setSapId(customer.getSapId());
+			// form.setLastSaveDt(customer.getLastSaveDate());
+			// form.setLastSaveDateGmt(customer.getLastSaveDateGmt());
+			// for Lava TBA
+			form.setApplyTba(customer.getApplyTbaFlag().equals("Y") ? true
+					: false);
+			// Added for March CPE 2006 - Vinod Mathew
+			form.setExcludeProds(customer.getExcludeProdFlag().equals("Y") ? true
+					: false);
+			// END
+			form.setSlaId(customer.getSlaId());
+			form.setCustomer_key(custKey);
+			
+			// set dropdown values for new eccUI
+			form.setOptionLabelsCharacterEncoding(null);
+			form.setOptionValuesCharacterEncoding(null);
+			form.setExchangeRateLabelList(null);
+			form.setExchangeRateValueList(null);
+			
+			String[] optionLabelCustSegment = CustomerMgr
+					.getOptionLabelsCustSegment(form.getRegion(),
+							PagesUtil.getDbRegionToConnect(request));
+			String[] optionValueCustSegment = CustomerMgr
+					.getOptionValuesCustSegment(form.getRegion(),
+							PagesUtil.getDbRegionToConnect(request));
+			form.setOptionLabelsCustSegment(optionLabelCustSegment);
+			form.setOptionValuesCustSegment(optionValueCustSegment);
+			
+			List custSegmentList = CustomerMgr.getCustSegment ( form.getRegion(),
+					PagesUtil.getDbRegionToConnect(request) );
+			form.setCustSegmentList(custSegmentList);			
+			form.setOptionLabelCustSegmentList(null);
+			form.setOptionLabelsCharacterEncodingList(null);
+			form.setOptionLabelValuesList(null);
+			
+			form.setTenant(customer.getTenantCode());
+		}
+
+		else { // create customer
+
+			form.setAction("Create Customer");
+			form.setRegion(PagesUtil.getRegionCode(request));
+			
+			form.setOptionLabelsCharacterEncoding(null);
+			form.setOptionValuesCharacterEncoding(null);
+			form.setExchangeRateLabelList(null);
+			form.setExchangeRateValueList(null);
+			
+			String[] optionLabelCustSegment = CustomerMgr
+					.getOptionLabelsCustSegment(form.getRegion(),
+							PagesUtil.getDbRegionToConnect(request));
+			String[] optionValueCustSegment = CustomerMgr
+					.getOptionValuesCustSegment(form.getRegion(),
+							PagesUtil.getDbRegionToConnect(request));
+			form.setOptionLabelsCustSegment(optionLabelCustSegment);
+			form.setOptionValuesCustSegment(optionValueCustSegment);
+			
+			List custSegmentList = CustomerMgr.getCustSegment ( form.getRegion(),
+					PagesUtil.getDbRegionToConnect(request) );
+			form.setCustSegmentList(custSegmentList);			
+			form.setOptionLabelCustSegmentList(null);
+			form.setOptionLabelsCharacterEncodingList(null);
+			form.setOptionLabelValuesList(null);
+
+
+			// Added for March CPE 2006 - Vinod Mathew
+			form.setExcludeProds(true);
+			// END
+			form.setFusionOrderabilityCheck(true);
+			User loginUser = PagesUtil.getLoginUser(request);
+			form.setCustomerType(loginUser.getCust_type());
+			form.setCustType(loginUser.getCust_type());
+
+			form.setCustomerTypeDesc(Customer.customerTypeToLable(loginUser
+					.getCust_type()));
+
+			// fill in the customer id
+
+			if (!isValidation) {
+				fillInCustomerID(form);
+				// For Create, pre-fill region field with the user's region
+			}
+			form.setRegionName(regionMgr.getRegion(regionCode, PagesUtil.getDbRegionToConnect(request)).getRegionName());
+			form.setRegion(regionCode);
+			fillInLocaleList(form, PagesUtil.getDbRegionToConnect(request));
+			form.setDefaultCategorySource("10000"); // Default category should
+													// be PM_3_LEVEL
+			// fillCataPriceNameDescList("CREATE", form);
+
+			if (isValidation)
+
+			{
+
+				if (form.getCustomerType().equalsIgnoreCase(
+						Customer.CUSTOMER_TYPE_ECATE)) {
+					fillCataPriceNameDescList("VALIDATION", form);
+				}
+				fillInCategoryList("VALIDATION", form, request);
+
+			}
+
+			else
+
+			{
+				fillCataPriceNameDescList("CREATE", form);
+				fillInCategoryList("CREATE", form, request);
+			}
+
+			form.setPriceLogic(priceLogicByRegion.getRuleID());
+			form.setPriceLogicText(priceLogicByRegion.getRuleDesc());
+
+			// 4.2
+			if (form.getAuthCheckFlag() == null) {
+				form.setAuthCheckFlag("N");
+				// if login as pricing admin, set the pricing login default to
+				// 5(MAD/CMM logic)
+				/*
+				 * if (
+				 * PagesUtil.getLoginUserRole(request).equalsIgnoreCase("5") &&
+				 * StrUtil.isEmpty(customer.getPriceRuleID()) &&
+				 * ("MAD".equalsIgnoreCase(customer.getCustSegment()) ||
+				 * "CMM".equalsIgnoreCase(customer.getCustSegment()) ) )
+				 * form.setPriceLogic("5");
+				 */
+			}
+			form.setTenant(PagesUtil.getTenantCode(request));
+		}
+		form.setLoginTenant(PagesUtil.getTenantCode(request));
+
+		// 4.2
+		// get the vision, stockCode and activityCode array
+/*		request.setAttribute("CustomerProfile.visionFlagList",
+				customerMgr.getVisionFlagGUIDisplayList());
+		request.setAttribute("CustomerProfile.stockCodeList",
+				customerMgr.getStockCodeGUIDisplayList());
+		request.setAttribute("CustomerProfile.activityCodeList",
+				customerMgr.getActivityCodeGUIDisplayList());*/
+		
+		form.setVisionFlagListDL(customerMgr.getVisionFlagGUIDisplayList());
+		form.setStockCodeListDL(customerMgr.getStockCodeGUIDisplayList());
+		form.setActivityCodeListDL(customerMgr.getActivityCodeGUIDisplayList());
+
+		/*
+		 * log.debug("OptionsOutputFormat size: " + formatListDisplay.size());
+		 * for(int i=0; i<formatListDisplay.size() ; i++){
+		 * 
+		 * log.debug(i+"=="+((CatalogFormatInfo)formatListDisplay.get(i)).
+		 * getCatFormatName()
+		 * +"=="+((CatalogFormatInfo)formatListDisplay.get(i))
+		 * .getCatFormatKey());
+		 * 
+		 * }
+		 */
+
+/*		request.setAttribute("CustomerProfileEditForm.OptionsOutputFormat",
+				formatListDisplay);
+
+		// for 4.1
+
+		request.setAttribute("CustomerProfileEditForm.OptionsAuthCode",
+				authCodeBList);
+
+		request.setAttribute("CustomerProfileEditForm.PriceLogic",
+				priceLogicList);*/
+
+		form.setOptionsOutputFormat(formatListDisplay);
+		form.setOptionsAuthCode(authCodeBList);
+		form.setPriceLogicList(priceLogicList);
+		form.setCustomer_key(custKey);
+		
+	}
+	
+	private void processCreate(CustomerProfileEditForm form, HttpServletRequest request)
+	{
+		log.debug("+++++++  start CustomerProfileEditAction:processCreate  +++++++");
+
+		if (!this.ifCustomerIDUnique(form, PagesUtil.getDbRegionToConnect(request)))
+
+		{
+			String error = form.getCustomerID()
+					+ " is already used by other customers.";
+
+			form.setErrorMsg(error);
+			processPopulate(form, request, true);
+			return;
+		}
+
+
+		// gather data
+
+		CustomerMgr customerMgr = new CustomerMgr();
+
+		Customer customer = new Customer();
+
+		Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+
+		// customer.setAtCostPlusCustomerID(form.getAtCostPlusCustDun());
+
+		customer.setCustName((form.getCustomerName() == null) ? null : form
+				.getCustomerName().trim());
+
+		customer.setCustID((form.getCustomerID() == null) ? null : form
+				.getCustomerID().trim());
+
+		customer.setChannelTypesArray(form.getChannelTypesArray());
+
+		customer.setPaNo((form.getPurchaseAgreement() == null) ? null : form
+				.getPurchaseAgreement().trim());
+
+		customer.setRegionCode((form.getRegion() == null) ? null : form
+				.getRegion().trim());
+
+		// Set to save the SLA ID into PA_NO field in customer table
+		customer.setSlaId(form.getSlaId());
+
+		// #36087 Code Changes Start
+		customer.setorderPhoneNo(form.getorderPhoneNo());
+		customer.setorderFAXNo(form.getorderFAXNo());
+		customer.setorderEmail(form.getorderEmail());
+		customer.setsupportURL(form.getsupportURL());
+		customer.setcrManagerName(form.getcrManagerName());
+		customer.setcrManagerPhoneNo(form.getcrManagerPhoneNo());
+		customer.setcrManagerFAXNo(form.getcrManagerFAXNo());
+		customer.setcrManagerEmail(form.getcrManagerEmail());
+		customer.setsinNo1(form.getsinNo1());
+		customer.setsinNo2(form.getsinNo2());
+		// #36087 Code Changes End
+
+		// Added for March CPE 2006 - Vinod Mathew
+		String excludeProdFlag = customer.getExcludeProdFlag();
+		customer.setExcludeProdFlag(form.isExcludeProds() ? "Y" : "N");
+		// END
+
+		customer.setReleasePoint((form.getReleasePoint() == null) ? null : form
+				.getReleasePoint().trim());
+
+		customer.setCustType(form.getCustomerType());
+
+		customer.setAccRateFlag(form.getExchangeRate());
+
+		if (form.getCustomerType().equalsIgnoreCase(
+				Customer.CUSTOMER_TYPE_ECATE)) {
+
+			customer.setFallBackFlag("N");
+
+		} else {
+
+			customer.setFallBackFlag("Y");
+
+		}
+
+		customer.setSupplierID((form.getSupplier() == null) ? null : form
+				.getSupplier().trim());
+
+		customer.setSupTPShortName((form.getSupplierTPShortName() == null) ? null
+				: form.getSupplierTPShortName().trim());
+
+		customer.setCustLoc((form.getLocation() == null) ? null : form
+				.getLocation().trim());
+
+		customer.setManager((form.getCatalogManager() == null) ? null : form
+				.getCatalogManager().trim());
+
+		customer.setBackupManager((form.getBackupCatalogManager() == null) ? null
+				: form.getBackupCatalogManager().trim());
+
+		customer.setCustDUN((form.getDun() == null) ? null : form.getDun()
+				.trim());
+
+		customer.setLastModifiedBy(ses.getUserID());
+
+		customer.setLastModifiedDate(new Date());
+
+		customer.setISOEncoding((form.getCharacterEncoding() == null) ? null
+				: form.getCharacterEncoding().trim());
+
+		// customer.setPriceDescriptor(form.getPriceDescriptor());
+
+		// customer.setOutPutFormat(form.getOutputFormat());
+
+		// String langCD =
+		// LanguageMgr.getLanguageMgr().getHPLanguage(form.getLocale());
+
+		customer.setDefaultLangCode(form.getLanguageCode());
+
+		String locale = LanguageMgr.getLanguageMgr().getLocale(
+				form.getLanguageCode(),PagesUtil.getDbRegionToConnect(request));
+
+		customer.setLocale(locale);
+
+		boolean fusionFlag = form.isFusionOrderabilityCheck();
+		customer.setFusionOrderableFlag(fusionFlag ? "Y" : "N");
+
+		// ecat
+
+		if (form.getCustomerType().equalsIgnoreCase(
+				Customer.CUSTOMER_TYPE_ECATE))
+
+		{
+
+			customer.setCatalogSource(form.getPrimaryCatalogSource());
+
+			customer.setPriceSource(form.getPriceSource());
+
+			customer.setFallBackFlag("N");
+
+		}
+
+		else {
+
+			customer.setFallBackFlag("Y");
+
+			// customer.setDefaultCategoryType(form.getDefaultCategorySource());
+
+		}
+		String defaultCategorySource = form.getDefaultCategorySource();
+		customer.setCategorizationID(defaultCategorySource);
+
+		// Deepak - to fix 38018 Start
+		try {
+
+			Categorization category = CategorizationMgr
+					.getCategorization(Integer.parseInt(defaultCategorySource),PagesUtil.getDbRegionToConnect(request));
+			customer.setCategoryName(category.getName());
+			customer.setDefaultCategoryType(category.getType());
+		} catch (NumberFormatException e) {
+			// Should never come here
+			log.error("Couldn't parse the defaultCategorySource");
+			throw new CatRuntimeException(
+					"default Categeory Source parse failed");
+		}
+
+		// Deepak - to fix 38018 End
+
+		/**
+		 * 4.1 Categorization cateObj =
+		 * PagesUtil.splitCategoryValue(defaultCategorySource);
+		 * customer.setDefaultCategoryType(cateObj.getType());
+		 * customer.setCategorizationID(cateObj.getId().toString());
+		 * customer.setCategoryName(cateObj.getName());
+		 **/
+
+		if (form.isApprovalEnableFlag()) {
+
+			customer.setDefaultApprovalReqFlag("Y");
+
+		} else {
+
+			customer.setDefaultApprovalReqFlag("N");
+
+			// set the casual buy/cross sell flags
+
+			// for 4.1
+
+			// set the casual buy/cross sell flags
+
+			/*
+			 * if (form.isCBIncludeFlag()) customer.setCBIncludeFlag("Y");
+			 * 
+			 * else
+			 * 
+			 * customer.setCBIncludeFlag("N");
+			 */
+
+		}
+		customer.setCBIncludeFlag(form.getCbIncludeFlag());
+
+		if (form.isCSIncludeFlag()) {
+
+			customer.setCSIncludeFlag("Y");
+
+		} else {
+
+			customer.setCSIncludeFlag("N");
+
+		}
+
+		if (form.isNDIncludeFlag()) {
+
+			customer.setNDIncludeFlag("Y");
+
+		} else {
+
+			customer.setNDIncludeFlag("N");
+
+		}
+
+		customer.setBuyTPName(form.getBuyerTPName());
+
+		customer.setBuyTPShortName(form.getBuyerTPShortName());
+
+		// for 4.1
+
+		customer.setPriceRuleID((form.getPriceLogic() == null) ? null : form
+				.getPriceLogic().trim());
+
+		if (form.getOrderCheckFlag()) {
+
+			customer.setOrderCheckFlag("Y");
+
+		} else {
+
+			customer.setOrderCheckFlag("N");
+
+		}
+
+		if (form.getOfferAllOrdFlag()) {
+
+			customer.setOfferAllOrdFlag("Y");
+
+		} else {
+
+			customer.setOfferAllOrdFlag("N");
+
+		}
+
+		if (form.getOfferEquivFlag()) {
+
+			customer.setOfferEquivFlag("Y");
+
+		} else {
+
+			customer.setOfferEquivFlag("N");
+
+		}
+		// Added for Chianti - Bundle Management - Set auto create sales flag
+		// value selected by user for the new cutomer
+		if (form.getAutoCreateSalesBdlFlag()) {
+			customer.setAutoCreateSalesBdlFlag("Y");
+		} else {
+			customer.setAutoCreateSalesBdlFlag("N");
+		}
+
+		customer.setGenesisCustomer(form.getGenesisCustomer());
+		log.debug("customer.GENESIS CUSTOMER: " + customer.getGenesisCustomer());
+		customer.setCustSegment(form.getCustSegment());
+
+		// end of 4.1
+
+		log.debug("customer.setCustName: " + customer.getCustName());
+
+		for (int i = 0; i < (customer.getChannelTypesArray()).length; i++) {
+
+			log.debug("customer.setChannelTypes" + i + ": "
+					+ (customer.getChannelTypesArray())[i]);
+
+		}
+
+		log.debug("customer.setPaNo: " + customer.getPaNo());
+
+		log.debug("customer.setRegionCode: " + customer.getRegionCode());
+
+		log.debug("customer.setReleasePoint: " + customer.getReleasePoint());
+
+		log.debug("customer.setCustType: " + customer.getCustType());
+
+		log.debug("customer.setSupplierID: " + customer.getSupplierID());
+
+		log.debug("customer.setCustLoc: " + customer.getCustLoc());
+
+		log.debug("customer.setManager: " + customer.getManager());
+
+		log.debug("customer.setBackupManager: " + customer.getBackupManager());
+
+		log.debug("customer.setCustDUN: " + customer.getCustDUN());
+
+		log.debug("customer.setLastModifiedBy: " + customer.getLastModifiedBy());
+
+		log.debug("customer.setISOEncoding: " + customer.getISOEncoding());
+
+		// log.debug("customer.setPriceDescriptor: " +
+		// customer.getPriceDescriptor());
+
+		log.debug("customer.setLocale: " + customer.getLocale());
+
+		log.debug("customer.setCatalogSource: " + customer.getCatalogSource());
+
+		log.debug("customer.setPriceSource: " + customer.getPriceSource());
+
+		log.debug("customer.setFallBackFlag: " + customer.getFallBackFlag());
+
+		log.debug("customer.setDefaultCategoryTypeBackFlag: "
+				+ customer.getDefaultCategoryType());
+
+		log.debug("customer.setDefaultApprovalReqFlag: "
+				+ customer.getDefaultApprovalReqFlag());
+
+		log.debug("customer.setBuyTPName: " + customer.getBuyTPName());
+
+		log.debug("customer.setBuyTPShortName: " + customer.getBuyTPShortName());
+
+		// log.debug("customer.setOutpuFormat: " + customer.getOutPutFormat());
+
+		log.debug("customer.setSupTPShortName: " + customer.getSupTPShortName());
+
+		log.debug("customer.setCBIncludeFlag: " + customer.getCBIncludeFlag());
+
+		log.debug("customer.setCSIncludeFlag: " + customer.getCSIncludeFlag());
+
+		// log.debug("customer.setNDIncludeFlag: " +
+		// customer.getNDIncludeFlag());
+
+		// Perform add customer
+
+		// 4.2 create
+		customer.setAuthCheckFlag(form.getAuthCheckFlag());
+		Customer customerFromGUI = form.getCustomer();
+		if(customerFromGUI != null){
+			customer.setPriceModel(customerFromGUI.getPriceModel());
+			customer.setLevelPriceCode(customerFromGUI.getLevelPriceCode());
+			customer.setPriceSwitch1(customerFromGUI.getPriceSwitch1());
+			customer.setPriceSwitch2(customerFromGUI.getPriceSwitch2());
+			customer.setPriceSwitch3(customerFromGUI.getPriceSwitch3());
+			customer.setPriceSwitch4(customerFromGUI.getPriceSwitch4());
+		}
+
+		// for 4.3.1 TBA -- Quest ticket (ASP000006315413)
+		customer.setApplyElcFlag(form.getApplyElc() ? "Y" : "N");
+		// for Lava -- focus changes
+		customer.setPresalesCustId(form.getPresalesCustId());
+		customer.setPresalesSource(form.getPresalesSource());
+		customer.setEucIndustryNm(form.getEucIndustryNm());
+		customer.setIndustrySegment(form.getIndustrySegment());
+		customer.setSapId(form.getSapId());
+		// customer.setCustSatFl(form.getCustSatFl());
+		// customer.setLastSaveDt(form.getLastSaveDt());
+		// customer.setLastSaveDtGmt(form.getLastSaveDateGmt());
+
+		// Lava TBA changes
+		customer.setApplyTbaFlag(form.getApplyTba() ? "Y" : "N");
+		
+		// Add Tenant Flag
+		customer.setTenantCode(form.getTenant());
+		
+		List customerList = customerMgr.add(customer, PagesUtil.getDbRegionToConnect(request));
+		log.debug("List customerList = customerMgr.add(customer);");
+
+	// save all the filters
+		if(customerFromGUI != null){
+			boolean saveFilter = customerMgr.saveFilters(customerFromGUI,
+					customer.getCustKey(), customer.getCustID(),
+					PagesUtil.getLoginUserID(request), PagesUtil.getDbRegionToConnect(request));
+			if (saveFilter == false) {
+				log.error("Fail to save the filters for the customer");
+				// 4.2 create
+	
+			}
+		}
+		ResponseStatus res = (ResponseStatus) (customerList.get(0));
+
+		log.debug("ResponseStatus res = (ResponseStatus)(customerList.get(0)");
+
+		log.debug("res.getMessage(): " + res.getMessage());
+
+		int type = res.getType();
+
+		if (type == ResponseStatusInfo.OK)
+
+		{
+
+			String key = ((Customer) (res.getBizObj())).getCustKey();
+
+			// for 4.1
+
+			if (form.getOutputFormatKeyList() != null && form.getOutputFormatKeyList().length > 0)
+
+			{
+
+				String[] catformatkeylist = form.getOutputFormatKeyList();
+
+				List test = new ArrayList(catformatkeylist.length);
+
+				for (int i = 0; i < catformatkeylist.length; i++)
+
+				{
+
+					CustCatFormatBean bean = new CustCatFormatBean();
+
+					bean.setCustKey(key);
+
+					bean.setCatFormatKey(catformatkeylist[i]);
+
+					test.add(bean);
+
+				}
+
+				CustCatFormatMgr mgr = CustCatFormatMgr.getCustCatFormatMgr();
+
+				mgr.updateCustCatFormatInfo(test,
+						PagesUtil.getDbRegionToConnect(request));
+
+			}
+
+			try {
+
+				String[] authCodeList = form.getProdAuthCodeList();
+
+				String[] activityCodeList = form.getActivityCodeList();
+
+				String[] stockCodeList = form.getStockCodeList();
+
+				String[] visionFlagList = form.getVisionFlagList();
+
+				int listSize = 0;
+
+				if (authCodeList != null) {
+					listSize += authCodeList.length;
+
+				}
+				if (activityCodeList != null) {
+					listSize += activityCodeList.length;
+
+				}
+				if (stockCodeList != null) {
+					listSize += stockCodeList.length;
+
+				}
+				if (visionFlagList != null) {
+					listSize += visionFlagList.length;
+
+				}
+
+				CustProdFilterMgr mgr = CustProdFilterMgr
+						.getCustProdFilterMgr();
+
+				mgr.deleteCustProdFilter(this.fCustKey,
+						PagesUtil.getDbRegionToConnect(request));
+
+				if (listSize > 0) {
+
+					List beanList = new ArrayList(listSize);
+
+					String userId = PagesUtil.getLoginUserID(request);
+
+					if (authCodeList != null)
+
+					{
+
+						for (int i = 0; i < authCodeList.length; i++)
+
+						{
+
+							CustProdFilterBean bean = new CustProdFilterBean();
+
+							bean.setCustKey(key);
+
+							bean.setFilterName("AUTHORIZATION_CODE");
+
+							bean.setFilterValue(authCodeList[i]);
+
+							bean.setModifiedBy(userId);
+
+							beanList.add(bean);
+
+						}
+
+					}
+
+					if (activityCodeList != null)
+
+					{
+
+						for (int i = 0; i < activityCodeList.length; i++)
+
+						{
+
+							CustProdFilterBean bean = new CustProdFilterBean();
+
+							bean.setCustKey(key);
+
+							bean.setFilterName("ACTIVITY_CODE");
+
+							bean.setFilterValue(activityCodeList[i]);
+
+							bean.setModifiedBy(userId);
+
+							beanList.add(bean);
+
+						}
+
+					}
+
+					if (stockCodeList != null)
+
+					{
+
+						for (int i = 0; i < stockCodeList.length; i++)
+
+						{
+
+							CustProdFilterBean bean = new CustProdFilterBean();
+
+							bean.setCustKey(key);
+
+							bean.setFilterName("STOCK_CODE");
+
+							bean.setFilterValue(stockCodeList[i]);
+
+							bean.setModifiedBy(userId);
+
+							beanList.add(bean);
+
+						}
+
+					}
+
+					if (visionFlagList != null)
+
+					{
+
+						for (int i = 0; i < visionFlagList.length; i++)
+
+						{
+
+							CustProdFilterBean bean = new CustProdFilterBean();
+
+							bean.setCustKey(key);
+
+							bean.setFilterName("VISION_FLAG");
+
+							bean.setFilterValue(visionFlagList[i]);
+
+							bean.setModifiedBy(userId);
+
+							beanList.add(bean);
+
+						}
+
+					}
+
+					mgr.insertCustProdFilter(beanList,
+							PagesUtil.getDbRegionToConnect(request));
+
+				}
+
+			} catch (Exception e) {
+
+				log.debug("Exception is in updating Product filter infos = "
+						+ e);
+
+			}
+
+			// end for 4.1
+
+			log.debug("custKey = ((Customer)(res.getBizObj())).getCustKey(): "
+					+ key);
+
+			form.setSuccessMsg(form.getCustomerName() + " is added successfully");
+			
+			log.debug("+++++++  OK, end CustomerProfileEditAction:processCreate  +++++++");
+			
+			form.setCustomer_key(key);
+			return;			
+			} else {
+				log.debug("failed to create customer: " + res.getMessage());
+				form.setErrorMsg("failed to create customer: " + res.getMessage());
+				return;
+			}
+	}
+	
+	private void processUpdate(CustomerProfileEditForm form,
+			HttpServletRequest request) {
+		log.debug("+++++++  start CustomerProfileEditAction:processUpdate(edit customer)  +++++++");
+
+		// Get customer data, provide cust_key
+		// gather data
+		CustomerMgr customerMgr = new CustomerMgr();
+		// Added for plc reports.
+		Session session = SessionMgr.getSessionMgr().getSession(request, false);
+		String userId = session.getUserID();
+		CustomerReport customerReport = new CustomerReport();
+		customerReport.setCustId(form.getCustomerID());
+		customerReport.setCustKey(form.getCustomer_key());
+		customerReport.setCustNameRep(form.getCustRep() ? "Y" : "N");
+		customerReport.setEolProdRep(form.getEolRep() ? "Y" : "N");
+		customerReport.setStdCatRep(form.getStdcatRep() ? "Y" : "N");
+		customerReport.setPtDealsRep(form.getPrtierRep() ? "Y" : "N");
+		customerReport.setLastModifiedBy(userId);
+		customerReport.setLastModifiedDate(new java.util.Date());
+		if ("Y".equals(customerReport.getCustNameRep())
+				|| "Y".equals(customerReport.getEolProdRep())
+				|| "Y".equals(customerReport.getStdCatRep())
+				|| "Y".equals(customerReport.getPtDealsRep())) {
+
+			if (StrUtil.isEmpty(form.getCatalogManager())) {
+				form.setErrorMsg("Please Select Catalog Manager");
+				this.processPopulate(form, request, true);
+			}
+			if (StrUtil.isEmpty(form.getBackupCatalogManager())) {
+				form.setErrorMsg("Please Select Backup Catalog Manager");
+				this.processPopulate(form, request, true);
+			}
+		}
+		customerMgr.updateCustomerReportInfo(customerReport, PagesUtil.getDbRegionToConnect(request));
+
+		// Ended for plc reports
+		Customer customer = CustomerProfileWebUtil
+				.retrieveCustomer(this.fCustKey, PagesUtil.getDbRegionToConnect(request));
+		customer.setCustName((form.getCustomerName() == null) ? null : form
+				.getCustomerName().trim());
+		customer.setChannelTypesArray(form.getChannelTypesArray());
+		customer.setPaNo((form.getPurchaseAgreement() == null) ? null : form
+				.getPurchaseAgreement().trim());
+		customer.setReleasePoint((form.getReleasePoint() == null) ? null : form
+				.getReleasePoint().trim());
+		// for cabernet 3831 by Ravi n
+		// is genesis customer
+		customer.setGenesisCustomer(form.getGenesisCustomer());
+		// Set to save the sla id into the PA_NO field of Cutomer table
+		customer.setSlaId(form.getSlaId());
+
+		customer.setorderPhoneNo((form.getorderPhoneNo() == null) ? null : form
+				.getorderPhoneNo().trim());
+		customer.setorderFAXNo((form.getorderFAXNo() == null) ? null : form
+				.getorderFAXNo().trim());
+		customer.setorderEmail((form.getorderEmail() == null) ? null : form
+				.getorderEmail().trim());
+		customer.setsupportURL((form.getsupportURL() == null) ? null : form
+				.getsupportURL().trim());
+		customer.setcrManagerName((form.getcrManagerName() == null) ? null
+				: form.getcrManagerName().trim());
+		customer.setcrManagerPhoneNo((form.getcrManagerPhoneNo() == null) ? null
+				: form.getcrManagerPhoneNo().trim());
+		customer.setcrManagerFAXNo((form.getcrManagerFAXNo() == null) ? null
+				: form.getcrManagerFAXNo().trim());
+		customer.setcrManagerEmail((form.getcrManagerEmail() == null) ? null
+				: form.getcrManagerEmail().trim());
+		customer.setsinNo1((form.getsinNo1() == null) ? null : form.getsinNo1()
+				.trim());
+		customer.setsinNo2((form.getsinNo2() == null) ? null : form.getsinNo2()
+				.trim());
+
+		customer.setCustType(form.getCustomerType());
+
+		String CustType = customer.getCustType();
+
+		if (CustType != null && CustType.equalsIgnoreCase(Customer.CUSTOMER_TYPE_ECATE)) {
+
+			customer.setFallBackFlag("N");
+
+		} else {
+
+			customer.setFallBackFlag("Y");
+		}
+		customer.setSupplierID((form.getSupplier() == null) ? null : form
+				.getSupplier().trim());
+		customer.setSupTPShortName((form.getSupplierTPShortName() == null) ? null
+				: form.getSupplierTPShortName().trim());
+		customer.setCustLoc((form.getLocation() == null) ? null : form
+				.getLocation().trim());
+		customer.setManager((form.getCatalogManager() == null) ? null : form
+				.getCatalogManager().trim());
+		customer.setBackupManager((form.getBackupCatalogManager() == null) ? null
+				: form.getBackupCatalogManager().trim());
+		customer.setLastModifiedBy(PagesUtil.getLoginUserID(request));
+		customer.setLastModifiedDate(new Date());
+		customer.setISOEncoding(form.getCharacterEncoding());
+
+		// Focus changes Lava
+		customer.setPresalesCustId(form.getPresalesCustId());
+		customer.setPresalesSource(form.getPresalesSource());
+		customer.setEucIndustryNm(form.getEucIndustryNm());
+		customer.setIndustrySegment(form.getIndustrySegment());
+		customer.setSapId(form.getSapId());
+		customer.setIndustrySegment(form.getIndustrySegment());
+		customer.setSapId(form.getSapId());
+		customer.setFusionOrderableFlag(form.isFusionOrderabilityCheck() ? "Y"
+				: "N");
+		// Added for March CPE 2006 - Vinod Mathew
+		String excludeProdFlag = customer.getExcludeProdFlag();
+		customer.setExcludeProdFlag(form.isExcludeProds() ? "Y" : "N");
+		// END
+
+		if (form.getEditEprimeDUNType().equalsIgnoreCase("true")) {
+			// String eprimeCustDUN = form.getEprimeCustDUN();
+			String eprimeCustDUN = customer.getEprimeCustDUN();
+			String eprimeCustType = form.getEprimeCustType();
+			if (!StrUtil.isEmpty(eprimeCustDUN)) {
+				// customer.setEprimeCustDUN(eprimeCustDUN);
+				customer.setEprimeCustType(eprimeCustType == null ? null
+						: eprimeCustType.trim());
+				log.debug("customer.setEprimeCustDUN" + eprimeCustDUN + " );");
+				log.debug("customer.setEprimeCustType(" + eprimeCustType
+						+ " );");
+			} else {
+				customer.setEprimeCustDUN(null);
+				customer.setEprimeCustType(null);
+				log.debug("customer.setEprimeCustDUN" + null + " );");
+				log.debug("customer.setEprimeCustType(" + null + " );");
+			}
+		}
+
+		customer.setDefaultLangCode(form.getLanguageCode());
+		String locale = LanguageMgr.getLanguageMgr().getLocale(
+				form.getLanguageCode(), PagesUtil.getDbRegionToConnect(request));
+		customer.setLocale(locale);
+
+		String defaultCategorySource = form.getDefaultCategorySource();
+		customer.setCategorizationID(defaultCategorySource);
+
+		// Deepak - to fix 38018 Start
+		try {
+
+			Categorization category = CategorizationMgr
+					.getCategorization(Integer.parseInt(defaultCategorySource),PagesUtil.getDbRegionToConnect(request));
+			customer.setCategoryName(category.getName());
+			customer.setDefaultCategoryType(category.getType());
+		} catch (NumberFormatException e) {
+			// Should never come here
+			log.error("Couldn't parse the defaultCategorySource");
+			throw new CatRuntimeException(
+					"default Categeory Source parse failed");
+		}
+
+		// Deepak - to fix 38018 End
+
+		String orgAccRateFlag = customer.getAccRateFlag();
+		// for 4.3.1 TBA -- Quest ticket (ASP000006315413)
+		String orgElcFlag = customer.getApplyElcFlag();
+		customer.setAccRateFlag(form.getExchangeRate());
+		if (form.isApprovalEnableFlag()) {
+			customer.setDefaultApprovalReqFlag("Y");
+		} else {
+			customer.setDefaultApprovalReqFlag("N");
+
+			// for Lava TBA
+		}
+		String orgTbaFlag = customer.getApplyTbaFlag();
+		System.out
+				.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+		System.out.println("Customer Apply TBA flag is "
+				+ customer.getApplyTbaFlag());
+		System.out
+				.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+		customer.setApplyTbaFlag(form.getApplyTba() ? "Y" : "N");
+
+		customer.setCBIncludeFlag(form.getCbIncludeFlag());
+		if (form.isCSIncludeFlag()) {
+			customer.setCSIncludeFlag("Y");
+		} else {
+			customer.setCSIncludeFlag("N");
+		}
+		if (form.isNDIncludeFlag()) {
+			customer.setNDIncludeFlag("Y");
+		} else {
+			customer.setNDIncludeFlag("N");
+		}
+		customer.setBuyTPName((form.getBuyerTPName() == null) ? null : form
+				.getBuyerTPName().trim());
+		customer.setBuyTPShortName((form.getBuyerTPShortName() == null) ? null
+				: form.getBuyerTPShortName().trim());
+		// String customerKey = request.getParameter("customer_key");
+		// customer.setCustKey(customerKey);
+		// for 4.1
+		customer.setPriceRuleID((form.getPriceLogic() == null) ? null : form
+				.getPriceLogic().trim());
+		if (form.getOrderCheckFlag()) {
+			customer.setOrderCheckFlag("Y");
+		} else {
+			customer.setOrderCheckFlag("N");
+		}
+		if (form.getOfferAllOrdFlag()) {
+			customer.setOfferAllOrdFlag("Y");
+		} else {
+			customer.setOfferAllOrdFlag("N");
+		}
+		if (form.getOfferEquivFlag()) {
+			customer.setOfferEquivFlag("Y");
+		} else {
+			customer.setOfferEquivFlag("N");
+		}
+		if (form.getAutoCreateSalesBdlFlag()) {
+			customer.setAutoCreateSalesBdlFlag("Y");
+		} else {
+			customer.setAutoCreateSalesBdlFlag("N");
+		}
+		customer.setCustSegment(form.getCustSegment());
+		// end for 4.1
+		customer.setApplyElcFlag(form.getApplyElc() ? "Y" : "N");
+
+		log.debug("customer.setCustName: " + customer.getCustName());
+
+		for (int i = 0; i < (customer.getChannelTypesArray()).length; i++) {
+			log.debug("customer.setChannelTypes" + i + ": "
+					+ (customer.getChannelTypesArray())[i]);
+		}
+		
+		// Add Tenant Flag
+		customer.setTenantCode(form.getTenant());
+		
+		log.debug("customer.setPaNo: " + customer.getPaNo());
+		log.debug("customer.setRegionCode: " + customer.getRegionCode());
+		log.debug("customer.setReleasePoin: " + customer.getReleasePoint());
+		log.debug("customer.setCustTyp: e" + customer.getCustType());
+		log.debug("customer.setSupplierID: " + customer.getSupplierID());
+		log.debug("customer.setCustLoc: " + customer.getCustLoc());
+		log.debug("customer.setManager: " + customer.getManager());
+		log.debug("customer.setBackupManager: " + customer.getBackupManager());
+		log.debug("customer.setCustDUN: " + customer.getCustDUN());
+		log.debug("customer.setLastModifiedBy: " + customer.getLastModifiedBy());
+		log.debug("customer.setISOEncoding: " + customer.getISOEncoding());
+		log.debug("customer.setPriceDescriptor: "
+				+ customer.getPriceDescriptor());
+		log.debug("customer.setEprimeCustDUN: " + customer.getEprimeCustDUN());
+		log.debug("customer.setEprimeCustType: " + customer.getEprimeCustType());
+		log.debug("customer.setCustKey: " + customer.getCustKey());
+		log.debug("customer.setLocale: " + customer.getLocale());
+		log.debug("customer.setDefaultCategoryType: "
+				+ customer.getDefaultCategoryType());
+		log.debug("customer.setDefaultApprovalReqFlag: "
+				+ customer.getDefaultApprovalReqFlag());
+		log.debug("customer.setBuyTPName: " + customer.getBuyTPName());
+		log.debug("customer.setBuyTPShortName: " + customer.getBuyTPShortName());
+		log.debug("customer.setSupTPShortName: " + customer.getSupTPShortName());
+		log.debug("customer.setCBIncludeFlag: " + customer.getCBIncludeFlag());
+		log.debug("customer.setCSIncludeFlag: " + customer.getCSIncludeFlag());
+
+		// 4.2
+		customer.setAuthCheckFlag(form.getAuthCheckFlag());
+		Customer customerFromGUI = form.getCustomer();
+		List customerList;
+		if (PagesUtil.getLoginUserRole(request)!= null && !PagesUtil.getLoginUserRole(request).equalsIgnoreCase("5")) {
+			customerList = customerMgr.update(customer,PagesUtil.getDbRegionToConnect(request));
+		} else {
+			customer.setPriceModel(customerFromGUI.getPriceModel());
+			customer.setLevelPriceCode(customerFromGUI.getLevelPriceCode());
+			customer.setPriceSwitch1(customerFromGUI.getPriceSwitch1());
+			customer.setPriceSwitch2(customerFromGUI.getPriceSwitch2());
+			customer.setPriceSwitch3(customerFromGUI.getPriceSwitch3());
+			customer.setPriceSwitch4(customerFromGUI.getPriceSwitch4());
+
+			String priceLogic = form.getPriceLogic();
+			if (!StrUtil.isEmpty(priceLogic)) {
+				int ll;
+				try {
+					ll = Integer.parseInt(priceLogic);
+					customer.setPriceRuleId(ll);
+				} catch (Exception e) {
+				}
+			}
+			customerList = customerMgr.updateForPrcAdmin(customer,PagesUtil.getDbRegionToConnect(request));
+		}
+
+		boolean saveFilter = customerMgr.saveFilters(customerFromGUI,
+				customer.getCustKey(), customer.getCustID(),
+				PagesUtil.getLoginUserID(request),PagesUtil.getDbRegionToConnect(request));
+		if (saveFilter == false) {
+			log.error("Fail to save the filters for the customer");
+			// for 4.1
+		}
+		try {
+			if (form.getOutputFormatKeyList() != null) {
+				String[] catformatkeylist = form.getOutputFormatKeyList();
+				List test = new ArrayList(catformatkeylist.length);
+				for (int i = 0; i < catformatkeylist.length; i++) {
+					CustCatFormatBean bean = new CustCatFormatBean();
+					bean.setCustKey(this.fCustKey);
+					bean.setCatFormatKey(catformatkeylist[i]);
+					test.add(bean);
+				}
+				CustCatFormatMgr mgr = CustCatFormatMgr.getCustCatFormatMgr();
+				mgr.updateCustCatFormatInfo(test,PagesUtil.getDbRegionToConnect(request));
+			}
+		} catch (Exception e) {
+			System.out.println("Exception is in updating output format = " + e);
+		}
+		// Added for March CPE 2006 - Vinod Mathew
+		if (!(excludeProdFlag.equals(customer.getExcludeProdFlag()))) {
+			List custList = customerMgr.updateCatInfoForCust(customer,PagesUtil.getDbRegionToConnect(request));
+			ResponseStatus cusRes = (ResponseStatus) (custList.get(0));
+			log.debug("ResponseStatus res = (ResponseStatus)(custList.get(0))");
+			log.debug("cusRes.getMessage(): " + cusRes.getMessage());
+			int type = cusRes.getType();
+			if (type != ResponseStatusInfo.OK) {
+				log.debug("fail to update catalog: " + cusRes.getMessage());
+			}
+		}
+
+		// END
+
+		// for 4.1
+		// if the accounting rate flag is changed make an entry in the
+		// propagation queue
+		if (!(orgAccRateFlag.equals(customer.getAccRateFlag()))) {
+			AddToPropQueueBean qBean = new AddToPropQueueBean();
+			qBean.setCustKey(customer.getCustKey());
+			qBean.setSource("RATE");
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxParsedStmt addToQSP = daxMgr.makeParsedStmt("propagation",
+					"propQueue", qBean, null, null);
+			DaxDB db = daxMgr.getDaxDB(PagesUtil.getDbRegionToConnect(request));
+			db.doSP(addToQSP, qBean, qBean);
+		}
+		// for 4.3.1 TBA -- Quest ticket (ASP000006315413)
+
+		/*
+		 * If the elcflag is altered in the Gui all the master catalogs belong
+		 * to this customer will be propagated, in order to recalculate the
+		 * product prices.
+		 */
+		if (!(orgElcFlag.equals(customer.getApplyElcFlag()))) {
+			AddToPropQueueBean qBean = new AddToPropQueueBean();
+			qBean.setCustKey(customer.getCustKey());
+			qBean.setSource("ELC-GUI");
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxParsedStmt addToQSP = daxMgr.makeParsedStmt("propagation",
+					"propQueue", qBean, null, null);
+			DaxDB db = daxMgr.getDaxDB(PagesUtil.getDbRegionToConnect(request));
+			db.doSP(addToQSP, qBean, qBean);
+		}
+
+		/**
+		 * If the TBA flag is altered in the Gui all the master catalogs belong
+		 * to this customer will be propagated, in order to recalculate the
+		 * product prices.
+		 */
+		if (!(orgTbaFlag.equals(customer.getApplyTbaFlag()))) {
+			AddToPropQueueBean qBean = new AddToPropQueueBean();
+			qBean.setCustKey(customer.getCustKey());
+			qBean.setSource("TBA-GUI");
+			DaxMgr daxMgr = DaxMgr.getInstance();
+			DaxParsedStmt addToQSP = daxMgr.makeParsedStmt("propagation",
+					"propQueue", qBean, null, null);
+			DaxDB db = daxMgr.getDaxDB(PagesUtil.getDbRegionToConnect(request));
+			db.doSP(addToQSP, qBean, qBean);
+		}
+
+		// check if we update current customer. if so update its record in
+		// session
+		Customer currentCustomer = PagesUtil.getCustomer(request);
+		if (currentCustomer != null
+				&& customer != null
+				&& customer.getCustKey()
+						.compareTo(currentCustomer.getCustKey()) == 0) {
+			log.debug("updating current customer in session");
+			Session ses = SessionMgr.getSessionMgr().getSession(request, false);
+			ses.setCurrentCustomer(customer);
+		}
+		log.debug("List customerList = customerMgr.update(customer)");
+		ResponseStatus res = (ResponseStatus) (customerList.get(0));
+		log.debug("ResponseStatus res = (ResponseStatus)(customerList.get(0))");
+		log.debug("res.getMessage(): " + res.getMessage());
+		int type = res.getType();
+		if (type == ResponseStatusInfo.OK) {
+			form.setSuccessMsg(res.getMessage());
+			log.debug("+++++++  end CustomerProfileEditAction:processUpdate  +++++++");
+		} else {
+			log.debug("fail to update customer: " + res.getMessage());
+			form.setErrorMsg("fail to update customer: " + res.getMessage());
+		}
+		
+		List custSegmentList = CustomerMgr.getCustSegment ( form.getRegion(),
+				PagesUtil.getDbRegionToConnect(request) );
+		form.setCustSegmentList(custSegmentList);
+	}	
+	
+	private boolean ifCustomerIDUnique(CustomerProfileEditForm form, String dbRegionToConnect)
+	{
+		String id = form.getCustomerID();
+		String duns = form.getDun();
+		CustomerMgr mgr = new CustomerMgr();
+		List list = mgr.getCustomersByCustIDDuns(id, duns, dbRegionToConnect);
+		if (list.size() > 0) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+	
+	private void fillInCustomerID(CustomerProfileEditForm form) {
+		try {
+			StringBuffer sb = new StringBuffer(CUST_ID_PREFIX);
+			String num = RandomNum.nextNumber();
+			sb.append(num);
+			form.setCustomerID(sb.toString());
+		}
+
+		catch (Exception e)
+
+		{
+
+			log.error("Cannot create the CustomerDBObject instance. There's no baseDBObject setup.");
+
+		}
+
+	}	
+	
+	private void fillInCategoryList(String action,
+			CustomerProfileEditForm form, HttpServletRequest request)
+
+	{
+		String langCD = null;
+		List categoryList = new ArrayList();
+		if (action.equalsIgnoreCase("CREATE")) {
+			langCD = (String) ((ArrayList) form.getLangCodeList()).get(0);
+		} else { // if (action.equalsIgnoreCase("EDIT"))
+			langCD = form.getLanguageCode();
+		}
+
+		String locale = LanguageMgr.getLanguageMgr().getLocale(langCD,PagesUtil.getDbRegionToConnect(request));
+
+		if (action.equalsIgnoreCase("CREATE"))
+		{
+			// log.debug("PagesUtil.getCategoryList(null," + locale + ")");
+			categoryList = PagesUtil.getCategoryListByRegion(request);
+		}else
+		{
+			// log.debug("PagesUtil.getCategoryList(" + this.fCustKey + "," +
+			// locale + ")");
+			// list = PagesUtil.getCategoryList(this.fCustKey, locale);
+			categoryList = PagesUtil.getCategoryListByCustAndRegion(request);
+		}
+
+		//request.setAttribute("CustomerProfileEditForm.categoryList",categoryList);
+		form.setCategoryList(categoryList);
+	}
+	
+	private void fillCataPriceNameDescList(String action,
+			CustomerProfileEditForm form)
+	{
+		List cataNameL = new ArrayList();
+		List cataDescL = new ArrayList();
+		List priceNameL = new ArrayList();
+		List priceDescL = new ArrayList();
+		String langCD = null;
+
+		String custType = form.getCustomerType();
+		if (action.equalsIgnoreCase("CREATE")) {
+			langCD = (String) ((ArrayList) (form.getLangCodeList())).get(0);
+		} else {
+			langCD = form.getLanguageCode();
+		}
+		log.debug("&&&&&&&&&&&&&&&&langCD: " + langCD);
+		CatalogPriceSourceLocaleMgr mgr = CatalogPriceSourceLocaleMgr
+				.getCatalogPriceSourceLocaleMgr();
+
+		mgr.catalogPriceSourceByLocale(langCD, cataNameL, cataDescL,
+				priceNameL, priceDescL);
+
+		form.setCataSourceECatNameList(cataNameL);
+		form.setCataSourceECatDescList(cataDescL);
+		form.setCataSourceECatOptionsList(null);
+		
+		form.setPriceSourceECatNameList(priceNameL);
+		form.setPriceSourceECatDescList(priceDescL);
+
+		String catalogSrc = form.getPrimaryCatalogSource();
+
+		if ((!StrUtil.isEmpty(catalogSrc) && catalogSrc
+				.equalsIgnoreCase(this.CONST_RESELLER_NAME))
+				||
+				(cataNameL.size() > 0 && ((String) cataNameL.get(0))
+						.equalsIgnoreCase(this.CONST_RESELLER_NAME)))
+		{
+			priceNameL.clear();
+			priceDescL.clear();
+			priceNameL.add(this.CONST_RESELLER_NAME);
+			priceDescL.add(this.CONST_RESELLER_NAME);
+			form.setPriceSourceECatNameList(priceNameL);
+			form.setPriceSourceECatDescList(priceDescL);
+		}
+	}
+	
+	private void fillInLocaleList(CustomerProfileEditForm form, String dbRegionToConnect)
+	{
+		List langCodeList = new ArrayList();
+		List lanList = new ArrayList();
+		List langCodeListECat = new ArrayList();
+		List lanListECat = new ArrayList();
+		List langCountryList = new ArrayList();
+		PagesUtil.getLocaleList(langCodeList, lanList, dbRegionToConnect);
+		PagesUtil.getLocaleListForECat(langCodeListECat, lanListECat, dbRegionToConnect);
+		String custType = form.getCustomerType();
+		LangCountryCodeBean lcBean = null;
+
+		if (!StrUtil.isEmpty(custType)
+				&& custType.equalsIgnoreCase(Customer.CUSTOMER_TYPE_ECATE))
+		{
+			for(int i=0; i < langCodeListECat.size(); i++){
+				lcBean = new LangCountryCodeBean();
+				lcBean.setLangCode((String)langCodeListECat.get(i));
+				lcBean.setCountry((String)lanListECat.get(i));
+				langCountryList.add(lcBean);
+			}
+			form.setLangCountryCodeList(langCountryList);
+			form.setLangCodeList(langCodeListECat);
+			form.setCountryList(lanListECat);
+		}else
+		{
+			for(int i=0; i < langCodeList.size(); i++){
+				lcBean = new LangCountryCodeBean();
+				lcBean.setLangCode((String)langCodeList.get(i));
+				lcBean.setCountry((String)lanList.get(i));
+				langCountryList.add(lcBean);
+			}
+			form.setLangCountryCodeList(langCountryList);			
+			form.setLangCodeList(langCodeList);
+			form.setCountryList(lanList);
+		}
+	}
+	
+	private void modifyFormatList(List list, String priceSource)
+	{
+		log.debug("modifyFormatList-priceSource: " + priceSource);
+		if (!StrUtil.isEmpty(priceSource)
+				&& priceSource.trim().equalsIgnoreCase(CONST_RESELLER_NAME))
+		{
+			log.debug("inside ");
+			for (int i = 0; i < list.size(); i++)
+			{
+				if (((CatalogFormatInfo) list.get(i)).getCatFormatName().trim()
+						.equalsIgnoreCase("EPRIME")) {
+					list.remove(i);
+				}
+			}
+		}
+	}
+	
+	private String setCustType(String custType) {
+		if (custType.equals("PS")) {
+			return "Public Sector";
+		} else if (custType.equals("LS")) {
+			return "Leasing";
+		} else if (custType.equals("BD")) {
+			return "Big Deal";
+		} else if (custType.equals("EC")) {
+			return "eProcurement";
+		} else if (custType.equals("GL")) {
+			return "Global";
+		} else if (custType.equals("GD")) {
+			return "GSA Customer";
+		} else if (custType.equals("FD")) {
+			return "Federal Customer";
+		}
+		else {
+			return "";
+		}
+	}// setCustTypeString
+	
+	
+	public static String getCustomerKey(CustomerProfileForm form,
+			HttpServletRequest request) {
+		String key = (String) request.getAttribute("customer_key");
+
+		if (key == null) {
+			key = (String) request.getParameter("customer_key");
+		}
+		if (key == null) {
+			key = form.getCustomer_key();
+
+		}
+		return key;
+
+	}
+	
+	private String getCustID(CustomerProfileEditForm form,
+			HttpServletRequest request) {
+		String id = (String) request.getAttribute("customer_key");
+
+		if (id == null) {
+			id = request.getParameter("customer_key");
+		}
+		if (id == null) {
+			id = form.getCustomer_key();
+		}
+
+		CustomerMgr cMgr = new CustomerMgr();
+		Customer cust = cMgr.getCustomer(id,PagesUtil.getDbRegionToConnect(request));
+
+		return cust.getCustID();
+
+	}
+	
+	public String getEprimeCustID(JSONObject jObj) {
+		
+		String eID = null;
+		if(jObj.get(CustomerFields.EPRIME_CUST_ID) != null){
+			eID = jObj.get(CustomerFields.EPRIME_CUST_ID).toString();
+		}
+		
+		if (eID == null) {
+			String region = null;
+			if(jObj.get(CustomerFields.REGION) != null){
+				region = jObj.get(CustomerFields.REGION).toString();
+			}
+			String source = null;
+			if(jObj.get(CustomerFields.PRICE_SOURCE) != null){
+				source = jObj.get(CustomerFields.PRICE_SOURCE).toString();
+			}
+
+			if (region != null && source != null) {
+
+				if (region.equalsIgnoreCase("EMEA")
+						&& source.equalsIgnoreCase("SPIDER")) {
+
+					String custID = "";
+					if(jObj.get(CustomerFields.CUST_ID) != null){
+						custID = jObj.get(CustomerFields.CUST_ID).toString();
+					}
+					String custDUN = "";
+					if(jObj.get(CustomerFields.EPRIME_CUST_DUN) != null){
+						custDUN = jObj.get(CustomerFields.EPRIME_CUST_DUN).toString();
+					}
+					eID = custID + "-" + custDUN;
+
+				} else {
+					if(jObj.get(CustomerFields.CUST_KEY) != null){
+						eID = jObj.get(CustomerFields.CUST_KEY).toString();
+					}else{
+						eID = "";
+					}
+				}
+
+			}else {
+				if(jObj.get(CustomerFields.CUST_KEY) != null){
+					eID = jObj.get(CustomerFields.CUST_KEY).toString();
+				}else{
+					eID = "";
+				}
+			}
+		}
+		return eID;
+	}
+
+	
+}
